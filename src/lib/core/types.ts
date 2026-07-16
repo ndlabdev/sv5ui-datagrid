@@ -36,6 +36,23 @@ export interface RowNode<TRow> {
 
 export type ColumnAlign = 'left' | 'center' | 'right'
 
+export type Density = 'compact' | 'standard' | 'comfortable'
+
+/**
+ * Strings used by the aria-live announcer. Override via
+ * `DataGridOptions.locale` for i18n.
+ */
+export interface DataGridLocale {
+    /** Announced when a column becomes sorted. */
+    sorted: (column: string, direction: SortDirection) => string
+    /** Announced when sorting is cleared. */
+    sortCleared: () => string
+    /** Announced with the post-filter row count when the filter changes. */
+    filtered: (count: number) => string
+    /** Announced when the page changes. */
+    page: (page: number) => string
+}
+
 /**
  * Context passed to a custom cell snippet.
  */
@@ -241,4 +258,13 @@ export interface DataGridOptions<TRow> {
 
     /** Feature modules to register. Order does not matter. */
     features?: GridFeature<TRow>[]
+
+    /**
+     * Row density. Drives row height and cell padding via CSS variables.
+     * @default 'standard'
+     */
+    density?: Density
+
+    /** Announcer string overrides for i18n. */
+    locale?: Partial<DataGridLocale>
 }

@@ -38,7 +38,12 @@ export class Virtualization<TRow> {
         const element = this.element
         const index = this.#indexOf(target)
         if (!element || index < 0) return
-        element.scrollTop = this.virtualizer.indexToOffset(index)
+        this.#setScrollTop(element, this.virtualizer.indexToOffset(index))
+    }
+
+    #setScrollTop(element: HTMLElement, value: number): void {
+        element.scrollTop = value
+        this.virtualizer.scrollTop = element.scrollTop
     }
 
     ensureVisible = (target: number | string): void => {
@@ -49,16 +54,16 @@ export class Virtualization<TRow> {
         const { virtualizer } = this
         const top = virtualizer.indexToOffset(index)
         if (virtualizer.viewportHeight <= 0) {
-            element.scrollTop = top
+            this.#setScrollTop(element, top)
             return
         }
 
         const headerOffset = Math.max(0, element.scrollHeight - virtualizer.totalHeight)
         const bottom = top + virtualizer.rowHeight + headerOffset
         if (top < element.scrollTop) {
-            element.scrollTop = top
+            this.#setScrollTop(element, top)
         } else if (bottom > element.scrollTop + virtualizer.viewportHeight) {
-            element.scrollTop = bottom - virtualizer.viewportHeight
+            this.#setScrollTop(element, bottom - virtualizer.viewportHeight)
         }
     }
 }

@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
-import type { ColumnDef } from '../core/types.js'
+import type { ColumnDef, Density } from '../core/types.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
 export interface GridRootProps<TRow> {
@@ -33,6 +33,21 @@ export interface GridBodyProps {
      */
     emptyText?: string
 
+    /** Renders skeleton rows instead of data rows. */
+    loading?: boolean
+
+    /**
+     * Number of skeleton rows rendered while loading.
+     * @default 5
+     */
+    loadingRows?: number
+
+    /** Error message. Takes precedence over `loading` and rows. */
+    error?: string | null
+
+    /** Renders a Retry action in the error state. */
+    onRetry?: () => void
+
     /** Additional classes applied to the body row group. */
     class?: ClassNameValue
 }
@@ -42,12 +57,53 @@ export interface GridPaginationProps {
     class?: ClassNameValue
 }
 
+export interface GridToolbarProps {
+    /** Additional classes applied to the toolbar container. */
+    class?: ClassNameValue
+
+    children?: Snippet
+}
+
+export interface GridQuickFilterProps {
+    /**
+     * Input placeholder text.
+     * @default 'Search...'
+     */
+    placeholder?: string
+
+    /**
+     * Debounce delay in milliseconds before the filter is applied.
+     * @default 200
+     */
+    debounce?: number
+
+    /** Additional classes applied to the input. */
+    class?: ClassNameValue
+}
+
+export interface GridDensityToggleProps {
+    /** Additional classes applied to the button group. */
+    class?: ClassNameValue
+}
+
 export type DataGridProps<TRow> = {
     /**
      * Text shown when there are no rows to display.
      * @default 'No data'
      */
     emptyText?: string
+
+    /** Renders the default toolbar (quick filter + density toggle). */
+    toolbar?: boolean
+
+    /** Renders skeleton rows instead of data rows. */
+    loading?: boolean
+
+    /** Error message shown instead of rows. */
+    error?: string | null
+
+    /** Renders a Retry action in the error state. */
+    onRetry?: () => void
 
     /** Additional classes applied to the root element. */
     class?: ClassNameValue
@@ -63,6 +119,7 @@ export type DataGridProps<TRow> = {
           getRowId?: never
           pageSize?: never
           virtual?: never
+          density?: never
       }
     | {
           grid?: never
@@ -84,5 +141,11 @@ export type DataGridProps<TRow> = {
            * Set a fixed viewport height via `class` (e.g. `h-[640px]`).
            */
           virtual?: VirtualizationOptions | true
+
+          /**
+           * Initial row density.
+           * @default 'standard'
+           */
+          density?: Density
       }
 )

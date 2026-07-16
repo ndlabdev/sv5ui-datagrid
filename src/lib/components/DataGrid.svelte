@@ -7,9 +7,12 @@
     import { getVirtualization, virtualization } from '../features/virtualization/index.js'
     import type { DataGridProps } from './datagrid.types.js'
     import GridBody from './GridBody.svelte'
+    import GridDensityToggle from './GridDensityToggle.svelte'
     import GridHeader from './GridHeader.svelte'
     import GridPagination from './GridPagination.svelte'
+    import GridQuickFilter from './GridQuickFilter.svelte'
     import GridRoot from './GridRoot.svelte'
+    import GridToolbar from './GridToolbar.svelte'
     import GridViewport from './GridViewport.svelte'
 
     let {
@@ -19,7 +22,12 @@
         getRowId,
         pageSize,
         virtual,
+        density,
+        toolbar = false,
         emptyText,
+        loading,
+        error,
+        onRetry,
         class: className
     }: DataGridProps<TRow> = $props()
 
@@ -30,6 +38,7 @@
                 data,
                 columns: columns ?? [],
                 getRowId: getRowId!,
+                density,
                 features: virtual
                     ? [
                           filtering<TRow>(),
@@ -50,9 +59,16 @@
 </script>
 
 <GridRoot {grid} class={isVirtual ? undefined : className}>
+    {#if toolbar}
+        <GridToolbar>
+            <GridQuickFilter class="min-w-64" />
+            <div class="grow"></div>
+            <GridDensityToggle />
+        </GridToolbar>
+    {/if}
     <GridViewport class={isVirtual ? className : undefined}>
         <GridHeader />
-        <GridBody {emptyText} />
+        <GridBody {emptyText} {loading} {error} {onRetry} />
     </GridViewport>
     <GridPagination />
 </GridRoot>

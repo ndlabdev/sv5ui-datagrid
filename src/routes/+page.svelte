@@ -1,18 +1,9 @@
 <script lang="ts">
-    import {
-        Badge,
-        Button,
-        Container,
-        Input,
-        Link,
-        ThemeModeButton,
-        useDebouncedState
-    } from 'sv5ui'
+    import { Badge, Button, Container, Link, ThemeModeButton } from 'sv5ui'
     import {
         createDataGrid,
         DataGrid,
         filtering,
-        getFiltering,
         getPagination,
         getSorting,
         Grid,
@@ -75,12 +66,8 @@
         features: [filtering(), sorting(), pagination({ pageSize: 5 })]
     })
 
-    const search = useDebouncedState('', 200)
-
-    $effect(() => {
-        const state = getFiltering(grid)
-        if (state && state.quick !== search.debounced) state.setQuickFilter(search.debounced)
-    })
+    let demoLoading = $state(false)
+    let demoError = $state<string | null>(null)
 
     let showEmail = $state(true)
 
@@ -171,12 +158,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <Input
-                placeholder="Search all columns..."
-                icon="lucide:search"
-                class="min-w-64"
-                bind:value={search.current}
-            />
             <Button
                 variant="outline"
                 size="sm"
@@ -205,9 +186,27 @@
                 label="Go to page 2"
                 onclick={() => getPagination(grid)!.setPage(2)}
             />
+            <Button
+                variant="outline"
+                size="sm"
+                label={demoLoading ? 'Stop loading' : 'Demo loading'}
+                onclick={() => (demoLoading = !demoLoading)}
+            />
+            <Button
+                variant="outline"
+                size="sm"
+                label={demoError ? 'Clear error' : 'Demo error'}
+                onclick={() => (demoError = demoError ? null : 'Something went wrong')}
+            />
         </div>
 
-        <DataGrid {grid} />
+        <DataGrid
+            {grid}
+            toolbar
+            loading={demoLoading}
+            error={demoError}
+            onRetry={() => (demoError = null)}
+        />
 
         <div class="rounded-lg border border-outline-variant p-3">
             <p class="mb-1 text-xs font-medium text-on-surface-variant">

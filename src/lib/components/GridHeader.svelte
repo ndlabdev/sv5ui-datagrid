@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Icon } from 'sv5ui'
+    import { HEADER_ROW } from '../core/focus-model.svelte.js'
     import { getSorting } from '../features/sorting/index.js'
     import { getGridContext } from './context.js'
     import type { GridHeaderProps } from './datagrid.types.js'
@@ -10,6 +11,11 @@
     const grid = getGridContext()
     const sorting = getSorting(grid)
     const slots = datagridVariants()
+
+    function isActive(index: number): boolean {
+        const { row, col } = grid.focus.active
+        return row === HEADER_ROW && col === index
+    }
 
     function ariaSort(columnId: string): 'ascending' | 'descending' | undefined {
         const direction = sorting?.directionOf(columnId)
@@ -27,15 +33,20 @@
 <div role="rowgroup" class={slots.header({ class: className })}>
     <div role="row" aria-rowindex={1} class={slots.headerRow()}>
         {#each grid.columns.visible as column, index (column.id)}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
                 role="columnheader"
                 aria-colindex={index + 1}
                 aria-sort={ariaSort(column.id)}
+                tabindex={isActive(index) ? 0 : -1}
+                data-dg-cell="{HEADER_ROW}:{index}"
                 class={slots.headerCell({ align: column.align })}
+                onclick={() => grid.focus.focusCell({ row: HEADER_ROW, col: index })}
             >
                 {#if sorting && column.def.sortable}
                     <button
                         type="button"
+                        tabindex="-1"
                         class={slots.sortButton()}
                         onclick={() => sorting.toggleSort(column.id)}
                     >

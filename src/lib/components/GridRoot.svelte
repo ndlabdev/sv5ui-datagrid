@@ -8,9 +8,10 @@
 
     setGridContext(untrack(() => grid))
 
-    const slots = datagridVariants()
+    const slots = $derived(datagridVariants({ density: grid.density }))
 </script>
 
 <div class={slots.root({ class: className })}>
+    <div aria-live="polite" class="sr-only">{grid.announcer.message}</div>
     {@render children?.()}
 </div>

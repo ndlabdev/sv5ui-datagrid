@@ -2,7 +2,9 @@
 export * from './components/index.js'
 
 // Headless core
+export { Announcer, defaultLocale } from './core/announcer.svelte.js'
 export { ColumnModel } from './core/column-model.svelte.js'
+export { FocusModel, HEADER_ROW, type CellPosition } from './core/focus-model.svelte.js'
 export {
     buildColumnCssVars,
     columnTrackSize,
