@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { filtering, getFiltering } from '../features/filtering/index.js'
 import { getPagination, pagination } from '../features/pagination/index.js'
 import { getSorting, sorting } from '../features/sorting/index.js'
+import { getVirtualization, virtualization } from '../features/virtualization/index.js'
 import { createDataGrid, type GridState } from './grid.svelte.js'
 import type { GridFeature } from './types.js'
 
@@ -141,5 +142,24 @@ describe('GridState', () => {
         const grid = createGrid([])
         grid.data = people.slice(0, 2)
         expect(names(grid)).toEqual(['Charlie', 'Alice'])
+    })
+
+    it('rejects two window-order features', () => {
+        expect(() => createGrid([pagination({ pageSize: 2 }), virtualization()])).toThrow(
+            /window-order/
+        )
+    })
+
+    it('virtualization resets scroll when sort or filter changes', () => {
+        const grid = createGrid([filtering(), sorting(), virtualization({ rowHeight: 40 })])
+        const virt = getVirtualization(grid)!
+
+        virt.virtualizer.scrollTop = 4000
+        getFiltering(grid)!.setQuickFilter('a')
+        expect(virt.virtualizer.scrollTop).toBe(0)
+
+        virt.virtualizer.scrollTop = 4000
+        getSorting(grid)!.toggleSort('name')
+        expect(virt.virtualizer.scrollTop).toBe(0)
     })
 })

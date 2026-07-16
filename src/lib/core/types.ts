@@ -46,7 +46,11 @@ export interface DataGridCellContext<TRow> {
     row: TRow
     /** The resolved cell value (from `accessor` or `row[id]`). */
     value: unknown
-    /** Zero-based index of the row within the rendered view. */
+    /**
+     * Zero-based position of the row within the filtered/sorted set.
+     * Window offsets (page, virtual range) are already applied, so the value
+     * is stable while scrolling or paging.
+     */
     rowIndex: number
 }
 

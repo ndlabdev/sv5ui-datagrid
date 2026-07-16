@@ -32,6 +32,11 @@ export class GridState<TRow> {
         }
 
         const stages = this.features.flatMap((feature) => feature.pipelineStage ?? [])
+        if (stages.filter((stage) => stage.order === PIPELINE_ORDER.window).length > 1) {
+            throw new Error(
+                'Only one window-order feature may be registered — use pagination() or virtualization(), not both'
+            )
+        }
         this.#pipeline = composePipeline(() => this.#baseNodes, stages, this)
     }
 

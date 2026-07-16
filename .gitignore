@@ -25,3 +25,7 @@ vite.config.ts.timestamp-*
 
 # Local Claude Code config (skills, settings) — not shared via git
 .claude/
+
+# test artifacts
+.vitest-attachments/
+__screenshots__/

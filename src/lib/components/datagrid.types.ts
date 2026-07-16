@@ -2,6 +2,7 @@ import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
 import type { ColumnDef } from '../core/types.js'
+import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
 export interface GridRootProps<TRow> {
     /** The grid instance created with `createDataGrid`. */
@@ -61,6 +62,7 @@ export type DataGridProps<TRow> = {
           columns?: never
           getRowId?: never
           pageSize?: never
+          virtual?: never
       }
     | {
           grid?: never
@@ -74,7 +76,13 @@ export type DataGridProps<TRow> = {
           /** Returns a stable unique id for a row. */
           getRowId: (row: TRow) => string
 
-          /** Rows per page. Omit to disable pagination. */
+          /** Rows per page. Omit to disable pagination. Ignored when `virtual` is set. */
           pageSize?: number
+
+          /**
+           * Enables row virtualization instead of pagination.
+           * Set a fixed viewport height via `class` (e.g. `h-[640px]`).
+           */
+          virtual?: VirtualizationOptions | true
       }
 )

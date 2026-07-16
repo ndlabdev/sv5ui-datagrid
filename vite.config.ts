@@ -25,6 +25,7 @@ export default defineConfig({
                 test: {
                     name: 'browser',
                     include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+                    setupFiles: ['./src/tests/setup.browser.ts'],
                     browser: {
                         enabled: true,
                         headless: true,

@@ -15,8 +15,14 @@ export { composePipeline, PIPELINE_ORDER, type Pipeline } from './core/pipeline.
 export { buildRowNodes } from './core/row-node.js'
 export type * from './core/types.js'
 export { getCellValue, isNullish } from './core/value.js'
+export {
+    Virtualizer,
+    type VirtualizerOptions,
+    type VirtualRange
+} from './core/virtualizer.svelte.js'
 
 // Feature modules
 export * from './features/filtering/index.js'
 export * from './features/pagination/index.js'
 export * from './features/sorting/index.js'
+export * from './features/virtualization/index.js'
