@@ -1,6 +1,7 @@
 <script lang="ts">
     import { useElementSize } from 'sv5ui'
     import { HEADER_ROW, type CellPosition } from '../core/focus-model.svelte.js'
+    import { getColumnOps } from '../features/column-ops/index.js'
     import { getPagination } from '../features/pagination/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
@@ -13,10 +14,12 @@
     const grid = getGridContext()
     const virtualization = getVirtualization(grid)
     const columnVirtualizer = virtualization?.columnVirtualizer ?? null
+    const columnOps = getColumnOps(grid)
     const slots = datagridVariants()
 
     let element = $state<HTMLElement | null>(null)
-    const size = useElementSize(() => (virtualization ? element : null))
+    const measured = Boolean(virtualization || columnOps)
+    const size = useElementSize(() => (measured ? element : null))
 
     $effect(() => {
         if (!virtualization) return
@@ -27,14 +30,22 @@
     })
 
     $effect(() => {
+        if (!columnOps) return
+        columnOps.element = element
+        return () => {
+            columnOps.element = null
+        }
+    })
+
+    $effect(() => {
         if (!virtualization) return
         virtualization.virtualizer.viewportHeight = size.height
     })
 
     $effect(() => {
-        if (!columnVirtualizer) return
-        columnVirtualizer.viewportWidth = size.width
+        if (!measured) return
         grid.columns.containerWidth = size.width
+        if (columnVirtualizer) columnVirtualizer.viewportWidth = size.width
     })
 
     const activeRendered = $derived.by(() => {
@@ -109,7 +120,7 @@
 <div
     bind:this={element}
     role="grid"
-    aria-rowcount={grid.totalRows + 1}
+    aria-rowcount={grid.totalRows + grid.columns.headerRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: className })}

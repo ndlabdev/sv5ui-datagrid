@@ -4,7 +4,7 @@
     import { getGridContext } from './context.js'
     import type { GridBodyProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
-    import { columnWindowOf, windowStartOf } from './window.js'
+    import { columnWindowOf, pinLeftVar, pinRightVar, windowStartOf } from './window.js'
 
     let {
         emptyText = 'No data',
@@ -25,9 +25,11 @@
         center: slots.cell({ align: 'center' }),
         right: slots.cell({ align: 'right' })
     } as const
+    const pinnedCellClass = slots.pinnedCell()
 
     const windowStart = $derived(windowStartOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
+    const headerRows = $derived(grid.columns.headerRowCount)
 
     function isActive(row: number, col: number): boolean {
         const active = grid.focus.active
@@ -45,22 +47,27 @@
         {@const rowHeight = rowHeightOf(windowStart + viewIndex)}
         <div
             role="row"
-            aria-rowindex={windowStart + viewIndex + 2}
+            aria-rowindex={windowStart + viewIndex + 1 + headerRows}
             class={rowClass}
             style:height={rowHeight}
             style:--dg-row-h={rowHeight}
             style:width={columnWindow.rowWidth}
         >
-            {#each columnWindow.renderColumns as column, viewCol (column.id)}
-                {@const colIndex = columnWindow.colStart + viewCol}
+            {#each columnWindow.renderColumns as entry (entry.column.id)}
+                {@const column = entry.column}
+                {@const colIndex = entry.index}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
                     role="gridcell"
                     aria-colindex={colIndex + 1}
                     tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
                     data-dg-cell="{windowStart + viewIndex}:{colIndex}"
-                    class={cellClass[column.align]}
+                    class={column.pinned
+                        ? `${cellClass[column.align]} ${pinnedCellClass}`
+                        : cellClass[column.align]}
                     style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
+                    style:left={pinLeftVar(column)}
+                    style:right={pinRightVar(column)}
                     onclick={() =>
                         grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
                 >
@@ -108,12 +115,10 @@
     {:else if loading}
         {#each Array.from({ length: loadingRows }, (_, i) => i) as i (i)}
             <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
-                {#each columnWindow.renderColumns as column, viewCol (column.id)}
+                {#each columnWindow.renderColumns as entry (entry.column.id)}
                     <div
-                        class={cellClass[column.align]}
-                        style:grid-column={columnWindow.windowed
-                            ? columnWindow.colStart + viewCol + 1
-                            : undefined}
+                        class={cellClass[entry.column.align]}
+                        style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
                     >
                         <Skeleton class="h-4 w-3/4" />
                     </div>

@@ -1,4 +1,5 @@
 import Body from './GridBody.svelte'
+import ColumnChooser from './GridColumnChooser.svelte'
 import DensityToggle from './GridDensityToggle.svelte'
 import Header from './GridHeader.svelte'
 import Pagination from './GridPagination.svelte'
@@ -18,6 +19,7 @@ export interface GridParts {
     Toolbar: typeof Toolbar
     QuickFilter: typeof QuickFilter
     DensityToggle: typeof DensityToggle
+    ColumnChooser: typeof ColumnChooser
 }
 
 export const Grid: GridParts = {
@@ -28,7 +30,8 @@ export const Grid: GridParts = {
     Pagination,
     Toolbar,
     QuickFilter,
-    DensityToggle
+    DensityToggle,
+    ColumnChooser
 }
 
 export { getGridContext, setGridContext } from './context.js'
@@ -37,6 +40,8 @@ export type { DataGridSlots, DataGridVariantProps } from './datagrid.variants.js
 export type {
     DataGridProps,
     GridBodyProps,
+    GridColumnChooserProps,
+    GridColumnMenuProps,
     GridDensityToggleProps,
     GridHeaderProps,
     GridPaginationProps,
@@ -45,4 +50,4 @@ export type {
     GridToolbarProps,
     GridViewportProps
 } from './datagrid.types.js'
-export { windowStartOf } from './window.js'
+export { columnWindowOf, windowStartOf, type ColumnEntry, type ColumnWindow } from './window.js'

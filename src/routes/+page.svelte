@@ -138,7 +138,8 @@
             <h1 class="text-2xl font-semibold text-on-surface">@sv5ui/datagrid — Phase 1 kernel</h1>
             <p class="text-sm text-on-surface-variant">
                 Feature modules · RowNode pipeline · ColumnModel (CSS vars) · compound parts · ARIA
-                grid · <Link href="/virtual">100k rows virtualization demo →</Link>
+                grid · <Link href="/virtual">100k rows demo →</Link> ·
+                <Link href="/columns">Columns UX demo →</Link>
             </p>
         </div>
         <ThemeModeButton />

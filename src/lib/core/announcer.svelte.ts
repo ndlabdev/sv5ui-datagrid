@@ -6,7 +6,12 @@ export const defaultLocale: DataGridLocale = {
         `sorted by ${column} ${direction === 'asc' ? 'ascending' : 'descending'}`,
     sortCleared: () => 'sort cleared',
     filtered: (count) => `${count} rows`,
-    page: (page) => `page ${page}`
+    page: (page) => `page ${page}`,
+    columnResized: (column, width) => `${column} column resized to ${width} pixels`,
+    columnMoved: (column, position) => `${column} column moved to position ${position}`,
+    columnPinned: (column, side) =>
+        side ? `${column} column pinned ${side}` : `${column} column unpinned`,
+    columnVisibility: (column, hidden) => `${column} column ${hidden ? 'hidden' : 'shown'}`
 }
 
 export class Announcer<TRow> {
@@ -27,6 +32,20 @@ export class Announcer<TRow> {
         })
         grid.events.on('pageChanged', ({ page }) => {
             this.message = locale.page(page)
+        })
+
+        const headerOf = (columnId: string) => grid.columns.get(columnId)?.header ?? columnId
+        grid.events.on('columnResized', ({ columnId, width }) => {
+            this.message = locale.columnResized(headerOf(columnId), width)
+        })
+        grid.events.on('columnMoved', ({ columnId, toIndex }) => {
+            this.message = locale.columnMoved(headerOf(columnId), toIndex + 1)
+        })
+        grid.events.on('columnPinned', ({ columnId, side }) => {
+            this.message = locale.columnPinned(headerOf(columnId), side)
+        })
+        grid.events.on('columnVisibilityChanged', ({ columnId, hidden }) => {
+            this.message = locale.columnVisibility(headerOf(columnId), hidden)
         })
     }
 }

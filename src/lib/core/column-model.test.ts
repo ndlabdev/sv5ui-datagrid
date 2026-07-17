@@ -1,0 +1,136 @@
+import { describe, expect, it } from 'vitest'
+import { ColumnModel } from './column-model.svelte.js'
+
+interface Row {
+    [key: string]: unknown
+}
+
+function createModel(): ColumnModel<Row> {
+    return new ColumnModel<Row>([
+        { id: 'a', header: 'A', width: 100 },
+        { id: 'b', header: 'B', flex: 1, minWidth: 80 },
+        { id: 'c', header: 'C', width: 120 },
+        { id: 'd', header: 'D', width: 90 }
+    ])
+}
+
+describe('ColumnModel runtime state', () => {
+    it('orders sections pinned-left, center, pinned-right', () => {
+        const model = createModel()
+        model.setPinned('c', 'left')
+        model.setPinned('a', 'right')
+
+        expect(model.visible.map((column) => column.id)).toEqual(['c', 'b', 'd', 'a'])
+        expect(model.pinnedLeft.map((column) => column.id)).toEqual(['c'])
+        expect(model.pinnedRight.map((column) => column.id)).toEqual(['a'])
+    })
+
+    it('moves columns within the display order', () => {
+        const model = createModel()
+        expect(model.moveColumn('d', 0)).toBe(0)
+        expect(model.visible.map((column) => column.id)).toEqual(['d', 'a', 'b', 'c'])
+
+        expect(model.moveColumn('missing', 0)).toBe(-1)
+    })
+
+    it('clamps width overrides and converts flex columns to fixed', () => {
+        const model = createModel()
+        expect(model.setWidth('b', 10)).toBe(80)
+        expect(model.widthOf('b')).toBe(80)
+        expect(model.resolvedWidths).toBeNull()
+
+        model.setWidths({ a: 5000, b: 200 })
+        expect(model.widthOf('a')).toBe(5000)
+        expect(model.widthOf('b')).toBe(200)
+    })
+
+    it('hides columns via overrides and keeps them in `all`', () => {
+        const model = createModel()
+        model.setHidden('b', true)
+        expect(model.visible.map((column) => column.id)).toEqual(['a', 'c', 'd'])
+        expect(model.all).toHaveLength(4)
+    })
+
+    it('computes sticky pin offsets cumulatively per side', () => {
+        const model = createModel()
+        model.setPinned('a', 'left')
+        model.setPinned('b', 'left')
+        model.setPinned('d', 'right')
+
+        expect(model.pins['a']).toBe(0)
+        expect(model.pins['b']).toBe(100)
+        expect(model.pins['d']).toBe(0)
+        expect(model.cssVars[model.get('a')!.pinVar]).toBe('0px')
+        expect(model.cssVars[model.get('b')!.pinVar]).toBe('100px')
+    })
+
+    it('round-trips the column state snapshot (exit criteria)', () => {
+        const model = createModel()
+        model.moveColumn('d', 0)
+        model.setWidth('b', 240)
+        model.setHidden('c', true)
+        model.setPinned('a', 'left')
+        const snapshot = model.columnState()
+
+        const restored = createModel()
+        restored.applyColumnState(JSON.parse(JSON.stringify(snapshot)))
+
+        expect(restored.visible.map((column) => column.id)).toEqual(
+            model.visible.map((column) => column.id)
+        )
+        expect(restored.widthOf('b')).toBe(240)
+        expect(restored.get('c')?.hidden).toBe(true)
+        expect(restored.get('a')?.pinned).toBe('left')
+        expect(restored.columnState()).toEqual(snapshot)
+    })
+
+    it('normalizes invalid pinned values instead of losing the column', () => {
+        const model = createModel()
+        model.applyColumnState({
+            order: [],
+            widths: {},
+            hidden: {},
+            pinned: { a: 'garbage' as never, b: 'right' }
+        })
+
+        expect(model.visible).toHaveLength(4)
+        expect(model.get('a')?.pinned).toBeNull()
+        expect(model.get('b')?.pinned).toBe('right')
+    })
+
+    it('drops unknown column ids when applying a snapshot', () => {
+        const model = createModel()
+        model.applyColumnState({
+            order: ['ghost', 'b', 'a'],
+            widths: { ghost: 500, a: 150 },
+            hidden: { ghost: true },
+            pinned: { ghost: 'left', d: 'right' }
+        })
+
+        expect(model.visible.map((column) => column.id)).toEqual(['b', 'a', 'c', 'd'])
+        expect(model.widthOf('a')).toBe(150)
+        expect(model.get('d')?.pinned).toBe('right')
+        expect(model.columnState().widths).not.toHaveProperty('ghost')
+    })
+
+    it('builds header levels from grouped defs', () => {
+        const model = new ColumnModel<Row>([
+            {
+                id: 'g',
+                header: 'Group',
+                children: [
+                    { id: 'x', width: 100 },
+                    { id: 'y', width: 100 }
+                ]
+            },
+            { id: 'z', width: 100 }
+        ])
+
+        expect(model.headerRowCount).toBe(2)
+        expect(model.headerLevels[0].map((cell) => [cell.id, cell.span])).toEqual([
+            ['g', 2],
+            ['placeholder-0-2', 1]
+        ])
+        expect(model.visible.map((column) => column.id)).toEqual(['x', 'y', 'z'])
+    })
+})

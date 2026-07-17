@@ -100,8 +100,8 @@ describe('virtualization', () => {
         const grid = createVirtualGrid(1_000)
         const screen = await render(VirtualGrid, { grid })
 
-        await screen.getByRole('button', { name: 'Value' }).click()
-        await screen.getByRole('button', { name: 'Value' }).click()
+        await screen.getByRole('button', { name: 'Value', exact: true }).click()
+        await screen.getByRole('button', { name: 'Value', exact: true }).click()
         await expect
             .element(screen.getByRole('columnheader', { name: 'Value' }))
             .toHaveAttribute('aria-sort', 'descending')

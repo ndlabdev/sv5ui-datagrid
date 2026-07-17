@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
-import type { ColumnDef, Density } from '../core/types.js'
+import type { ColumnDef, ColumnState, Density } from '../core/types.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
 export interface GridRootProps<TRow> {
@@ -84,6 +84,16 @@ export interface GridQuickFilterProps {
 export interface GridDensityToggleProps {
     /** Additional classes applied to the button group. */
     class?: ClassNameValue
+}
+
+export interface GridColumnChooserProps {
+    /** Additional classes applied to the trigger button. */
+    class?: ClassNameValue
+}
+
+export interface GridColumnMenuProps<TRow> {
+    /** The column the menu operates on. */
+    column: ColumnState<TRow>
 }
 
 export type DataGridProps<TRow> = {

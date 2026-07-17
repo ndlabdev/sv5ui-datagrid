@@ -9,10 +9,18 @@ export {
     buildColumnCssVars,
     columnTrackSize,
     createColumnState,
+    pinOffsets,
     prefixSums,
     resolveColumnWidths,
-    toStyleString
+    toStyleString,
+    trackWidthEstimates
 } from './core/column-sizing.js'
+export {
+    buildGroupPaths,
+    buildHeaderLevels,
+    flattenColumns,
+    parentGroupIdOf
+} from './core/header-groups.js'
 export {
     ColumnVirtualizer,
     type ColumnVirtualizerOptions
@@ -33,6 +41,7 @@ export {
 } from './core/virtualizer.svelte.js'
 
 // Feature modules
+export * from './features/column-ops/index.js'
 export * from './features/filtering/index.js'
 export * from './features/pagination/index.js'
 export * from './features/sorting/index.js'

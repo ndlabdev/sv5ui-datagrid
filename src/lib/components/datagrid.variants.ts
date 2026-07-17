@@ -9,12 +9,23 @@ export const datagridVariants = tv({
         headerRow:
             'grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant',
         headerCell:
-            'flex h-(--dg-row-h) min-w-0 items-center gap-1 px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+            'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+        groupCell:
+            'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 border-b border-outline-variant px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant',
         sortButton:
-            'inline-flex cursor-pointer items-center gap-1 select-none transition-colors hover:text-on-surface',
+            'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
+        resizeHandle:
+            'absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
+        menuButton:
+            'opacity-0 transition-opacity group-hover/head:opacity-100 group-focus-within/head:opacity-100',
+        dropIndicator: 'pointer-events-none absolute inset-y-0 z-20 w-0.5 bg-primary',
+        pinnedCell:
+            'sticky z-[5] bg-surface group-hover/row:bg-surface-container-low border-outline-variant',
+        pinnedHeaderCell: 'sticky z-[15] bg-surface-container',
+        chooserItem: 'flex items-center gap-2 px-1 py-1',
         body: 'relative',
         bodyOffset: 'will-change-transform',
-        row: 'grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container-low',
+        row: 'group/row grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container-low',
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
         footer: 'flex justify-end'

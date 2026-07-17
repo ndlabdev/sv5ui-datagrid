@@ -36,6 +36,44 @@ export interface RowNode<TRow> {
 
 export type ColumnAlign = 'left' | 'center' | 'right'
 
+export type PinnedSide = 'left' | 'right'
+
+/**
+ * Serializable snapshot of the runtime column state — order, width,
+ * visibility and pin overrides. Round-trips through
+ * `getColumnState()` / `applyColumnState()`.
+ */
+export interface ColumnStateSnapshot {
+    /** Leaf column ids in display order. */
+    order: string[]
+    /** Width overrides in pixels, keyed by column id. */
+    widths: Record<string, number>
+    /** Visibility overrides, keyed by column id. */
+    hidden: Record<string, boolean>
+    /** Pin overrides, keyed by column id. */
+    pinned: Record<string, PinnedSide | null>
+}
+
+/**
+ * One rendered cell of a header group row.
+ */
+export interface HeaderGroupCell {
+    /** Group id, or a synthesized id for placeholder cells. */
+    id: string
+    /** Group label. Empty for placeholders. */
+    header: string
+    /** Zero-based index of the first spanned leaf within visible columns. */
+    start: number
+    /** Number of spanned leaf columns. */
+    span: number
+    /** True for the empty filler above ungrouped columns. */
+    isPlaceholder: boolean
+    /** Ids of the spanned leaf columns (group resize distributes over these). */
+    leafIds: string[]
+    /** Pin side shared by the spanned leaves, if any. */
+    pinned: PinnedSide | null
+}
+
 export type Density = 'compact' | 'standard' | 'comfortable'
 
 /**
@@ -51,6 +89,14 @@ export interface DataGridLocale {
     filtered: (count: number) => string
     /** Announced when the page changes. */
     page: (page: number) => string
+    /** Announced when a column is resized. */
+    columnResized: (column: string, width: number) => string
+    /** Announced when a column is moved. */
+    columnMoved: (column: string, position: number) => string
+    /** Announced when a column is pinned or unpinned. */
+    columnPinned: (column: string, side: PinnedSide | null) => string
+    /** Announced when a column is hidden or shown. */
+    columnVisibility: (column: string, hidden: boolean) => string
 }
 
 /**
@@ -125,6 +171,18 @@ export interface ColumnDef<TRow> {
     hidden?: boolean
 
     /**
+     * Pins the column to the left or right edge of the viewport.
+     */
+    pinned?: PinnedSide
+
+    /**
+     * Child columns. Turns this definition into a header group: only
+     * `id` and `header` apply to the group itself; all data-facing
+     * options belong to the leaf children. Nesting is unlimited.
+     */
+    children?: ColumnDef<TRow>[]
+
+    /**
      * Enables click-to-sort on the header.
      * @default false
      */
@@ -166,8 +224,12 @@ export interface ColumnState<TRow> {
     hidden: boolean
     /** Resolved alignment. */
     align: ColumnAlign
+    /** Resolved pin side. */
+    pinned: PinnedSide | null
     /** CSS custom property holding this column's track size. */
     cssVar: string
+    /** CSS custom property holding this column's sticky pin offset. */
+    pinVar: string
 }
 
 /**
@@ -191,6 +253,11 @@ export interface PipelineStage<TRow> {
 export interface Keybinding<TRow> {
     /** Key descriptor, e.g. `'ArrowDown'`, `'Ctrl+Home'`. */
     key: string
+    /**
+     * Guard evaluated before the handler. When it returns false the
+     * binding is skipped and later bindings may match the same key.
+     */
+    when?: (grid: GridState<TRow>) => boolean
     /** Invoked when the key matches while the grid has focus. */
     handler: (grid: GridState<TRow>, event: KeyboardEvent) => void
 }
@@ -241,6 +308,10 @@ export interface GridEventMap {
     sortChanged: { sort: SortState[] }
     filterChanged: { filter: FilterModel }
     pageChanged: { page: number; pageSize: number | null }
+    columnResized: { columnId: string; width: number }
+    columnMoved: { columnId: string; toIndex: number }
+    columnPinned: { columnId: string; side: PinnedSide | null }
+    columnVisibilityChanged: { columnId: string; hidden: boolean }
 }
 
 export interface DataGridOptions<TRow> {

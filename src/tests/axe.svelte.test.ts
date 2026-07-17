@@ -36,8 +36,8 @@ async function expectNoViolations(container: Element) {
     const results = await axe.run(container, {
         rules: { region: { enabled: false }, 'page-has-heading-one': { enabled: false } }
     })
-    const summary = results.violations.map(
-        (violation) => `${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`
+    const summary = results.violations.flatMap((violation) =>
+        violation.nodes.map((node) => `${violation.id}: ${node.html.slice(0, 160)}`)
     )
     expect(summary).toEqual([])
 }

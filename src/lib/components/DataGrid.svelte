@@ -1,12 +1,14 @@
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
     import { createDataGrid } from '../core/grid.svelte.js'
+    import { columnOps } from '../features/column-ops/index.js'
     import { filtering } from '../features/filtering/index.js'
     import { pagination } from '../features/pagination/index.js'
     import { sorting } from '../features/sorting/index.js'
     import { getVirtualization, virtualization } from '../features/virtualization/index.js'
     import type { DataGridProps } from './datagrid.types.js'
     import GridBody from './GridBody.svelte'
+    import GridColumnChooser from './GridColumnChooser.svelte'
     import GridDensityToggle from './GridDensityToggle.svelte'
     import GridHeader from './GridHeader.svelte'
     import GridPagination from './GridPagination.svelte'
@@ -43,9 +45,15 @@
                     ? [
                           filtering<TRow>(),
                           sorting<TRow>(),
+                          columnOps<TRow>(),
                           virtualization<TRow>(virtual === true ? undefined : virtual)
                       ]
-                    : [filtering<TRow>(), sorting<TRow>(), pagination<TRow>({ pageSize })]
+                    : [
+                          filtering<TRow>(),
+                          sorting<TRow>(),
+                          columnOps<TRow>(),
+                          pagination<TRow>({ pageSize })
+                      ]
             })
     )
 
@@ -63,6 +71,7 @@
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />
             <div class="grow"></div>
+            <GridColumnChooser />
             <GridDensityToggle />
         </GridToolbar>
     {/if}

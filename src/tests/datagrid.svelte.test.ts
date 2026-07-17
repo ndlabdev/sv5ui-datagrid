@@ -69,14 +69,14 @@ describe('DataGrid', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
         const style = screen.getByRole('grid').element().getAttribute('style') ?? ''
         expect(style).toContain('--dg-col-age-w: 96px')
-        expect(style).toContain('--dg-col-name-w: minmax(120px, 1fr)')
+        expect(style).toMatch(/--dg-col-name-w: (minmax\(120px, 1fr\)|[\d.]+px)/)
         expect(style).toContain('--dg-grid-template: var(--dg-col-name-w) var(--dg-col-age-w)')
     })
 
     it('cycles sort on header click: asc → desc → none', async () => {
         const screen = await render(TypedDataGrid, { data: people.slice(0, 4), columns, getRowId })
         const header = screen.getByRole('columnheader', { name: 'Name' })
-        const sortButton = screen.getByRole('button', { name: 'Name' })
+        const sortButton = screen.getByRole('button', { name: 'Name', exact: true })
 
         await sortButton.click()
         await expect.element(header).toHaveAttribute('aria-sort', 'ascending')
@@ -161,7 +161,7 @@ describe('Grid compound composition', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
         expect(firstColumn(screen.container)).toHaveLength(4)
 
-        await screen.getByRole('button', { name: 'Age' }).click()
+        await screen.getByRole('button', { name: 'Age', exact: true }).click()
         await expect
             .element(screen.getByRole('columnheader', { name: 'Age' }))
             .toHaveAttribute('aria-sort', 'ascending')

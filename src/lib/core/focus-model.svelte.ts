@@ -57,7 +57,9 @@ export class FocusModel<TRow> {
 
     handleKeydown = (event: KeyboardEvent): boolean => {
         const descriptor = describeKey(event)
-        const binding = this.#bindings.find((candidate) => candidate.key === descriptor)
+        const binding = this.#bindings.find(
+            (candidate) => candidate.key === descriptor && (candidate.when?.(this.#grid) ?? true)
+        )
         if (!binding) return false
 
         event.preventDefault()
