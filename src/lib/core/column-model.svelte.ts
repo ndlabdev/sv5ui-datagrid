@@ -8,7 +8,12 @@ import {
     trackWidthEstimates
 } from './column-sizing.js'
 import { orderLeafDefs, sanitizeColumnState } from './column-order.js'
-import { buildGroupPaths, buildHeaderLevels, flattenColumns } from './header-groups.js'
+import {
+    buildGroupPaths,
+    buildHeaderLevels,
+    flattenColumns,
+    groupBoundaries
+} from './header-groups.js'
 import { clamp } from './math.js'
 import type { ColumnDef, ColumnState, ColumnStateSnapshot, PinnedSide } from './types.js'
 
@@ -60,6 +65,7 @@ export class ColumnModel<TRow> {
 
     headerLevels = $derived.by(() => buildHeaderLevels(this.visible, this.groupPaths))
     headerRowCount = $derived(this.headerLevels.length + 1)
+    groupBoundaryFlags = $derived.by(() => groupBoundaries(this.headerLevels, this.visible.length))
 
     constructor(defs: ColumnDef<TRow>[]) {
         this.defs = defs

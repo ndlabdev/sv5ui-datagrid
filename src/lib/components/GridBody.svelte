@@ -26,6 +26,11 @@
         right: slots.cell({ align: 'right' })
     } as const
     const pinnedCellClass = slots.pinnedCell()
+    const boundaryClass = slots.groupBoundary()
+
+    function withBoundary(base: string, index: number): string {
+        return grid.columns.groupBoundaryFlags[index] ? `${base} ${boundaryClass}` : base
+    }
 
     const windowStart = $derived(windowStartOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
@@ -62,9 +67,12 @@
                     aria-colindex={colIndex + 1}
                     tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
                     data-dg-cell="{windowStart + viewIndex}:{colIndex}"
-                    class={column.pinned
-                        ? `${cellClass[column.align]} ${pinnedCellClass}`
-                        : cellClass[column.align]}
+                    class={withBoundary(
+                        column.pinned
+                            ? `${cellClass[column.align]} ${pinnedCellClass}`
+                            : cellClass[column.align],
+                        colIndex
+                    )}
                     style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
                     style:left={pinLeftVar(column)}
                     style:right={pinRightVar(column)}

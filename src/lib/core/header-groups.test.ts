@@ -4,6 +4,7 @@ import {
     buildGroupPaths,
     buildHeaderLevels,
     flattenColumns,
+    groupBoundaries,
     parentGroupIdOf
 } from './header-groups.js'
 import type { ColumnDef, ColumnState } from './types.js'
@@ -71,6 +72,26 @@ describe('buildGroupPaths', () => {
         expect(paths.get('q1')?.map((group) => group.id)).toEqual(['comp', 'bonus-group'])
         expect(parentGroupIdOf(paths, 'q1')).toBe('bonus-group')
         expect(parentGroupIdOf(paths, 'status')).toBeNull()
+    })
+})
+
+describe('groupBoundaries', () => {
+    it('flags the last column of each top-level cell except the final one', () => {
+        const visible = states(['id', 'name', 'status', 'salary', 'q1', 'q2'])
+        const levels = buildHeaderLevels(visible, buildGroupPaths(defs))
+
+        expect(groupBoundaries(levels, visible.length)).toEqual([
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+        ])
+    })
+
+    it('returns no flags for flat definitions', () => {
+        expect(groupBoundaries([], 3)).toEqual([false, false, false])
     })
 })
 

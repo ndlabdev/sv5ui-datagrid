@@ -5,13 +5,14 @@ export const datagridVariants = tv({
         root: 'w-full space-y-3',
         toolbar: 'flex flex-wrap items-center gap-2',
         viewport: 'relative w-full overflow-auto rounded-lg border border-outline-variant text-sm',
-        header: 'sticky top-0 z-10 min-w-full bg-surface-container',
-        headerRow:
-            'grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant',
+        header: 'sticky top-0 z-10 min-w-full border-b border-outline-variant bg-surface-container',
+        headerRow: 'grid [grid-template-columns:var(--dg-grid-template)]',
+        groupRow:
+            'relative grid [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[16] after:h-px after:bg-outline-variant',
         headerCell:
             'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         groupCell:
-            'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 border-b border-outline-variant px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant',
+            'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant',
         sortButton:
             'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
         resizeHandle:
@@ -25,9 +26,10 @@ export const datagridVariants = tv({
         chooserItem: 'flex items-center gap-2 px-1 py-1',
         body: 'relative',
         bodyOffset: 'will-change-transform',
-        row: 'group/row grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container-low',
+        row: 'group/row relative grid [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
+        groupBoundary: 'border-r border-outline-variant',
         footer: 'flex justify-end'
     },
     variants: {

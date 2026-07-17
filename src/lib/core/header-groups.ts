@@ -59,6 +59,18 @@ function createLevelCell<TRow>(
     }
 }
 
+export function groupBoundaries(levels: HeaderGroupCell[][], columnCount: number): boolean[] {
+    const flags = new Array<boolean>(columnCount).fill(false)
+    const topLevel = levels[0]
+    if (!topLevel) return flags
+
+    for (const cell of topLevel) {
+        const end = cell.start + cell.span - 1
+        if (end < columnCount - 1) flags[end] = true
+    }
+    return flags
+}
+
 export function buildHeaderLevels<TRow>(
     visible: ColumnState<TRow>[],
     paths: Map<string, ColumnDef<TRow>[]>

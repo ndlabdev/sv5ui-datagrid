@@ -28,6 +28,11 @@
         right: slots.headerCell({ align: 'right' })
     } as const
     const groupCellClass = slots.groupCell()
+    const boundaryClass = slots.groupBoundary()
+
+    function withBoundary(base: string, endIndex: number): string {
+        return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
+    }
     const pinnedHeaderClass = slots.pinnedHeaderCell()
     const resizeHandleClass = slots.resizeHandle()
 
@@ -173,16 +178,17 @@
 
 <div role="rowgroup" class={slots.header({ class: className })} style:width={columnWindow.rowWidth}>
     {#each headerLevels as level, levelIndex (levelIndex)}
-        <div role="row" aria-rowindex={levelIndex + 1} class={slots.headerRow()}>
+        <div role="row" aria-rowindex={levelIndex + 1} class={slots.groupRow()}>
             {#each level as cell (`${cell.id}-${cell.start}`)}
                 {#if cellVisible(cell)}
                     <div
                         role="columnheader"
                         aria-colindex={cell.start + 1}
                         aria-colspan={cell.span > 1 ? cell.span : undefined}
-                        class={cell.pinned
-                            ? `${groupCellClass} ${pinnedHeaderClass}`
-                            : groupCellClass}
+                        class={withBoundary(
+                            cell.pinned ? `${groupCellClass} ${pinnedHeaderClass}` : groupCellClass,
+                            cell.start + cell.span - 1
+                        )}
                         style:grid-column={`${cell.start + 1} / span ${cell.span}`}
                         style:left={pinLeftOf(cell)}
                         style:right={pinRightOf(cell)}
@@ -222,9 +228,12 @@
                 aria-sort={ariaSort(column.id)}
                 tabindex={isActive(index) ? 0 : -1}
                 data-dg-cell="{HEADER_ROW}:{index}"
-                class={column.pinned
-                    ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
-                    : headerCellClass[column.align]}
+                class={withBoundary(
+                    column.pinned
+                        ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
+                        : headerCellClass[column.align],
+                    index
+                )}
                 style:grid-column={columnWindow.windowed ? index + 1 : undefined}
                 style:left={pinLeftVar(column)}
                 style:right={pinRightVar(column)}
