@@ -5,7 +5,7 @@ export const datagridVariants = tv({
         root: 'w-full space-y-3',
         toolbar: 'flex flex-wrap items-center gap-2',
         viewport: 'relative w-full overflow-auto rounded-lg border border-outline-variant text-sm',
-        header: 'sticky top-0 z-10 bg-surface-container',
+        header: 'sticky top-0 z-10 min-w-full bg-surface-container',
         headerRow:
             'grid [grid-template-columns:var(--dg-grid-template)] border-b border-outline-variant',
         headerCell:

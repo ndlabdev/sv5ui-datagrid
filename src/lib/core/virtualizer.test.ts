@@ -80,4 +80,23 @@ describe('Virtualizer', () => {
         virtualizer.onScroll(1234)
         expect(virtualizer.scrollTop).toBe(1234)
     })
+
+    it('supports variable row heights through the layout', () => {
+        const heights = [40, 80, 40, 120, 40]
+        const virtualizer = new Virtualizer({
+            getCount: () => heights.length,
+            getRowHeight: (index) => heights[index],
+            overscan: 0,
+            initialRows: 20
+        })
+        virtualizer.viewportHeight = 100
+
+        expect(virtualizer.totalHeight).toBe(320)
+        expect(virtualizer.sizeOf(3)).toBe(120)
+        expect(virtualizer.indexToOffset(3)).toBe(160)
+
+        virtualizer.scrollTop = 160
+        expect(virtualizer.range).toEqual({ start: 3, end: 4 })
+        expect(virtualizer.offsetY).toBe(160)
+    })
 })

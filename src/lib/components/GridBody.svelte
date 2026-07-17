@@ -4,7 +4,7 @@
     import { getGridContext } from './context.js'
     import type { GridBodyProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
-    import { windowStartOf } from './window.js'
+    import { columnWindowOf, windowStartOf } from './window.js'
 
     let {
         emptyText = 'No data',
@@ -27,25 +27,32 @@
     } as const
 
     const windowStart = $derived(windowStartOf(grid))
+    const columnWindow = $derived(columnWindowOf(grid))
 
     function isActive(row: number, col: number): boolean {
         const active = grid.focus.active
         return active.row === row && active.col === col
     }
+
+    function rowHeightOf(row: number): string | undefined {
+        if (!virtualization) return undefined
+        return `${virtualization.virtualizer.sizeOf(row)}px`
+    }
 </script>
 
 {#snippet rows()}
     {#each grid.nodes as node, viewIndex (node.id)}
+        {@const rowHeight = rowHeightOf(windowStart + viewIndex)}
         <div
             role="row"
             aria-rowindex={windowStart + viewIndex + 2}
             class={rowClass}
-            style:height={virtualization ? `${virtualization.virtualizer.rowHeight}px` : undefined}
-            style:min-height={virtualization
-                ? `${virtualization.virtualizer.rowHeight}px`
-                : undefined}
+            style:height={rowHeight}
+            style:--dg-row-h={rowHeight}
+            style:width={columnWindow.rowWidth}
         >
-            {#each grid.columns.visible as column, colIndex (column.id)}
+            {#each columnWindow.renderColumns as column, viewCol (column.id)}
+                {@const colIndex = columnWindow.colStart + viewCol}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
                     role="gridcell"
@@ -53,6 +60,7 @@
                     tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
                     data-dg-cell="{windowStart + viewIndex}:{colIndex}"
                     class={cellClass[column.align]}
+                    style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
                     onclick={() =>
                         grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
                 >
@@ -81,7 +89,7 @@
         : undefined}
 >
     {#if error}
-        <div role="row" class={rowClass}>
+        <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
             <div
                 role="gridcell"
                 aria-colindex={1}
@@ -99,16 +107,21 @@
         </div>
     {:else if loading}
         {#each Array.from({ length: loadingRows }, (_, i) => i) as i (i)}
-            <div role="row" class={rowClass}>
-                {#each grid.columns.visible as column (column.id)}
-                    <div class={cellClass[column.align]}>
+            <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
+                {#each columnWindow.renderColumns as column, viewCol (column.id)}
+                    <div
+                        class={cellClass[column.align]}
+                        style:grid-column={columnWindow.windowed
+                            ? columnWindow.colStart + viewCol + 1
+                            : undefined}
+                    >
                         <Skeleton class="h-4 w-3/4" />
                     </div>
                 {/each}
             </div>
         {/each}
     {:else if grid.totalRows === 0}
-        <div role="row" class={rowClass}>
+        <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
             <div
                 role="gridcell"
                 aria-colindex={1}

@@ -123,10 +123,19 @@
         maximumFractionDigits: 0
     })
 
+    const quarterColumns: ColumnDef<Employee>[] = Array.from({ length: 10 }, (_, q) => ({
+        id: `q${q + 1}`,
+        header: `Q${q + 1}`,
+        sortable: true,
+        align: 'right' as const,
+        width: 90,
+        accessor: (employee: Employee) => (employee.score * (q + 3)) % 1000
+    }))
+
     const columns: ColumnDef<Employee>[] = [
         { id: 'id', header: '#', sortable: true, align: 'right', width: 80 },
-        { id: 'name', header: 'Name', sortable: true, flex: 1, minWidth: 170 },
-        { id: 'email', header: 'Email', flex: 1, minWidth: 210 },
+        { id: 'name', header: 'Name', sortable: true, width: 170 },
+        { id: 'email', header: 'Email', width: 210 },
         { id: 'role', header: 'Role', sortable: true, width: 130, cell: roleCell },
         { id: 'city', header: 'City', sortable: true, width: 120 },
         { id: 'dept', header: 'Dept', sortable: true, width: 110 },
@@ -141,15 +150,39 @@
             accessor: (employee) => employee.salary,
             cell: salaryCell
         },
-        { id: 'active', header: 'Active', align: 'center', width: 90, cell: activeCell }
+        { id: 'active', header: 'Active', align: 'center', width: 90, cell: activeCell },
+        ...quarterColumns
     ]
 
     const grid = createDataGrid<Employee>({
         data: employees,
         columns,
         getRowId: (employee) => String(employee.id),
-        features: [filtering(), sorting(), virtualization({ rowHeight: 40, overscan: 6 })]
+        features: [
+            filtering(),
+            sorting(),
+            virtualization({ rowHeight: 40, overscan: 6, columns: true })
+        ]
     })
+
+    const variableGrid = createDataGrid<Employee>({
+        data: employees.slice(0, 5000),
+        columns: [
+            { id: 'id', header: '#', sortable: true, align: 'right', width: 80 },
+            { id: 'name', header: 'Name', sortable: true, flex: 1, minWidth: 170 },
+            { id: 'role', header: 'Role', sortable: true, width: 130, cell: roleCell },
+            { id: 'age', header: 'Age', sortable: true, align: 'right', width: 80 }
+        ],
+        getRowId: (employee) => String(employee.id),
+        features: [
+            sorting(),
+            virtualization({
+                getRowHeight: (node) => 40 + (node.row.id % 3) * 24,
+                overscan: 6
+            })
+        ]
+    })
+    const variableVirt = getVirtualization(variableGrid)!
 
     const virt = getVirtualization(grid)!
 
@@ -216,7 +249,7 @@
     </div>
 
     <Grid.Root {grid}>
-        <Grid.Viewport class="h-[640px]">
+        <Grid.Viewport class="h-160">
             <Grid.Header />
             <Grid.Body />
         </Grid.Viewport>
@@ -224,8 +257,45 @@
 
     <p class="font-mono text-xs text-on-surface-variant">
         rendered rows {virt.virtualizer.range.start + 1}–{virt.virtualizer.range.end} / {grid.totalRows.toLocaleString()}
-        · DOM giữ ~{virt.virtualizer.range.end - virt.virtualizer.range.start} hàng dù danh sách cao {Math.round(
+        · rendered cols {virt.columnVirtualizer
+            ? `${virt.columnVirtualizer.range.start + 1}–${virt.columnVirtualizer.range.end}`
+            : 'all'} / {grid.columns.visible.length} · DOM giữ ~{virt.virtualizer.range.end -
+            virt.virtualizer.range.start} hàng dù danh sách cao {Math.round(
             virt.virtualizer.totalHeight / 1000
         ).toLocaleString()}k px
     </p>
+
+    <section class="space-y-3">
+        <div class="space-y-1">
+            <h2 class="text-lg font-medium text-on-surface">Variable row heights</h2>
+            <p class="text-sm text-on-surface-variant">
+                5.000 hàng với <code>getRowHeight</code> (40/64/88px xen kẽ) — offset tính bằng
+                Fenwick tree, <code>scrollToRow</code> vẫn nhảy chính xác.
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <Button
+                variant="outline"
+                size="sm"
+                label="Scroll to row 2500"
+                onclick={() => variableVirt.scrollToRow(2499)}
+            />
+            <Button
+                variant="outline"
+                size="sm"
+                label="Top"
+                onclick={() => variableVirt.scrollToRow(0)}
+            />
+            <span class="font-mono text-xs text-on-surface-variant">
+                rows {variableVirt.virtualizer.range.start + 1}–{variableVirt.virtualizer.range.end} /
+                {variableGrid.totalRows.toLocaleString()}
+            </span>
+        </div>
+        <Grid.Root grid={variableGrid}>
+            <Grid.Viewport class="h-100">
+                <Grid.Header />
+                <Grid.Body />
+            </Grid.Viewport>
+        </Grid.Root>
+    </section>
 </Container>

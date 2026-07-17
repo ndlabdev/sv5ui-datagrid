@@ -9,9 +9,18 @@ export {
     buildColumnCssVars,
     columnTrackSize,
     createColumnState,
+    prefixSums,
+    resolveColumnWidths,
     toStyleString
 } from './core/column-sizing.js'
+export {
+    ColumnVirtualizer,
+    type ColumnVirtualizerOptions
+} from './core/column-virtualizer.svelte.js'
+export { fixedRowLayout, variableRowLayout, type RowLayout } from './core/row-layout.js'
 export { EventBus, type EventHandler } from './core/events.js'
+export { clamp } from './core/math.js'
+export { rafBatch } from './core/raf-batch.js'
 export { createDataGrid, GridState } from './core/grid.svelte.js'
 export { composePipeline, PIPELINE_ORDER, type Pipeline } from './core/pipeline.svelte.js'
 export { buildRowNodes } from './core/row-node.js'

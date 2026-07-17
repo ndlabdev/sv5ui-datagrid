@@ -7,11 +7,12 @@
         value: number
     }
 
-    let { grid }: { grid: GridState<Row> } = $props()
+    let { grid, viewportClass = 'h-100' }: { grid: GridState<Row>; viewportClass?: string } =
+        $props()
 </script>
 
 <Grid.Root {grid}>
-    <Grid.Viewport class="h-[400px]">
+    <Grid.Viewport class={viewportClass}>
         <Grid.Header />
         <Grid.Body />
     </Grid.Viewport>

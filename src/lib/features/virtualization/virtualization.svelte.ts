@@ -1,3 +1,4 @@
+import { ColumnVirtualizer } from '../../core/column-virtualizer.svelte.js'
 import type { GridState } from '../../core/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/pipeline.svelte.js'
 import type { GridFeature } from '../../core/types.js'
@@ -8,17 +9,31 @@ export const VIRTUALIZATION = 'virtualization'
 
 export class Virtualization<TRow> {
     readonly virtualizer: Virtualizer
+    readonly columnVirtualizer: ColumnVirtualizer | null
 
     element = $state<HTMLElement | null>(null)
 
     #grid: GridState<TRow>
 
-    constructor(grid: GridState<TRow>, options: VirtualizationOptions) {
+    constructor(grid: GridState<TRow>, options: VirtualizationOptions<TRow>) {
         this.#grid = grid
+        const getRowHeight = options.getRowHeight
         this.virtualizer = new Virtualizer({
-            ...options,
-            getCount: () => grid.totalRows
+            rowHeight: options.rowHeight,
+            overscan: options.overscan,
+            initialRows: options.initialRows,
+            getCount: () => grid.totalRows,
+            getRowHeight: getRowHeight
+                ? (index) => getRowHeight(grid.preWindowNodes[index])
+                : undefined
         })
+        this.columnVirtualizer = options.columns
+            ? new ColumnVirtualizer({
+                  getOffsets: () => grid.columns.offsets ?? [],
+                  overscanPx:
+                      typeof options.columns === 'object' ? options.columns.overscanPx : undefined
+              })
+            : null
 
         grid.events.on('sortChanged', this.#resetScroll)
         grid.events.on('filterChanged', this.#resetScroll)
@@ -59,16 +74,39 @@ export class Virtualization<TRow> {
         }
 
         const headerOffset = Math.max(0, element.scrollHeight - virtualizer.totalHeight)
-        const bottom = top + virtualizer.rowHeight + headerOffset
+        const bottom = top + virtualizer.sizeOf(index) + headerOffset
         if (top < element.scrollTop) {
             this.#setScrollTop(element, top)
         } else if (bottom > element.scrollTop + virtualizer.viewportHeight) {
             this.#setScrollTop(element, bottom - virtualizer.viewportHeight)
         }
     }
+
+    #setScrollLeft(element: HTMLElement, value: number): void {
+        element.scrollLeft = value
+        if (this.columnVirtualizer) this.columnVirtualizer.scrollLeft = element.scrollLeft
+    }
+
+    ensureColVisible = (col: number): void => {
+        const element = this.element
+        const columnVirtualizer = this.columnVirtualizer
+        const offsets = this.#grid.columns.offsets
+        if (!element || !columnVirtualizer || !offsets || col < 0) return
+
+        const left = columnVirtualizer.offsetOf(col)
+        const right = offsets[Math.min(col + 1, offsets.length - 1)]
+        if (left < element.scrollLeft) {
+            this.#setScrollLeft(element, left)
+        } else if (
+            columnVirtualizer.viewportWidth > 0 &&
+            right > element.scrollLeft + columnVirtualizer.viewportWidth
+        ) {
+            this.#setScrollLeft(element, right - columnVirtualizer.viewportWidth)
+        }
+    }
 }
 
-export function virtualization<TRow>(options: VirtualizationOptions = {}): GridFeature<TRow> {
+export function virtualization<TRow>(options: VirtualizationOptions<TRow> = {}): GridFeature<TRow> {
     return {
         id: VIRTUALIZATION,
         createState: (grid) => new Virtualization(grid, options),

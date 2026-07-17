@@ -12,6 +12,7 @@
 
     const grid = getGridContext()
     const virtualization = getVirtualization(grid)
+    const columnVirtualizer = virtualization?.columnVirtualizer ?? null
     const slots = datagridVariants()
 
     let element = $state<HTMLElement | null>(null)
@@ -30,8 +31,18 @@
         virtualization.virtualizer.viewportHeight = size.height
     })
 
+    $effect(() => {
+        if (!columnVirtualizer) return
+        columnVirtualizer.viewportWidth = size.width
+        grid.columns.containerWidth = size.width
+    })
+
     const activeRendered = $derived.by(() => {
         const active = grid.focus.active
+        if (columnVirtualizer && grid.columns.offsets) {
+            const { start, end } = columnVirtualizer.range
+            if (active.col < start || active.col >= end) return false
+        }
         if (active.row === HEADER_ROW) return true
         const start = windowStartOf(grid)
         return active.row >= start && active.row < start + grid.nodes.length
@@ -44,6 +55,7 @@
         if (!element || !element.contains(document.activeElement)) return
 
         pendingFocus = active
+        virtualization?.ensureColVisible(active.col)
         if (active.row < 0) return
 
         if (virtualization) {
@@ -60,6 +72,7 @@
     $effect(() => {
         void grid.focus.active
         void grid.nodes
+        void columnVirtualizer?.range
         if (!pendingFocus || !element) return
 
         const cell = element.querySelector<HTMLElement>(
@@ -85,6 +98,12 @@
         if (event.target !== element) return
         grid.focus.focusCell(grid.focus.active)
     }
+
+    function handleScroll(event: Event) {
+        const target = event.currentTarget as HTMLElement
+        virtualization?.virtualizer.onScroll(target.scrollTop)
+        columnVirtualizer?.onScroll(target.scrollLeft)
+    }
 </script>
 
 <div
@@ -98,9 +117,7 @@
     onkeydown={grid.focus.handleKeydown}
     onfocus={redirectFocus}
     onfocusin={syncFocus}
-    onscroll={virtualization
-        ? (event) => virtualization.virtualizer.onScroll(event.currentTarget.scrollTop)
-        : undefined}
+    onscroll={virtualization ? handleScroll : undefined}
 >
     {@render children?.()}
 </div>

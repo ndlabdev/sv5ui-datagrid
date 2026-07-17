@@ -4,4 +4,4 @@ export {
     virtualization,
     VIRTUALIZATION
 } from './virtualization.svelte.js'
-export type { VirtualizationOptions } from './virtualization.types.js'
+export type { ColumnVirtualizationOptions, VirtualizationOptions } from './virtualization.types.js'

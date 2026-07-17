@@ -22,7 +22,9 @@
         "lint": "prettier --check . && eslint .",
         "format": "prettier --write .",
         "test:unit": "vitest",
-        "test": "npm run test:unit -- --run"
+        "test": "npm run test:unit -- --run",
+        "bench": "vitest bench --run --project unit",
+        "perf:scroll": "node scripts/measure-scroll.mjs"
     },
     "files": [
         "dist",

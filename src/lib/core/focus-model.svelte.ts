@@ -1,3 +1,4 @@
+import { clamp } from './math.js'
 import type { GridState } from './grid.svelte.js'
 import type { Keybinding } from './types.js'
 
@@ -41,10 +42,10 @@ export class FocusModel<TRow> {
 
     pageStep(): number {
         const virtualization = this.#grid.state['virtualization'] as
-            { virtualizer?: { viewportHeight: number; rowHeight: number } } | undefined
+            { virtualizer?: { viewportHeight: number; visibleCount: () => number } } | undefined
         const virtualizer = virtualization?.virtualizer
         if (virtualizer && virtualizer.viewportHeight > 0) {
-            return Math.max(1, Math.floor(virtualizer.viewportHeight / virtualizer.rowHeight))
+            return virtualizer.visibleCount()
         }
 
         const pagination = this.#grid.state['pagination'] as
@@ -71,10 +72,6 @@ function describeKey(event: KeyboardEvent): string {
     if (event.altKey) descriptor += 'Alt+'
     if (event.shiftKey) descriptor += 'Shift+'
     return descriptor + event.key
-}
-
-function clamp(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max)
 }
 
 function createDefaultBindings<TRow>(): Keybinding<TRow>[] {

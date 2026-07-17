@@ -30,11 +30,13 @@ export function sortNodes<TRow>(
     })
 }
 
+const collator = new Intl.Collator(undefined, { numeric: true })
+
 function compareValues(a: unknown, b: unknown): number {
     if (isNullish(a)) return isNullish(b) ? 0 : -1
     if (isNullish(b)) return 1
     if (typeof a === 'number' && typeof b === 'number') return a - b
     if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b)
     if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime()
-    return String(a).localeCompare(String(b), undefined, { numeric: true })
+    return collator.compare(String(a), String(b))
 }

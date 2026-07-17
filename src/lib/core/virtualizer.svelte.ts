@@ -1,3 +1,7 @@
+import { clamp } from './math.js'
+import { rafBatch } from './raf-batch.js'
+import { fixedRowLayout, variableRowLayout, type RowLayout } from './row-layout.js'
+
 export interface VirtualRange {
     start: number
     end: number
@@ -8,6 +12,7 @@ export interface VirtualizerOptions {
     rowHeight?: number
     overscan?: number
     initialRows?: number
+    getRowHeight?: (index: number) => number
 }
 
 export class Virtualizer {
@@ -19,28 +24,34 @@ export class Virtualizer {
     readonly initialRows: number
 
     #getCount: () => number
-    #pendingScrollTop: number | null = null
+    #getRowHeight?: (index: number) => number
+
+    layout = $derived.by<RowLayout>(() => {
+        const count = this.#getCount()
+        if (this.#getRowHeight) return variableRowLayout(count, this.#getRowHeight)
+        return fixedRowLayout(count, this.rowHeight)
+    })
 
     range = $derived.by<VirtualRange>(() => {
-        const count = this.#getCount()
-        if (count <= 0) return { start: 0, end: 0 }
+        const { layout } = this
+        if (layout.count <= 0) return { start: 0, end: 0 }
         if (this.viewportHeight <= 0) {
-            return { start: 0, end: Math.min(this.initialRows, count) }
+            return { start: 0, end: Math.min(this.initialRows, layout.count) }
         }
 
-        const rawStart = Math.floor(this.scrollTop / this.rowHeight) - this.overscan
-        const rawEnd =
-            Math.ceil((this.scrollTop + this.viewportHeight) / this.rowHeight) + this.overscan
-        const end = Math.max(0, Math.min(count, rawEnd))
-        const start = Math.max(0, Math.min(rawStart, end))
+        const firstVisible = layout.indexAt(this.scrollTop)
+        const lastVisible = layout.indexAt(this.scrollTop + this.viewportHeight - 1)
+        const end = clamp(lastVisible + 1 + this.overscan, 0, layout.count)
+        const start = clamp(firstVisible - this.overscan, 0, end)
         return { start, end }
     })
 
-    totalHeight = $derived.by(() => this.#getCount() * this.rowHeight)
-    offsetY = $derived.by(() => this.range.start * this.rowHeight)
+    totalHeight = $derived.by(() => this.layout.totalHeight)
+    offsetY = $derived.by(() => this.layout.offsetOf(this.range.start))
 
     constructor(options: VirtualizerOptions) {
         this.#getCount = options.getCount
+        this.#getRowHeight = options.getRowHeight
         this.rowHeight = options.rowHeight ?? 40
         this.overscan = options.overscan ?? 5
         this.initialRows = options.initialRows ?? 20
@@ -50,26 +61,28 @@ export class Virtualizer {
         return this.#getCount()
     }
 
-    onScroll = (scrollTop: number): void => {
-        if (typeof requestAnimationFrame !== 'function') {
-            this.scrollTop = scrollTop
-            return
-        }
+    onScroll = rafBatch((scrollTop: number) => {
+        this.scrollTop = scrollTop
+    })
 
-        const hadPending = this.#pendingScrollTop !== null
-        this.#pendingScrollTop = scrollTop
-        if (hadPending) return
+    sizeOf(index: number): number {
+        return this.layout.sizeOf(index)
+    }
 
-        requestAnimationFrame(() => {
-            if (this.#pendingScrollTop === null) return
-            this.scrollTop = this.#pendingScrollTop
-            this.#pendingScrollTop = null
-        })
+    visibleCount(): number {
+        const { layout } = this
+        if (layout.count <= 0) return 1
+        if (this.viewportHeight <= 0) return Math.max(1, Math.min(this.initialRows, layout.count))
+        return Math.max(
+            1,
+            layout.indexAt(this.scrollTop + this.viewportHeight - 1) -
+                layout.indexAt(this.scrollTop) +
+                1
+        )
     }
 
     indexToOffset(index: number): number {
         const count = this.#getCount()
-        const clamped = Math.max(0, Math.min(index, Math.max(0, count - 1)))
-        return clamped * this.rowHeight
+        return this.layout.offsetOf(clamp(index, 0, Math.max(0, count - 1)))
     }
 }

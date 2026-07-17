@@ -35,6 +35,12 @@ export default defineConfig(
         }
     },
     {
+        files: ['scripts/**'],
+        rules: {
+            'no-console': 'off'
+        }
+    },
+    {
         files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 
         languageOptions: {
