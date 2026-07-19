@@ -11,7 +11,9 @@ export const defaultLocale: DataGridLocale = {
     columnMoved: (column, position) => `${column} column moved to position ${position}`,
     columnPinned: (column, side) =>
         side ? `${column} column pinned ${side}` : `${column} column unpinned`,
-    columnVisibility: (column, hidden) => `${column} column ${hidden ? 'hidden' : 'shown'}`
+    columnVisibility: (column, hidden) => `${column} column ${hidden ? 'hidden' : 'shown'}`,
+    selected: (count) => `${count} rows selected`,
+    copied: (count) => `${count} rows copied`
 }
 
 export class Announcer<TRow> {
@@ -46,6 +48,12 @@ export class Announcer<TRow> {
         })
         grid.events.on('columnVisibilityChanged', ({ columnId, hidden }) => {
             this.message = locale.columnVisibility(headerOf(columnId), hidden)
+        })
+        grid.events.on('selectionChanged', ({ selectedIds }) => {
+            this.message = locale.selected(selectedIds.length)
+        })
+        grid.events.on('rowsCopied', ({ count }) => {
+            this.message = locale.copied(count)
         })
     }
 }

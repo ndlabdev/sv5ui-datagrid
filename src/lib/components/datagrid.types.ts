@@ -2,6 +2,7 @@ import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
 import type { ColumnDef, ColumnState, Density } from '../core/types.js'
+import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
 export interface GridRootProps<TRow> {
@@ -117,6 +118,17 @@ export interface GridColumnMenuProps<TRow> {
     column: ColumnState<TRow>
 }
 
+export interface GridContextMenuProps {
+    /**
+     * File name used by the Export CSV item.
+     * @default 'export.csv'
+     */
+    exportFilename?: string
+
+    /** The right-click target, typically `Grid.Viewport`. */
+    children?: Snippet
+}
+
 export type DataGridProps<TRow> = {
     /**
      * Text shown when there are no rows to display.
@@ -149,6 +161,7 @@ export type DataGridProps<TRow> = {
           columns?: never
           getRowId?: never
           pageSize?: never
+          selection?: never
           virtual?: never
           density?: never
       }
@@ -166,6 +179,12 @@ export type DataGridProps<TRow> = {
 
           /** Rows per page. Omit to disable pagination. Ignored when `virtual` is set. */
           pageSize?: number
+
+          /**
+           * Enables row selection with the checkbox column, clipboard
+           * copy and CSV export.
+           */
+          selection?: SelectionOptions<TRow> | true
 
           /**
            * Enables row virtualization instead of pagination.

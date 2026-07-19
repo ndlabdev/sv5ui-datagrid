@@ -1,5 +1,6 @@
 import Body from './GridBody.svelte'
 import ColumnChooser from './GridColumnChooser.svelte'
+import ContextMenu from './GridContextMenu.svelte'
 import DensityToggle from './GridDensityToggle.svelte'
 import FilterChips from './GridFilterChips.svelte'
 import Header from './GridHeader.svelte'
@@ -22,6 +23,7 @@ export interface GridParts {
     QuickFilter: typeof QuickFilter
     DensityToggle: typeof DensityToggle
     ColumnChooser: typeof ColumnChooser
+    ContextMenu: typeof ContextMenu
     FilterChips: typeof FilterChips
     StatusBar: typeof StatusBar
 }
@@ -36,6 +38,7 @@ export const Grid: GridParts = {
     QuickFilter,
     DensityToggle,
     ColumnChooser,
+    ContextMenu,
     FilterChips,
     StatusBar
 }
@@ -48,6 +51,7 @@ export type {
     GridBodyProps,
     GridColumnChooserProps,
     GridColumnMenuProps,
+    GridContextMenuProps,
     GridDensityToggleProps,
     GridFilterChipsProps,
     GridFilterPanelProps,

@@ -33,6 +33,7 @@ export { createDataGrid, GridState } from './core/grid.svelte.js'
 export { composePipeline, PIPELINE_ORDER, type Pipeline } from './core/pipeline.svelte.js'
 export { buildRowNodes } from './core/row-node.js'
 export type * from './core/types.js'
+export { SELECTION_COLUMN_ID } from './core/types.js'
 export { getCellValue, isNullish } from './core/value.js'
 export {
     Virtualizer,
@@ -44,5 +45,6 @@ export {
 export * from './features/column-ops/index.js'
 export * from './features/filtering/index.js'
 export * from './features/pagination/index.js'
+export * from './features/selection/index.js'
 export * from './features/sorting/index.js'
 export * from './features/virtualization/index.js'

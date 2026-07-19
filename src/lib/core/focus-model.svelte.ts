@@ -56,6 +56,7 @@ export class FocusModel<TRow> {
     }
 
     handleKeydown = (event: KeyboardEvent): boolean => {
+        if (targetsInteractiveElement(event)) return false
         const descriptor = describeKey(event)
         const binding = this.#bindings.find(
             (candidate) => candidate.key === descriptor && (candidate.when?.(this.#grid) ?? true)
@@ -66,6 +67,16 @@ export class FocusModel<TRow> {
         binding.handler(this.#grid, event)
         return true
     }
+}
+
+function targetsInteractiveElement(event: KeyboardEvent): boolean {
+    const target = event.target as HTMLElement | null
+    if (!target?.closest || target.hasAttribute('data-dg-cell')) return false
+    return (
+        target.closest(
+            'input, textarea, select, button, [contenteditable="true"], [role="dialog"], [role="menu"]'
+        ) !== null
+    )
 }
 
 function describeKey(event: KeyboardEvent): string {

@@ -4,11 +4,13 @@
     import { columnOps } from '../features/column-ops/index.js'
     import { filtering } from '../features/filtering/index.js'
     import { pagination } from '../features/pagination/index.js'
+    import { selection } from '../features/selection/index.js'
     import { sorting } from '../features/sorting/index.js'
     import { getVirtualization, virtualization } from '../features/virtualization/index.js'
     import type { DataGridProps } from './datagrid.types.js'
     import GridBody from './GridBody.svelte'
     import GridColumnChooser from './GridColumnChooser.svelte'
+    import GridContextMenu from './GridContextMenu.svelte'
     import GridDensityToggle from './GridDensityToggle.svelte'
     import GridFilterChips from './GridFilterChips.svelte'
     import GridHeader from './GridHeader.svelte'
@@ -25,6 +27,7 @@
         columns,
         getRowId,
         pageSize,
+        selection: selectionProp,
         virtual,
         density,
         toolbar = false,
@@ -43,19 +46,17 @@
                 columns: columns ?? [],
                 getRowId: getRowId!,
                 density,
-                features: virtual
-                    ? [
-                          filtering<TRow>(),
-                          sorting<TRow>(),
-                          columnOps<TRow>(),
-                          virtualization<TRow>(virtual === true ? undefined : virtual)
-                      ]
-                    : [
-                          filtering<TRow>(),
-                          sorting<TRow>(),
-                          columnOps<TRow>(),
-                          pagination<TRow>({ pageSize })
-                      ]
+                features: [
+                    filtering<TRow>(),
+                    sorting<TRow>(),
+                    columnOps<TRow>(),
+                    ...(selectionProp
+                        ? [selection<TRow>(selectionProp === true ? undefined : selectionProp)]
+                        : []),
+                    virtual
+                        ? virtualization<TRow>(virtual === true ? undefined : virtual)
+                        : pagination<TRow>({ pageSize })
+                ]
             })
     )
 
@@ -78,10 +79,12 @@
             <GridDensityToggle />
         </GridToolbar>
     {/if}
-    <GridViewport class={isVirtual ? className : undefined}>
-        <GridHeader />
-        <GridBody {emptyText} {loading} {error} {onRetry} />
-    </GridViewport>
+    <GridContextMenu>
+        <GridViewport class={isVirtual ? className : undefined}>
+            <GridHeader />
+            <GridBody {emptyText} {loading} {error} {onRetry} />
+        </GridViewport>
+    </GridContextMenu>
     <div class="flex items-center justify-between gap-4">
         <GridStatusBar />
         <GridPagination class="grow" />

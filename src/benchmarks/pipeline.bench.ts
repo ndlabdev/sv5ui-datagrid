@@ -7,6 +7,7 @@ import {
     distinctValues,
     quickFilterNodes
 } from '../lib/features/filtering/index.js'
+import { rowsToMatrix, toCsv, toTsv } from '../lib/features/selection/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
 import { benchColumns, makeBenchNodes, makeBenchRows } from './data.js'
 
@@ -50,6 +51,19 @@ describe('pipeline @ 100k rows', () => {
 
     bench('distinct values', () => {
         distinctValues(nodes100k, benchColumns[0])
+    })
+})
+
+describe('clipboard @ 10k selected rows', () => {
+    const nodes10k = nodes100k.slice(0, 10_000)
+    const columnStates = benchColumns.map((def) => createColumnState(def))
+
+    bench('rowsToMatrix + toTsv', () => {
+        toTsv(rowsToMatrix(nodes10k, columnStates))
+    })
+
+    bench('rowsToMatrix + toCsv', () => {
+        toCsv(rowsToMatrix(nodes10k, columnStates))
     })
 })
 

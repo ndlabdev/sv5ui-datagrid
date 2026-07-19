@@ -73,6 +73,14 @@ export type ColumnAlign = 'left' | 'center' | 'right'
 export type PinnedSide = 'left' | 'right'
 
 /**
+ * Id of the synthetic checkbox column prepended by the selection
+ * feature. Excluded from reorder, pin, hide and state snapshots.
+ */
+export const SELECTION_COLUMN_ID = '__dg-select__'
+
+export type SelectionMode = 'single' | 'multiple'
+
+/**
  * Serializable snapshot of the runtime column state — order, width,
  * visibility and pin overrides. Round-trips through
  * `getColumnState()` / `applyColumnState()`.
@@ -131,6 +139,10 @@ export interface DataGridLocale {
     columnPinned: (column: string, side: PinnedSide | null) => string
     /** Announced when a column is hidden or shown. */
     columnVisibility: (column: string, hidden: boolean) => string
+    /** Announced with the selected row count when the selection changes. */
+    selected: (count: number) => string
+    /** Announced after rows are copied to the clipboard. */
+    copied: (count: number) => string
 }
 
 /**
@@ -352,6 +364,8 @@ export interface GridEventMap {
     columnMoved: { columnId: string; toIndex: number }
     columnPinned: { columnId: string; side: PinnedSide | null }
     columnVisibilityChanged: { columnId: string; hidden: boolean }
+    selectionChanged: { selectedIds: string[] }
+    rowsCopied: { count: number }
 }
 
 export interface DataGridOptions<TRow> {

@@ -1,9 +1,12 @@
 <script lang="ts">
     import { Empty, Skeleton } from 'sv5ui'
+    import { SELECTION_COLUMN_ID } from '../core/types.js'
+    import { getSelection } from '../features/selection/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
     import type { GridBodyProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
+    import GridSelectionCell from './GridSelectionCell.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar, windowStartOf } from './window.js'
 
     let {
@@ -17,9 +20,15 @@
 
     const grid = getGridContext()
     const virtualization = getVirtualization(grid)
+    const selectionState = getSelection(grid)
     const slots = datagridVariants()
 
     const rowClass = slots.row()
+    const rowSelectedClass = `${rowClass} ${slots.rowSelected()}`
+
+    function classOfRow(id: string): string {
+        return selectionState?.isSelected(id) ? rowSelectedClass : rowClass
+    }
     const cellClass = {
         left: slots.cell({ align: 'left' }),
         center: slots.cell({ align: 'center' }),
@@ -53,7 +62,8 @@
         <div
             role="row"
             aria-rowindex={windowStart + viewIndex + 1 + headerRows}
-            class={rowClass}
+            aria-selected={selectionState ? selectionState.isSelected(node.id) : undefined}
+            class={classOfRow(node.id)}
             style:height={rowHeight}
             style:--dg-row-h={rowHeight}
             style:width={columnWindow.rowWidth}
@@ -79,7 +89,9 @@
                     onclick={() =>
                         grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
                 >
-                    {#if column.def.cell}
+                    {#if column.id === SELECTION_COLUMN_ID}
+                        <GridSelectionCell {node} />
+                    {:else if column.def.cell}
                         {@render column.def.cell({
                             node,
                             row: node.row,

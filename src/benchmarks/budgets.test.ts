@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { createColumnState } from '../lib/core/column-sizing.js'
 import { variableRowLayout } from '../lib/core/row-layout.js'
 import {
     compileColumnFilters,
     distinctValues,
     quickFilterNodes
 } from '../lib/features/filtering/index.js'
+import { rowsToMatrix, toCsv, toTsv } from '../lib/features/selection/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
 import { benchColumns, makeBenchNodes } from './data.js'
 
 const nodes100k = makeBenchNodes(100_000)
+const benchColumnStates = benchColumns.map((def) => createColumnState(def))
 
 function measure(run: () => void): number {
     run()
@@ -63,6 +66,16 @@ describe('performance budgets (coarse regression ceilings; PLAN §8 targets are 
 
     it('collects distinct values from 100k rows within budget', () => {
         const elapsed = measure(() => distinctValues(nodes100k, benchColumns[0]))
+        expect(elapsed).toBeLessThan(200)
+    })
+
+    it('serializes 10k selected rows to TSV and CSV within budget', () => {
+        const nodes10k = nodes100k.slice(0, 10_000)
+        const elapsed = measure(() => {
+            const matrix = rowsToMatrix(nodes10k, benchColumnStates)
+            toTsv(matrix)
+            toCsv(matrix)
+        })
         expect(elapsed).toBeLessThan(200)
     })
 })

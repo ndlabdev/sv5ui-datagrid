@@ -2,7 +2,7 @@
     import { Badge, Icon } from 'sv5ui'
     import { HEADER_ROW } from '../core/focus-model.svelte.js'
     import { rafBatch } from '../core/raf-batch.js'
-    import type { HeaderGroupCell } from '../core/types.js'
+    import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../core/types.js'
     import { getColumnOps } from '../features/column-ops/index.js'
     import { getFiltering } from '../features/filtering/index.js'
     import { getSorting } from '../features/sorting/index.js'
@@ -11,6 +11,7 @@
     import { datagridVariants } from './datagrid.variants.js'
     import GridColumnMenu from './GridColumnMenu.svelte'
     import GridFilterPanel from './GridFilterPanel.svelte'
+    import GridSelectionCell from './GridSelectionCell.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar } from './window.js'
 
     let { class: className }: GridHeaderProps = $props()
@@ -134,7 +135,7 @@
     } | null = null
 
     function headerPointerDown(event: PointerEvent, columnId: string) {
-        if (!columnOps?.canReorder) return
+        if (!columnOps?.canReorder || columnId === SELECTION_COLUMN_ID) return
         if ((event.target as HTMLElement).closest('[data-dg-noreorder]')) return
         dragCandidate = {
             id: columnId,
@@ -247,7 +248,9 @@
                 onpointerup={headerPointerEnd}
                 onpointercancel={headerPointerCancel}
             >
-                {#if sorting && column.def.sortable}
+                {#if column.id === SELECTION_COLUMN_ID}
+                    <GridSelectionCell />
+                {:else if sorting && column.def.sortable}
                     <button
                         type="button"
                         tabindex="-1"
@@ -264,13 +267,13 @@
                 {:else}
                     <span class="truncate">{column.header}</span>
                 {/if}
-                {#if columnOps || filteringState}
+                {#if (columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
                     <span class="grow"></span>
                 {/if}
-                {#if filteringState}
+                {#if filteringState && column.id !== SELECTION_COLUMN_ID}
                     <GridFilterPanel {column} />
                 {/if}
-                {#if columnOps}
+                {#if columnOps && column.id !== SELECTION_COLUMN_ID}
                     <GridColumnMenu {column} />
                     {#if columnOps.canResize}
                         <div

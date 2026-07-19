@@ -29,6 +29,8 @@ export const datagridVariants = tv({
         row: 'group/row relative grid [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
+        rowSelected:
+            'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
         groupBoundary: 'border-r border-outline-variant',
         filterPanel:
             'fixed z-50 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',

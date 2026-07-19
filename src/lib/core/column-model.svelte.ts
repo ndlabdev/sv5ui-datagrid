@@ -15,11 +15,30 @@ import {
     groupBoundaries
 } from './header-groups.js'
 import { clamp } from './math.js'
-import type { ColumnDef, ColumnState, ColumnStateSnapshot, PinnedSide } from './types.js'
+import {
+    SELECTION_COLUMN_ID,
+    type ColumnDef,
+    type ColumnState,
+    type ColumnStateSnapshot,
+    type PinnedSide
+} from './types.js'
+
+const SELECTION_COLUMN_WIDTH = 44
+
+const selectionColumnDef: ColumnDef<unknown> = {
+    id: SELECTION_COLUMN_ID,
+    header: '',
+    width: SELECTION_COLUMN_WIDTH,
+    minWidth: SELECTION_COLUMN_WIDTH,
+    maxWidth: SELECTION_COLUMN_WIDTH,
+    align: 'center',
+    pinned: 'left'
+}
 
 export class ColumnModel<TRow> {
     defs = $state.raw<ColumnDef<TRow>[]>([])
     containerWidth = $state(0)
+    selectionColumn = $state(false)
 
     orderIds = $state.raw<string[]>([])
     widthOverrides = $state.raw<Record<string, number>>({})
@@ -37,7 +56,11 @@ export class ColumnModel<TRow> {
                 pinned: this.pinnedOverrides[def.id]
             })
         )
+        const lead = this.selectionColumn
+            ? [createColumnState(selectionColumnDef as ColumnDef<TRow>)]
+            : []
         return [
+            ...lead,
             ...states.filter((column) => column.pinned === 'left'),
             ...states.filter((column) => column.pinned === null),
             ...states.filter((column) => column.pinned === 'right')
@@ -101,29 +124,31 @@ export class ColumnModel<TRow> {
     }
 
     moveColumn(id: string, toIndex: number): number {
+        if (id === SELECTION_COLUMN_ID) return -1
         const order = this.all.map((column) => column.id)
         const from = order.indexOf(id)
         if (from < 0) return -1
-        const target = clamp(toIndex, 0, order.length - 1)
+        const min = this.selectionColumn ? 1 : 0
+        const target = clamp(toIndex, min, order.length - 1)
         order.splice(from, 1)
         order.splice(target, 0, id)
-        this.orderIds = order
+        this.orderIds = order.filter((columnId) => columnId !== SELECTION_COLUMN_ID)
         return target
     }
 
     setPinned(id: string, side: PinnedSide | null): void {
-        if (!this.get(id)) return
+        if (id === SELECTION_COLUMN_ID || !this.get(id)) return
         this.pinnedOverrides = { ...this.pinnedOverrides, [id]: side }
     }
 
     setHidden(id: string, hidden: boolean): void {
-        if (!this.get(id)) return
+        if (id === SELECTION_COLUMN_ID || !this.get(id)) return
         this.hiddenOverrides = { ...this.hiddenOverrides, [id]: hidden }
     }
 
     columnState(): ColumnStateSnapshot {
         return {
-            order: this.all.map((column) => column.id),
+            order: this.all.map((column) => column.id).filter((id) => id !== SELECTION_COLUMN_ID),
             widths: { ...this.widthOverrides },
             hidden: { ...this.hiddenOverrides },
             pinned: { ...this.pinnedOverrides }

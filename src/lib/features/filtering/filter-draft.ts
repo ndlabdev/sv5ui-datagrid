@@ -28,7 +28,7 @@ export function emptyDraft(type: FilterType): FilterDraft {
 const numToStr = (value: number | undefined): string => (value !== undefined ? String(value) : '')
 
 // sv5ui Input type="number" binds a number, so drafts may hold non-strings.
-const str = (value: unknown): string => (value == null ? '' : String(value))
+const str = (value: unknown): string => (value === null || value === undefined ? '' : String(value))
 
 export function draftFromFilter(type: FilterType, filter: ColumnFilter | undefined): FilterDraft {
     const draft = emptyDraft(type)

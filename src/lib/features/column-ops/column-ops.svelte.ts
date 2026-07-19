@@ -3,7 +3,13 @@ import { HEADER_ROW } from '../../core/focus-model.svelte.js'
 import type { GridState } from '../../core/grid.svelte.js'
 import { parentGroupIdOf } from '../../core/header-groups.js'
 import { clamp } from '../../core/math.js'
-import type { ColumnStateSnapshot, GridFeature, Keybinding, PinnedSide } from '../../core/types.js'
+import {
+    SELECTION_COLUMN_ID,
+    type ColumnStateSnapshot,
+    type GridFeature,
+    type Keybinding,
+    type PinnedSide
+} from '../../core/types.js'
 import { dropTargetIndex } from './drag.js'
 import type { ColumnDragState, ColumnOpsOptions } from './column-ops.types.js'
 
@@ -48,6 +54,7 @@ export class ColumnOps<TRow> {
 
         const parent = parentGroupIdOf(columns.groupPaths, id)
         const indices = columns.visible.flatMap((candidate, index) =>
+            candidate.id !== SELECTION_COLUMN_ID &&
             candidate.pinned === column.pinned &&
             parentGroupIdOf(columns.groupPaths, candidate.id) === parent
                 ? [index]
@@ -116,7 +123,7 @@ export class ColumnOps<TRow> {
     }
 
     moveColumn = (id: string, toVisibleIndex: number): number => {
-        if (!this.canReorder) return -1
+        if (!this.canReorder || id === SELECTION_COLUMN_ID) return -1
         const { columns } = this.#grid
         const from = columns.indexOf(id)
         if (from < 0) return -1
@@ -166,13 +173,13 @@ export class ColumnOps<TRow> {
     }
 
     pinColumn = (id: string, side: PinnedSide | null): void => {
-        if (!this.canPin) return
+        if (!this.canPin || id === SELECTION_COLUMN_ID) return
         this.#grid.columns.setPinned(id, side)
         this.#grid.events.emit('columnPinned', { columnId: id, side })
     }
 
     setColumnHidden = (id: string, hidden: boolean): void => {
-        if (!this.canHide) return
+        if (!this.canHide || id === SELECTION_COLUMN_ID) return
         if (hidden && this.#grid.columns.visible.length <= 1) return
         this.#grid.columns.setHidden(id, hidden)
         this.#grid.focus.focusCell(this.#grid.focus.active)
