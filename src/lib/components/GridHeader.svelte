@@ -1,14 +1,16 @@
 <script lang="ts">
-    import { Icon } from 'sv5ui'
+    import { Badge, Icon } from 'sv5ui'
     import { HEADER_ROW } from '../core/focus-model.svelte.js'
     import { rafBatch } from '../core/raf-batch.js'
     import type { HeaderGroupCell } from '../core/types.js'
     import { getColumnOps } from '../features/column-ops/index.js'
+    import { getFiltering } from '../features/filtering/index.js'
     import { getSorting } from '../features/sorting/index.js'
     import { getGridContext } from './context.js'
     import type { GridHeaderProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
     import GridColumnMenu from './GridColumnMenu.svelte'
+    import GridFilterPanel from './GridFilterPanel.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar } from './window.js'
 
     let { class: className }: GridHeaderProps = $props()
@@ -16,6 +18,7 @@
     const grid = getGridContext()
     const sorting = getSorting(grid)
     const columnOps = getColumnOps(grid)
+    const filteringState = getFiltering(grid)
     const slots = datagridVariants()
 
     const columnWindow = $derived(columnWindowOf(grid))
@@ -249,16 +252,25 @@
                         type="button"
                         tabindex="-1"
                         class={slots.sortButton()}
-                        onclick={() => sorting.toggleSort(column.id)}
+                        onclick={(event) =>
+                            sorting.toggleSort(column.id, { append: event.shiftKey })}
                     >
                         {column.header}
                         <Icon name={sortIcon(column.id)} class="size-3.5 shrink-0" />
+                        {#if sorting.priorityOf(column.id)}
+                            <Badge label={sorting.priorityOf(column.id)!} size="xs" />
+                        {/if}
                     </button>
                 {:else}
                     <span class="truncate">{column.header}</span>
                 {/if}
-                {#if columnOps}
+                {#if columnOps || filteringState}
                     <span class="grow"></span>
+                {/if}
+                {#if filteringState}
+                    <GridFilterPanel {column} />
+                {/if}
+                {#if columnOps}
                     <GridColumnMenu {column} />
                     {#if columnOps.canResize}
                         <div

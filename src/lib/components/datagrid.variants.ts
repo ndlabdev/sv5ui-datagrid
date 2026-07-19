@@ -30,7 +30,11 @@ export const datagridVariants = tv({
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
         groupBoundary: 'border-r border-outline-variant',
-        footer: 'flex justify-end'
+        filterPanel:
+            'fixed z-50 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
+        filterChips: 'flex flex-wrap items-center gap-1.5',
+        statusBar: 'flex items-center justify-between gap-4 px-1 text-xs text-on-surface-variant',
+        footer: 'flex items-center justify-between gap-4'
     },
     variants: {
         align: {

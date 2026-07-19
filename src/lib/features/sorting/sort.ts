@@ -1,13 +1,17 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types.js'
 import { getCellValue, isNullish } from '../../core/value.js'
 
+export type SortNulls = 'first' | 'last'
+
 export function sortNodes<TRow>(
     nodes: RowNode<TRow>[],
     columns: ColumnDef<TRow>[],
-    sort: SortState[]
+    sort: SortState[],
+    nulls: SortNulls = 'first'
 ): RowNode<TRow>[] {
     if (sort.length === 0) return nodes
 
+    const nullSign = nulls === 'last' ? 1 : -1
     const comparators = sort.flatMap((entry) => {
         const column = columns.find((c) => c.id === entry.columnId)
         if (!column) return []
@@ -15,7 +19,8 @@ export function sortNodes<TRow>(
         const factor = entry.direction === 'asc' ? 1 : -1
         const compare =
             column.sortFn ??
-            ((a: TRow, b: TRow) => compareValues(getCellValue(a, column), getCellValue(b, column)))
+            ((a: TRow, b: TRow) =>
+                compareValues(getCellValue(a, column), getCellValue(b, column), nullSign))
 
         return [(a: RowNode<TRow>, b: RowNode<TRow>) => compare(a.row, b.row) * factor]
     })
@@ -32,9 +37,9 @@ export function sortNodes<TRow>(
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
-function compareValues(a: unknown, b: unknown): number {
-    if (isNullish(a)) return isNullish(b) ? 0 : -1
-    if (isNullish(b)) return 1
+function compareValues(a: unknown, b: unknown, nullSign: number): number {
+    if (isNullish(a)) return isNullish(b) ? 0 : nullSign
+    if (isNullish(b)) return -nullSign
     if (typeof a === 'number' && typeof b === 'number') return a - b
     if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b)
     if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime()

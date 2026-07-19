@@ -2,6 +2,7 @@
     import { useElementSize } from 'sv5ui'
     import { HEADER_ROW, type CellPosition } from '../core/focus-model.svelte.js'
     import { getColumnOps } from '../features/column-ops/index.js'
+    import { getFiltering } from '../features/filtering/index.js'
     import { getPagination } from '../features/pagination/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
@@ -15,6 +16,7 @@
     const virtualization = getVirtualization(grid)
     const columnVirtualizer = virtualization?.columnVirtualizer ?? null
     const columnOps = getColumnOps(grid)
+    const filteringState = getFiltering(grid)
     const slots = datagridVariants()
 
     let element = $state<HTMLElement | null>(null)
@@ -114,6 +116,8 @@
         const target = event.currentTarget as HTMLElement
         virtualization?.virtualizer.onScroll(target.scrollTop)
         columnVirtualizer?.onScroll(target.scrollLeft)
+        if (filteringState?.filterFor) filteringState.filterFor = null
+        if (columnOps?.menuFor) columnOps.menuFor = null
     }
 </script>
 
@@ -128,7 +132,7 @@
     onkeydown={grid.focus.handleKeydown}
     onfocus={redirectFocus}
     onfocusin={syncFocus}
-    onscroll={virtualization ? handleScroll : undefined}
+    onscroll={handleScroll}
 >
     {@render children?.()}
 </div>

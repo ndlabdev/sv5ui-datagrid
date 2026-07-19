@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { variableRowLayout } from '../lib/core/row-layout.js'
-import { quickFilterNodes } from '../lib/features/filtering/index.js'
+import {
+    compileColumnFilters,
+    distinctValues,
+    quickFilterNodes
+} from '../lib/features/filtering/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
 import { benchColumns, makeBenchNodes } from './data.js'
 
@@ -36,5 +40,29 @@ describe('performance budgets (coarse regression ceilings; PLAN §8 targets are 
     it('builds a 100k variable-row layout within budget', () => {
         const elapsed = measure(() => variableRowLayout(100_000, (i) => 40 + (i % 3) * 24))
         expect(elapsed).toBeLessThan(100)
+    })
+
+    it('multi-sorts 100k rows within budget', () => {
+        const elapsed = measure(() =>
+            sortNodes(nodes100k, benchColumns, [
+                { columnId: 'name', direction: 'asc' },
+                { columnId: 'score', direction: 'desc' }
+            ])
+        )
+        expect(elapsed).toBeLessThan(1000)
+    })
+
+    it('applies compiled column filters to 100k rows within budget', () => {
+        const predicate = compileColumnFilters(benchColumns, {
+            score: { kind: 'number', op: 'between', value: 100, to: 800 },
+            active: { kind: 'boolean', value: true }
+        })!
+        const elapsed = measure(() => nodes100k.filter(predicate))
+        expect(elapsed).toBeLessThan(300)
+    })
+
+    it('collects distinct values from 100k rows within budget', () => {
+        const elapsed = measure(() => distinctValues(nodes100k, benchColumns[0]))
+        expect(elapsed).toBeLessThan(200)
     })
 })

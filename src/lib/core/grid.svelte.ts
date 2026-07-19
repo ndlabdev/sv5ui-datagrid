@@ -67,6 +67,10 @@ export class GridState<TRow> {
         return this.#pipeline.before(PIPELINE_ORDER.window)()
     }
 
+    get sourceNodes(): RowNode<TRow>[] {
+        return this.#pipeline.before(PIPELINE_ORDER.filter)()
+    }
+
     get totalRows(): number {
         return this.preWindowNodes.length
     }

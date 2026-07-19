@@ -139,7 +139,8 @@
             <p class="text-sm text-on-surface-variant">
                 Feature modules · RowNode pipeline · ColumnModel (CSS vars) · compound parts · ARIA
                 grid · <Link href="/virtual">100k rows demo →</Link> ·
-                <Link href="/columns">Columns UX demo →</Link>
+                <Link href="/columns">Columns UX demo →</Link> ·
+                <Link href="/filters">Data ops demo →</Link>
             </p>
         </div>
         <ThemeModeButton />

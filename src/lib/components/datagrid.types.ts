@@ -53,7 +53,28 @@ export interface GridBodyProps {
 }
 
 export interface GridPaginationProps {
+    /**
+     * Page-size choices shown in the footer select.
+     * @default [10, 25, 50, 100]
+     */
+    pageSizes?: number[]
+
     /** Additional classes applied to the footer element. */
+    class?: ClassNameValue
+}
+
+export interface GridFilterPanelProps<TRow> {
+    /** The column the filter editor operates on. */
+    column: ColumnState<TRow>
+}
+
+export interface GridFilterChipsProps {
+    /** Additional classes applied to the chips container. */
+    class?: ClassNameValue
+}
+
+export interface GridStatusBarProps {
+    /** Additional classes applied to the status bar. */
     class?: ClassNameValue
 }
 

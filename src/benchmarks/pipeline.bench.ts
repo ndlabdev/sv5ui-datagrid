@@ -2,7 +2,11 @@ import { bench, describe } from 'vitest'
 import { createColumnState, prefixSums, resolveColumnWidths } from '../lib/core/column-sizing.js'
 import { buildRowNodes } from '../lib/core/row-node.js'
 import { variableRowLayout } from '../lib/core/row-layout.js'
-import { quickFilterNodes } from '../lib/features/filtering/index.js'
+import {
+    compileColumnFilters,
+    distinctValues,
+    quickFilterNodes
+} from '../lib/features/filtering/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
 import { benchColumns, makeBenchNodes, makeBenchRows } from './data.js'
 
@@ -27,6 +31,25 @@ describe('pipeline @ 100k rows', () => {
 
     bench('quick filter', () => {
         quickFilterNodes(nodes100k, benchColumns, 'person 12')
+    })
+
+    bench('multi-sort (string + number)', () => {
+        sortNodes(nodes100k, benchColumns, [
+            { columnId: 'name', direction: 'asc' },
+            { columnId: 'score', direction: 'desc' }
+        ])
+    })
+
+    bench('compiled column filters (number between + boolean)', () => {
+        const predicate = compileColumnFilters(benchColumns, {
+            score: { kind: 'number', op: 'between', value: 100, to: 800 },
+            active: { kind: 'boolean', value: true }
+        })!
+        nodes100k.filter(predicate)
+    })
+
+    bench('distinct values', () => {
+        distinctValues(nodes100k, benchColumns[0])
     })
 })
 

@@ -49,6 +49,10 @@ describe('GridState', () => {
         expect(getFiltering(grid)).toBeDefined()
         expect(getPagination(grid)).toBeDefined()
         expect(Object.keys(grid.api).toSorted()).toEqual([
+            'applyFilterModel',
+            'clearColumnFilters',
+            'getFilterModel',
+            'setColumnFilter',
             'setPage',
             'setPageSize',
             'setQuickFilter',

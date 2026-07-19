@@ -10,10 +10,12 @@
     import GridBody from './GridBody.svelte'
     import GridColumnChooser from './GridColumnChooser.svelte'
     import GridDensityToggle from './GridDensityToggle.svelte'
+    import GridFilterChips from './GridFilterChips.svelte'
     import GridHeader from './GridHeader.svelte'
     import GridPagination from './GridPagination.svelte'
     import GridQuickFilter from './GridQuickFilter.svelte'
     import GridRoot from './GridRoot.svelte'
+    import GridStatusBar from './GridStatusBar.svelte'
     import GridToolbar from './GridToolbar.svelte'
     import GridViewport from './GridViewport.svelte'
 
@@ -70,6 +72,7 @@
     {#if toolbar}
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />
+            <GridFilterChips />
             <div class="grow"></div>
             <GridColumnChooser />
             <GridDensityToggle />
@@ -79,5 +82,8 @@
         <GridHeader />
         <GridBody {emptyText} {loading} {error} {onRetry} />
     </GridViewport>
-    <GridPagination />
+    <div class="flex items-center justify-between gap-4">
+        <GridStatusBar />
+        <GridPagination class="grow" />
+    </div>
 </GridRoot>

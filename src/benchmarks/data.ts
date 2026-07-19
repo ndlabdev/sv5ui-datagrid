@@ -10,10 +10,10 @@ export interface BenchRow {
 }
 
 export const benchColumns: ColumnDef<BenchRow>[] = [
-    { id: 'name', sortable: true },
-    { id: 'email' },
-    { id: 'score', sortable: true },
-    { id: 'active' }
+    { id: 'name', sortable: true, filter: 'text' },
+    { id: 'email', filter: 'text' },
+    { id: 'score', sortable: true, filter: 'number' },
+    { id: 'active', filter: 'boolean' }
 ]
 
 export function makeBenchRows(count: number): BenchRow[] {

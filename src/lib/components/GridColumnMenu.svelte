@@ -1,6 +1,7 @@
 <script lang="ts" generics="TRow">
     import { Button, DropdownMenu } from 'sv5ui'
     import { getColumnOps } from '../features/column-ops/index.js'
+    import { filterTypeOf, getFiltering } from '../features/filtering/index.js'
     import { getSorting } from '../features/sorting/index.js'
     import { getGridContext } from './context.js'
     import type { GridColumnMenuProps } from './datagrid.types.js'
@@ -11,6 +12,7 @@
     const grid = getGridContext<TRow>()
     const columnOps = getColumnOps(grid)!
     const sorting = getSorting(grid)
+    const filteringState = getFiltering(grid)
     const slots = datagridVariants()
 
     interface MenuEntry {
@@ -19,49 +21,58 @@
         onSelect: () => void
     }
 
-    const items = $derived.by<MenuEntry[]>(() => {
+    function sortItems(): MenuEntry[] {
+        if (!sorting || !column.def.sortable) return []
+        return [
+            {
+                label: 'Sort ascending',
+                icon: 'lucide:arrow-up-narrow-wide',
+                onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'asc' }])
+            },
+            {
+                label: 'Sort descending',
+                icon: 'lucide:arrow-down-wide-narrow',
+                onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'desc' }])
+            },
+            { label: 'Clear sort', icon: 'lucide:circle-x', onSelect: () => sorting.setSort([]) }
+        ]
+    }
+
+    function pinItems(): MenuEntry[] {
+        if (!columnOps.canPin) return []
         const list: MenuEntry[] = []
-        if (sorting && column.def.sortable) {
-            list.push(
-                {
-                    label: 'Sort ascending',
-                    icon: 'lucide:arrow-up-narrow-wide',
-                    onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'asc' }])
-                },
-                {
-                    label: 'Sort descending',
-                    icon: 'lucide:arrow-down-wide-narrow',
-                    onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'desc' }])
-                },
-                {
-                    label: 'Clear sort',
-                    icon: 'lucide:circle-x',
-                    onSelect: () => sorting.setSort([])
-                }
-            )
+        if (column.pinned !== 'left') {
+            list.push({
+                label: 'Pin left',
+                icon: 'lucide:arrow-left-to-line',
+                onSelect: () => columnOps.pinColumn(column.id, 'left')
+            })
         }
-        if (columnOps.canPin) {
-            if (column.pinned !== 'left') {
-                list.push({
-                    label: 'Pin left',
-                    icon: 'lucide:arrow-left-to-line',
-                    onSelect: () => columnOps.pinColumn(column.id, 'left')
-                })
-            }
-            if (column.pinned !== 'right') {
-                list.push({
-                    label: 'Pin right',
-                    icon: 'lucide:arrow-right-to-line',
-                    onSelect: () => columnOps.pinColumn(column.id, 'right')
-                })
-            }
-            if (column.pinned) {
-                list.push({
-                    label: 'Unpin',
-                    icon: 'lucide:pin-off',
-                    onSelect: () => columnOps.pinColumn(column.id, null)
-                })
-            }
+        if (column.pinned !== 'right') {
+            list.push({
+                label: 'Pin right',
+                icon: 'lucide:arrow-right-to-line',
+                onSelect: () => columnOps.pinColumn(column.id, 'right')
+            })
+        }
+        if (column.pinned) {
+            list.push({
+                label: 'Unpin',
+                icon: 'lucide:pin-off',
+                onSelect: () => columnOps.pinColumn(column.id, null)
+            })
+        }
+        return list
+    }
+
+    function actionItems(): MenuEntry[] {
+        const list: MenuEntry[] = []
+        if (filteringState && filterTypeOf(column.def)) {
+            list.push({
+                label: 'Filter…',
+                icon: 'lucide:filter',
+                onSelect: () => (filteringState.filterFor = column.id)
+            })
         }
         if (columnOps.canResize) {
             list.push({
@@ -78,7 +89,9 @@
             })
         }
         return list
-    })
+    }
+
+    const items = $derived([...sortItems(), ...pinItems(), ...actionItems()])
 </script>
 
 {#if items.length > 0}
