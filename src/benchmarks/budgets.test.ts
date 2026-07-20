@@ -69,6 +69,28 @@ describe('performance budgets (coarse regression ceilings; PLAN §8 targets are 
         expect(elapsed).toBeLessThan(200)
     })
 
+    it('flattens 100k rows with structural meta and expanded details within budget', () => {
+        const expanded = new Set(
+            nodes100k.filter((_, index) => index % 10 === 0).map((node) => node.id)
+        )
+        const elapsed = measure(() =>
+            nodes100k.flatMap((node) => {
+                const parent = { ...node, meta: { expandable: true, level: 0 } }
+                if (!expanded.has(node.id)) return [parent]
+                return [
+                    parent,
+                    {
+                        id: `${node.id}:detail`,
+                        row: node.row,
+                        index: node.index,
+                        meta: { fullWidth: true, level: 1 }
+                    }
+                ]
+            })
+        )
+        expect(elapsed).toBeLessThan(150)
+    })
+
     it('serializes 10k selected rows to TSV and CSV within budget', () => {
         const nodes10k = nodes100k.slice(0, 10_000)
         const elapsed = measure(() => {

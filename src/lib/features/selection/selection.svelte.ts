@@ -38,7 +38,9 @@ export class Selection<TRow> {
     }
 
     selectableNodes = $derived.by(() =>
-        this.#grid.preWindowNodes.filter((node) => this.isRowSelectable(node.row))
+        this.#grid.preWindowNodes.filter(
+            (node) => !node.meta?.fullWidth && this.isRowSelectable(node.row)
+        )
     )
 
     allState: SelectAllState = $derived.by(() =>

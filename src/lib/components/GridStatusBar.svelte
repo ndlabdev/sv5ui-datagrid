@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getPagination } from '../features/pagination/index.js'
+    import { getRowPinning } from '../features/row-pinning/index.js'
     import { getSelection } from '../features/selection/index.js'
     import { getGridContext } from './context.js'
     import type { GridStatusBarProps } from './datagrid.types.js'
@@ -10,10 +11,16 @@
     const grid = getGridContext()
     const pagination = getPagination(grid)
     const selectionState = getSelection(grid)
+    const pinning = getRowPinning(grid)
     const slots = datagridVariants()
 
     const total = $derived(grid.sourceNodes.length)
-    const filtered = $derived(grid.totalRows)
+    const filtered = $derived(
+        grid.preWindowNodes.reduce(
+            (count, node) => (node.meta?.fullWidth ? count : count + 1),
+            pinning?.pinnedCount ?? 0
+        )
+    )
     const selected = $derived(selectionState?.count ?? 0)
 </script>
 

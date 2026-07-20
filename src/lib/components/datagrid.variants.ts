@@ -29,6 +29,14 @@ export const datagridVariants = tv({
         row: 'group/row relative grid [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
+        toggleButton:
+            'mr-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
+        fullWidthCell:
+            'min-h-(--dg-row-h) min-w-0 bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+        pinnedRow:
+            'group/row relative grid [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
+        pinnedRowsTop: 'sticky z-[8] min-w-full shadow-sm',
+        pinnedRowsBottom: 'sticky bottom-0 z-[8] min-w-full shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
         groupBoundary: 'border-r border-outline-variant',

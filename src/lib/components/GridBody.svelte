@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { Empty, Skeleton } from 'sv5ui'
-    import { SELECTION_COLUMN_ID } from '../core/types.js'
+    import { Empty, Icon, Skeleton } from 'sv5ui'
+    import { SELECTION_COLUMN_ID, type RowNode } from '../core/types.js'
+    import { getRowPinning } from '../features/row-pinning/index.js'
     import { getSelection } from '../features/selection/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
@@ -15,12 +16,14 @@
         loadingRows = 5,
         error = null,
         onRetry,
+        fullWidthRow,
         class: className
     }: GridBodyProps = $props()
 
     const grid = getGridContext()
     const virtualization = getVirtualization(grid)
     const selectionState = getSelection(grid)
+    const pinning = getRowPinning(grid)
     const slots = datagridVariants()
 
     const rowClass = slots.row()
@@ -44,6 +47,8 @@
     const windowStart = $derived(windowStartOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(grid.columns.headerRowCount)
+    const topRows = $derived(pinning?.topNodes.length ?? 0)
+    const firstDataIndex = $derived(grid.columns.visible[0]?.id === SELECTION_COLUMN_ID ? 1 : 0)
 
     function isActive(row: number, col: number): boolean {
         const active = grid.focus.active
@@ -54,58 +59,166 @@
         if (!virtualization) return undefined
         return `${virtualization.virtualizer.sizeOf(row)}px`
     }
+
+    function indentOf(node: RowNode<unknown>, colIndex: number): string | undefined {
+        const level = node.meta?.level ?? 0
+        if (colIndex !== firstDataIndex || level === 0) return undefined
+        return `calc(0.75rem + ${level * 1.25}rem)`
+    }
+
+    function ariaExpanded(node: RowNode<unknown>): boolean | undefined {
+        return node.meta?.expandable ? grid.expansion.isExpanded(node.id) : undefined
+    }
 </script>
+
+{#snippet cellContent(
+    node: RowNode<unknown>,
+    column: (typeof columnWindow.renderColumns)[number]['column'],
+    colIndex: number,
+    rowIndex: number
+)}
+    {#if column.id === SELECTION_COLUMN_ID}
+        <GridSelectionCell {node} />
+    {:else}
+        {#if colIndex === firstDataIndex && node.meta?.expandable}
+            <button
+                type="button"
+                tabindex="-1"
+                aria-label={grid.expansion.isExpanded(node.id) ? 'Collapse row' : 'Expand row'}
+                class={slots.toggleButton()}
+                onclick={(event) => {
+                    event.stopPropagation()
+                    grid.expansion.toggle(node.id)
+                }}
+            >
+                <Icon
+                    name="lucide:chevron-right"
+                    class={`size-4 transition-transform ${grid.expansion.isExpanded(node.id) ? 'rotate-90' : ''}`}
+                />
+            </button>
+        {/if}
+        {#if column.def.cell}
+            {@render column.def.cell({
+                node,
+                row: node.row,
+                value: grid.getValue(node, column),
+                rowIndex
+            })}
+        {:else}
+            {grid.getValue(node, column)}
+        {/if}
+    {/if}
+{/snippet}
 
 {#snippet rows()}
     {#each grid.nodes as node, viewIndex (node.id)}
         {@const rowHeight = rowHeightOf(windowStart + viewIndex)}
         <div
             role="row"
-            aria-rowindex={windowStart + viewIndex + 1 + headerRows}
+            aria-rowindex={windowStart + viewIndex + 1 + headerRows + topRows}
             aria-selected={selectionState ? selectionState.isSelected(node.id) : undefined}
+            aria-level={node.meta?.level !== undefined ? node.meta.level + 1 : undefined}
+            aria-expanded={ariaExpanded(node)}
+            aria-setsize={node.meta?.setSize}
+            aria-posinset={node.meta?.posInSet}
+            data-dg-row-id={node.id}
             class={classOfRow(node.id)}
             style:height={rowHeight}
             style:--dg-row-h={rowHeight}
             style:width={columnWindow.rowWidth}
         >
-            {#each columnWindow.renderColumns as entry (entry.column.id)}
-                {@const column = entry.column}
-                {@const colIndex = entry.index}
+            {#if node.meta?.fullWidth}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
                     role="gridcell"
-                    aria-colindex={colIndex + 1}
-                    tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
-                    data-dg-cell="{windowStart + viewIndex}:{colIndex}"
+                    aria-colindex={1}
+                    tabindex={isActive(windowStart + viewIndex, 0) ? 0 : -1}
+                    data-dg-cell="{windowStart + viewIndex}:0"
+                    class={slots.fullWidthCell()}
+                    style="grid-column: 1 / -1"
+                    onclick={() => grid.focus.focusCell({ row: windowStart + viewIndex, col: 0 })}
+                >
+                    {#if fullWidthRow}
+                        {@render fullWidthRow({
+                            node,
+                            row: node.row,
+                            rowIndex: windowStart + viewIndex
+                        })}
+                    {:else}
+                        {grid.getValue(node, grid.columns.visible[firstDataIndex])}
+                    {/if}
+                </div>
+            {:else}
+                {#each columnWindow.renderColumns as entry (entry.column.id)}
+                    {@const column = entry.column}
+                    {@const colIndex = entry.index}
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <div
+                        role="gridcell"
+                        aria-colindex={colIndex + 1}
+                        tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
+                        data-dg-cell="{windowStart + viewIndex}:{colIndex}"
+                        class={withBoundary(
+                            column.pinned
+                                ? `${cellClass[column.align]} ${pinnedCellClass}`
+                                : cellClass[column.align],
+                            colIndex
+                        )}
+                        style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
+                        style:left={pinLeftVar(column)}
+                        style:right={pinRightVar(column)}
+                        style:padding-left={indentOf(node, colIndex)}
+                        onclick={() =>
+                            grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
+                    >
+                        {@render cellContent(node, column, colIndex, windowStart + viewIndex)}
+                    </div>
+                {/each}
+            {/if}
+        </div>
+    {/each}
+{/snippet}
+
+{#snippet pinnedRows(nodes: RowNode<unknown>[], baseIndex: number)}
+    {#each nodes as node, pinIndex (node.id)}
+        <div
+            role="row"
+            aria-rowindex={baseIndex + pinIndex}
+            data-dg-row-id={node.id}
+            class={slots.pinnedRow()}
+            style:width={columnWindow.rowWidth}
+        >
+            {#each columnWindow.renderColumns as entry (entry.column.id)}
+                {@const column = entry.column}
+                <div
+                    role="gridcell"
+                    aria-colindex={entry.index + 1}
                     class={withBoundary(
                         column.pinned
                             ? `${cellClass[column.align]} ${pinnedCellClass}`
                             : cellClass[column.align],
-                        colIndex
+                        entry.index
                     )}
-                    style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
+                    style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
                     style:left={pinLeftVar(column)}
                     style:right={pinRightVar(column)}
-                    onclick={() =>
-                        grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
                 >
-                    {#if column.id === SELECTION_COLUMN_ID}
-                        <GridSelectionCell {node} />
-                    {:else if column.def.cell}
-                        {@render column.def.cell({
-                            node,
-                            row: node.row,
-                            value: grid.getValue(node, column),
-                            rowIndex: windowStart + viewIndex
-                        })}
-                    {:else}
-                        {grid.getValue(node, column)}
-                    {/if}
+                    {@render cellContent(node, column, entry.index, node.index)}
                 </div>
             {/each}
         </div>
     {/each}
 {/snippet}
+
+{#if pinning && pinning.topNodes.length > 0}
+    <div
+        role="rowgroup"
+        class={slots.pinnedRowsTop()}
+        style:top={`calc(var(--dg-row-h) * ${headerRows})`}
+    >
+        {@render pinnedRows(pinning.topNodes, headerRows + 1)}
+    </div>
+{/if}
 
 <div
     role="rowgroup"
@@ -167,3 +280,9 @@
         {@render rows()}
     {/if}
 </div>
+
+{#if pinning && pinning.bottomNodes.length > 0}
+    <div role="rowgroup" class={slots.pinnedRowsBottom()}>
+        {@render pinnedRows(pinning.bottomNodes, headerRows + topRows + grid.totalRows + 1)}
+    </div>
+{/if}

@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
-import type { ColumnDef, ColumnState, Density } from '../core/types.js'
+import type { ColumnDef, ColumnState, Density, RowNode } from '../core/types.js'
 import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
@@ -27,7 +27,24 @@ export interface GridHeaderProps {
     class?: ClassNameValue
 }
 
+/**
+ * Context passed to the `fullWidthRow` snippet for rows flagged with
+ * `meta.fullWidth` (detail panels, group rows).
+ */
+export interface DataGridFullWidthContext<TRow> {
+    /** The pipeline node being rendered. */
+    node: RowNode<TRow>
+    /** The raw row object the node points at. */
+    row: TRow
+    /** Absolute row index within the filtered/sorted set. */
+    rowIndex: number
+}
+
 export interface GridBodyProps {
+    /** Renders rows flagged `meta.fullWidth` across every column. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fullWidthRow?: Snippet<[DataGridFullWidthContext<any>]>
+
     /**
      * Text shown when there are no rows to display.
      * @default 'No data'
@@ -147,6 +164,9 @@ export type DataGridProps<TRow> = {
 
     /** Renders a Retry action in the error state. */
     onRetry?: () => void
+
+    /** Renders rows flagged `meta.fullWidth` across every column. */
+    fullWidthRow?: GridBodyProps['fullWidthRow']
 
     /** Additional classes applied to the root element. */
     class?: ClassNameValue

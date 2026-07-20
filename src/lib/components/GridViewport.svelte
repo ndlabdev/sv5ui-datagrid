@@ -4,6 +4,7 @@
     import { getColumnOps } from '../features/column-ops/index.js'
     import { getFiltering } from '../features/filtering/index.js'
     import { getPagination } from '../features/pagination/index.js'
+    import { getRowPinning } from '../features/row-pinning/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
     import type { GridViewportProps } from './datagrid.types.js'
@@ -17,7 +18,10 @@
     const columnVirtualizer = virtualization?.columnVirtualizer ?? null
     const columnOps = getColumnOps(grid)
     const filteringState = getFiltering(grid)
+    const pinning = getRowPinning(grid)
     const slots = datagridVariants()
+
+    const pinnedRowCount = $derived(pinning?.pinnedCount ?? 0)
 
     let element = $state<HTMLElement | null>(null)
     const measured = Boolean(virtualization || columnOps)
@@ -121,10 +125,11 @@
     }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
     bind:this={element}
-    role="grid"
-    aria-rowcount={grid.totalRows + grid.columns.headerRowCount}
+    role={grid.expansion.enabled ? 'treegrid' : 'grid'}
+    aria-rowcount={grid.totalRows + grid.columns.headerRowCount + pinnedRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: className })}

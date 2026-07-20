@@ -35,6 +35,7 @@
         loading,
         error,
         onRetry,
+        fullWidthRow,
         class: className
     }: DataGridProps<TRow> = $props()
 
@@ -82,7 +83,7 @@
     <GridContextMenu>
         <GridViewport class={isVirtual ? className : undefined}>
             <GridHeader />
-            <GridBody {emptyText} {loading} {error} {onRetry} />
+            <GridBody {emptyText} {loading} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
     </GridContextMenu>
     <div class="flex items-center justify-between gap-4">

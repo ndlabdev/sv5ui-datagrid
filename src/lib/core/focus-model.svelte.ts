@@ -1,6 +1,6 @@
 import { clamp } from './math.js'
 import type { GridState } from './grid.svelte.js'
-import type { Keybinding } from './types.js'
+import type { Keybinding, RowNode } from './types.js'
 
 export interface CellPosition {
     row: number
@@ -30,9 +30,11 @@ export class FocusModel<TRow> {
 
     focusCell = (position: CellPosition): void => {
         if (this.maxCol < 0) return
+        const row = clamp(position.row, HEADER_ROW, Math.max(HEADER_ROW, this.maxRow))
+        const fullWidth = row >= 0 && this.#grid.preWindowNodes[row]?.meta?.fullWidth
         this.active = {
-            row: clamp(position.row, HEADER_ROW, Math.max(HEADER_ROW, this.maxRow)),
-            col: clamp(position.col, 0, this.maxCol)
+            row,
+            col: fullWidth ? 0 : clamp(position.col, 0, this.maxCol)
         }
     }
 
@@ -87,8 +89,55 @@ function describeKey(event: KeyboardEvent): string {
     return descriptor + event.key
 }
 
+function activeNode<TRow>(grid: GridState<TRow>): RowNode<TRow> | undefined {
+    const { row, col } = grid.focus.active
+    if (row < 0 || col !== 0) return undefined
+    return grid.preWindowNodes[row]
+}
+
+function focusParentRow<TRow>(grid: GridState<TRow>, level: number): void {
+    for (let row = grid.focus.active.row - 1; row >= 0; row--) {
+        if ((grid.preWindowNodes[row].meta?.level ?? 0) < level) {
+            grid.focus.focusCell({ row, col: 0 })
+            return
+        }
+    }
+}
+
+function createTreegridBindings<TRow>(): Keybinding<TRow>[] {
+    return [
+        {
+            key: 'ArrowRight',
+            when: (grid) => {
+                const node = activeNode(grid)
+                return Boolean(node?.meta?.expandable && !grid.expansion.isExpanded(node.id))
+            },
+            handler: (grid) => grid.expansion.expand(activeNode(grid)!.id)
+        },
+        {
+            key: 'ArrowLeft',
+            when: (grid) => {
+                const node = activeNode(grid)
+                return Boolean(node?.meta?.expandable && grid.expansion.isExpanded(node.id))
+            },
+            handler: (grid) => grid.expansion.collapse(activeNode(grid)!.id)
+        },
+        {
+            key: 'ArrowLeft',
+            when: (grid) => (activeNode(grid)?.meta?.level ?? 0) > 0,
+            handler: (grid) => focusParentRow(grid, activeNode(grid)!.meta!.level!)
+        },
+        {
+            key: 'Enter',
+            when: (grid) => Boolean(activeNode(grid)?.meta?.expandable),
+            handler: (grid) => grid.expansion.toggle(activeNode(grid)!.id)
+        }
+    ]
+}
+
 function createDefaultBindings<TRow>(): Keybinding<TRow>[] {
     return [
+        ...createTreegridBindings<TRow>(),
         { key: 'ArrowDown', handler: (grid) => grid.focus.moveBy(1, 0) },
         { key: 'ArrowUp', handler: (grid) => grid.focus.moveBy(-1, 0) },
         { key: 'ArrowLeft', handler: (grid) => grid.focus.moveBy(0, -1) },

@@ -1,6 +1,7 @@
 import { Announcer, defaultLocale } from './announcer.svelte.js'
 import { ColumnModel } from './column-model.svelte.js'
 import { EventBus } from './events.js'
+import { ExpansionModel } from './expansion.svelte.js'
 import { FocusModel } from './focus-model.svelte.js'
 import { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
 import { buildRowNodes } from './row-node.js'
@@ -26,6 +27,7 @@ export class GridState<TRow> {
     readonly getRowId: (row: TRow) => string
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
+    readonly expansion: ExpansionModel
 
     #baseNodes = $derived.by(() => buildRowNodes(this.data, this.getRowId))
     #pipeline: Pipeline<TRow>
@@ -34,6 +36,7 @@ export class GridState<TRow> {
         this.data = options.data ?? []
         this.getRowId = options.getRowId
         this.columns = new ColumnModel(options.columns)
+        this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.density = options.density ?? 'standard'
 

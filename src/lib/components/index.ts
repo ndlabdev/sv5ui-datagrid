@@ -49,6 +49,7 @@ export type { DataGridSlots, DataGridVariantProps } from './datagrid.variants.js
 export type {
     DataGridProps,
     GridBodyProps,
+    DataGridFullWidthContext,
     GridColumnChooserProps,
     GridColumnMenuProps,
     GridContextMenuProps,

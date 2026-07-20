@@ -141,7 +141,8 @@
                 grid · <Link href="/virtual">100k rows demo →</Link> ·
                 <Link href="/columns">Columns UX demo →</Link> ·
                 <Link href="/filters">Data ops demo →</Link> ·
-                <Link href="/selection">Selection demo →</Link>
+                <Link href="/selection">Selection demo →</Link> ·
+                <Link href="/rows">Row structures demo →</Link>
             </p>
         </div>
         <ThemeModeButton />
