@@ -73,6 +73,8 @@ so anything the package ships can be built from outside it:
 | `keybindings`    | keyboard bindings, with a `when` guard                           |
 | `menuItems`      | column- and context-menu entries                                 |
 | `cellDecoration` | per-cell classes and `aria-selected`                             |
+| `serialize`      | the feature's slice of a state snapshot                          |
+| `hydrate`        | restores what `serialize` produced                               |
 
 `cellDecoration` runs for every rendered cell, so keep it cheap — a grid whose features do not
 define it skips the work entirely:
@@ -84,6 +86,25 @@ const highlightNegative = (): GridFeature<Row> => ({
         column.id === 'balance' && node.row.balance < 0 ? { class: 'text-error' } : undefined
 })
 ```
+
+### State persistence
+
+`persistState` mirrors column layout, sort, filter, page size and density into `localStorage`
+and restores them on mount:
+
+```svelte
+<DataGrid {grid} persistState={{ key: 'orders-grid' }} />
+```
+
+`grid.api.getState()` and `grid.api.setState(snapshot)` do the same thing by hand — the
+snapshot is versioned and JSON-serializable, so it travels to a server or a URL just as well.
+Columns are keyed by id: ids that disappeared are dropped and ids added since keep their
+defaults, so a stored snapshot never resurrects a column the app no longer defines. Pass
+`migrate` to upgrade snapshots written by an older version of your app; anything it declines
+falls back to the column defaults rather than half-applying.
+
+A feature persists its own state through `serialize`/`hydrate` and is stored under its id, so
+features the kernel knows nothing about round-trip too.
 
 ### DOM contract
 

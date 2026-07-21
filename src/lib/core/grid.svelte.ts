@@ -5,13 +5,16 @@ import { ExpansionModel } from './expansion.svelte.js'
 import { FocusModel } from './focus-model.svelte.js'
 import { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
 import { buildRowNodes } from './row-node.js'
-import type {
-    ColumnState,
-    DataGridOptions,
-    Density,
-    GridEventMap,
-    GridFeature,
-    RowNode
+import { buildColumnSnapshot, isDensity, resolveColumnSnapshot } from './snapshot.js'
+import {
+    SNAPSHOT_VERSION,
+    type ColumnState,
+    type DataGridOptions,
+    type Density,
+    type GridEventMap,
+    type GridFeature,
+    type GridSnapshot,
+    type RowNode
 } from './types.js'
 import { getCellValue } from './value.js'
 
@@ -46,6 +49,11 @@ export class GridState<TRow> {
         for (const feature of this.features) {
             if (feature.createApi) Object.assign(this.api, feature.createApi(this))
         }
+        // Assigned last so a feature cannot shadow the kernel's own API.
+        Object.assign(this.api, {
+            getState: () => this.getState(),
+            setState: (snapshot: GridSnapshot) => this.setState(snapshot)
+        })
 
         this.focus = new FocusModel(
             this,
@@ -80,6 +88,43 @@ export class GridState<TRow> {
 
     feature<TState>(id: string): TState | undefined {
         return this.state[id] as TState | undefined
+    }
+
+    /** A JSON-serializable snapshot of everything the user can rearrange. */
+    getState(): GridSnapshot {
+        const snapshot: GridSnapshot = { version: SNAPSHOT_VERSION }
+
+        const columns = buildColumnSnapshot(this.columns)
+        if (columns) snapshot.columns = columns
+        if (this.density !== 'standard') snapshot.density = this.density
+
+        const features: Record<string, unknown> = {}
+        for (const feature of this.features) {
+            const slice = feature.serialize?.(this)
+            if (slice !== undefined) features[feature.id] = slice
+        }
+        if (Object.keys(features).length > 0) snapshot.features = features
+
+        return snapshot
+    }
+
+    /** Restores a snapshot produced by `getState`. */
+    setState(snapshot: GridSnapshot): void {
+        const columns = resolveColumnSnapshot(
+            snapshot.columns,
+            this.columns.leafDefs.map((def) => def.id)
+        )
+        this.columns.orderIds = columns.orderIds
+        this.columns.widthOverrides = columns.widthOverrides
+        this.columns.hiddenOverrides = columns.hiddenOverrides
+        this.columns.pinnedOverrides = columns.pinnedOverrides
+
+        if (isDensity(snapshot.density)) this.density = snapshot.density
+
+        for (const feature of this.features) {
+            const slice = snapshot.features?.[feature.id]
+            if (slice !== undefined) feature.hydrate?.(slice, this)
+        }
     }
 
     getValue(node: RowNode<TRow>, column: ColumnState<TRow>): unknown {

@@ -130,6 +130,13 @@
         if (savedLayout.current) ops.applyColumnState(savedLayout.current)
     }
 
+    const PERSIST_KEY = 'datagrid-columns-demo'
+
+    function forgetState() {
+        localStorage.removeItem(PERSIST_KEY)
+        location.reload()
+    }
+
     const wideColumns: ColumnDef<Employee>[] = [
         { id: 'id', header: '#', sortable: true, align: 'right', width: 70, pinned: 'left' },
         { id: 'name', header: 'Name', width: 170, pinned: 'left' },
@@ -170,6 +177,8 @@
             <p class="text-sm text-on-surface-variant">
                 Resize (kéo mép / double-click autosize) · Reorder (kéo header) · Pin · Ẩn/hiện ·
                 Header groups · Column menu — tất cả điều khiển được bằng bàn phím.
+                <strong>Sắp xếp lại rồi F5</strong>: layout, sort, filter, page size và density đều
+                được giữ nguyên.
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -186,21 +195,22 @@
                 label="Autosize all"
                 onclick={ops.autoSizeColumns}
             />
-            <Button variant="outline" size="sm" label="Save layout" onclick={saveLayout} />
+            <Button variant="outline" size="sm" label="Save preset" onclick={saveLayout} />
             <Button
                 variant="outline"
                 size="sm"
-                label="Restore layout"
+                label="Restore preset"
                 disabled={!savedLayout.current}
                 onclick={restoreLayout}
             />
+            <Button variant="outline" size="sm" label="Quên state đã lưu" onclick={forgetState} />
             <span class="text-xs text-on-surface-variant">
-                Layout lưu qua <code>useLocalStorage</code> — round-trip
-                <code>getColumnState()/applyColumnState()</code>
+                Preset thủ công dùng <code>getColumnState()/applyColumnState()</code>; còn
+                <code>persistState</code> bên dưới tự lưu <em>toàn bộ</em> state.
             </span>
         </div>
 
-        <DataGrid {grid} toolbar />
+        <DataGrid {grid} toolbar persistState={{ key: PERSIST_KEY }} />
 
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">
             <span>Focus header rồi:</span>

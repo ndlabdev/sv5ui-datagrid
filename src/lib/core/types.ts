@@ -520,6 +520,47 @@ export interface GridFeature<TRow> {
      * cheap; grids without a decorating feature skip the work entirely.
      */
     cellDecoration?: (ctx: CellDecorationContext<TRow>) => CellDecoration | undefined
+    /**
+     * The feature's slice of a state snapshot, stored under its id. Return
+     * undefined to stay out of the snapshot entirely. Must be JSON-safe.
+     */
+    serialize?: (grid: GridState<TRow>) => unknown
+    /**
+     * Restores what `serialize` produced. Called only when the snapshot holds
+     * a slice for this feature, so a feature added later simply starts fresh.
+     */
+    hydrate?: (slice: unknown, grid: GridState<TRow>) => void
+}
+
+/** Bumped when the snapshot shape changes in a way `migrate` must handle. */
+export const SNAPSHOT_VERSION = 1
+
+/**
+ * A versioned, JSON-serializable view of everything the user can rearrange.
+ * Column identity is by id, so adding or removing columns between sessions is
+ * safe: unknown ids are dropped and new ones keep their defaults.
+ */
+export interface GridSnapshot {
+    version: number
+    columns?: {
+        order?: string[]
+        widths?: Record<string, number>
+        hidden?: Record<string, boolean>
+        pinned?: Record<string, PinnedSide | null>
+    }
+    density?: Density
+    /** Per-feature slices, keyed by feature id. */
+    features?: Record<string, unknown>
+}
+
+export interface PersistStateOptions {
+    /** localStorage key. */
+    key: string
+    /**
+     * Upgrades a snapshot written by an older version of your app. Return
+     * undefined to discard it and start from the column defaults.
+     */
+    migrate?: (stored: GridSnapshot) => GridSnapshot | undefined
 }
 
 /**

@@ -52,11 +52,13 @@ describe('GridState', () => {
             'applyFilterModel',
             'clearColumnFilters',
             'getFilterModel',
+            'getState',
             'setColumnFilter',
             'setPage',
             'setPageSize',
             'setQuickFilter',
             'setSort',
+            'setState',
             'toggleSort'
         ])
     })

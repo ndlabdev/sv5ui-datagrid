@@ -38,6 +38,7 @@
         error,
         onRetry,
         fullWidthRow,
+        persistState,
         class: className
     }: DataGridProps<TRow> = $props()
 
@@ -75,7 +76,7 @@
     })
 </script>
 
-<GridRoot {grid} class={isVirtual ? undefined : className}>
+<GridRoot {grid} {persistState} class={isVirtual ? undefined : className}>
     {#if toolbar}
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />

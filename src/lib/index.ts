@@ -35,7 +35,14 @@ export { createDataGrid, GridState } from './core/grid.svelte.js'
 export { composePipeline, PIPELINE_ORDER, type Pipeline } from './core/pipeline.svelte.js'
 export { buildRowNodes } from './core/row-node.js'
 export type * from './core/types.js'
-export { SELECTION_COLUMN_ID } from './core/types.js'
+export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types.js'
+export {
+    buildColumnSnapshot,
+    isDensity,
+    normalizeSnapshot,
+    resolveColumnSnapshot,
+    type ColumnSnapshotSource
+} from './core/snapshot.js'
 export { getCellValue, isNullish } from './core/value.js'
 export {
     Virtualizer,

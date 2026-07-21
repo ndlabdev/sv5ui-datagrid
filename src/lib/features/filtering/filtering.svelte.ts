@@ -85,6 +85,17 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
                 applyFilterModel: state.applyFilterModel
             }
         },
+        serialize: (grid) => {
+            const model = getFiltering(grid)?.model
+            if (!model) return undefined
+            const active = model.quick !== '' || Object.keys(model.columns).length > 0
+            return active ? model : undefined
+        },
+        hydrate: (slice, grid) => {
+            if (slice && typeof slice === 'object') {
+                getFiltering(grid)?.applyFilterModel(slice as FilterModel)
+            }
+        },
         pipelineStage: {
             order: PIPELINE_ORDER.filter,
             transform: (nodes, grid) => {

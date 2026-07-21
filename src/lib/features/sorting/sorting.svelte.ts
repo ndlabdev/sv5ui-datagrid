@@ -89,6 +89,13 @@ export function sorting<TRow>(options: SortingOptions = {}): GridFeature<TRow> {
             return { toggleSort: state.toggleSort, setSort: state.setSort }
         },
         keybindings: createKeybindings<TRow>(),
+        serialize: (grid) => {
+            const sort = getSorting(grid)?.sort ?? []
+            return sort.length > 0 ? sort : undefined
+        },
+        hydrate: (slice, grid) => {
+            if (Array.isArray(slice)) getSorting(grid)?.setSort(slice as SortState[])
+        },
         pipelineStage: {
             order: PIPELINE_ORDER.sort,
             transform: (nodes, grid) => {

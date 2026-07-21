@@ -54,6 +54,12 @@ export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<T
             const state = getPagination(grid)!
             return { setPage: state.setPage, setPageSize: state.setPageSize }
         },
+        // Page size is a preference; the page number is not — restoring page 7
+        // of a list the user has since filtered lands them nowhere.
+        serialize: (grid) => getPagination(grid)?.pageSize ?? undefined,
+        hydrate: (slice, grid) => {
+            if (typeof slice === 'number') getPagination(grid)?.setPageSize(slice)
+        },
         pipelineStage: {
             order: PIPELINE_ORDER.window,
             transform: (nodes, grid) => {

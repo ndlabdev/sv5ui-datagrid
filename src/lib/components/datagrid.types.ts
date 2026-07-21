@@ -1,7 +1,13 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
-import type { ColumnDef, ColumnState, Density, RowNode } from '../core/types.js'
+import type {
+    ColumnDef,
+    ColumnState,
+    Density,
+    PersistStateOptions,
+    RowNode
+} from '../core/types.js'
 import type { EditingOptions } from '../features/editing/index.js'
 import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
@@ -9,6 +15,12 @@ import type { VirtualizationOptions } from '../features/virtualization/index.js'
 export interface GridRootProps<TRow> {
     /** The grid instance created with `createDataGrid`. */
     grid: GridState<TRow>
+
+    /**
+     * Mirrors column layout, sort, filter, page size and density into
+     * `localStorage` and restores them on mount.
+     */
+    persistState?: PersistStateOptions
 
     /** Additional classes applied to the root element. */
     class?: ClassNameValue
@@ -177,6 +189,12 @@ export type DataGridProps<TRow> = {
 
     /** Renders rows flagged `meta.fullWidth` across every column. */
     fullWidthRow?: GridBodyProps['fullWidthRow']
+
+    /**
+     * Mirrors column layout, sort, filter, page size and density into
+     * `localStorage` and restores them on mount.
+     */
+    persistState?: PersistStateOptions
 
     /** Additional classes applied to the root element. */
     class?: ClassNameValue
