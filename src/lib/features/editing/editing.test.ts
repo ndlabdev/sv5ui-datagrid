@@ -187,6 +187,65 @@ describe('Editing — undo/redo', () => {
     })
 })
 
+describe('Editing — applyEdits', () => {
+    it('writes many cells across rows as one undo step', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+        const events: unknown[] = []
+        grid.events.on('cellEdited', (payload) => events.push(payload))
+
+        expect(
+            state.applyEdits([
+                { rowId: '1', changes: { name: 'Alina', age: 31 } },
+                { rowId: '2', changes: { name: 'Bobby' } }
+            ])
+        ).toBe(true)
+
+        expect(grid.data[0]).toMatchObject({ name: 'Alina', age: 31 })
+        expect(grid.data[1].name).toBe('Bobby')
+        expect(events).toHaveLength(3)
+
+        state.undo()
+        expect(grid.data[0]).toMatchObject({ name: 'Alice', age: 30 })
+        expect(grid.data[1].name).toBe('Bob')
+
+        state.redo()
+        expect(grid.data[0].name).toBe('Alina')
+        expect(grid.data[1].name).toBe('Bobby')
+    })
+
+    it('runs each column parse and validation', () => {
+        const grid = createGrid()
+        getEditing(grid)!.applyEdits([{ rowId: '2', changes: { age: '44' } }])
+        expect(grid.data[1].age).toBe(44)
+    })
+
+    it('rejects the whole batch when one cell is invalid', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+
+        expect(
+            state.applyEdits([
+                { rowId: '1', changes: { name: 'Fine' } },
+                { rowId: '2', changes: { name: 'x' } }
+            ])
+        ).toBe(false)
+        expect(grid.data[0].name).toBe('Alice')
+        expect(state.error).toBe('Too short')
+        expect(state.canUndo).toBe(false)
+    })
+
+    it('skips unknown rows and non-editable columns', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+
+        expect(state.applyEdits([{ rowId: 'nope', changes: { name: 'X' } }])).toBe(false)
+        // `active` is not editable on this column set
+        expect(state.applyEdits([{ rowId: '1', changes: { active: false } }])).toBe(false)
+        expect(grid.data[0].active).toBe(true)
+    })
+})
+
 describe('Editing — row mode', () => {
     it('edits several cells of a row as one transaction and undo', () => {
         const grid = createGrid({ mode: 'row' })

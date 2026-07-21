@@ -1,13 +1,13 @@
 import type { EditTransaction } from '../../core/types.js'
 
 /**
- * One undoable edit. `before` restores the prior values, `after`
- * re-applies the change. A row-mode edit spans several columns in one
- * command so it undoes atomically.
+ * One undoable edit. `before` restores the prior values, `after` re-applies
+ * the change. Both are lists so a row-mode edit or a paste spanning many
+ * rows undoes in a single step.
  */
 export interface UndoCommand {
-    before: EditTransaction
-    after: EditTransaction
+    before: EditTransaction[]
+    after: EditTransaction[]
 }
 
 export interface UndoState {

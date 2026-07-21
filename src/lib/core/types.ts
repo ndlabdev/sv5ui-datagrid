@@ -457,6 +457,26 @@ export interface Keybinding<TRow> {
 }
 
 /**
+ * The cell a `cellDecoration` hook is being asked about. `rowIndex` and
+ * `colIndex` are absolute positions within the filtered/sorted set, matching
+ * the cell's `data-dg-cell="row:col"` attribute.
+ */
+export interface CellDecorationContext<TRow> {
+    node: RowNode<TRow>
+    column: ColumnState<TRow>
+    rowIndex: number
+    colIndex: number
+}
+
+/** Styling a feature applies to one cell. */
+export interface CellDecoration {
+    /** Classes merged onto the cell element. */
+    class?: string
+    /** Sets `aria-selected` on the cell. */
+    selected?: boolean
+}
+
+/**
  * Context handed to feature menu-item factories.
  */
 export interface MenuContext<TRow> {
@@ -492,6 +512,12 @@ export interface GridFeature<TRow> {
     keybindings?: Keybinding<TRow>[]
     /** Column menu / context menu items contributed by the feature. */
     menuItems?: (ctx: MenuContext<TRow>) => MenuItem[]
+    /**
+     * Per-cell styling contributed by the feature — range highlights,
+     * validation marks, heatmaps. Runs for every rendered cell, so keep it
+     * cheap; grids without a decorating feature skip the work entirely.
+     */
+    cellDecoration?: (ctx: CellDecorationContext<TRow>) => CellDecoration | undefined
 }
 
 /**

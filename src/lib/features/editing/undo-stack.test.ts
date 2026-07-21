@@ -11,8 +11,8 @@ import {
 
 function cmd(id: string, before: unknown, after: unknown): UndoCommand {
     return {
-        before: { rowId: id, changes: { v: before } },
-        after: { rowId: id, changes: { v: after } }
+        before: [{ rowId: id, changes: { v: before } }],
+        after: [{ rowId: id, changes: { v: after } }]
     }
 }
 
@@ -29,12 +29,12 @@ describe('undo-stack', () => {
         let state = pushCommand(pushCommand(emptyUndo(), cmd('1', 'a', 'b')), cmd('2', 'x', 'y'))
 
         const u1 = undo(state)!
-        expect(u1.command.before.changes).toEqual({ v: 'x' })
+        expect(u1.command.before[0].changes).toEqual({ v: 'x' })
         state = u1.state
         expect(canRedo(state)).toBe(true)
 
         const r1 = redo(state)!
-        expect(r1.command.after.changes).toEqual({ v: 'y' })
+        expect(r1.command.after[0].changes).toEqual({ v: 'y' })
         state = r1.state
         expect(canRedo(state)).toBe(false)
     })
@@ -46,7 +46,7 @@ describe('undo-stack', () => {
 
         expect(state.stack).toHaveLength(2)
         expect(canRedo(state)).toBe(false)
-        expect(state.stack[1].after.changes).toEqual({ v: 'q' })
+        expect(state.stack[1].after[0].changes).toEqual({ v: 'q' })
     })
 
     it('returns null at the ends of the stack', () => {

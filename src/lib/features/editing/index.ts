@@ -1,3 +1,4 @@
+export { groupChangesByRow } from './edit-batch.js'
 export { Editing, EDITING, editing, editorTypeOf, getEditing } from './editing.svelte.js'
 export type { EditingCell, EditingOptions, EditMode, MoveDirection } from './editing.types.js'
 export { isPromise, runValidation, type Validated } from './validate.js'

@@ -1,6 +1,11 @@
 <script lang="ts">
     import { Empty, Icon, Skeleton } from 'sv5ui'
-    import { SELECTION_COLUMN_ID, type ColumnState, type RowNode } from '../core/types.js'
+    import {
+        SELECTION_COLUMN_ID,
+        type CellDecoration,
+        type ColumnState,
+        type RowNode
+    } from '../core/types.js'
     import { getEditing } from '../features/editing/index.js'
     import { getRowPinning } from '../features/row-pinning/index.js'
     import { getSelection } from '../features/selection/index.js'
@@ -60,6 +65,28 @@
 
     function withBoundary(base: string, index: number): string {
         return grid.columns.groupBoundaryFlags[index] ? `${base} ${boundaryClass}` : base
+    }
+
+    // Resolved once: a grid with no decorating feature pays nothing per cell.
+    const decorators = grid.features.filter((feature) => feature.cellDecoration)
+
+    function decorationOf(
+        node: RowNode<unknown>,
+        column: ColumnState<unknown>,
+        rowIndex: number,
+        colIndex: number
+    ): CellDecoration | undefined {
+        if (decorators.length === 0) return undefined
+        let merged: CellDecoration | undefined
+        for (const feature of decorators) {
+            const decoration = feature.cellDecoration!({ node, column, rowIndex, colIndex })
+            if (!decoration) continue
+            merged = {
+                class: [merged?.class, decoration.class].filter(Boolean).join(' ') || undefined,
+                selected: merged?.selected || decoration.selected
+            }
+        }
+        return merged
     }
 
     const windowStart = $derived(windowStartOf(grid))
@@ -171,10 +198,17 @@
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
                     {@const editingCell = isEditingCell(node, column)}
+                    {@const decoration = decorationOf(
+                        node,
+                        column,
+                        windowStart + viewIndex,
+                        colIndex
+                    )}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <div
                         role="gridcell"
                         aria-colindex={colIndex + 1}
+                        aria-selected={decoration?.selected}
                         tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
                         data-dg-cell="{windowStart + viewIndex}:{colIndex}"
                         class={withBoundary(
@@ -183,7 +217,8 @@
                                 : cellClass[column.align]) +
                                 (!editingCell && isEditable(node, column)
                                     ? ` ${editableClass}`
-                                    : ''),
+                                    : '') +
+                                (decoration?.class ? ` ${decoration.class}` : ''),
                             colIndex
                         )}
                         style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}

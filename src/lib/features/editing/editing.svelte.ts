@@ -9,6 +9,7 @@ import type {
     Keybinding,
     RowNode
 } from '../../core/types.js'
+import { groupChangesByRow } from './edit-batch.js'
 import type { EditingCell, EditingOptions, MoveDirection } from './editing.types.js'
 import {
     canRedo,
@@ -133,8 +134,8 @@ export class Editing<TRow> {
             changes: { [columnId]: validated.value }
         })
         this.#undo = pushCommand(this.#undo, {
-            before,
-            after: { rowId: node.id, changes: { [columnId]: validated.value } }
+            before: [before],
+            after: [{ rowId: node.id, changes: { [columnId]: validated.value } }]
         })
         this.#grid.events.emit('cellEdited', {
             rowId: node.id,
@@ -242,7 +243,10 @@ export class Editing<TRow> {
             return false
         }
         const before = this.#applyTransaction({ rowId: node.id, changes })
-        this.#undo = pushCommand(this.#undo, { before, after: { rowId: node.id, changes } })
+        this.#undo = pushCommand(this.#undo, {
+            before: [before],
+            after: [{ rowId: node.id, changes }]
+        })
         this.#grid.events.emit('rowEdited', { rowId: node.id, changes })
         this.rowEditId = null
         this.drafts = {}
@@ -259,15 +263,81 @@ export class Editing<TRow> {
     undo = (): void => {
         const result = undo(this.#undo)
         if (!result) return
-        this.#applyTransaction(result.command.before)
+        for (const tx of result.command.before) this.#applyTransaction(tx)
         this.#undo = result.state
     }
 
     redo = (): void => {
         const result = redo(this.#undo)
         if (!result) return
-        this.#applyTransaction(result.command.after)
+        for (const tx of result.command.after) this.#applyTransaction(tx)
         this.#undo = result.state
+    }
+
+    /**
+     * Writes many cells at once — the path a paste or any programmatic edit
+     * takes. Every value goes through the column's `parse` and validation;
+     * one invalid cell rejects the whole batch, and a successful batch lands
+     * as a single undo step.
+     */
+    applyEdits = (edits: EditTransaction[]): boolean | Promise<boolean> => {
+        const resolved = edits.flatMap((edit) => {
+            const node = this.#nodeById(edit.rowId)
+            if (!node) return []
+            return Object.entries(edit.changes).flatMap(([columnId, raw]) => {
+                const def = this.#grid.columns.get(columnId)?.def
+                if (!def || !this.editableAt(node, def)) return []
+                return [{ node, def, columnId, result: this.#resolve(node, def, raw) }]
+            })
+        })
+
+        if (resolved.some((entry) => isPromise(entry.result))) {
+            return Promise.all(
+                resolved.map(async (entry) => ({ ...entry, validated: await entry.result }))
+            ).then((entries) => this.#writeEdits(entries))
+        }
+        return this.#writeEdits(
+            resolved.map((entry) => ({ ...entry, validated: entry.result as Validated }))
+        )
+    }
+
+    #writeEdits(
+        entries: {
+            node: RowNode<TRow>
+            def: ColumnDef<TRow>
+            columnId: string
+            validated: Validated
+        }[]
+    ): boolean {
+        const invalid = entries.find((entry) => entry.validated.error !== null)
+        if (invalid) {
+            const message = invalid.validated.error!
+            this.error = message
+            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(message))
+            return false
+        }
+        if (entries.length === 0) return false
+
+        // One transaction per row, so a batch applies and undoes in one step.
+        const after = groupChangesByRow(
+            entries.map((entry) => ({
+                rowId: entry.node.id,
+                columnId: entry.columnId,
+                value: entry.validated.value
+            }))
+        )
+        const before = after.map((tx) => this.#applyTransaction(tx))
+        this.#undo = pushCommand(this.#undo, { before, after })
+
+        for (const entry of entries) {
+            this.#grid.events.emit('cellEdited', {
+                rowId: entry.node.id,
+                columnId: entry.columnId,
+                oldValue: before.find((tx) => tx.rowId === entry.node.id)?.changes[entry.columnId],
+                newValue: entry.validated.value
+            })
+        }
+        return true
     }
 }
 
@@ -328,6 +398,7 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
                 getEditingCell: () => state.active,
                 startRowEdit: state.startRowEdit,
                 commitRow: state.commitRow,
+                applyEdits: state.applyEdits,
                 undo: state.undo,
                 redo: state.redo
             }

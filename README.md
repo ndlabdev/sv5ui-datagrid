@@ -60,6 +60,38 @@ For simple cases, pass `data`/`columns` directly instead of creating a grid inst
 <DataGrid {data} {columns} pageSize={10} />
 ```
 
+## Extension points
+
+Every feature — the built-in ones and yours — is a plain object plugging into the same hooks,
+so anything the package ships can be built from outside it:
+
+| Hook             | What it does                                                     |
+| ---------------- | ---------------------------------------------------------------- |
+| `pipelineStage`  | an ordered, pure transform of the row list (filter, sort, group) |
+| `createState`    | reactive state exposed on `grid.state[id]`                       |
+| `createApi`      | imperative methods merged into `grid.api`                        |
+| `keybindings`    | keyboard bindings, with a `when` guard                           |
+| `menuItems`      | column- and context-menu entries                                 |
+| `cellDecoration` | per-cell classes and `aria-selected`                             |
+
+`cellDecoration` runs for every rendered cell, so keep it cheap — a grid whose features do not
+define it skips the work entirely:
+
+```ts
+const highlightNegative = (): GridFeature<Row> => ({
+    id: 'highlight-negative',
+    cellDecoration: ({ node, column }) =>
+        column.id === 'balance' && node.row.balance < 0 ? { class: 'text-error' } : undefined
+})
+```
+
+### DOM contract
+
+Body cells carry `data-dg-cell="rowIndex:colIndex"` (absolute indices within the
+filtered/sorted set) and rows carry `data-dg-row-id`. Both are public: delegate pointer events
+from a wrapper and read them with `event.target.closest('[data-dg-cell]')` rather than
+attaching a handler per cell.
+
 ## Development
 
 ```bash
