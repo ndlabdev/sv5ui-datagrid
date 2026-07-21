@@ -1,5 +1,8 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Snippet } from 'svelte'
 import type { GridState } from './grid.svelte.js'
+
+export type { StandardSchemaV1 }
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -173,6 +176,83 @@ export interface DataGridLocale {
     rowExpanded: (expanded: boolean) => string
     /** Announced when a row is pinned or unpinned. */
     rowPinned: (side: RowPinSide | null) => string
+    /** Announced when a commit is blocked by validation. */
+    editInvalid: (message: string) => string
+}
+
+/**
+ * Built-in inline editor mapped from a column's `editor`, each backed
+ * by a real sv5ui component:
+ * text → Input, number → InputNumber, select → Select,
+ * selectMenu → SelectMenu (searchable), checkbox → Checkbox,
+ * date → DatePicker, time → TimeField, textarea → Textarea,
+ * rating → Rating, tags → InputTags.
+ */
+export type EditorType =
+    | 'text'
+    | 'number'
+    | 'select'
+    | 'selectMenu'
+    | 'checkbox'
+    | 'date'
+    | 'time'
+    | 'textarea'
+    | 'rating'
+    | 'tags'
+
+/** One option of the built-in select editor. */
+export interface EditorOption {
+    label: string
+    value: string
+}
+
+/**
+ * Context handed to a custom editor snippet. The snippet reads `value`,
+ * pushes changes through `setValue`, and ends the edit with `commit`
+ * (validated) or `cancel`.
+ */
+export interface EditorContext<TRow> {
+    /** Current draft value. */
+    value: unknown
+    /** The row being edited. */
+    row: TRow
+    /** The pipeline node being edited. */
+    node: RowNode<TRow>
+    /** Updates the draft without committing. */
+    setValue: (value: unknown) => void
+    /** Validates and, if valid, writes the draft to the row. */
+    commit: () => void
+    /** Discards the draft and leaves edit mode. */
+    cancel: () => void
+    /** Current validation message, or null. */
+    error: string | null
+}
+
+/**
+ * Advanced editor configuration for a column.
+ */
+export interface ColumnEditorDef<TRow> {
+    /** Built-in editor family. */
+    type: EditorType
+    /** Options for the `select` editor. */
+    options?: EditorOption[]
+    /** Custom editor snippet, overriding the built-in for `type`. */
+    editor?: Snippet<[EditorContext<TRow>]>
+}
+
+/** Predicate/flag deciding whether a cell can be edited. */
+export type Editable<TRow> =
+    boolean | ((ctx: { row: TRow; node: RowNode<TRow>; value: unknown }) => boolean)
+
+/**
+ * A single-row edit: the changed fields keyed by column id.
+ * The unit of the transaction and undo/redo APIs.
+ */
+export interface EditTransaction {
+    /** Target row id (from `getRowId`). */
+    rowId: string
+    /** Column id → new value. */
+    changes: Record<string, unknown>
 }
 
 /**
@@ -280,6 +360,38 @@ export interface ColumnDef<TRow> {
      * Custom cell renderer.
      */
     cell?: Snippet<[DataGridCellContext<TRow>]>
+
+    /**
+     * Whether cells in this column can be edited. A predicate receives
+     * the row, node and value.
+     * @default false
+     */
+    editable?: Editable<TRow>
+
+    /**
+     * Inline editor: a built-in editor type or an advanced definition
+     * with options / a custom snippet. Defaults to `'text'` when the
+     * column is editable and no editor is set.
+     */
+    editor?: EditorType | ColumnEditorDef<TRow>
+
+    /**
+     * Standard-schema (zod / valibot / arktype / …) validating a
+     * committed value. Invalid commits are blocked with an error.
+     */
+    schema?: StandardSchemaV1
+
+    /**
+     * Imperative validator, an alternative to `schema`. Returns an error
+     * message, or null when valid.
+     */
+    validate?: (value: unknown, row: TRow) => string | null
+
+    /**
+     * Transforms the editor's raw output into the value written to the
+     * row (e.g. parse a number). Runs before validation.
+     */
+    parse?: (input: unknown, row: TRow) => unknown
 }
 
 /**
@@ -398,6 +510,8 @@ export interface GridEventMap {
     rowsCopied: { count: number }
     rowExpanded: { id: string; expanded: boolean }
     rowPinnedChanged: { id: string; side: RowPinSide | null }
+    cellEdited: { rowId: string; columnId: string; oldValue: unknown; newValue: unknown }
+    rowEdited: { rowId: string; changes: Record<string, unknown> }
 }
 
 export interface DataGridOptions<TRow> {

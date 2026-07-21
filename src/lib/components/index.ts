@@ -50,6 +50,7 @@ export type {
     DataGridProps,
     GridBodyProps,
     DataGridFullWidthContext,
+    GridCellEditorProps,
     GridColumnChooserProps,
     GridColumnMenuProps,
     GridContextMenuProps,

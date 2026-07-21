@@ -15,13 +15,21 @@ export const defaultLocale: DataGridLocale = {
     selected: (count) => `${count} rows selected`,
     copied: (count) => `${count} rows copied`,
     rowExpanded: (expanded) => (expanded ? 'row expanded' : 'row collapsed'),
-    rowPinned: (side) => (side ? `row pinned ${side}` : 'row unpinned')
+    rowPinned: (side) => (side ? `row pinned ${side}` : 'row unpinned'),
+    editInvalid: (message) => message
 }
 
 export class Announcer<TRow> {
     message = $state('')
 
+    readonly locale: DataGridLocale
+
+    announce(message: string): void {
+        this.message = message
+    }
+
     constructor(grid: GridState<TRow>, locale: DataGridLocale) {
+        this.locale = locale
         grid.events.on('sortChanged', ({ sort }) => {
             if (sort.length === 0) {
                 this.message = locale.sortCleared()

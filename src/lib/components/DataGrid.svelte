@@ -2,6 +2,7 @@
     import { untrack } from 'svelte'
     import { createDataGrid } from '../core/grid.svelte.js'
     import { columnOps } from '../features/column-ops/index.js'
+    import { editing } from '../features/editing/index.js'
     import { filtering } from '../features/filtering/index.js'
     import { pagination } from '../features/pagination/index.js'
     import { selection } from '../features/selection/index.js'
@@ -28,6 +29,7 @@
         getRowId,
         pageSize,
         selection: selectionProp,
+        editing: editingProp,
         virtual,
         density,
         toolbar = false,
@@ -53,6 +55,9 @@
                     columnOps<TRow>(),
                     ...(selectionProp
                         ? [selection<TRow>(selectionProp === true ? undefined : selectionProp)]
+                        : []),
+                    ...(editingProp
+                        ? [editing<TRow>(editingProp === true ? undefined : editingProp)]
                         : []),
                     virtual
                         ? virtualization<TRow>(virtual === true ? undefined : virtual)

@@ -31,6 +31,13 @@ export const datagridVariants = tv({
         empty: 'w-full p-4',
         toggleButton:
             'mr-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
+        cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
+        cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
+        cellEditorPad: 'px-2',
+        cellEditorField: 'w-full',
+        cellError:
+            'absolute top-full left-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
+        cellEditable: 'cursor-text',
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         pinnedRow:

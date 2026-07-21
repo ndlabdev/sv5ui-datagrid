@@ -8,7 +8,7 @@ import {
 } from '../lib/features/filtering/index.js'
 import { rowsToMatrix, toCsv, toTsv } from '../lib/features/selection/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
-import { benchColumns, makeBenchNodes } from './data.js'
+import { benchColumns, makeBenchNodes, makeBenchRows } from './data.js'
 
 const nodes100k = makeBenchNodes(100_000)
 const benchColumnStates = benchColumns.map((def) => createColumnState(def))
@@ -67,6 +67,17 @@ describe('performance budgets (coarse regression ceilings; PLAN §8 targets are 
     it('collects distinct values from 100k rows within budget', () => {
         const elapsed = measure(() => distinctValues(nodes100k, benchColumns[0]))
         expect(elapsed).toBeLessThan(200)
+    })
+
+    it('applies a single-cell transaction to a 100k array within budget', () => {
+        const rows = makeBenchRows(100_000)
+        const elapsed = measure(() => {
+            const index = 50_000
+            const next = rows.slice()
+            next[index] = { ...next[index], name: 'Edited' }
+            void next
+        })
+        expect(elapsed).toBeLessThan(20)
     })
 
     it('flattens 100k rows with structural meta and expanded details within budget', () => {

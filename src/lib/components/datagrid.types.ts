@@ -2,6 +2,7 @@ import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid.svelte.js'
 import type { ColumnDef, ColumnState, Density, RowNode } from '../core/types.js'
+import type { EditingOptions } from '../features/editing/index.js'
 import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
@@ -135,6 +136,15 @@ export interface GridColumnMenuProps<TRow> {
     column: ColumnState<TRow>
 }
 
+export interface GridCellEditorProps<TRow> {
+    /** The node whose cell is being edited. */
+    node: RowNode<TRow>
+    /** The column being edited. */
+    column: ColumnState<TRow>
+    /** Row edit mode: bind the draft to `drafts[columnId]`. */
+    rowMode?: boolean
+}
+
 export interface GridContextMenuProps {
     /**
      * File name used by the Export CSV item.
@@ -182,6 +192,7 @@ export type DataGridProps<TRow> = {
           getRowId?: never
           pageSize?: never
           selection?: never
+          editing?: never
           virtual?: never
           density?: never
       }
@@ -205,6 +216,9 @@ export type DataGridProps<TRow> = {
            * copy and CSV export.
            */
           selection?: SelectionOptions<TRow> | true
+
+          /** Enables inline editing (double-click / Enter / F2). */
+          editing?: EditingOptions | true
 
           /**
            * Enables row virtualization instead of pagination.

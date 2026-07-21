@@ -2,6 +2,7 @@
     import { useElementSize } from 'sv5ui'
     import { HEADER_ROW, type CellPosition } from '../core/focus-model.svelte.js'
     import { getColumnOps } from '../features/column-ops/index.js'
+    import { getEditing } from '../features/editing/index.js'
     import { getFiltering } from '../features/filtering/index.js'
     import { getPagination } from '../features/pagination/index.js'
     import { getRowPinning } from '../features/row-pinning/index.js'
@@ -19,6 +20,7 @@
     const columnOps = getColumnOps(grid)
     const filteringState = getFiltering(grid)
     const pinning = getRowPinning(grid)
+    const editing = getEditing(grid)
     const slots = datagridVariants()
 
     const pinnedRowCount = $derived(pinning?.pinnedCount ?? 0)
@@ -116,6 +118,30 @@
         grid.focus.focusCell(grid.focus.active)
     }
 
+    function isPrintable(event: KeyboardEvent): boolean {
+        return (
+            event.key.length === 1 &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            event.key !== ' '
+        )
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (grid.focus.handleKeydown(event)) return
+        if (!editing || editing.active || editing.rowEditId || !isPrintable(event)) return
+
+        const { row, col } = grid.focus.active
+        if (row < 0) return
+        const node = grid.preWindowNodes[row]
+        const column = grid.columns.visible[col]
+        if (!node || !column || !editing.editableAt(node, column.def)) return
+
+        event.preventDefault()
+        editing.startEditWith(node.id, column.id, event.key)
+    }
+
     function handleScroll(event: Event) {
         const target = event.currentTarget as HTMLElement
         virtualization?.virtualizer.onScroll(target.scrollTop)
@@ -134,7 +160,7 @@
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: className })}
     style={grid.columns.style}
-    onkeydown={grid.focus.handleKeydown}
+    onkeydown={handleKeydown}
     onfocus={redirectFocus}
     onfocusin={syncFocus}
     onscroll={handleScroll}

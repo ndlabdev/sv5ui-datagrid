@@ -45,6 +45,7 @@ export {
 
 // Feature modules
 export * from './features/column-ops/index.js'
+export * from './features/editing/index.js'
 export * from './features/filtering/index.js'
 export * from './features/pagination/index.js'
 export * from './features/row-pinning/index.js'

@@ -1,10 +1,12 @@
 <script lang="ts">
     import { Empty, Icon, Skeleton } from 'sv5ui'
-    import { SELECTION_COLUMN_ID, type RowNode } from '../core/types.js'
+    import { SELECTION_COLUMN_ID, type ColumnState, type RowNode } from '../core/types.js'
+    import { getEditing } from '../features/editing/index.js'
     import { getRowPinning } from '../features/row-pinning/index.js'
     import { getSelection } from '../features/selection/index.js'
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
+    import GridCellEditor from './GridCellEditor.svelte'
     import type { GridBodyProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
     import GridSelectionCell from './GridSelectionCell.svelte'
@@ -24,7 +26,23 @@
     const virtualization = getVirtualization(grid)
     const selectionState = getSelection(grid)
     const pinning = getRowPinning(grid)
+    const editing = getEditing(grid)
     const slots = datagridVariants()
+    const editableClass = slots.cellEditable()
+
+    function isEditingCell(node: RowNode<unknown>, column: ColumnState<unknown>): boolean {
+        if (!editing) return false
+        if (editing.active) return editing.isEditing(node.id, column.id)
+        return editing.rowEditId === node.id && editing.editableAt(node, column.def)
+    }
+
+    function isEditable(node: RowNode<unknown>, column: ColumnState<unknown>): boolean {
+        return editing?.editableAt(node, column.def) ?? false
+    }
+
+    function startEdit(node: RowNode<unknown>, column: ColumnState<unknown>): void {
+        if (editing && isEditable(node, column)) editing.startEdit(node.id, column.id)
+    }
 
     const rowClass = slots.row()
     const rowSelectedClass = `${rowClass} ${slots.rowSelected()}`
@@ -152,6 +170,7 @@
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
+                    {@const editingCell = isEditingCell(node, column)}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <div
                         role="gridcell"
@@ -159,19 +178,28 @@
                         tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
                         data-dg-cell="{windowStart + viewIndex}:{colIndex}"
                         class={withBoundary(
-                            column.pinned
+                            (column.pinned
                                 ? `${cellClass[column.align]} ${pinnedCellClass}`
-                                : cellClass[column.align],
+                                : cellClass[column.align]) +
+                                (!editingCell && isEditable(node, column)
+                                    ? ` ${editableClass}`
+                                    : ''),
                             colIndex
                         )}
                         style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
                         style:left={pinLeftVar(column)}
                         style:right={pinRightVar(column)}
-                        style:padding-left={indentOf(node, colIndex)}
+                        style:padding={editingCell ? '0' : undefined}
+                        style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
                         onclick={() =>
                             grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
+                        ondblclick={() => startEdit(node, column)}
                     >
-                        {@render cellContent(node, column, colIndex, windowStart + viewIndex)}
+                        {#if editingCell}
+                            <GridCellEditor {node} {column} rowMode={editing?.active === null} />
+                        {:else}
+                            {@render cellContent(node, column, colIndex, windowStart + viewIndex)}
+                        {/if}
                     </div>
                 {/each}
             {/if}
