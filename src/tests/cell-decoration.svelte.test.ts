@@ -90,6 +90,21 @@ describe('cellDecoration extension point', () => {
         expect(cellAt(screen.container, 0, 1).className).not.toContain('x-bold')
     })
 
+    it('hands the grid to the hook so a feature can read its own state', async () => {
+        const marker: GridFeature<Cell> = {
+            id: 'state-decorator',
+            createState: () => ({ markedColumn: 'b' }),
+            cellDecoration: ({ grid, column }) => {
+                const state = grid.feature<{ markedColumn: string }>('state-decorator')
+                return column.id === state?.markedColumn ? { class: 'x-decorated' } : undefined
+            }
+        }
+        const screen = await renderGrid(makeGrid([marker]))
+
+        expect(cellAt(screen.container, 0, 1).className).toContain('x-decorated')
+        expect(cellAt(screen.container, 0, 0).className).not.toContain('x-decorated')
+    })
+
     it('leaves cells untouched when no feature decorates', async () => {
         const screen = await renderGrid(makeGrid())
 

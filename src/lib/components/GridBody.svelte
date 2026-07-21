@@ -79,7 +79,13 @@
         if (decorators.length === 0) return undefined
         let merged: CellDecoration | undefined
         for (const feature of decorators) {
-            const decoration = feature.cellDecoration!({ node, column, rowIndex, colIndex })
+            const decoration = feature.cellDecoration!({
+                grid,
+                node,
+                column,
+                rowIndex,
+                colIndex
+            })
             if (!decoration) continue
             merged = {
                 class: [merged?.class, decoration.class].filter(Boolean).join(' ') || undefined,

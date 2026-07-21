@@ -462,6 +462,8 @@ export interface Keybinding<TRow> {
  * the cell's `data-dg-cell="row:col"` attribute.
  */
 export interface CellDecorationContext<TRow> {
+    /** The grid, so a feature can read the state it registered. */
+    grid: GridState<TRow>
     node: RowNode<TRow>
     column: ColumnState<TRow>
     rowIndex: number
