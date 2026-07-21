@@ -389,3 +389,38 @@ describe('header groups', () => {
         expect(grid.columns.visible.map((column) => column.id)).toEqual(['name', 'email', 'age'])
     })
 })
+
+describe('header alignment', () => {
+    it('keeps the label on the same side as the cell content', async () => {
+        /** Wide enough that the label has room to sit anywhere in the cell. */
+        const wide: ColumnDef<Person>[] = [
+            { id: 'name', header: 'Name', sortable: true, width: 240 },
+            { id: 'age', header: 'Age', sortable: true, align: 'right', width: 240 }
+        ]
+        const grid = createDataGrid<Person>({
+            data: people.slice(0, 5),
+            columns: wide,
+            getRowId,
+            features: [sorting(), columnOps()]
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const headers = [...screen.container.querySelectorAll<HTMLElement>('[role="columnheader"]')]
+
+        /** Free space on each side of the label, which is where the align shows up. */
+        function slack(headerText: string) {
+            const cell = headers.find((header) => header.textContent?.includes(headerText))!
+            const label = cell.querySelector('button')!
+            const cellBox = cell.getBoundingClientRect()
+            const labelBox = label.getBoundingClientRect()
+            return { before: labelBox.left - cellBox.left, after: cellBox.right - labelBox.right }
+        }
+
+        const right = slack('Age')
+        expect(right.before).toBeGreaterThan(right.after)
+
+        const left = slack('Name')
+        expect(left.after).toBeGreaterThan(left.before)
+    })
+})

@@ -225,6 +225,8 @@
         {#each columnWindow.renderColumns as entry (entry.column.id)}
             {@const column = entry.column}
             {@const index = entry.index}
+            {@const spacer =
+                Boolean(columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
                 role="columnheader"
@@ -248,6 +250,9 @@
                 onpointerup={headerPointerEnd}
                 onpointercancel={headerPointerCancel}
             >
+                {#if spacer && column.align !== 'left'}
+                    <span class="grow"></span>
+                {/if}
                 {#if column.id === SELECTION_COLUMN_ID}
                     <GridSelectionCell />
                 {:else if sorting && column.def.sortable}
@@ -267,7 +272,7 @@
                 {:else}
                     <span class="truncate">{column.header}</span>
                 {/if}
-                {#if (columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
+                {#if spacer && column.align !== 'right'}
                     <span class="grow"></span>
                 {/if}
                 {#if filteringState && column.id !== SELECTION_COLUMN_ID}

@@ -5,10 +5,10 @@ export const datagridVariants = tv({
         root: 'w-full space-y-3',
         toolbar: 'flex flex-wrap items-center gap-2',
         viewport: 'relative w-full overflow-auto rounded-lg border border-outline-variant text-sm',
-        header: 'sticky top-0 z-10 min-w-full border-b border-outline-variant bg-surface-container',
+        header: 'sticky top-0 z-10 min-w-min border-b border-outline-variant bg-surface-container',
         headerRow: 'grid [grid-template-columns:var(--dg-grid-template)]',
         groupRow:
-            'relative grid [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[16] after:h-px after:bg-outline-variant',
+            'relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[16] after:h-px after:bg-outline-variant',
         headerCell:
             'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         groupCell:
@@ -26,7 +26,7 @@ export const datagridVariants = tv({
         chooserItem: 'flex items-center gap-2 px-1 py-1',
         body: 'relative',
         bodyOffset: 'will-change-transform',
-        row: 'group/row relative grid [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
+        row: 'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
         toggleButton:
@@ -41,9 +41,9 @@ export const datagridVariants = tv({
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         pinnedRow:
-            'group/row relative grid [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
-        pinnedRowsTop: 'sticky z-[8] min-w-full shadow-sm',
-        pinnedRowsBottom: 'sticky bottom-0 z-[8] min-w-full shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
+            'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
+        pinnedRowsTop: 'sticky z-[8] min-w-min shadow-sm',
+        pinnedRowsBottom: 'sticky bottom-0 z-[8] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
         groupBoundary: 'border-r border-outline-variant',
