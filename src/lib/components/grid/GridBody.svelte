@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
     import { Empty, Icon, Skeleton } from 'sv5ui'
     import {
         SELECTION_COLUMN_ID,
@@ -26,9 +26,9 @@
         onRetry,
         fullWidthRow,
         class: className
-    }: GridBodyProps = $props()
+    }: GridBodyProps<TRow> = $props()
 
-    const grid = getGridContext()
+    const grid = getGridContext<TRow>()
     const virtualization = getVirtualization(grid)
     const selectionState = getSelection(grid)
     const pinning = getRowPinning(grid)
@@ -36,17 +36,17 @@
     const slots = datagridVariants()
     const editableClass = slots.cellEditable()
 
-    function isEditingCell(node: RowNode<unknown>, column: ColumnState<unknown>): boolean {
+    function isEditingCell(node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
         if (!editing) return false
         if (editing.active) return editing.isEditing(node.id, column.id)
         return editing.rowEditId === node.id && editing.editableAt(node, column.def)
     }
 
-    function isEditable(node: RowNode<unknown>, column: ColumnState<unknown>): boolean {
+    function isEditable(node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
         return editing?.editableAt(node, column.def) ?? false
     }
 
-    function startEdit(node: RowNode<unknown>, column: ColumnState<unknown>): void {
+    function startEdit(node: RowNode<TRow>, column: ColumnState<TRow>): void {
         if (editing && isEditable(node, column)) editing.startEdit(node.id, column.id)
     }
 
@@ -72,8 +72,8 @@
     const decorators = grid.features.filter((feature) => feature.cellDecoration)
 
     function decorationOf(
-        node: RowNode<unknown>,
-        column: ColumnState<unknown>,
+        node: RowNode<TRow>,
+        column: ColumnState<TRow>,
         rowIndex: number,
         colIndex: number
     ): CellDecoration | undefined {
@@ -117,19 +117,19 @@
         return `${virtualization.virtualizer.sizeOf(row)}px`
     }
 
-    function indentOf(node: RowNode<unknown>, colIndex: number): string | undefined {
+    function indentOf(node: RowNode<TRow>, colIndex: number): string | undefined {
         const level = node.meta?.level ?? 0
         if (colIndex !== firstDataIndex || level === 0) return undefined
         return `calc(0.75rem + ${level * 1.25}rem)`
     }
 
-    function ariaExpanded(node: RowNode<unknown>): boolean | undefined {
+    function ariaExpanded(node: RowNode<TRow>): boolean | undefined {
         return node.meta?.expandable ? grid.expansion.isExpanded(node.id) : undefined
     }
 </script>
 
 {#snippet cellContent(
-    node: RowNode<unknown>,
+    node: RowNode<TRow>,
     column: (typeof columnWindow.renderColumns)[number]['column'],
     colIndex: number,
     rowIndex: number
@@ -188,7 +188,6 @@
             style:width={columnWindow.rowWidth}
         >
             {#if node.meta?.fullWidth}
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
                     role="gridcell"
                     aria-colindex={1}
@@ -196,7 +195,6 @@
                     data-dg-cell="{rowIndex}:0"
                     class={slots.fullWidthCell()}
                     style="grid-column: 1 / -1"
-                    onclick={() => grid.focus.focusCell({ row: rowIndex, col: 0 })}
                 >
                     {#if fullWidthRow}
                         {@render fullWidthRow({
@@ -214,7 +212,6 @@
                     {@const colIndex = entry.index}
                     {@const editingCell = isEditingCell(node, column)}
                     {@const decoration = decorationOf(node, column, rowIndex, colIndex)}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <div
                         role="gridcell"
                         aria-colindex={colIndex + 1}
@@ -236,7 +233,6 @@
                         style:inset-inline-end={pinRightVar(column)}
                         style:padding={editingCell ? '0' : undefined}
                         style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
-                        onclick={() => grid.focus.focusCell({ row: rowIndex, col: colIndex })}
                         ondblclick={() => startEdit(node, column)}
                     >
                         {#if editingCell}
@@ -251,7 +247,7 @@
     {/each}
 {/snippet}
 
-{#snippet pinnedRows(nodes: RowNode<unknown>[], baseIndex: number, section: 'top' | 'bottom')}
+{#snippet pinnedRows(nodes: RowNode<TRow>[], baseIndex: number, section: 'top' | 'bottom')}
     {#each nodes as node, pinIndex (node.id)}
         <div
             role="row"

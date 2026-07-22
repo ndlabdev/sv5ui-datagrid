@@ -118,27 +118,56 @@
             : `[data-dg-pinned-cell="${section}:${position.row}:${position.col}"]`
     }
 
-    function syncFocus(event: FocusEvent) {
+    /** The cell an event landed in, read back from its descriptor attribute. */
+    function positionOf(event: Event): CellPosition | null {
         const target = event.target as HTMLElement | null
         const pinned = target?.closest('[data-dg-pinned-cell]')?.getAttribute('data-dg-pinned-cell')
         if (pinned) {
             const [section, row, col] = pinned.split(':')
-            grid.focus.focusCell({
+            return {
                 row: Number(row),
                 col: Number(col),
                 section: section as 'top' | 'bottom'
-            })
-            return
+            }
         }
 
         const descriptor = target?.closest('[data-dg-cell]')?.getAttribute('data-dg-cell')
-        if (!descriptor) return
+        if (!descriptor) return null
 
         const [row, col] = descriptor.split(':').map(Number)
-        const active = grid.focus.active
-        if (active.row !== row || active.col !== col || sectionOf(active) !== 'body') {
-            grid.focus.focusCell({ row, col })
+        return { row, col }
+    }
+
+    function syncFocus(event: FocusEvent) {
+        const position = positionOf(event)
+        if (!position) return
+        if (position.section) {
+            grid.focus.focusCell(position)
+            return
         }
+
+        const active = grid.focus.active
+        if (
+            active.row !== position.row ||
+            active.col !== position.col ||
+            sectionOf(active) !== 'body'
+        ) {
+            grid.focus.focusCell(position)
+        }
+    }
+
+    /**
+     * Cells delegate their click here instead of each carrying a handler. The
+     * viewport already owns the keyboard half of the same interaction, so the
+     * two halves stay together — and a grid renders thousands of cells that
+     * would otherwise each allocate a closure per render.
+     *
+     * A cell that wants to swallow its click stops propagation, exactly as it
+     * did when the handler was bound per cell.
+     */
+    function focusClickedCell(event: MouseEvent) {
+        const position = positionOf(event)
+        if (position) grid.focus.focusCell(position)
     }
 
     function redirectFocus(event: FocusEvent) {
@@ -199,6 +228,18 @@
     }
 </script>
 
+<!--
+    `grid` and `treegrid` are both interactive composite roles, and a
+    focusable container is exactly what the grid pattern calls for. The
+    compiler reads the role off a ternary, cannot resolve it to either
+    literal, and so falls back to treating the element as non-interactive.
+
+    The only way to satisfy it is a static role, which would mean branching
+    the element and duplicating every attribute on it — or hiding the
+    attributes behind a spread, which silences the check without answering
+    it and re-diffs the whole attribute set on each resize frame. Neither
+    trade is worth making for a false positive.
+-->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
     bind:this={element}
@@ -209,6 +250,7 @@
     class={slots.viewport({ class: className })}
     style={grid.columns.style}
     onkeydown={handleKeydown}
+    onclick={focusClickedCell}
     onfocus={redirectFocus}
     onfocusin={syncFocus}
     onscroll={handleScroll}

@@ -53,10 +53,9 @@ export interface DataGridFullWidthContext<TRow> {
     rowIndex: number
 }
 
-export interface GridBodyProps {
+export interface GridBodyProps<TRow = unknown> {
     /** Renders rows flagged `meta.fullWidth` across every column. */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fullWidthRow?: Snippet<[DataGridFullWidthContext<any>]>
+    fullWidthRow?: Snippet<[DataGridFullWidthContext<TRow>]>
 
     /**
      * Text shown when there are no rows to display.
@@ -188,7 +187,7 @@ export type DataGridProps<TRow> = {
     onRetry?: () => void
 
     /** Renders rows flagged `meta.fullWidth` across every column. */
-    fullWidthRow?: GridBodyProps['fullWidthRow']
+    fullWidthRow?: GridBodyProps<TRow>['fullWidthRow']
 
     /**
      * Mirrors column layout, sort, filter, page size and density into

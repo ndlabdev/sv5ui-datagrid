@@ -241,7 +241,6 @@
             {@const index = entry.index}
             {@const spacer =
                 Boolean(columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
                 role="columnheader"
                 aria-colindex={index + 1}
@@ -258,7 +257,6 @@
                 style:inset-inline-start={pinLeftVar(column)}
                 style:inset-inline-end={pinRightVar(column)}
                 onclickcapture={maybeSuppressClick}
-                onclick={() => grid.focus.focusCell({ row: HEADER_ROW, col: index })}
                 onpointerdown={(event) => headerPointerDown(event, column.id)}
                 onpointermove={headerPointerMove}
                 onpointerup={headerPointerEnd}

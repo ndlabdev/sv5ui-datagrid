@@ -4,20 +4,20 @@
  * allowed through; `javascript:`, `data:` and `vbscript:` are dropped so a
  * hostile row cannot run script in the host page.
  */
-const NAVIGABLE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:', 'sms:', 'ftp:'])
+const NAVIGABLE_PROTOCOLS = new Set(['http', 'https', 'mailto', 'tel', 'sms', 'ftp'])
 
-const SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/
-
-/**
- * Whitespace and control characters a browser drops before resolving a url.
- * Matching them is the point here — they are exactly what hides a scheme.
- */
-// eslint-disable-next-line no-control-regex
-const IGNORED = /[\u0000-\u0020\u00a0\ufeff]/g
+/** A url is relative once one of these appears before any `:`. */
+const PATH_START = /[/?#]/
 
 /**
  * Returns the href to render, or `undefined` when the value is not safe to
  * navigate to. Relative urls and fragments carry no scheme and are kept.
+ *
+ * The scheme is matched raw against the allowlist rather than being cleaned
+ * up first. A browser ignores control characters and whitespace when it
+ * resolves a url, so `java\tscript:` and `java script:` both run script — but
+ * neither spells a name on the list, so both are rejected without the grid
+ * having to enumerate every character a browser might drop.
  */
 export function safeHref(value: unknown): string | undefined {
     if (value === null || value === undefined) return undefined
@@ -25,10 +25,10 @@ export function safeHref(value: unknown): string | undefined {
     const href = String(value).trim()
     if (href === '') return undefined
 
-    // The scheme has to be read from a stripped copy, because a browser reads
-    // `java\tscript:` and `java script:` as `javascript:`.
-    const scheme = SCHEME.exec(href.replace(IGNORED, ''))
-    if (!scheme) return href
+    const colon = href.indexOf(':')
+    const pathStart = href.search(PATH_START)
+    const relative = colon < 0 || (pathStart >= 0 && pathStart < colon)
+    if (relative) return href
 
-    return NAVIGABLE_PROTOCOLS.has(scheme[0].toLowerCase()) ? href : undefined
+    return NAVIGABLE_PROTOCOLS.has(href.slice(0, colon).toLowerCase()) ? href : undefined
 }
