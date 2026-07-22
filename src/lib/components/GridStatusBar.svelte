@@ -14,12 +14,16 @@
     const pinning = getRowPinning(grid)
     const slots = datagridVariants()
 
-    const total = $derived(grid.sourceNodes.length)
+    // In server mode only one page is in memory, so the counts have to come
+    // from the server total rather than from the nodes on hand.
+    const total = $derived(pagination?.server ? pagination.total : grid.sourceNodes.length)
     const filtered = $derived(
-        grid.preWindowNodes.reduce(
-            (count, node) => (node.meta?.fullWidth ? count : count + 1),
-            pinning?.pinnedCount ?? 0
-        )
+        pagination?.server
+            ? total
+            : grid.preWindowNodes.reduce(
+                  (count, node) => (node.meta?.fullWidth ? count : count + 1),
+                  pinning?.pinnedCount ?? 0
+              )
     )
     const selected = $derived(selectionState?.count ?? 0)
 </script>

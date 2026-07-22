@@ -17,17 +17,16 @@
     const rangeStart = $derived(
         pagination?.pageSize ? (pagination.page - 1) * pagination.pageSize + 1 : 1
     )
+    const total = $derived(pagination?.total ?? grid.totalRows)
     const rangeEnd = $derived(
-        pagination?.pageSize
-            ? Math.min(pagination.page * pagination.pageSize, grid.totalRows)
-            : grid.totalRows
+        pagination?.pageSize ? Math.min(pagination.page * pagination.pageSize, total) : total
     )
 </script>
 
-{#if pagination && pagination.pageSize && grid.totalRows > 0}
+{#if pagination && pagination.pageSize && total > 0}
     <div class={slots.footer({ class: className })}>
         <span class="text-xs text-on-surface-variant">
-            {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {grid.totalRows.toLocaleString()}
+            {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {total.toLocaleString()}
         </span>
         <div class="flex items-center gap-2">
             <Select
@@ -38,9 +37,9 @@
                     (value) => pagination.setPageSize(Number(value))
                 }
             />
-            {#if grid.totalRows > pagination.pageSize}
+            {#if total > pagination.pageSize}
                 <Pagination
-                    total={grid.totalRows}
+                    {total}
                     itemsPerPage={pagination.pageSize}
                     bind:page={() => pagination.page, (page) => pagination.setPage(page)}
                 />

@@ -194,8 +194,8 @@
                             cell.start + cell.span - 1
                         )}
                         style:grid-column={`${cell.start + 1} / span ${cell.span}`}
-                        style:left={pinLeftOf(cell)}
-                        style:right={pinRightOf(cell)}
+                        style:inset-inline-start={pinLeftOf(cell)}
+                        style:inset-inline-end={pinRightOf(cell)}
                     >
                         {cell.header}
                         {#if columnOps?.canResize && !cell.isPlaceholder}
@@ -241,8 +241,8 @@
                     index
                 )}
                 style:grid-column={columnWindow.windowed ? index + 1 : undefined}
-                style:left={pinLeftVar(column)}
-                style:right={pinRightVar(column)}
+                style:inset-inline-start={pinLeftVar(column)}
+                style:inset-inline-end={pinRightVar(column)}
                 onclickcapture={maybeSuppressClick}
                 onclick={() => grid.focus.focusCell({ row: HEADER_ROW, col: index })}
                 onpointerdown={(event) => headerPointerDown(event, column.id)}
@@ -274,7 +274,7 @@
                          still needs an accessible name. -->
                     <span class="sr-only">{column.id}</span>
                 {:else}
-                    <span class="truncate">{column.header}</span>
+                    <span class="truncate" data-dg-truncate>{column.header}</span>
                 {/if}
                 {#if spacer && column.align !== 'right'}
                     <span class="grow"></span>

@@ -90,6 +90,25 @@ describe('column virtualization', () => {
         expect(header.at(-1)).toBeLessThanOrEqual(COLS)
     })
 
+    it('windows the same columns under dir="rtl", where scrollLeft goes negative', async () => {
+        const ltr = makeGrid(1_000)
+        const ltrScreen = await render(VirtualGrid, { grid: ltr, viewportClass: 'h-100 w-150' })
+        const ltrViewport = ltrScreen.container.querySelector<HTMLElement>('[role="grid"]')!
+        ltrViewport.scrollLeft = 1200
+        await expect.poll(() => headerIndices(ltrScreen.container)[0]).toBeGreaterThan(1)
+        const expected = headerIndices(ltrScreen.container)
+
+        const rtl = makeGrid(1_000)
+        const rtlScreen = await render(VirtualGrid, { grid: rtl, viewportClass: 'h-100 w-150' })
+        const rtlViewport = rtlScreen.container.querySelector<HTMLElement>('[role="grid"]')!
+        rtlViewport.dir = 'rtl'
+
+        // RTL reports zero at the right edge and counts down from there.
+        rtlViewport.scrollLeft = -1200
+        await expect.poll(() => headerIndices(rtlScreen.container)).toEqual(expected)
+        expect(firstBodyRowIndices(rtlScreen.container)).toEqual(expected)
+    })
+
     it('keyboard navigation scrolls unrendered columns into view', async () => {
         const grid = makeGrid(50)
         const screen = await render(VirtualGrid, { grid, viewportClass: 'h-100 w-150' })

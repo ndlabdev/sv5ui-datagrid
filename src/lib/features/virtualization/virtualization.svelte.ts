@@ -1,6 +1,7 @@
 import { ColumnVirtualizer } from '../../core/column-virtualizer.svelte.js'
 import type { GridState } from '../../core/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/pipeline.svelte.js'
+import { scrollStart, setScrollStart } from '../../core/scroll.js'
 import type { GridFeature } from '../../core/types.js'
 import { Virtualizer } from '../../core/virtualizer.svelte.js'
 import type { VirtualizationOptions } from './virtualization.types.js'
@@ -83,8 +84,8 @@ export class Virtualization<TRow> {
     }
 
     #setScrollLeft(element: HTMLElement, value: number): void {
-        element.scrollLeft = value
-        if (this.columnVirtualizer) this.columnVirtualizer.scrollLeft = element.scrollLeft
+        setScrollStart(element, value)
+        if (this.columnVirtualizer) this.columnVirtualizer.scrollLeft = scrollStart(element)
     }
 
     ensureColVisible = (col: number): void => {
@@ -95,11 +96,12 @@ export class Virtualization<TRow> {
 
         const left = columnVirtualizer.offsetOf(col)
         const right = offsets[Math.min(col + 1, offsets.length - 1)]
-        if (left < element.scrollLeft) {
+        const start = scrollStart(element)
+        if (left < start) {
             this.#setScrollLeft(element, left)
         } else if (
             columnVirtualizer.viewportWidth > 0 &&
-            right > element.scrollLeft + columnVirtualizer.viewportWidth
+            right > start + columnVirtualizer.viewportWidth
         ) {
             this.#setScrollLeft(element, right - columnVirtualizer.viewportWidth)
         }

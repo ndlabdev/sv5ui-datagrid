@@ -16,7 +16,7 @@ export const datagridVariants = tv({
         sortButton:
             'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
         resizeHandle:
-            'absolute inset-y-0 right-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
+            'absolute inset-y-0 end-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
         menuButton:
             'opacity-0 transition-opacity group-hover/head:opacity-100 group-focus-within/head:opacity-100',
         dropIndicator: 'pointer-events-none absolute inset-y-0 z-20 w-0.5 bg-primary',
@@ -30,13 +30,13 @@ export const datagridVariants = tv({
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
         empty: 'w-full p-4',
         toggleButton:
-            'mr-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
+            'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
         cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
         cellEditorPad: 'px-2',
         cellEditorField: 'w-full',
         cellError:
-            'absolute top-full left-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
+            'absolute top-full start-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
         cellEditable: 'cursor-text',
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
@@ -46,7 +46,7 @@ export const datagridVariants = tv({
         pinnedRowsBottom: 'sticky bottom-0 z-[8] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
-        groupBoundary: 'border-r border-outline-variant',
+        groupBoundary: 'border-e border-outline-variant',
         filterPanel:
             'fixed z-50 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
         filterChips: 'flex flex-wrap items-center gap-1.5',
@@ -55,12 +55,12 @@ export const datagridVariants = tv({
     },
     variants: {
         align: {
-            left: { headerCell: 'justify-start text-left', cell: 'justify-start text-left' },
+            left: { headerCell: 'justify-start text-start', cell: 'justify-start text-start' },
             center: {
                 headerCell: 'justify-center text-center',
                 cell: 'justify-center text-center'
             },
-            right: { headerCell: 'justify-end text-right', cell: 'justify-end text-right' }
+            right: { headerCell: 'justify-end text-end', cell: 'justify-end text-end' }
         },
         density: {
             compact: { root: '[--dg-row-h:2rem] [--dg-cell-py:0.25rem]' },

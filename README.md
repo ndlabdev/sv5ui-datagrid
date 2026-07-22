@@ -132,6 +132,26 @@ falls back to the column defaults rather than half-applying.
 A feature persists its own state through `serialize`/`hydrate` and is stored under its id, so
 features the kernel knows nothing about round-trip too.
 
+### Server-side paging
+
+Pass `rowCount` and the grid stops slicing, because `data` already holds one page:
+
+```ts
+pagination({ pageSize: 25, rowCount: 0 })
+// then, as each response lands:
+grid.api.setRowCount(total)
+```
+
+Page count, the footer range and the status bar all count against the server total. Listen for
+`pageChanged` to fetch. Clearing `rowCount` returns to client-side paging.
+
+### RTL
+
+Layout uses logical properties, so a `dir="rtl"` ancestor mirrors the grid — including pinned
+columns, which stick to the inline start and end rather than to left and right. Horizontal
+scroll positions are normalised through `scrollStart`/`setScrollStart`, since browsers report
+`scrollLeft` as negative under RTL.
+
 ### DOM contract
 
 Body cells carry `data-dg-cell="rowIndex:colIndex"` (absolute indices within the

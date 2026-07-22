@@ -2,14 +2,25 @@ import { clamp } from './math.js'
 import type { GridState } from './grid.svelte.js'
 import type { Keybinding, RowNode } from './types.js'
 
+/**
+ * Which band of rows a position lives in. `row` is only ever an index into
+ * `preWindowNodes` within the `body` section, so anything reading `active.row`
+ * as a data index must check the section first.
+ */
+export type GridSection = 'top' | 'body' | 'bottom'
+
 export interface CellPosition {
     row: number
     col: number
+    /** @default 'body' */
+    section?: GridSection
 }
 
 export const HEADER_ROW = -1
 
 export class FocusModel<TRow> {
+    // Body positions carry no `section` at all, so `active` keeps the exact
+    // shape it had before pinned rows became focusable.
     active = $state.raw<CellPosition>({ row: HEADER_ROW, col: 0 })
 
     #grid: GridState<TRow>
@@ -28,18 +39,66 @@ export class FocusModel<TRow> {
         return this.#grid.columns.visible.length - 1
     }
 
+    /** Pinned rows live outside the pipeline, so they are counted separately. */
+    rowsIn(section: GridSection): number {
+        if (section === 'body') return this.#grid.totalRows
+        const pinning = this.#grid.state['rowPinning'] as
+            { topNodes?: unknown[]; bottomNodes?: unknown[] } | undefined
+        const nodes = section === 'top' ? pinning?.topNodes : pinning?.bottomNodes
+        return nodes?.length ?? 0
+    }
+
+    /**
+     * Vertical order is header, pinned top, body, pinned bottom. Flattening it
+     * keeps arrow, page and Ctrl+Home/End movement to plain arithmetic instead
+     * of a special case per boundary.
+     */
+    #toLinear(position: CellPosition): number {
+        const section = position.section ?? 'body'
+        const top = this.rowsIn('top')
+        if (section === 'top') return 1 + position.row
+        if (section === 'bottom') return 1 + top + this.#grid.totalRows + position.row
+        return position.row === HEADER_ROW ? 0 : 1 + top + position.row
+    }
+
+    #fromLinear(index: number): CellPosition {
+        const top = this.rowsIn('top')
+        const body = this.#grid.totalRows
+        if (index <= 0) return { row: HEADER_ROW, col: 0 }
+        if (index <= top) return { row: index - 1, col: 0, section: 'top' }
+        if (index <= top + body) return { row: index - top - 1, col: 0 }
+        return { row: index - top - body - 1, col: 0, section: 'bottom' }
+    }
+
     focusCell = (position: CellPosition): void => {
         if (this.maxCol < 0) return
+        const section = position.section ?? 'body'
+        const col = clamp(position.col, 0, this.maxCol)
+
+        if (section !== 'body') {
+            const max = this.rowsIn(section) - 1
+            if (max < 0) return
+            this.active = { row: clamp(position.row, 0, max), col, section }
+            return
+        }
+
         const row = clamp(position.row, HEADER_ROW, Math.max(HEADER_ROW, this.maxRow))
         const fullWidth = row >= 0 && this.#grid.preWindowNodes[row]?.meta?.fullWidth
-        this.active = {
-            row,
-            col: fullWidth ? 0 : clamp(position.col, 0, this.maxCol)
-        }
+        this.active = { row, col: fullWidth ? 0 : col }
     }
 
     moveBy = (rows: number, cols: number): void => {
-        this.focusCell({ row: this.active.row + rows, col: this.active.col + cols })
+        const col = this.active.col + cols
+        if (rows === 0) {
+            this.focusCell({ ...this.active, col })
+            return
+        }
+
+        const last = this.rowsIn('top') + this.#grid.totalRows + this.rowsIn('bottom')
+        const target = clamp(this.#toLinear(this.active) + rows, 0, last)
+        // Spreading the linear result, not `active`, so crossing back into the
+        // body drops the section rather than carrying a stale one.
+        this.focusCell({ ...this.#fromLinear(target), col })
     }
 
     pageStep(): number {

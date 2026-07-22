@@ -104,7 +104,12 @@
 
     function isActive(row: number, col: number): boolean {
         const active = grid.focus.active
-        return active.row === row && active.col === col
+        return !active.section && active.row === row && active.col === col
+    }
+
+    function isPinnedActive(section: 'top' | 'bottom', row: number, col: number): boolean {
+        const active = grid.focus.active
+        return active.section === section && active.row === row && active.col === col
     }
 
     function rowHeightOf(row: number): string | undefined {
@@ -159,7 +164,7 @@
         {:else if column.def.type}
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
         {:else}
-            {grid.getValue(node, column)}
+            <span class="truncate" data-dg-truncate>{grid.getValue(node, column)}</span>
         {/if}
     {/if}
 {/snippet}
@@ -231,8 +236,8 @@
                             colIndex
                         )}
                         style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
-                        style:left={pinLeftVar(column)}
-                        style:right={pinRightVar(column)}
+                        style:inset-inline-start={pinLeftVar(column)}
+                        style:inset-inline-end={pinRightVar(column)}
                         style:padding={editingCell ? '0' : undefined}
                         style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
                         onclick={() =>
@@ -251,7 +256,7 @@
     {/each}
 {/snippet}
 
-{#snippet pinnedRows(nodes: RowNode<unknown>[], baseIndex: number)}
+{#snippet pinnedRows(nodes: RowNode<unknown>[], baseIndex: number, section: 'top' | 'bottom')}
     {#each nodes as node, pinIndex (node.id)}
         <div
             role="row"
@@ -265,6 +270,8 @@
                 <div
                     role="gridcell"
                     aria-colindex={entry.index + 1}
+                    tabindex={isPinnedActive(section, pinIndex, entry.index) ? 0 : -1}
+                    data-dg-pinned-cell="{section}:{pinIndex}:{entry.index}"
                     class={withBoundary(
                         column.pinned
                             ? `${cellClass[column.align]} ${pinnedCellClass}`
@@ -272,8 +279,8 @@
                         entry.index
                     )}
                     style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
-                    style:left={pinLeftVar(column)}
-                    style:right={pinRightVar(column)}
+                    style:inset-inline-start={pinLeftVar(column)}
+                    style:inset-inline-end={pinRightVar(column)}
                 >
                     {@render cellContent(node, column, entry.index, node.index)}
                 </div>
@@ -288,7 +295,7 @@
         class={slots.pinnedRowsTop()}
         style:top={`calc(var(--dg-row-h) * ${headerRows})`}
     >
-        {@render pinnedRows(pinning.topNodes, headerRows + 1)}
+        {@render pinnedRows(pinning.topNodes, headerRows + 1, 'top')}
     </div>
 {/if}
 
@@ -355,6 +362,10 @@
 
 {#if pinning && pinning.bottomNodes.length > 0}
     <div role="rowgroup" class={slots.pinnedRowsBottom()}>
-        {@render pinnedRows(pinning.bottomNodes, headerRows + topRows + grid.totalRows + 1)}
+        {@render pinnedRows(
+            pinning.bottomNodes,
+            headerRows + topRows + grid.totalRows + 1,
+            'bottom'
+        )}
     </div>
 {/if}

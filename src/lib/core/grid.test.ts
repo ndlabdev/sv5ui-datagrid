@@ -57,6 +57,7 @@ describe('GridState', () => {
             'setPage',
             'setPageSize',
             'setQuickFilter',
+            'setRowCount',
             'setSort',
             'setState',
             'toggleSort'

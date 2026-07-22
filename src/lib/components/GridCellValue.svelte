@@ -120,8 +120,9 @@
         target={options.target}
         external={options.target === '_blank'}
         tabindex={-1}
-        class="truncate">{text}</Link
+        class="truncate"
+        data-dg-truncate>{text}</Link
     >
 {:else}
-    <span class="truncate">{text}</span>
+    <span class="truncate" data-dg-truncate>{text}</span>
 {/if}
