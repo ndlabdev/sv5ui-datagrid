@@ -1,6 +1,7 @@
 import { ColumnVirtualizer } from '../../core/column-virtualizer.svelte.js'
 import type { GridState } from '../../core/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/pipeline.svelte.js'
+import { nodeIndexById } from '../../core/row-node.js'
 import { scrollStart, setScrollStart } from '../../core/scroll.js'
 import type { GridFeature } from '../../core/types.js'
 import { Virtualizer } from '../../core/virtualizer.svelte.js'
@@ -45,9 +46,14 @@ export class Virtualization<TRow> {
         if (this.element) this.element.scrollTop = 0
     }
 
+    // Scroll targets address a row's position in the windowed set, which is
+    // not `node.index`. Built lazily — a grid scrolled only by index never
+    // pays for it.
+    #indexById = $derived.by(() => nodeIndexById(this.#grid.preWindowNodes))
+
     #indexOf(target: number | string): number {
         if (typeof target === 'number') return target
-        return this.#grid.preWindowNodes.findIndex((node) => node.id === target)
+        return this.#indexById.get(target) ?? -1
     }
 
     scrollToRow = (target: number | string): void => {

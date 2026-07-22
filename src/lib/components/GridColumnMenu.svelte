@@ -91,18 +91,34 @@
         return list
     }
 
-    const items = $derived([...sortItems(), ...pinItems(), ...actionItems()])
+    const open = $derived(columnOps.menuFor === column.id)
+
+    /**
+     * Whether the trigger is worth rendering at all. Cheap enough to evaluate
+     * for every column, unlike the items themselves.
+     */
+    const hasItems = $derived(
+        Boolean(sorting && column.def.sortable) ||
+            columnOps.canPin ||
+            columnOps.canResize ||
+            columnOps.canHide ||
+            Boolean(filteringState && filterTypeOf(column.def))
+    )
+
+    // Built only while this column's menu is open: every visible column mounts
+    // one of these, and the entries are rebuilt on any sort or pin change.
+    const items = $derived(open ? [...sortItems(), ...pinItems(), ...actionItems()] : [])
 </script>
 
-{#if items.length > 0}
+{#if hasItems}
     <span data-dg-noreorder class={slots.menuButton()}>
         <DropdownMenu
             {items}
             bind:open={
-                () => columnOps.menuFor === column.id,
-                (open) => {
-                    if (open) columnOps.menuFor = column.id
-                    else if (columnOps.menuFor === column.id) columnOps.menuFor = null
+                () => open,
+                (next) => {
+                    if (next) columnOps.menuFor = column.id
+                    else if (open) columnOps.menuFor = null
                 }
             }
         >

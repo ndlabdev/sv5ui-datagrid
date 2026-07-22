@@ -7,7 +7,7 @@ import {
     toStyleString,
     trackWidthEstimates
 } from './column-sizing.js'
-import { orderLeafDefs } from './column-order.js'
+import { columnIndexById, columnsById, orderLeafDefs } from './column-order.js'
 import {
     buildGroupPaths,
     buildHeaderLevels,
@@ -80,6 +80,9 @@ export class ColumnModel<TRow> {
     )
     style = $derived(toStyleString(this.cssVars))
 
+    #byId = $derived(columnsById(this.all))
+    #visibleIndex = $derived(columnIndexById(this.visible))
+
     headerLevels = $derived.by(() => buildHeaderLevels(this.visible, this.groupPaths))
     headerRowCount = $derived(this.headerLevels.length + 1)
     groupBoundaryFlags = $derived.by(() => groupBoundaries(this.headerLevels, this.visible.length))
@@ -89,11 +92,11 @@ export class ColumnModel<TRow> {
     }
 
     get(id: string): ColumnState<TRow> | undefined {
-        return this.all.find((column) => column.id === id)
+        return this.#byId.get(id)
     }
 
     indexOf(id: string): number {
-        return this.visible.findIndex((column) => column.id === id)
+        return this.#visibleIndex.get(id) ?? -1
     }
 
     widthOf(id: string): number | undefined {

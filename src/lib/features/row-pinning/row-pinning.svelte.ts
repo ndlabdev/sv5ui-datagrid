@@ -9,24 +9,35 @@ export class RowPinning<TRow> {
     pinnedOverrides = $state.raw<Record<string, RowPinSide | null>>({})
 
     readonly #grid: GridState<TRow>
-    readonly #isRowPinned: (row: TRow) => RowPinSide | null
+    readonly #isRowPinned: ((row: TRow) => RowPinSide | null) | null
 
     constructor(grid: GridState<TRow>, options: RowPinningOptions<TRow>) {
         this.#grid = grid
-        this.#isRowPinned = options.isRowPinned ?? (() => null)
+        this.#isRowPinned = options.isRowPinned ?? null
     }
 
     sideOf(node: RowNode<TRow>): RowPinSide | null {
-        return this.pinnedOverrides[node.id] !== undefined
-            ? this.pinnedOverrides[node.id]
-            : this.#isRowPinned(node.row)
+        const override = this.pinnedOverrides[node.id]
+        if (override !== undefined) return override
+        return this.#isRowPinned?.(node.row) ?? null
+    }
+
+    /**
+     * With no predicate and no overrides nothing can be pinned, so the two
+     * scans below are skipped entirely — the common case for a grid that
+     * merely has the feature registered.
+     */
+    get #possible(): boolean {
+        return this.#isRowPinned !== null || Object.keys(this.pinnedOverrides).length > 0
     }
 
     topNodes = $derived.by(() =>
-        this.#grid.sourceNodes.filter((node) => this.sideOf(node) === 'top')
+        this.#possible ? this.#grid.sourceNodes.filter((node) => this.sideOf(node) === 'top') : []
     )
     bottomNodes = $derived.by(() =>
-        this.#grid.sourceNodes.filter((node) => this.sideOf(node) === 'bottom')
+        this.#possible
+            ? this.#grid.sourceNodes.filter((node) => this.sideOf(node) === 'bottom')
+            : []
     )
     pinnedCount = $derived(this.topNodes.length + this.bottomNodes.length)
 

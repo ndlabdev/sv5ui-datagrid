@@ -171,10 +171,11 @@
 
 {#snippet rows()}
     {#each grid.nodes as node, viewIndex (node.id)}
-        {@const rowHeight = rowHeightOf(windowStart + viewIndex)}
+        {@const rowIndex = windowStart + viewIndex}
+        {@const rowHeight = rowHeightOf(rowIndex)}
         <div
             role="row"
-            aria-rowindex={windowStart + viewIndex + 1 + headerRows + topRows}
+            aria-rowindex={rowIndex + 1 + headerRows + topRows}
             aria-selected={selectionState ? selectionState.isSelected(node.id) : undefined}
             aria-level={node.meta?.level !== undefined ? node.meta.level + 1 : undefined}
             aria-expanded={ariaExpanded(node)}
@@ -191,17 +192,17 @@
                 <div
                     role="gridcell"
                     aria-colindex={1}
-                    tabindex={isActive(windowStart + viewIndex, 0) ? 0 : -1}
-                    data-dg-cell="{windowStart + viewIndex}:0"
+                    tabindex={isActive(rowIndex, 0) ? 0 : -1}
+                    data-dg-cell="{rowIndex}:0"
                     class={slots.fullWidthCell()}
                     style="grid-column: 1 / -1"
-                    onclick={() => grid.focus.focusCell({ row: windowStart + viewIndex, col: 0 })}
+                    onclick={() => grid.focus.focusCell({ row: rowIndex, col: 0 })}
                 >
                     {#if fullWidthRow}
                         {@render fullWidthRow({
                             node,
                             row: node.row,
-                            rowIndex: windowStart + viewIndex
+                            rowIndex
                         })}
                     {:else}
                         {grid.getValue(node, grid.columns.visible[firstDataIndex])}
@@ -212,19 +213,14 @@
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
                     {@const editingCell = isEditingCell(node, column)}
-                    {@const decoration = decorationOf(
-                        node,
-                        column,
-                        windowStart + viewIndex,
-                        colIndex
-                    )}
+                    {@const decoration = decorationOf(node, column, rowIndex, colIndex)}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <div
                         role="gridcell"
                         aria-colindex={colIndex + 1}
                         aria-selected={decoration?.selected}
-                        tabindex={isActive(windowStart + viewIndex, colIndex) ? 0 : -1}
-                        data-dg-cell="{windowStart + viewIndex}:{colIndex}"
+                        tabindex={isActive(rowIndex, colIndex) ? 0 : -1}
+                        data-dg-cell="{rowIndex}:{colIndex}"
                         class={withBoundary(
                             (column.pinned
                                 ? `${cellClass[column.align]} ${pinnedCellClass}`
@@ -240,14 +236,13 @@
                         style:inset-inline-end={pinRightVar(column)}
                         style:padding={editingCell ? '0' : undefined}
                         style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
-                        onclick={() =>
-                            grid.focus.focusCell({ row: windowStart + viewIndex, col: colIndex })}
+                        onclick={() => grid.focus.focusCell({ row: rowIndex, col: colIndex })}
                         ondblclick={() => startEdit(node, column)}
                     >
                         {#if editingCell}
                             <GridCellEditor {node} {column} rowMode={editing?.active === null} />
                         {:else}
-                            {@render cellContent(node, column, colIndex, windowStart + viewIndex)}
+                            {@render cellContent(node, column, colIndex, rowIndex)}
                         {/if}
                     </div>
                 {/each}

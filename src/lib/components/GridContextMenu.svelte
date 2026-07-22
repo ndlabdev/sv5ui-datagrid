@@ -1,7 +1,6 @@
 <script lang="ts">
     import { ContextMenu, type ContextMenuItem } from 'sv5ui'
     import type { RowNode } from '../core/types.js'
-    import { getRowPinning } from '../features/row-pinning/index.js'
     import { getSelection } from '../features/selection/index.js'
     import type { GridContextMenuProps } from './datagrid.types.js'
     import { getGridContext } from './context.js'
@@ -10,24 +9,17 @@
 
     const grid = getGridContext()
     const selectionState = getSelection(grid)
-    const pinning = getRowPinning(grid)
     const hasItems = Boolean(selectionState || grid.features.some((feature) => feature.menuItems))
 
     let menuNode = $state.raw<RowNode<unknown> | null>(null)
 
+    // The source set is unfiltered, so it covers pinned rows too — they are
+    // lifted out of the pipeline downstream, not out of the source.
     function captureNode(event: MouseEvent) {
         const id = (event.target as HTMLElement | null)
             ?.closest('[data-dg-row-id]')
             ?.getAttribute('data-dg-row-id')
-        menuNode = id === undefined || id === null ? null : (findNode(id) ?? null)
-    }
-
-    function findNode(id: string): RowNode<unknown> | undefined {
-        return (
-            grid.preWindowNodes.find((node) => node.id === id) ??
-            pinning?.topNodes.find((node) => node.id === id) ??
-            pinning?.bottomNodes.find((node) => node.id === id)
-        )
+        menuNode = id === undefined || id === null ? null : (grid.nodeById(id) ?? null)
     }
 
     function selectionItems(): ContextMenuItem[] {

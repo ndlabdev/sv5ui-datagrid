@@ -137,6 +137,7 @@
         startX: number
         pointerId: number
         element: HTMLElement
+        rtl: boolean
     } | null = null
 
     function headerPointerDown(event: PointerEvent, columnId: string) {
@@ -146,7 +147,10 @@
             id: columnId,
             startX: event.clientX,
             pointerId: event.pointerId,
-            element: event.currentTarget as HTMLElement
+            element: event.currentTarget as HTMLElement,
+            // Read once: `isRtl` forces a style recalculation, and direction
+            // cannot change mid-drag.
+            rtl: headerRowElement ? isRtl(headerRowElement) : false
         }
     }
 
@@ -157,10 +161,10 @@
             capturePointer(dragCandidate.element, dragCandidate.pointerId)
         }
         const rect = headerRowElement?.getBoundingClientRect()
-        if (rect && headerRowElement) {
+        if (rect) {
             columnOps.updateDrag(
                 dragCandidate.id,
-                inlineOffset(isRtl(headerRowElement), rect, event.clientX)
+                inlineOffset(dragCandidate.rtl, rect, event.clientX)
             )
         }
     }

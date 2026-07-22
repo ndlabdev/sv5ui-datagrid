@@ -1,10 +1,12 @@
 import type { GridState } from '../../core/grid.svelte.js'
+import { nodesById } from '../../core/row-node.js'
 import type { GridFeature, Keybinding, RowNode, SelectionMode } from '../../core/types.js'
 import { downloadCsv, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {
     allSelection,
     emptySelection,
     selectAllStateOf,
+    selectableIdsOf,
     singleSelection,
     withId,
     withoutId,
@@ -43,8 +45,11 @@ export class Selection<TRow> {
         )
     )
 
+    // Rebuilt only when the selectable set changes, not when the selection does.
+    #selectableIds = $derived.by(() => selectableIdsOf(this.selectableNodes))
+
     allState: SelectAllState = $derived.by(() =>
-        selectAllStateOf(this.selectedIds, this.selectableNodes)
+        selectAllStateOf(this.selectedIds, this.#selectableIds)
     )
 
     get count(): number {
@@ -55,8 +60,12 @@ export class Selection<TRow> {
         return this.selectedIds.has(id)
     }
 
+    // Selection addresses the rows the user can actually see, so this indexes
+    // the post-filter set rather than the grid's unfiltered source map.
+    #byId = $derived.by(() => nodesById(this.#grid.preWindowNodes))
+
     #nodeOf(id: string): RowNode<TRow> | undefined {
-        return this.#grid.preWindowNodes.find((node) => node.id === id)
+        return this.#byId.get(id)
     }
 
     #selectable(id: string): boolean {

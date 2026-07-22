@@ -44,15 +44,28 @@ export function allSelection(ids: string[]): ReadonlySet<string> {
     return new Set(ids)
 }
 
-export function selectAllStateOf<TRow>(
+/**
+ * The selectable ids as a set for membership tests. Rebuilt whole by the
+ * derived that owns it and never mutated.
+ */
+export function selectableIdsOf<TRow>(nodes: RowNode<TRow>[]): ReadonlySet<string> {
+    return new Set(nodes.map((node) => node.id))
+}
+
+/**
+ * Counts the selection against the selectable ids rather than the other way
+ * round: the header checkbox re-reads this on every toggle, and a selection is
+ * normally far smaller than the row set it is drawn from.
+ */
+export function selectAllStateOf(
     set: ReadonlySet<string>,
-    selectable: RowNode<TRow>[]
+    selectableIds: ReadonlySet<string>
 ): SelectAllState {
-    if (selectable.length === 0 || set.size === 0) return 'none'
+    if (selectableIds.size === 0 || set.size === 0) return 'none'
     let selected = 0
-    for (const node of selectable) {
-        if (set.has(node.id)) selected++
+    for (const id of set) {
+        if (selectableIds.has(id)) selected++
     }
     if (selected === 0) return 'none'
-    return selected === selectable.length ? 'all' : 'some'
+    return selected === selectableIds.size ? 'all' : 'some'
 }

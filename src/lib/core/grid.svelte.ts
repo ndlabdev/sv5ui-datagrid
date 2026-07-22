@@ -4,7 +4,7 @@ import { EventBus } from './events.js'
 import { ExpansionModel } from './expansion.svelte.js'
 import { FocusModel } from './focus-model.svelte.js'
 import { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
-import { buildRowNodes } from './row-node.js'
+import { buildRowNodes, nodesById } from './row-node.js'
 import { buildColumnSnapshot, isDensity, resolveColumnSnapshot } from './snapshot.js'
 import {
     SNAPSHOT_VERSION,
@@ -35,6 +35,9 @@ export class GridState<TRow> {
     readonly expansion: ExpansionModel
 
     #baseNodes = $derived.by(() => buildRowNodes(this.data, this.getRowId))
+    // Editing resolves a row per committed cell, so a paste over a large grid
+    // would otherwise scan the whole set once per cell.
+    #baseById = $derived.by(() => nodesById(this.#baseNodes))
     #pipeline: Pipeline<TRow>
 
     constructor(options: DataGridOptions<TRow>) {
@@ -91,6 +94,15 @@ export class GridState<TRow> {
 
     feature<TState>(id: string): TState | undefined {
         return this.state[id] as TState | undefined
+    }
+
+    /**
+     * Resolves a row by id against the unfiltered source, which is what an
+     * edit or a transaction addresses — a row hidden by a filter is still a
+     * row the app may write to.
+     */
+    nodeById(id: string): RowNode<TRow> | undefined {
+        return this.#baseById.get(id)
     }
 
     /** A JSON-serializable snapshot of everything the user can rearrange. */

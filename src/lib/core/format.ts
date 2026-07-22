@@ -17,24 +17,32 @@ export type FormatOptions = Pick<
 const numberFormatters = new Map<string, Intl.NumberFormat>()
 const dateFormatters = new Map<string, Intl.DateTimeFormat>()
 
+/**
+ * Configurations come from column definitions, so the set is normally tiny.
+ * A cap keeps an app that builds options per row from growing the cache
+ * without bound; dropping the whole map is fine because rebuilding a
+ * formatter is exactly the cost this cache already assumes.
+ */
+const FORMATTER_CACHE_LIMIT = 64
+
+function cached<T>(cache: Map<string, T>, key: string, create: () => T): T {
+    const existing = cache.get(key)
+    if (existing) return existing
+
+    if (cache.size >= FORMATTER_CACHE_LIMIT) cache.clear()
+    const formatter = create()
+    cache.set(key, formatter)
+    return formatter
+}
+
 function numberFormatter(locale: string | undefined, options: Intl.NumberFormatOptions) {
     const key = `${locale ?? ''}|${JSON.stringify(options)}`
-    let formatter = numberFormatters.get(key)
-    if (!formatter) {
-        formatter = new Intl.NumberFormat(locale, options)
-        numberFormatters.set(key, formatter)
-    }
-    return formatter
+    return cached(numberFormatters, key, () => new Intl.NumberFormat(locale, options))
 }
 
 function dateFormatter(locale: string | undefined, options: Intl.DateTimeFormatOptions) {
     const key = `${locale ?? ''}|${JSON.stringify(options)}`
-    let formatter = dateFormatters.get(key)
-    if (!formatter) {
-        formatter = new Intl.DateTimeFormat(locale, options)
-        dateFormatters.set(key, formatter)
-    }
-    return formatter
+    return cached(dateFormatters, key, () => new Intl.DateTimeFormat(locale, options))
 }
 
 export const DEFAULT_EMPTY_TEXT = '—'
