@@ -10,6 +10,7 @@
         isBlank
     } from '../core/format.js'
     import type { ColumnDef, RowAction } from '../core/types.js'
+    import { safeHref } from '../core/url.js'
 
     let {
         def,
@@ -115,14 +116,19 @@
         aria-label={`${value} / ${max}`}
     />
 {:else if def.type === 'link'}
-    <Link
-        href={options.href?.(row) ?? String(value)}
-        target={options.target}
-        external={options.target === '_blank'}
-        tabindex={-1}
-        class="truncate"
-        data-dg-truncate>{text}</Link
-    >
+    {@const href = safeHref(options.href?.(row) ?? value)}
+    {#if href}
+        <Link
+            {href}
+            target={options.target}
+            external={options.target === '_blank'}
+            tabindex={-1}
+            class="truncate"
+            data-dg-truncate>{text}</Link
+        >
+    {:else}
+        <span class="truncate" data-dg-truncate>{text}</span>
+    {/if}
 {:else}
     <span class="truncate" data-dg-truncate>{text}</span>
 {/if}

@@ -57,4 +57,18 @@ describe('toCsv', () => {
             'Alice,plain,2\r\n"Bob ""B""","a,b\nc",4\r\nCarol\tTab,,6'
         )
     })
+
+    it('neutralizes cells a spreadsheet would run as a formula', () => {
+        expect(toCsv([['=1+1', '+A1', '-2', '@SUM(A1)']])).toBe("'=1+1,'+A1,'-2,'@SUM(A1)")
+    })
+
+    it('quotes a neutralized cell that also needs escaping', () => {
+        expect(toCsv([['=HYPERLINK("http://evil","x")']])).toBe(
+            '"\'=HYPERLINK(""http://evil"",""x"")"'
+        )
+    })
+
+    it('leaves ordinary cells untouched', () => {
+        expect(toCsv([['Alice', '2', 'a-b']])).toBe('Alice,2,a-b')
+    })
 })

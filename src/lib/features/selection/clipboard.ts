@@ -33,8 +33,22 @@ export function toTsv(matrix: CellMatrix): string {
         .join('\n')
 }
 
+/**
+ * A spreadsheet reads a cell opening with `=`, `+`, `-`, `@` or a control
+ * character as a formula, so exported data can execute on the machine that
+ * opens the file. Prefixing an apostrophe makes the cell literal text \u2014 the
+ * mitigation Excel, Sheets and LibreOffice all understand.
+ *
+ * Only the file export is neutralized: clipboard copy is normally a
+ * grid-to-grid round trip, and quoting there would corrupt the paste back.
+ */
+export function neutralizeFormula(cell: string): string {
+    return /^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell
+}
+
 function csvCell(cell: string): string {
-    return /[",\n\r]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell
+    const safe = neutralizeFormula(cell)
+    return /[",\n\r]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe
 }
 
 export function toCsv(matrix: CellMatrix): string {
@@ -49,5 +63,7 @@ export function downloadCsv(csv: string, filename: string): void {
     anchor.href = url
     anchor.download = filename
     anchor.click()
-    URL.revokeObjectURL(url)
+    // Revoking in the same task cancels the download in some browsers, which
+    // have not yet read the blob when `click` returns.
+    setTimeout(() => URL.revokeObjectURL(url), 0)
 }
