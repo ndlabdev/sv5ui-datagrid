@@ -1,4 +1,4 @@
-import type { RowNode } from '../types.js'
+import type { RowNode } from '../types/index.js'
 
 export function buildRowNodes<TRow>(
     data: TRow[],

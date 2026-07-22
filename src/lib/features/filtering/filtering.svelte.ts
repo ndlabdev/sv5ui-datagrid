@@ -1,6 +1,6 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
-import type { ColumnFilter, FilterModel, GridFeature } from '../../core/types.js'
+import type { ColumnFilter, FilterModel, GridFeature } from '../../core/types/index.js'
 import { distinctValuesCached } from './distinct-values.js'
 import { compileColumnFilters } from './filter-predicates.js'
 import { quickFilterNodes } from './quick-filter.js'

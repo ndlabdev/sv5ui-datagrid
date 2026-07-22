@@ -13,7 +13,7 @@
         NumberFilterOp,
         SetFilterValue,
         TextFilterOp
-    } from '../../core/types.js'
+    } from '../../core/types/index.js'
     import {
         buildColumnFilter,
         draftFromFilter,

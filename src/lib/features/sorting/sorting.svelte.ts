@@ -1,7 +1,7 @@
 import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
-import type { GridFeature, Keybinding, SortDirection, SortState } from '../../core/types.js'
+import type { GridFeature, Keybinding, SortDirection, SortState } from '../../core/types/index.js'
 import { sortNodes, type SortNulls } from './sort.js'
 
 export const SORTING = 'sorting'

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ContextMenu, type ContextMenuItem } from 'sv5ui'
-    import type { RowNode } from '../../core/types.js'
+    import type { RowNode } from '../../core/types/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import type { GridContextMenuProps } from '../datagrid.types.js'
     import { getGridContext } from '../internal/context.js'

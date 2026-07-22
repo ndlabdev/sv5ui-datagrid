@@ -9,7 +9,7 @@
         formatPercent,
         isBlank
     } from '../../core/utils/format.js'
-    import type { ColumnDef, RowAction } from '../../core/types.js'
+    import type { ColumnDef, RowAction } from '../../core/types/index.js'
     import { safeHref } from '../../core/utils/url.js'
 
     let {

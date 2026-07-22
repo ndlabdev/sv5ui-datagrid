@@ -1,4 +1,4 @@
-import type { ColumnDef } from '../types.js'
+import type { ColumnDef } from '../types/index.js'
 
 export function getCellValue<TRow>(row: TRow, column: ColumnDef<TRow>): unknown {
     if (column.accessor) return column.accessor(row)

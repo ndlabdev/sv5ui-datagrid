@@ -6,7 +6,7 @@ import {
     resolveColumnSnapshot,
     type ColumnSnapshotSource
 } from './snapshot.js'
-import { SNAPSHOT_VERSION, type GridSnapshot } from '../types.js'
+import { SNAPSHOT_VERSION, type GridSnapshot } from '../types/index.js'
 
 const empty: ColumnSnapshotSource = {
     orderIds: [],

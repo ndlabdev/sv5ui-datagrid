@@ -3,7 +3,7 @@ import { filtering, getFiltering } from '../../features/filtering/index.js'
 import { getPagination, pagination } from '../../features/pagination/index.js'
 import { getSorting, sorting } from '../../features/sorting/index.js'
 import { createDataGrid } from '../grid/grid.svelte.js'
-import type { DataGridOptions } from '../types.js'
+import type { DataGridOptions } from '../types/index.js'
 
 interface Person {
     id: number

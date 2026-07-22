@@ -12,8 +12,8 @@ export * from './components/index.js'
 export { createDataGrid, GridState } from './core/grid/grid.svelte.js'
 export { buildRowNodes } from './core/grid/row-node.js'
 export { getCellValue, isNullish } from './core/utils/value.js'
-export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types.js'
-export type * from './core/types.js'
+export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types/index.js'
+export type * from './core/types/index.js'
 
 // Models reachable from a grid instance
 export { Announcer, defaultLocale } from './core/interaction/announcer.svelte.js'

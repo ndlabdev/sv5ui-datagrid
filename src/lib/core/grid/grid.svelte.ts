@@ -16,7 +16,7 @@ import {
     type GridSnapshot,
     type RowModel,
     type RowNode
-} from '../types.js'
+} from '../types/index.js'
 import { getCellValue } from '../utils/value.js'
 
 export class GridState<TRow> {

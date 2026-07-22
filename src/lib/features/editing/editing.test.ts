@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { describe, expect, it, vi } from 'vitest'
 import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
-import type { ColumnDef } from '../../core/types.js'
+import type { ColumnDef } from '../../core/types/index.js'
 import { editing, getEditing } from './index.js'
 import type { EditingOptions } from './editing.types.js'
 

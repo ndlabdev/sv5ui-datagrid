@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
 import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
-import type { ColumnDef } from '../../core/types.js'
+import type { ColumnDef } from '../../core/types/index.js'
 import { sorting } from '../sorting/index.js'
 import { columnOps, getColumnOps } from './index.js'
 import { dropTargetIndex } from './drag.js'

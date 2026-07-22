@@ -8,7 +8,7 @@ import {
     type GridFeature,
     type Keybinding,
     type PinnedSide
-} from '../../core/types.js'
+} from '../../core/types/index.js'
 import { dropTargetIndex } from './drag.js'
 import type { ColumnDragState, ColumnOpsOptions } from './column-ops.types.js'
 

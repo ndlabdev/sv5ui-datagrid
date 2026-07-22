@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Button } from 'sv5ui'
-    import type { Density } from '../../core/types.js'
+    import type { Density } from '../../core/types/index.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridDensityToggleProps } from '../datagrid.types.js'
 

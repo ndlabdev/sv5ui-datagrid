@@ -1,4 +1,4 @@
-import type { RowPinSide } from '../../core/types.js'
+import type { RowPinSide } from '../../core/types/index.js'
 
 export interface RowPinningOptions<TRow> {
     /**

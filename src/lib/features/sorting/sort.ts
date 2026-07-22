@@ -1,4 +1,4 @@
-import type { ColumnDef, RowNode, SortState } from '../../core/types.js'
+import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
 import { getCellValue, isNullish } from '../../core/utils/value.js'
 
 export type SortNulls = 'first' | 'last'

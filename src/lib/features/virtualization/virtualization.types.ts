@@ -1,4 +1,4 @@
-import type { RowNode } from '../../core/types.js'
+import type { RowNode } from '../../core/types/index.js'
 
 export interface ColumnVirtualizationOptions {
     /**

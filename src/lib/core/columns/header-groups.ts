@@ -1,4 +1,4 @@
-import type { ColumnDef, ColumnState, HeaderGroupCell } from '../types.js'
+import type { ColumnDef, ColumnState, HeaderGroupCell } from '../types/index.js'
 
 export function flattenColumns<TRow>(defs: ColumnDef<TRow>[]): ColumnDef<TRow>[] {
     return defs.flatMap((def) => (def.children?.length ? flattenColumns(def.children) : [def]))

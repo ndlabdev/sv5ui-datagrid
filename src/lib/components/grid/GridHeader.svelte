@@ -3,7 +3,7 @@
     import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
     import { rafBatch } from '../../core/utils/raf-batch.js'
     import { inlineDelta, inlineOffset, isRtl } from '../../core/utils/scroll.js'
-    import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../../core/types.js'
+    import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../../core/types/index.js'
     import { getColumnOps } from '../../features/column-ops/index.js'
     import { getFiltering } from '../../features/filtering/index.js'
     import { getSorting } from '../../features/sorting/index.js'

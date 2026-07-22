@@ -1,5 +1,5 @@
 import { clamp } from '../utils/math.js'
-import type { ColumnDef, ColumnState, PinnedSide } from '../types.js'
+import type { ColumnDef, ColumnState, PinnedSide } from '../types/index.js'
 
 const DEFAULT_MIN_WIDTH = 40
 

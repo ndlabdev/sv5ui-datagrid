@@ -8,7 +8,7 @@ import type {
     GridFeature,
     Keybinding,
     RowNode
-} from '../../core/types.js'
+} from '../../core/types/index.js'
 import { groupChangesByRow } from './edit-batch.js'
 import type { EditingCell, EditingOptions, MoveDirection } from './editing.types.js'
 import {

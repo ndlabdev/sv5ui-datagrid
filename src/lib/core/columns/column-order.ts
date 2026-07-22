@@ -1,4 +1,4 @@
-import type { ColumnDef, ColumnState } from '../types.js'
+import type { ColumnDef, ColumnState } from '../types/index.js'
 
 /**
  * Column lookups run per cell, per header and per feature event, so they are

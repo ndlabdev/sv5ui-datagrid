@@ -1,5 +1,5 @@
 import { buildRowNodes } from '../lib/core/grid/row-node.js'
-import type { ColumnDef, RowNode } from '../lib/core/types.js'
+import type { ColumnDef, RowNode } from '../lib/core/types/index.js'
 
 export interface BenchRow {
     id: number

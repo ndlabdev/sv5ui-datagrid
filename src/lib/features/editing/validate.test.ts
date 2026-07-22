@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { describe, expect, it } from 'vitest'
-import type { ColumnDef } from '../../core/types.js'
+import type { ColumnDef } from '../../core/types/index.js'
 import { isPromise, runValidation } from './validate.js'
 
 interface Row {

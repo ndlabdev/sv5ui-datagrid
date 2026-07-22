@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ColumnFilter } from '../../core/types.js'
+import type { ColumnFilter } from '../../core/types/index.js'
 import { buildColumnFilter, draftFromFilter, emptyDraft } from './filter-draft.js'
 
 describe('draftFromFilter', () => {

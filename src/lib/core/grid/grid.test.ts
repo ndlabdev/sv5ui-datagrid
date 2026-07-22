@@ -4,7 +4,7 @@ import { getPagination, pagination } from '../../features/pagination/index.js'
 import { getSorting, sorting } from '../../features/sorting/index.js'
 import { getVirtualization, virtualization } from '../../features/virtualization/index.js'
 import { createDataGrid, type GridState } from './grid.svelte.js'
-import type { GridFeature } from '../types.js'
+import type { GridFeature } from '../types/index.js'
 
 interface Person {
     id: number

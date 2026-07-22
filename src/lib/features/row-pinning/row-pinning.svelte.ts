@@ -1,6 +1,12 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
-import type { GridFeature, MenuContext, MenuItem, RowNode, RowPinSide } from '../../core/types.js'
+import type {
+    GridFeature,
+    MenuContext,
+    MenuItem,
+    RowNode,
+    RowPinSide
+} from '../../core/types/index.js'
 import type { RowPinningOptions } from './row-pinning.types.js'
 
 export const ROW_PINNING = 'rowPinning'

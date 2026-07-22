@@ -1,4 +1,4 @@
-import type { EditTransaction } from '../../core/types.js'
+import type { EditTransaction } from '../../core/types/index.js'
 
 /**
  * One undoable edit. `before` restores the prior values, `after` re-applies

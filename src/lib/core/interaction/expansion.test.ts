@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDataGrid, type GridState } from '../grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../grid/pipeline.svelte.js'
-import type { ColumnDef, GridFeature, RowNode } from '../types.js'
+import type { ColumnDef, GridFeature, RowNode } from '../types/index.js'
 
 interface Order {
     id: number

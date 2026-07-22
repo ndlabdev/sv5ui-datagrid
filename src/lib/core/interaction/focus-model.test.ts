@@ -4,7 +4,7 @@ import { pagination } from '../../features/pagination/index.js'
 import { getSorting, sorting } from '../../features/sorting/index.js'
 import { HEADER_ROW } from './focus-model.svelte.js'
 import { createDataGrid, type GridState } from '../grid/grid.svelte.js'
-import type { GridFeature } from '../types.js'
+import type { GridFeature } from '../types/index.js'
 
 interface Person {
     id: number

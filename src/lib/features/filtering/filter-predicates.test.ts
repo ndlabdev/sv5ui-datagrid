@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { buildRowNodes } from '../../core/grid/row-node.js'
-import type { ColumnDef, ColumnFilter } from '../../core/types.js'
+import type { ColumnDef, ColumnFilter } from '../../core/types/index.js'
 import { DISTINCT_VALUES_CAP, distinctValues } from './distinct-values.js'
 import {
     compileColumnFilters,

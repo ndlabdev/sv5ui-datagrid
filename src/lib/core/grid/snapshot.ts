@@ -1,4 +1,9 @@
-import { SNAPSHOT_VERSION, type Density, type GridSnapshot, type PinnedSide } from '../types.js'
+import {
+    SNAPSHOT_VERSION,
+    type Density,
+    type GridSnapshot,
+    type PinnedSide
+} from '../types/index.js'
 
 /** The column state a snapshot round-trips, independent of any class. */
 export interface ColumnSnapshotSource {

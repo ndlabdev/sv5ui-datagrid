@@ -1,5 +1,5 @@
 import type { GridState } from '../grid/grid.svelte.js'
-import type { DataGridLocale } from '../types.js'
+import type { DataGridLocale } from '../types/index.js'
 
 export const defaultLocale: DataGridLocale = {
     sorted: (column, direction) =>

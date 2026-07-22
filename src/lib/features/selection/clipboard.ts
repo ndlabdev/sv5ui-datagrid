@@ -1,5 +1,5 @@
 import { getCellValue } from '../../core/utils/value.js'
-import { SELECTION_COLUMN_ID, type ColumnState, type RowNode } from '../../core/types.js'
+import { SELECTION_COLUMN_ID, type ColumnState, type RowNode } from '../../core/types/index.js'
 
 export type CellMatrix = string[][]
 

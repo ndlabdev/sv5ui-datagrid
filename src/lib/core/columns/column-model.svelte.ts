@@ -15,7 +15,12 @@ import {
     groupBoundaries
 } from './header-groups.js'
 import { clamp } from '../utils/math.js'
-import { SELECTION_COLUMN_ID, type ColumnDef, type ColumnState, type PinnedSide } from '../types.js'
+import {
+    SELECTION_COLUMN_ID,
+    type ColumnDef,
+    type ColumnState,
+    type PinnedSide
+} from '../types/index.js'
 
 const SELECTION_COLUMN_WIDTH = 44
 

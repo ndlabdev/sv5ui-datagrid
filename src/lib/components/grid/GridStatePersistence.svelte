@@ -3,7 +3,7 @@
     import { useLocalStorage } from 'sv5ui'
     import type { GridState } from '../../core/grid/grid.svelte.js'
     import { normalizeSnapshot } from '../../core/grid/snapshot.js'
-    import type { GridSnapshot, PersistStateOptions } from '../../core/types.js'
+    import type { GridSnapshot, PersistStateOptions } from '../../core/types/index.js'
 
     let { grid, options }: { grid: GridState<TRow>; options: PersistStateOptions } = $props()
 

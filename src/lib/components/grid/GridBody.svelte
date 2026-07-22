@@ -5,7 +5,7 @@
         type CellDecoration,
         type ColumnState,
         type RowNode
-    } from '../../core/types.js'
+    } from '../../core/types/index.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getSelection } from '../../features/selection/index.js'

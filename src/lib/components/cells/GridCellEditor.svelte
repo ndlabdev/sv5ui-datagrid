@@ -12,7 +12,7 @@
         TimeField,
         useClickOutside
     } from 'sv5ui'
-    import type { ColumnState, EditorContext, RowNode } from '../../core/types.js'
+    import type { ColumnState, EditorContext, RowNode } from '../../core/types/index.js'
     import { editorTypeOf, getEditing } from '../../features/editing/index.js'
     import { getGridContext } from '../internal/context.js'
     import { datagridVariants } from '../datagrid.variants.js'

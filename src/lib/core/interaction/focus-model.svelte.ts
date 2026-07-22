@@ -1,6 +1,6 @@
 import { clamp } from '../utils/math.js'
 import type { GridState } from '../grid/grid.svelte.js'
-import type { Keybinding, RowNode } from '../types.js'
+import type { Keybinding, RowNode } from '../types/index.js'
 
 /**
  * Which band of rows a position lives in. `row` is only ever an index into

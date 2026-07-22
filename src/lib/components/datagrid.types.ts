@@ -7,7 +7,7 @@ import type {
     Density,
     PersistStateOptions,
     RowNode
-} from '../core/types.js'
+} from '../core/types/index.js'
 import type { EditingOptions } from '../features/editing/index.js'
 import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'

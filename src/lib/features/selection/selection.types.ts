@@ -1,4 +1,4 @@
-import type { SelectionMode } from '../../core/types.js'
+import type { SelectionMode } from '../../core/types/index.js'
 
 export interface SelectionOptions<TRow> {
     /**

@@ -3,7 +3,7 @@ import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
 import { nodeIndexById } from '../../core/grid/row-node.js'
 import { scrollStart, setScrollStart } from '../../core/utils/scroll.js'
-import type { GridFeature } from '../../core/types.js'
+import type { GridFeature } from '../../core/types/index.js'
 import { Virtualizer } from '../../core/virtual/virtualizer.svelte.js'
 import type { VirtualizationOptions } from './virtualization.types.js'
 

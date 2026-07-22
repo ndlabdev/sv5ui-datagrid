@@ -1,5 +1,5 @@
 import type { GridState } from './grid.svelte.js'
-import type { PipelineStage, RowNode } from '../types.js'
+import type { PipelineStage, RowNode } from '../types/index.js'
 
 export const PIPELINE_ORDER = {
     filter: 100,

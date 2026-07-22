@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildRowNodes } from '../../core/grid/row-node.js'
-import type { ColumnDef, RowNode } from '../../core/types.js'
+import type { ColumnDef, RowNode } from '../../core/types/index.js'
 import { sortNodes } from './sort.js'
 
 interface Person {

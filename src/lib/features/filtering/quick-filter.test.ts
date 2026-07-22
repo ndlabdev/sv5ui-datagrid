@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildRowNodes } from '../../core/grid/row-node.js'
-import type { ColumnDef } from '../../core/types.js'
+import type { ColumnDef } from '../../core/types/index.js'
 import { quickFilterNodes } from './quick-filter.js'
 
 interface Person {

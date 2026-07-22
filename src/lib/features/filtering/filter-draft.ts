@@ -5,7 +5,7 @@ import type {
     NumberFilterOp,
     SetFilterValue,
     TextFilterOp
-} from '../../core/types.js'
+} from '../../core/types/index.js'
 
 export interface FilterDraft {
     op: string

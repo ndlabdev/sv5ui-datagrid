@@ -7,7 +7,7 @@ import {
     groupBoundaries,
     parentGroupIdOf
 } from './header-groups.js'
-import type { ColumnDef, ColumnState } from '../types.js'
+import type { ColumnDef, ColumnState } from '../types/index.js'
 
 interface Row {
     [key: string]: unknown

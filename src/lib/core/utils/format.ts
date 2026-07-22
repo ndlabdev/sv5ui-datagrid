@@ -1,4 +1,4 @@
-import type { ColumnTypeOptions } from '../types.js'
+import type { ColumnTypeOptions } from '../types/index.js'
 
 /**
  * The slice of `ColumnTypeOptions` the formatters read. Declared separately so

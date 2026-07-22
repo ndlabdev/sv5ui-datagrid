@@ -1,6 +1,6 @@
 import type { EventBus } from '../grid/events.js'
 import { emptyIdSet, idSetOf, idSetWith, idSetWithout } from '../utils/id-set.js'
-import type { GridEventMap } from '../types.js'
+import type { GridEventMap } from '../types/index.js'
 
 export class ExpansionModel {
     expandedIds = $state.raw<ReadonlySet<string>>(emptyIdSet())

@@ -1,4 +1,4 @@
-import type { EditTransaction } from '../../core/types.js'
+import type { EditTransaction } from '../../core/types/index.js'
 
 /**
  * Collapses per-cell edits into one transaction per row, preserving the order

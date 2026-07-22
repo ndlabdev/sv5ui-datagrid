@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
-import type { ColumnDef } from '../../core/types.js'
+import type { ColumnDef } from '../../core/types/index.js'
 import { filtering, getFiltering } from '../filtering/index.js'
 import { getSorting, sorting } from '../sorting/index.js'
 import { getRowPinning, rowPinning, type RowPinningOptions } from './index.js'

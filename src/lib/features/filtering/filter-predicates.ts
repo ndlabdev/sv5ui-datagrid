@@ -6,7 +6,7 @@ import type {
     NumberFilterOp,
     RowNode,
     TextFilterOp
-} from '../../core/types.js'
+} from '../../core/types/index.js'
 import { getCellValue, isNullish } from '../../core/utils/value.js'
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
