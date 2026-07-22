@@ -4,12 +4,14 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterChipsProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
 
     let { class: className }: GridFilterChipsProps = $props()
 
     const grid = getGridContext()
     const filteringState = getFiltering(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const chips = $derived.by(() => {
         if (!filteringState) return []
@@ -21,7 +23,11 @@
 </script>
 
 {#if filteringState && chips.length > 0}
-    <div class={slots.filterChips({ class: className })} role="group" aria-label="Active filters">
+    <div
+        class={slots.filterChips({ class: [theme('filterChips'), className] })}
+        role="group"
+        aria-label="Active filters"
+    >
         {#each chips as chip (chip.columnId)}
             <Button
                 variant="soft"

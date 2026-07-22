@@ -6,6 +6,7 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridColumnMenuProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
 
     let { column }: GridColumnMenuProps<TRow> = $props()
 
@@ -14,6 +15,7 @@
     const sorting = getSorting(grid)
     const filteringState = getFiltering(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     interface MenuEntry {
         label: string
@@ -107,7 +109,7 @@
 </script>
 
 {#if hasItems}
-    <span data-dg-noreorder class={slots.menuButton()}>
+    <span data-dg-noreorder class={slots.menuButton({ class: theme('menuButton') })}>
         <DropdownMenu
             {items}
             bind:open={

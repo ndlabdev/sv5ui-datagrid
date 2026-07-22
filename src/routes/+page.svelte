@@ -144,7 +144,8 @@
                 <Link href="/selection">Selection demo →</Link> ·
                 <Link href="/rows">Row structures demo →</Link> ·
                 <Link href="/editing">Editing demo →</Link> ·
-                <Link href="/renderers">Cell renderers demo →</Link>
+                <Link href="/renderers">Cell renderers demo →</Link> ·
+                <Link href="/theming">Theming demo →</Link>
             </p>
         </div>
         <ThemeModeButton />

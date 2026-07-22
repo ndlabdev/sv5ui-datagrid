@@ -1,4 +1,6 @@
+import type { ClassNameValue } from 'tailwind-merge'
 import { tv, type VariantProps } from 'tailwind-variants'
+import type { Density } from '../core/types/index.js'
 
 export const datagridVariants = tv({
     slots: {
@@ -76,3 +78,16 @@ export const datagridVariants = tv({
 
 export type DataGridVariantProps = VariantProps<typeof datagridVariants>
 export type DataGridSlots = keyof ReturnType<typeof datagridVariants>
+
+/** Extra classes per visual slot, merged after the variant's own. */
+export type DataGridUi = Partial<Record<DataGridSlots, ClassNameValue>>
+
+/**
+ * The shape `defineDataGridConfig` overrides, and the values used when it is
+ * never called. `align` is deliberately absent: it is resolved per column from
+ * `ColumnDef.align`, not as a whole-grid preference.
+ */
+export const datagridDefaults: { defaultVariants: { density: Density }; slots: DataGridUi } = {
+    defaultVariants: { density: 'standard' },
+    slots: {}
+}

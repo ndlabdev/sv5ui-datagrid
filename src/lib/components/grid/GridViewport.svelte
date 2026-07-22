@@ -11,6 +11,7 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridViewportProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
     import { windowStartOf } from '../internal/window.js'
 
     let { class: className, children }: GridViewportProps = $props()
@@ -23,6 +24,7 @@
     const pinning = getRowPinning(grid)
     const editing = getEditing(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const pinnedRowCount = $derived(pinning?.pinnedCount ?? 0)
 
@@ -231,7 +233,7 @@
     aria-rowcount={grid.totalRows + grid.columns.headerRowCount + pinnedRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
-    class={slots.viewport({ class: className })}
+    class={slots.viewport({ class: [theme('viewport'), className] })}
     style={grid.columns.style}
     onkeydown={handleKeydown}
     onclick={focusClickedCell}

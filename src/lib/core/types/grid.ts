@@ -1,7 +1,8 @@
 import type { ColumnDef, PinnedSide } from './columns.js'
 import type { FilterModel } from './filtering.js'
 import type { GridFeature } from './feature.js'
-import type { RowModel, RowPinSide } from './rows.js'
+import type { ClassNameValue } from 'tailwind-merge'
+import type { RowModel, RowNode, RowPinSide } from './rows.js'
 import type { SortDirection, SortState } from './sorting.js'
 
 /** Grid-level configuration, snapshots and the event surface. */
@@ -124,4 +125,10 @@ export interface DataGridOptions<TRow> {
 
     /** Announcer string overrides for i18n. */
     locale?: Partial<DataGridLocale>
+
+    /**
+     * Classes added to every row — the escape hatch for data-driven row
+     * styling such as flagging overdue records. Runs per rendered row.
+     */
+    rowClass?: (node: RowNode<TRow>) => ClassNameValue
 }

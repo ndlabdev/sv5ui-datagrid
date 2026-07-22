@@ -1,6 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid/grid.svelte.js'
+import type { DataGridUi } from './datagrid.variants.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -15,6 +16,12 @@ import type { VirtualizationOptions } from '../features/virtualization/index.js'
 export interface GridRootProps<TRow> {
     /** The grid instance created with `createDataGrid`. */
     grid: GridState<TRow>
+
+    /**
+     * Per-slot class overrides for this grid, applied after the app-wide
+     * `defineDataGridConfig` slots and merged with the variant's own.
+     */
+    ui?: DataGridUi
 
     /**
      * Mirrors column layout, sort, filter, page size and density into
@@ -197,6 +204,12 @@ export type DataGridProps<TRow> = {
 
     /** Additional classes applied to the root element. */
     class?: ClassNameValue
+
+    /**
+     * Per-slot class overrides for this grid, applied after the app-wide
+     * `defineDataGridConfig` slots and merged with the variant's own.
+     */
+    ui?: DataGridUi
 } & (
     | {
           /**
@@ -207,6 +220,7 @@ export type DataGridProps<TRow> = {
           data?: never
           columns?: never
           getRowId?: never
+          rowClass?: never
           pageSize?: never
           selection?: never
           editing?: never
@@ -224,6 +238,12 @@ export type DataGridProps<TRow> = {
 
           /** Returns a stable unique id for a row. */
           getRowId: (row: TRow) => string
+
+          /**
+           * Classes added to every row — the escape hatch for data-driven row
+           * styling. Pass it to `createDataGrid` instead when you own the grid.
+           */
+          rowClass?: (node: RowNode<TRow>) => ClassNameValue
 
           /** Rows per page. Omit to disable pagination. Ignored when `virtual` is set. */
           pageSize?: number

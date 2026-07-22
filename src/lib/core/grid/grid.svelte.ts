@@ -6,6 +6,7 @@ import { FocusModel } from '../interaction/focus-model.svelte.js'
 import { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
 import { buildRowNodes, nodesById } from './row-node.js'
 import { buildColumnSnapshot, isDensity, resolveColumnSnapshot } from './snapshot.js'
+import type { ClassNameValue } from 'tailwind-merge'
 import {
     SNAPSHOT_VERSION,
     type ColumnState,
@@ -29,6 +30,13 @@ export class GridState<TRow> {
     readonly state: Record<string, unknown> = {}
     readonly api: Record<string, unknown> = {}
     readonly getRowId: (row: TRow) => string
+    readonly rowClass?: (node: RowNode<TRow>) => ClassNameValue
+    /**
+     * The density the app asked for, or undefined when it never said. The
+     * presentation layer fills the gap from the theme config, so a grid built
+     * headlessly still reports a concrete `density`.
+     */
+    readonly configuredDensity: Density | undefined
     readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
@@ -41,6 +49,8 @@ export class GridState<TRow> {
     constructor(options: DataGridOptions<TRow>) {
         this.data = options.data ?? []
         this.getRowId = options.getRowId
+        this.rowClass = options.rowClass
+        this.configuredDensity = options.density
         this.rowModel = options.rowModel ?? 'client'
         this.columns = new ColumnModel(options.columns)
         this.expansion = new ExpansionModel(this.events)

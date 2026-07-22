@@ -4,12 +4,14 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridPaginationProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
 
     let { pageSizes = [10, 25, 50, 100], class: className }: GridPaginationProps = $props()
 
     const grid = getGridContext()
     const pagination = getPagination(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const sizeItems = $derived(
         pageSizes.map((size) => ({ label: `${size} / page`, value: String(size) }))
@@ -24,7 +26,7 @@
 </script>
 
 {#if pagination && pagination.pageSize && total > 0}
-    <div class={slots.footer({ class: className })}>
+    <div class={slots.footer({ class: [theme('footer'), className] })}>
         <span class="text-xs text-on-surface-variant">
             {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {total.toLocaleString()}
         </span>

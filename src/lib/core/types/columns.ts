@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Snippet } from 'svelte'
+import type { ClassNameValue } from 'tailwind-merge'
 import type { BadgeProps } from 'sv5ui'
 import type { ColumnEditorDef, Editable, EditorType } from './editing.js'
 import type { ColumnFilterDef, FilterType } from './filtering.js'
@@ -221,6 +222,13 @@ export interface ColumnDef<TRow> {
 
     /** Custom cell renderer. */
     cell?: Snippet<[DataGridCellContext<TRow>]>
+
+    /**
+     * Classes added to this column's cells, per row — the escape hatch for
+     * data-driven styling such as marking negative amounts. Runs for every
+     * rendered cell of the column, so keep it cheap.
+     */
+    cellClass?: (ctx: DataGridCellContext<TRow>) => ClassNameValue
 
     /**
      * Whether cells in this column can be edited. A predicate receives

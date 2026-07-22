@@ -10,6 +10,7 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridHeaderProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
     import GridColumnMenu from '../menus/GridColumnMenu.svelte'
     import GridFilterPanel from '../menus/GridFilterPanel.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
@@ -22,24 +23,25 @@
     const columnOps = getColumnOps(grid)
     const filteringState = getFiltering(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const columnWindow = $derived(columnWindowOf(grid))
     const headerLevels = $derived(grid.columns.headerLevels)
     const leafRowIndex = $derived(grid.columns.headerRowCount)
 
-    const headerCellClass = {
-        left: slots.headerCell({ align: 'left' }),
-        center: slots.headerCell({ align: 'center' }),
-        right: slots.headerCell({ align: 'right' })
-    } as const
-    const groupCellClass = slots.groupCell()
+    const headerCellClass = $derived({
+        left: slots.headerCell({ align: 'left', class: theme('headerCell') }),
+        center: slots.headerCell({ align: 'center', class: theme('headerCell') }),
+        right: slots.headerCell({ align: 'right', class: theme('headerCell') })
+    } as const)
+    const groupCellClass = $derived(slots.groupCell({ class: theme('groupCell') }))
     const boundaryClass = slots.groupBoundary()
 
     function withBoundary(base: string, endIndex: number): string {
         return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
     }
-    const pinnedHeaderClass = slots.pinnedHeaderCell()
-    const resizeHandleClass = slots.resizeHandle()
+    const pinnedHeaderClass = $derived(slots.pinnedHeaderCell({ class: theme('pinnedHeaderCell') }))
+    const resizeHandleClass = $derived(slots.resizeHandle({ class: theme('resizeHandle') }))
 
     function isActive(index: number): boolean {
         const { row, col } = grid.focus.active
@@ -194,9 +196,17 @@
     }
 </script>
 
-<div role="rowgroup" class={slots.header({ class: className })} style:width={columnWindow.rowWidth}>
+<div
+    role="rowgroup"
+    class={slots.header({ class: [theme('header'), className] })}
+    style:width={columnWindow.rowWidth}
+>
     {#each headerLevels as level, levelIndex (levelIndex)}
-        <div role="row" aria-rowindex={levelIndex + 1} class={slots.groupRow()}>
+        <div
+            role="row"
+            aria-rowindex={levelIndex + 1}
+            class={slots.groupRow({ class: theme('groupRow') })}
+        >
             {#each level as cell (`${cell.id}-${cell.start}`)}
                 {#if cellVisible(cell)}
                     <div
@@ -233,7 +243,7 @@
     <div
         role="row"
         aria-rowindex={leafRowIndex}
-        class={slots.headerRow()}
+        class={slots.headerRow({ class: theme('headerRow') })}
         bind:this={headerRowElement}
     >
         {#each columnWindow.renderColumns as entry (entry.column.id)}
@@ -271,7 +281,7 @@
                     <button
                         type="button"
                         tabindex="-1"
-                        class={slots.sortButton()}
+                        class={slots.sortButton({ class: theme('sortButton') })}
                         onclick={(event) =>
                             sorting.toggleSort(column.id, { append: event.shiftKey })}
                     >
@@ -316,7 +326,7 @@
     </div>
     {#if columnOps?.drag}
         <div
-            class={slots.dropIndicator()}
+            class={slots.dropIndicator({ class: theme('dropIndicator') })}
             style:inset-inline-start={`${columnOps.drag.indicatorX}px`}
         ></div>
     {/if}

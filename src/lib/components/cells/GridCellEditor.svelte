@@ -16,6 +16,7 @@
     import { editorTypeOf, getEditing } from '../../features/editing/index.js'
     import { getGridContext } from '../internal/context.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
     import {
         fromDateValue,
         fromTimeValue,
@@ -32,6 +33,7 @@
     const grid = getGridContext<TRow>()
     const editing = getEditing(grid)!
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const type = $derived(editorTypeOf(column))
     const editorDef = $derived(
@@ -74,9 +76,9 @@
         type === 'text' || type === 'number' || type === 'textarea' || type === 'tags'
     )
     const containerClass = $derived(
-        `${slots.cellEditor()} ${flatText ? slots.cellEditorFlat() : slots.cellEditorPad()}`
+        `${slots.cellEditor({ class: theme('cellEditor') })} ${flatText ? slots.cellEditorFlat({ class: theme('cellEditorFlat') }) : slots.cellEditorPad({ class: theme('cellEditorPad') })}`
     )
-    const fieldClass = slots.cellEditorField()
+    const fieldClass = $derived(slots.cellEditorField({ class: theme('cellEditorField') }))
     const fieldUi = { base: 'h-full min-h-(--dg-row-h) rounded-none border-0 bg-transparent px-3' }
     // Number editor keeps InputNumber's formatting + arrow keys but drops the
     // stepper buttons (their focus/controlled-state churn caused edit glitches).
@@ -262,6 +264,6 @@
     {/if}
 
     {#if error}
-        <span role="alert" class={slots.cellError()}>{error}</span>
+        <span role="alert" class={slots.cellError({ class: theme('cellError') })}>{error}</span>
     {/if}
 </div>

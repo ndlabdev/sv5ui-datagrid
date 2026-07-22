@@ -23,12 +23,14 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterPanelProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
 
     let { column }: GridFilterPanelProps<TRow> = $props()
 
     const grid = getGridContext<TRow>()
     const filteringState = getFiltering(grid)!
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     const type = $derived(filterTypeOf(column.def))
     const open = $derived(filteringState.filterFor === column.id)
@@ -134,7 +136,10 @@
 </script>
 
 {#if type}
-    <span data-dg-noreorder class={active ? undefined : slots.menuButton()}>
+    <span
+        data-dg-noreorder
+        class={active ? undefined : slots.menuButton({ class: theme('menuButton') })}
+    >
         <Button
             bind:ref={triggerElement}
             variant="ghost"
@@ -152,7 +157,7 @@
             bind:this={panelElement}
             role="dialog"
             aria-label={`Filter ${column.header}`}
-            class={slots.filterPanel()}
+            class={slots.filterPanel({ class: theme('filterPanel') })}
             style:left={`${position.x}px`}
             style:top={`${position.y}px`}
             use:useClickOutside={{ handler: onClickOutside }}
@@ -182,7 +187,7 @@
                 <Input placeholder="Search values..." icon="lucide:search" bind:value={setSearch} />
                 <div class="max-h-56 space-y-0.5 overflow-auto">
                     {#each distinctShown as entry (entry)}
-                        <div class={slots.chooserItem()}>
+                        <div class={slots.chooserItem({ class: theme('chooserItem') })}>
                             <Checkbox
                                 label={entry === null ? '(blank)' : String(entry)}
                                 checked={setSelected.includes(entry)}

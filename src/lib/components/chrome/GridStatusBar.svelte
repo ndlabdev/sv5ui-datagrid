@@ -5,6 +5,7 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridStatusBarProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { getGridTheme } from '../internal/theme.js'
 
     let { class: className }: GridStatusBarProps = $props()
 
@@ -13,6 +14,7 @@
     const selectionState = getSelection(grid)
     const pinning = getRowPinning(grid)
     const slots = datagridVariants()
+    const theme = getGridTheme()
 
     // In server mode only one page is in memory, so the counts have to come
     // from the server total rather than from the nodes on hand.
@@ -28,7 +30,7 @@
     const selected = $derived(selectionState?.count ?? 0)
 </script>
 
-<div class={slots.statusBar({ class: className })}>
+<div class={slots.statusBar({ class: [theme('statusBar'), className] })}>
     <span>
         {filtered === total
             ? `${total.toLocaleString()} rows`

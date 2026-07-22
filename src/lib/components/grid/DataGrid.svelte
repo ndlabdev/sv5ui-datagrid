@@ -27,6 +27,7 @@
         data,
         columns,
         getRowId,
+        rowClass,
         pageSize,
         selection: selectionProp,
         editing: editingProp,
@@ -39,6 +40,7 @@
         onRetry,
         fullWidthRow,
         persistState,
+        ui,
         class: className
     }: DataGridProps<TRow> = $props()
 
@@ -49,6 +51,7 @@
                 data,
                 columns: columns ?? [],
                 getRowId: getRowId!,
+                rowClass,
                 density,
                 features: [
                     filtering<TRow>(),
@@ -76,7 +79,7 @@
     })
 </script>
 
-<GridRoot {grid} {persistState} class={isVirtual ? undefined : className}>
+<GridRoot {grid} {persistState} {ui} class={isVirtual ? undefined : className}>
     {#if toolbar}
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />

@@ -46,7 +46,12 @@ export const Grid: GridParts = {
 
 export { getGridContext, setGridContext } from './internal/context.js'
 export { datagridVariants } from './datagrid.variants.js'
-export type { DataGridSlots, DataGridVariantProps } from './datagrid.variants.js'
+export type { DataGridSlots, DataGridUi, DataGridVariantProps } from './datagrid.variants.js'
+export {
+    defineDataGridConfig,
+    resetDataGridConfig,
+    type DataGridConfig
+} from './datagrid.config.js'
 /**
  * Only the props that carry real configuration. A part whose props are just
  * `class` and `children` is typed from the component itself with Svelte's

@@ -10,7 +10,9 @@
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import { getVirtualization } from '../../features/virtualization/index.js'
+    import { twMerge } from 'tailwind-merge'
     import { getGridContext } from '../internal/context.js'
+    import { getGridTheme } from '../internal/theme.js'
     import GridCellEditor from '../cells/GridCellEditor.svelte'
     import GridCellValue from '../cells/GridCellValue.svelte'
     import type { GridBodyProps } from '../datagrid.types.js'
@@ -34,7 +36,8 @@
     const pinning = getRowPinning(grid)
     const editing = getEditing(grid)
     const slots = datagridVariants()
-    const editableClass = slots.cellEditable()
+    const theme = getGridTheme()
+    const editableClass = $derived(slots.cellEditable({ class: theme('cellEditable') }))
 
     function isEditingCell(node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
         if (!editing) return false
@@ -50,19 +53,54 @@
         if (editing && isEditable(node, column)) editing.startEdit(node.id, column.id)
     }
 
-    const rowClass = slots.row()
-    const rowSelectedClass = `${rowClass} ${slots.rowSelected()}`
+    const rowClass = $derived(slots.row({ class: theme('row') }))
+    const rowSelectedClass = $derived(
+        `${rowClass} ${slots.rowSelected({ class: theme('rowSelected') })}`
+    )
 
-    function classOfRow(id: string): string {
-        return selectionState?.isSelected(id) ? rowSelectedClass : rowClass
+    /** Only pays for `twMerge` when the app actually returns classes. */
+    function classOfRow(node: RowNode<TRow>): string {
+        const base = selectionState?.isSelected(node.id) ? rowSelectedClass : rowClass
+        const custom = grid.rowClass?.(node)
+        return custom ? twMerge(base, custom) : base
     }
-    const cellClass = {
-        left: slots.cell({ align: 'left' }),
-        center: slots.cell({ align: 'center' }),
-        right: slots.cell({ align: 'right' })
-    } as const
-    const pinnedCellClass = slots.pinnedCell()
+
+    const cellClass = $derived({
+        left: slots.cell({ align: 'left', class: theme('cell') }),
+        center: slots.cell({ align: 'center', class: theme('cell') }),
+        right: slots.cell({ align: 'right', class: theme('cell') })
+    } as const)
+    const pinnedCellClass = $derived(slots.pinnedCell({ class: theme('pinnedCell') }))
     const boundaryClass = slots.groupBoundary()
+
+    interface CellClassInput {
+        node: RowNode<TRow>
+        column: ColumnState<TRow>
+        colIndex: number
+        rowIndex: number
+        editing?: boolean
+        decoration?: CellDecoration
+    }
+
+    function classOfCell(input: CellClassInput): string {
+        const { node, column, colIndex, rowIndex, decoration } = input
+        let result = column.pinned
+            ? `${cellClass[column.align]} ${pinnedCellClass}`
+            : cellClass[column.align]
+        if (!input.editing && isEditable(node, column)) result += ` ${editableClass}`
+        if (decoration?.class) result += ` ${decoration.class}`
+        result = withBoundary(result, colIndex)
+
+        const custom = column.def.cellClass
+        if (!custom) return result
+        const extra = custom({
+            node,
+            row: node.row,
+            value: grid.getValue(node, column),
+            rowIndex
+        })
+        return extra ? twMerge(result, extra) : result
+    }
 
     function withBoundary(base: string, index: number): string {
         return grid.columns.groupBoundaryFlags[index] ? `${base} ${boundaryClass}` : base
@@ -141,7 +179,7 @@
                 type="button"
                 tabindex="-1"
                 aria-label={grid.expansion.isExpanded(node.id) ? 'Collapse row' : 'Expand row'}
-                class={slots.toggleButton()}
+                class={slots.toggleButton({ class: theme('toggleButton') })}
                 onclick={(event) => {
                     event.stopPropagation()
                     grid.expansion.toggle(node.id)
@@ -181,7 +219,7 @@
             aria-setsize={node.meta?.setSize}
             aria-posinset={node.meta?.posInSet}
             data-dg-row-id={node.id}
-            class={classOfRow(node.id)}
+            class={classOfRow(node)}
             style:height={rowHeight}
             style:--dg-row-h={rowHeight}
             style:width={columnWindow.rowWidth}
@@ -192,7 +230,7 @@
                     aria-colindex={1}
                     tabindex={isActive(rowIndex, 0) ? 0 : -1}
                     data-dg-cell="{rowIndex}:0"
-                    class={slots.fullWidthCell()}
+                    class={slots.fullWidthCell({ class: theme('fullWidthCell') })}
                     style="grid-column: 1 / -1"
                 >
                     {#if fullWidthRow}
@@ -217,16 +255,14 @@
                         aria-selected={decoration?.selected}
                         tabindex={isActive(rowIndex, colIndex) ? 0 : -1}
                         data-dg-cell="{rowIndex}:{colIndex}"
-                        class={withBoundary(
-                            (column.pinned
-                                ? `${cellClass[column.align]} ${pinnedCellClass}`
-                                : cellClass[column.align]) +
-                                (!editingCell && isEditable(node, column)
-                                    ? ` ${editableClass}`
-                                    : '') +
-                                (decoration?.class ? ` ${decoration.class}` : ''),
-                            colIndex
-                        )}
+                        class={classOfCell({
+                            node,
+                            column,
+                            colIndex,
+                            rowIndex,
+                            editing: editingCell,
+                            decoration
+                        })}
                         style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
                         style:inset-inline-start={pinLeftVar(column)}
                         style:inset-inline-end={pinRightVar(column)}
@@ -252,7 +288,7 @@
             role="row"
             aria-rowindex={baseIndex + pinIndex}
             data-dg-row-id={node.id}
-            class={slots.pinnedRow()}
+            class={slots.pinnedRow({ class: theme('pinnedRow') })}
             style:width={columnWindow.rowWidth}
         >
             {#each columnWindow.renderColumns as entry (entry.column.id)}
@@ -262,12 +298,12 @@
                     aria-colindex={entry.index + 1}
                     tabindex={isPinnedActive(section, pinIndex, entry.index) ? 0 : -1}
                     data-dg-pinned-cell="{section}:{pinIndex}:{entry.index}"
-                    class={withBoundary(
-                        column.pinned
-                            ? `${cellClass[column.align]} ${pinnedCellClass}`
-                            : cellClass[column.align],
-                        entry.index
-                    )}
+                    class={classOfCell({
+                        node,
+                        column,
+                        colIndex: entry.index,
+                        rowIndex: node.index
+                    })}
                     style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
                     style:inset-inline-start={pinLeftVar(column)}
                     style:inset-inline-end={pinRightVar(column)}
@@ -282,7 +318,7 @@
 {#if pinning && pinning.topNodes.length > 0}
     <div
         role="rowgroup"
-        class={slots.pinnedRowsTop()}
+        class={slots.pinnedRowsTop({ class: theme('pinnedRowsTop') })}
         style:top={`calc(var(--dg-row-h) * ${headerRows})`}
     >
         {@render pinnedRows(pinning.topNodes, headerRows + 1, 'top')}
@@ -292,7 +328,7 @@
 <div
     role="rowgroup"
     aria-busy={loading || undefined}
-    class={slots.body({ class: className })}
+    class={slots.body({ class: [theme('body'), className] })}
     style:height={virtualization && !loading && !error && grid.totalRows > 0
         ? `${virtualization.virtualizer.totalHeight}px`
         : undefined}
@@ -302,7 +338,7 @@
             <div
                 role="gridcell"
                 aria-colindex={1}
-                class={slots.empty()}
+                class={slots.empty({ class: theme('empty') })}
                 style="grid-column: 1 / -1"
             >
                 <Empty
@@ -332,7 +368,7 @@
             <div
                 role="gridcell"
                 aria-colindex={1}
-                class={slots.empty()}
+                class={slots.empty({ class: theme('empty') })}
                 style="grid-column: 1 / -1"
             >
                 <Empty icon="lucide:inbox" title={emptyText} variant="naked" size="sm" />
@@ -340,7 +376,7 @@
         </div>
     {:else if virtualization}
         <div
-            class={slots.bodyOffset()}
+            class={slots.bodyOffset({ class: theme('bodyOffset') })}
             style:transform={`translateY(${virtualization.virtualizer.offsetY}px)`}
         >
             {@render rows()}
@@ -351,7 +387,7 @@
 </div>
 
 {#if pinning && pinning.bottomNodes.length > 0}
-    <div role="rowgroup" class={slots.pinnedRowsBottom()}>
+    <div role="rowgroup" class={slots.pinnedRowsBottom({ class: theme('pinnedRowsBottom') })}>
         {@render pinnedRows(
             pinning.bottomNodes,
             headerRows + topRows + grid.totalRows + 1,
