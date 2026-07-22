@@ -6,13 +6,15 @@ import {
     columnOps,
     createDataGrid,
     DataGrid,
+    filtering,
     getPagination,
     pagination,
     rowPinning,
     sorting,
     type ColumnDef,
     type DataGridProps,
-    type GridState
+    type GridState,
+    type SortState
 } from '$lib/index.js'
 
 interface Person {
@@ -189,6 +191,7 @@ describe('server-side pagination', () => {
             columns,
             data: people.slice(0, 5),
             getRowId: (person) => String(person.id),
+            rowModel: 'server',
             features: [sorting(), pagination({ pageSize: 5, rowCount: 137 })]
         })
     }
@@ -222,7 +225,23 @@ describe('server-side pagination', () => {
     it('falls back to the client total once rowCount is cleared', () => {
         const state = getPagination(serverGrid())!
         state.setRowCount(null)
-        expect(state.server).toBe(false)
         expect(state.total).toBe(5)
+    })
+
+    it('leaves filter and sort to the server rather than redoing them', () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: people.slice(0, 5),
+            getRowId: (person) => String(person.id),
+            rowModel: 'server',
+            features: [sorting(), filtering()]
+        })
+        ;(grid.api.setQuickFilter as (query: string) => void)('nothing matches this')
+        ;(grid.api.setSort as (sort: SortState[]) => void)([
+            { columnId: 'name', direction: 'desc' }
+        ])
+
+        // The page the server sent is exactly what renders, untouched.
+        expect(grid.nodes.map((node) => node.row.id)).toEqual([1, 2, 3, 4, 5])
     })
 })

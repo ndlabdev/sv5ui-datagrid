@@ -100,7 +100,9 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
             order: PIPELINE_ORDER.filter,
             transform: (nodes, grid) => {
                 const state = getFiltering(grid)
-                if (!state) return nodes
+                // Server mode: the rows arrived filtered; filtering again would
+                // drop rows the server deliberately returned.
+                if (!state || grid.rowModel === 'server') return nodes
                 const quickFiltered = quickFilterNodes(
                     nodes,
                     grid.columns.visible.map((column) => column.def),

@@ -14,6 +14,7 @@ import {
     type GridEventMap,
     type GridFeature,
     type GridSnapshot,
+    type RowModel,
     type RowNode
 } from './types.js'
 import { getCellValue } from './value.js'
@@ -28,6 +29,7 @@ export class GridState<TRow> {
     readonly state: Record<string, unknown> = {}
     readonly api: Record<string, unknown> = {}
     readonly getRowId: (row: TRow) => string
+    readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
     readonly expansion: ExpansionModel
@@ -38,6 +40,7 @@ export class GridState<TRow> {
     constructor(options: DataGridOptions<TRow>) {
         this.data = options.data ?? []
         this.getRowId = options.getRowId
+        this.rowModel = options.rowModel ?? 'client'
         this.columns = new ColumnModel(options.columns)
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]

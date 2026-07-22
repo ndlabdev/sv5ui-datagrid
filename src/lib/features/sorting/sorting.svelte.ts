@@ -100,7 +100,9 @@ export function sorting<TRow>(options: SortingOptions = {}): GridFeature<TRow> {
             order: PIPELINE_ORDER.sort,
             transform: (nodes, grid) => {
                 const state = getSorting(grid)
-                if (!state) return nodes
+                // Server mode: the rows arrived sorted, and re-sorting the page
+                // in isolation would reorder it against the rest of the set.
+                if (!state || grid.rowModel === 'server') return nodes
                 return sortNodes(
                     nodes,
                     grid.columns.all.map((column) => column.def),

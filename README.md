@@ -142,18 +142,36 @@ falls back to the column defaults rather than half-applying.
 A feature persists its own state through `serialize`/`hydrate` and is stored under its id, so
 features the kernel knows nothing about round-trip too.
 
-### Server-side paging
+### Server row model
 
-Pass `rowCount` and the grid stops slicing, because `data` already holds one page:
+`rowModel: 'server'` tells the pipeline that `data` already holds exactly what should be
+shown: filtering, sorting and windowing pass their rows through untouched. The features stay
+registered, because their state, UI and events are precisely what a server row model listens
+to in order to fetch the next page.
 
 ```ts
-pagination({ pageSize: 25, rowCount: 0 })
-// then, as each response lands:
-grid.api.setRowCount(total)
+const grid = createDataGrid({
+    columns,
+    data: [],
+    getRowId,
+    rowModel: 'server',
+    features: [sorting(), filtering(), pagination({ pageSize: 25 })]
+})
+
+grid.events.on('sortChanged', fetchPage)
+grid.events.on('filterChanged', fetchPage)
+grid.events.on('pageChanged', fetchPage)
+
+async function fetchPage() {
+    const { rows, total } = await api.load(grid.api.getFilterModel(), page)
+    grid.data = rows
+    grid.api.setRowCount(total)
+}
 ```
 
-Page count, the footer range and the status bar all count against the server total. Listen for
-`pageChanged` to fetch. Clearing `rowCount` returns to client-side paging.
+`setRowCount` gives the footer, the page count and the status bar their totals.
+`@sv5ui/datagrid-pro` builds on this with a `DataSource` that wires the whole loop, including
+infinite scroll and server-side group expansion.
 
 ### RTL
 

@@ -9,10 +9,9 @@ export interface PaginationOptions {
     pageSize?: number
     page?: number
     /**
-     * Total rows held by the server. Setting it switches to server-side
-     * paging: `data` carries only the current page, so the pipeline stops
-     * slicing and the page count comes from this number instead. Update it
-     * through `setRowCount` as responses arrive.
+     * Total rows held by the server, for a grid created with
+     * `rowModel: 'server'`. Update it through `setRowCount` as responses
+     * arrive; the page count and the footer count against it.
      */
     rowCount?: number
 }
@@ -40,7 +39,7 @@ export class Pagination<TRow> {
 
     /** True when the server owns paging and `data` is a single page. */
     get server(): boolean {
-        return this.rowCount !== null
+        return this.#grid.rowModel === 'server'
     }
 
     /** Rows across every page — what the footer counts against. */

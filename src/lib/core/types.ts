@@ -688,6 +688,20 @@ export interface DataGridOptions<TRow> {
      */
     density?: Density
 
+    /**
+     * Where filtering, sorting and windowing happen.
+     *
+     * `'server'` makes those pipeline stages pass their rows through
+     * untouched, because `data` already holds exactly what should be shown.
+     * The features stay registered: their state, UI and events are what a
+     * server row model listens to in order to fetch the next page.
+     *
+     * @default 'client'
+     */
+    rowModel?: RowModel
+
     /** Announcer string overrides for i18n. */
     locale?: Partial<DataGridLocale>
 }
+
+export type RowModel = 'client' | 'server'
