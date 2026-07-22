@@ -1,4 +1,4 @@
-import { buildRowNodes } from '../lib/core/row-node.js'
+import { buildRowNodes } from '../lib/core/grid/row-node.js'
 import type { ColumnDef, RowNode } from '../lib/core/types.js'
 
 export interface BenchRow {

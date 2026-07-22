@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Snippet } from 'svelte'
 import type { BadgeProps } from 'sv5ui'
-import type { GridState } from './grid.svelte.js'
+import type { GridState } from './grid/grid.svelte.js'
 
 export type { StandardSchemaV1 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDataGrid } from '../../core/grid.svelte.js'
+import { createDataGrid } from '../../core/grid/grid.svelte.js'
 import type { ColumnDef } from '../../core/types.js'
 import { getPagination, pagination } from './index.js'
 

@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode, SetFilterValue } from '../../core/types.js'
-import { getCellValue, isNullish } from '../../core/value.js'
+import { getCellValue, isNullish } from '../../core/utils/value.js'
 
 export const DISTINCT_VALUES_CAP = 200
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDataGrid, type GridState } from '../../core/grid.svelte.js'
+import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
 import { SELECTION_COLUMN_ID, type ColumnDef } from '../../core/types.js'
 import { columnOps, getColumnOps } from '../column-ops/index.js'
 import { filtering, getFiltering } from '../filtering/index.js'

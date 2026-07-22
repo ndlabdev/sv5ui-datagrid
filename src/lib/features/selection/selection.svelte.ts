@@ -1,5 +1,5 @@
-import type { GridState } from '../../core/grid.svelte.js'
-import { nodesById } from '../../core/row-node.js'
+import type { GridState } from '../../core/grid/grid.svelte.js'
+import { nodesById } from '../../core/grid/row-node.js'
 import type { GridFeature, Keybinding, RowNode, SelectionMode } from '../../core/types.js'
 import { downloadCsv, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {

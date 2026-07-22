@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRowNodes } from '../../core/row-node.js'
+import { buildRowNodes } from '../../core/grid/row-node.js'
 import { paginateNodes } from './paginate.js'
 
 interface Person {

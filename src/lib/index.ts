@@ -9,26 +9,26 @@
 export * from './components/index.js'
 
 // Grid instance
-export { createDataGrid, GridState } from './core/grid.svelte.js'
-export { buildRowNodes } from './core/row-node.js'
-export { getCellValue, isNullish } from './core/value.js'
+export { createDataGrid, GridState } from './core/grid/grid.svelte.js'
+export { buildRowNodes } from './core/grid/row-node.js'
+export { getCellValue, isNullish } from './core/utils/value.js'
 export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types.js'
 export type * from './core/types.js'
 
 // Models reachable from a grid instance
-export { Announcer, defaultLocale } from './core/announcer.svelte.js'
-export { ColumnModel } from './core/column-model.svelte.js'
-export { EventBus, type EventHandler } from './core/events.js'
-export { ExpansionModel } from './core/expansion.svelte.js'
+export { Announcer, defaultLocale } from './core/interaction/announcer.svelte.js'
+export { ColumnModel } from './core/columns/column-model.svelte.js'
+export { EventBus, type EventHandler } from './core/grid/events.js'
+export { ExpansionModel } from './core/interaction/expansion.svelte.js'
 export {
     FocusModel,
     HEADER_ROW,
     type CellPosition,
     type GridSection
-} from './core/focus-model.svelte.js'
+} from './core/interaction/focus-model.svelte.js'
 
 // Writing a feature module
-export { PIPELINE_ORDER } from './core/pipeline.svelte.js'
+export { PIPELINE_ORDER } from './core/grid/pipeline.svelte.js'
 
 // Cell formatting, for custom renderers
 export {
@@ -41,19 +41,19 @@ export {
     toDate,
     toNumber,
     type FormatOptions
-} from './core/format.js'
+} from './core/utils/format.js'
 
 // Row measurement, for variable row heights
-export { fixedRowLayout, variableRowLayout, type RowLayout } from './core/row-layout.js'
+export { fixedRowLayout, variableRowLayout, type RowLayout } from './core/virtual/row-layout.js'
 export {
     ColumnVirtualizer,
     type ColumnVirtualizerOptions
-} from './core/column-virtualizer.svelte.js'
+} from './core/virtual/column-virtualizer.svelte.js'
 export {
     Virtualizer,
     type VirtualizerOptions,
     type VirtualRange
-} from './core/virtualizer.svelte.js'
+} from './core/virtual/virtualizer.svelte.js'
 
 // Feature modules
 export {

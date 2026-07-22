@@ -1,0 +1,325 @@
+<script lang="ts">
+    import { Badge, Icon } from 'sv5ui'
+    import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
+    import { rafBatch } from '../../core/utils/raf-batch.js'
+    import { inlineDelta, inlineOffset, isRtl } from '../../core/utils/scroll.js'
+    import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../../core/types.js'
+    import { getColumnOps } from '../../features/column-ops/index.js'
+    import { getFiltering } from '../../features/filtering/index.js'
+    import { getSorting } from '../../features/sorting/index.js'
+    import { getGridContext } from '../internal/context.js'
+    import type { GridHeaderProps } from '../datagrid.types.js'
+    import { datagridVariants } from '../datagrid.variants.js'
+    import GridColumnMenu from '../menus/GridColumnMenu.svelte'
+    import GridFilterPanel from '../menus/GridFilterPanel.svelte'
+    import GridSelectionCell from '../cells/GridSelectionCell.svelte'
+    import { columnWindowOf, pinLeftVar, pinRightVar } from '../internal/window.js'
+
+    let { class: className }: GridHeaderProps = $props()
+
+    const grid = getGridContext()
+    const sorting = getSorting(grid)
+    const columnOps = getColumnOps(grid)
+    const filteringState = getFiltering(grid)
+    const slots = datagridVariants()
+
+    const columnWindow = $derived(columnWindowOf(grid))
+    const headerLevels = $derived(grid.columns.headerLevels)
+    const leafRowIndex = $derived(grid.columns.headerRowCount)
+
+    const headerCellClass = {
+        left: slots.headerCell({ align: 'left' }),
+        center: slots.headerCell({ align: 'center' }),
+        right: slots.headerCell({ align: 'right' })
+    } as const
+    const groupCellClass = slots.groupCell()
+    const boundaryClass = slots.groupBoundary()
+
+    function withBoundary(base: string, endIndex: number): string {
+        return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
+    }
+    const pinnedHeaderClass = slots.pinnedHeaderCell()
+    const resizeHandleClass = slots.resizeHandle()
+
+    function isActive(index: number): boolean {
+        const { row, col } = grid.focus.active
+        return row === HEADER_ROW && col === index
+    }
+
+    function ariaSort(columnId: string): 'ascending' | 'descending' | undefined {
+        const direction = sorting?.directionOf(columnId)
+        if (!direction) return undefined
+        return direction === 'asc' ? 'ascending' : 'descending'
+    }
+
+    function sortIcon(columnId: string): string {
+        const direction = sorting?.directionOf(columnId)
+        if (!direction) return 'lucide:chevrons-up-down'
+        return direction === 'asc' ? 'lucide:chevron-up' : 'lucide:chevron-down'
+    }
+
+    function cellVisible(cell: HeaderGroupCell): boolean {
+        for (let index = cell.start; index < cell.start + cell.span; index++) {
+            if (columnWindow.has(index)) return true
+        }
+        return false
+    }
+
+    function pinLeftOf(cell: HeaderGroupCell): string | undefined {
+        if (cell.pinned !== 'left') return undefined
+        const pinVar = grid.columns.get(cell.leafIds[0])?.pinVar
+        return pinVar ? `var(${pinVar})` : undefined
+    }
+
+    function pinRightOf(cell: HeaderGroupCell): string | undefined {
+        if (cell.pinned !== 'right') return undefined
+        const pinVar = grid.columns.get(cell.leafIds[cell.leafIds.length - 1])?.pinVar
+        return pinVar ? `var(${pinVar})` : undefined
+    }
+
+    let resizing: ((clientX: number) => void) | null = null
+
+    function capturePointer(element: HTMLElement, pointerId: number) {
+        try {
+            element.setPointerCapture(pointerId)
+        } catch {
+            // synthetic pointer events have no active pointer to capture
+        }
+    }
+
+    function startResize(event: PointerEvent, columnId: string) {
+        const ops = columnOps
+        if (!ops?.canResize) return
+        event.stopPropagation()
+        const handle = event.currentTarget as HTMLElement
+        capturePointer(handle, event.pointerId)
+        const startX = event.clientX
+        const startWidth = ops.currentWidth(columnId)
+        const rtl = isRtl(handle)
+        resizing = rafBatch((clientX) =>
+            ops.setColumnWidth(columnId, startWidth + inlineDelta(rtl, startX, clientX))
+        )
+    }
+
+    function startGroupResize(event: PointerEvent, cell: HeaderGroupCell) {
+        const ops = columnOps
+        if (!ops?.canResize || cell.isPlaceholder) return
+        event.stopPropagation()
+        const handle = event.currentTarget as HTMLElement
+        capturePointer(handle, event.pointerId)
+        const startX = event.clientX
+        const rtl = isRtl(handle)
+        const startWidths = cell.leafIds.map((id) => ops.currentWidth(id))
+        const total = startWidths.reduce((sum, width) => sum + width, 0)
+        const share = (index: number) =>
+            total > 0 ? startWidths[index] / total : 1 / startWidths.length
+        resizing = rafBatch((clientX) => {
+            const delta = inlineDelta(rtl, startX, clientX)
+            const widths: Record<string, number> = {}
+            cell.leafIds.forEach((id, i) => {
+                widths[id] = startWidths[i] + delta * share(i)
+            })
+            grid.columns.setWidths(widths)
+        })
+    }
+
+    function moveResize(event: PointerEvent) {
+        resizing?.(event.clientX)
+    }
+
+    function endResize() {
+        resizing = null
+    }
+
+    let headerRowElement = $state<HTMLElement | null>(null)
+    let dragCandidate: {
+        id: string
+        startX: number
+        pointerId: number
+        element: HTMLElement
+        rtl: boolean
+    } | null = null
+
+    function headerPointerDown(event: PointerEvent, columnId: string) {
+        if (!columnOps?.canReorder || columnId === SELECTION_COLUMN_ID) return
+        if ((event.target as HTMLElement).closest('[data-dg-noreorder]')) return
+        dragCandidate = {
+            id: columnId,
+            startX: event.clientX,
+            pointerId: event.pointerId,
+            element: event.currentTarget as HTMLElement,
+            // Read once: `isRtl` forces a style recalculation, and direction
+            // cannot change mid-drag.
+            rtl: headerRowElement ? isRtl(headerRowElement) : false
+        }
+    }
+
+    function headerPointerMove(event: PointerEvent) {
+        if (!dragCandidate || !columnOps) return
+        if (!columnOps.drag) {
+            if (Math.abs(event.clientX - dragCandidate.startX) < 4) return
+            capturePointer(dragCandidate.element, dragCandidate.pointerId)
+        }
+        const rect = headerRowElement?.getBoundingClientRect()
+        if (rect) {
+            columnOps.updateDrag(
+                dragCandidate.id,
+                inlineOffset(dragCandidate.rtl, rect, event.clientX)
+            )
+        }
+    }
+
+    let suppressClick = false
+
+    function headerPointerEnd() {
+        if (!dragCandidate) return
+        if (columnOps?.drag) {
+            suppressClick = true
+            setTimeout(() => (suppressClick = false), 0)
+        }
+        columnOps?.commitDrag()
+        dragCandidate = null
+    }
+
+    function maybeSuppressClick(event: MouseEvent) {
+        if (!suppressClick) return
+        suppressClick = false
+        event.preventDefault()
+        event.stopPropagation()
+    }
+
+    function headerPointerCancel() {
+        columnOps?.cancelDrag()
+        dragCandidate = null
+    }
+</script>
+
+<div role="rowgroup" class={slots.header({ class: className })} style:width={columnWindow.rowWidth}>
+    {#each headerLevels as level, levelIndex (levelIndex)}
+        <div role="row" aria-rowindex={levelIndex + 1} class={slots.groupRow()}>
+            {#each level as cell (`${cell.id}-${cell.start}`)}
+                {#if cellVisible(cell)}
+                    <div
+                        role="columnheader"
+                        aria-colindex={cell.start + 1}
+                        aria-colspan={cell.span > 1 ? cell.span : undefined}
+                        class={withBoundary(
+                            cell.pinned ? `${groupCellClass} ${pinnedHeaderClass}` : groupCellClass,
+                            cell.start + cell.span - 1
+                        )}
+                        style:grid-column={`${cell.start + 1} / span ${cell.span}`}
+                        style:inset-inline-start={pinLeftOf(cell)}
+                        style:inset-inline-end={pinRightOf(cell)}
+                    >
+                        {cell.header}
+                        {#if columnOps?.canResize && !cell.isPlaceholder}
+                            <div
+                                data-dg-noreorder
+                                role="separator"
+                                aria-orientation="vertical"
+                                aria-label={`Resize ${cell.header} group`}
+                                class={resizeHandleClass}
+                                onpointerdown={(event) => startGroupResize(event, cell)}
+                                onpointermove={moveResize}
+                                onpointerup={endResize}
+                                onpointercancel={endResize}
+                            ></div>
+                        {/if}
+                    </div>
+                {/if}
+            {/each}
+        </div>
+    {/each}
+    <div
+        role="row"
+        aria-rowindex={leafRowIndex}
+        class={slots.headerRow()}
+        bind:this={headerRowElement}
+    >
+        {#each columnWindow.renderColumns as entry (entry.column.id)}
+            {@const column = entry.column}
+            {@const index = entry.index}
+            {@const spacer =
+                Boolean(columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+                role="columnheader"
+                aria-colindex={index + 1}
+                aria-sort={ariaSort(column.id)}
+                tabindex={isActive(index) ? 0 : -1}
+                data-dg-cell="{HEADER_ROW}:{index}"
+                class={withBoundary(
+                    column.pinned
+                        ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
+                        : headerCellClass[column.align],
+                    index
+                )}
+                style:grid-column={columnWindow.windowed ? index + 1 : undefined}
+                style:inset-inline-start={pinLeftVar(column)}
+                style:inset-inline-end={pinRightVar(column)}
+                onclickcapture={maybeSuppressClick}
+                onclick={() => grid.focus.focusCell({ row: HEADER_ROW, col: index })}
+                onpointerdown={(event) => headerPointerDown(event, column.id)}
+                onpointermove={headerPointerMove}
+                onpointerup={headerPointerEnd}
+                onpointercancel={headerPointerCancel}
+            >
+                {#if spacer && column.align !== 'left'}
+                    <span class="grow"></span>
+                {/if}
+                {#if column.id === SELECTION_COLUMN_ID}
+                    <GridSelectionCell />
+                {:else if sorting && column.def.sortable}
+                    <button
+                        type="button"
+                        tabindex="-1"
+                        class={slots.sortButton()}
+                        onclick={(event) =>
+                            sorting.toggleSort(column.id, { append: event.shiftKey })}
+                    >
+                        {column.header}
+                        <Icon name={sortIcon(column.id)} class="size-3.5 shrink-0" />
+                        {#if sorting.priorityOf(column.id)}
+                            <Badge label={sorting.priorityOf(column.id)!} size="xs" />
+                        {/if}
+                    </button>
+                {:else if column.header === ''}
+                    <!-- Action columns are usually headerless; a column header
+                         still needs an accessible name. -->
+                    <span class="sr-only">{column.id}</span>
+                {:else}
+                    <span class="truncate" data-dg-truncate>{column.header}</span>
+                {/if}
+                {#if spacer && column.align !== 'right'}
+                    <span class="grow"></span>
+                {/if}
+                {#if filteringState && column.id !== SELECTION_COLUMN_ID}
+                    <GridFilterPanel {column} />
+                {/if}
+                {#if columnOps && column.id !== SELECTION_COLUMN_ID}
+                    <GridColumnMenu {column} />
+                    {#if columnOps.canResize}
+                        <div
+                            data-dg-noreorder
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label={`Resize ${column.header} column`}
+                            class={resizeHandleClass}
+                            onpointerdown={(event) => startResize(event, column.id)}
+                            onpointermove={moveResize}
+                            onpointerup={endResize}
+                            onpointercancel={endResize}
+                            ondblclick={() => columnOps.autoSizeColumn(column.id)}
+                        ></div>
+                    {/if}
+                {/if}
+            </div>
+        {/each}
+    </div>
+    {#if columnOps?.drag}
+        <div
+            class={slots.dropIndicator()}
+            style:inset-inline-start={`${columnOps.drag.indicatorX}px`}
+        ></div>
+    {/if}
+</div>

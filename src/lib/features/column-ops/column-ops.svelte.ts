@@ -1,8 +1,8 @@
-import { prefixSums } from '../../core/column-sizing.js'
-import { HEADER_ROW } from '../../core/focus-model.svelte.js'
-import type { GridState } from '../../core/grid.svelte.js'
-import { parentGroupIdOf } from '../../core/header-groups.js'
-import { clamp } from '../../core/math.js'
+import { prefixSums } from '../../core/columns/column-sizing.js'
+import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
+import type { GridState } from '../../core/grid/grid.svelte.js'
+import { parentGroupIdOf } from '../../core/columns/header-groups.js'
+import { clamp } from '../../core/utils/math.js'
 import {
     SELECTION_COLUMN_ID,
     type GridFeature,

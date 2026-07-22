@@ -1,18 +1,18 @@
-import Body from './GridBody.svelte'
-import ColumnChooser from './GridColumnChooser.svelte'
-import ContextMenu from './GridContextMenu.svelte'
-import DensityToggle from './GridDensityToggle.svelte'
-import FilterChips from './GridFilterChips.svelte'
-import Header from './GridHeader.svelte'
-import Pagination from './GridPagination.svelte'
-import QuickFilter from './GridQuickFilter.svelte'
-import Root from './GridRoot.svelte'
-import StatusBar from './GridStatusBar.svelte'
-import Toolbar from './GridToolbar.svelte'
-import Viewport from './GridViewport.svelte'
+import Body from './grid/GridBody.svelte'
+import ColumnChooser from './chrome/GridColumnChooser.svelte'
+import ContextMenu from './menus/GridContextMenu.svelte'
+import DensityToggle from './chrome/GridDensityToggle.svelte'
+import FilterChips from './chrome/GridFilterChips.svelte'
+import Header from './grid/GridHeader.svelte'
+import Pagination from './chrome/GridPagination.svelte'
+import QuickFilter from './chrome/GridQuickFilter.svelte'
+import Root from './grid/GridRoot.svelte'
+import StatusBar from './chrome/GridStatusBar.svelte'
+import Toolbar from './chrome/GridToolbar.svelte'
+import Viewport from './grid/GridViewport.svelte'
 
-export { default as DataGrid } from './DataGrid.svelte'
-export { default as GridCellValue } from './GridCellValue.svelte'
+export { default as DataGrid } from './grid/DataGrid.svelte'
+export { default as GridCellValue } from './cells/GridCellValue.svelte'
 
 export interface GridParts {
     Root: typeof Root
@@ -44,7 +44,7 @@ export const Grid: GridParts = {
     StatusBar
 }
 
-export { getGridContext, setGridContext } from './context.js'
+export { getGridContext, setGridContext } from './internal/context.js'
 export { datagridVariants } from './datagrid.variants.js'
 export type { DataGridSlots, DataGridVariantProps } from './datagrid.variants.js'
 export type {

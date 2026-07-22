@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createColumnState } from '../lib/core/column-sizing.js'
-import { variableRowLayout } from '../lib/core/row-layout.js'
+import { createColumnState } from '../lib/core/columns/column-sizing.js'
+import { variableRowLayout } from '../lib/core/virtual/row-layout.js'
 import {
     compileColumnFilters,
     distinctValues,

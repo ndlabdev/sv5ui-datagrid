@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types.js'
-import { getCellValue, isNullish } from '../../core/value.js'
+import { getCellValue, isNullish } from '../../core/utils/value.js'
 
 export type SortNulls = 'first' | 'last'
 
