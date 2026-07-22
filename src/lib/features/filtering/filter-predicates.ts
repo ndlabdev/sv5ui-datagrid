@@ -61,7 +61,10 @@ function numberPredicate(
     const target = filter.value ?? Number.NaN
     if (filter.op === 'between') {
         const to = filter.to ?? Number.NaN
+        // `Number(null)` and `Number('')` are both 0, so a blank cell would
+        // otherwise fall inside any range that spans zero.
         return (value) => {
+            if (isBlank(value)) return false
             const numeric = Number(value)
             return numeric >= target && numeric <= to
         }

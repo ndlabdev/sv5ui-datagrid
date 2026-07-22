@@ -185,6 +185,44 @@ describe('Editing — undo/redo', () => {
         expect(grid.data[0].name).toBe('Alice')
         expect(grid.data[1].name).toBe('Bobby')
     })
+
+    it('reports undo and redo as edits, so a server copy can follow them', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+        const events: { rowId: string; columnId: string; oldValue: unknown; newValue: unknown }[] =
+            []
+        grid.events.on('cellEdited', (payload) => events.push(payload))
+
+        state.startEdit('1', 'name')
+        state.setDraft('Alicia')
+        state.commit()
+        state.undo()
+        state.redo()
+
+        expect(events).toEqual([
+            { rowId: '1', columnId: 'name', oldValue: 'Alice', newValue: 'Alicia' },
+            { rowId: '1', columnId: 'name', oldValue: 'Alicia', newValue: 'Alice' },
+            { rowId: '1', columnId: 'name', oldValue: 'Alice', newValue: 'Alicia' }
+        ])
+    })
+
+    it('reports every cell of a multi-cell batch when it is undone', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+
+        state.applyEdits([{ rowId: '1', changes: { name: 'Alicia', age: 31 } }])
+
+        const events: { columnId: string; newValue: unknown }[] = []
+        grid.events.on('cellEdited', (payload) =>
+            events.push({ columnId: payload.columnId, newValue: payload.newValue })
+        )
+        state.undo()
+
+        expect(events).toEqual([
+            { columnId: 'name', newValue: 'Alice' },
+            { columnId: 'age', newValue: 30 }
+        ])
+    })
 })
 
 describe('Editing — applyEdits', () => {

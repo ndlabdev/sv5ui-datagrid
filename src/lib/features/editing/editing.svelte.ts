@@ -66,7 +66,7 @@ export class Editing<TRow> {
     }
 
     #nodeById(rowId: string): RowNode<TRow> | undefined {
-        return this.#grid.sourceNodes.find((node) => node.id === rowId)
+        return this.#grid.nodeById(rowId)
     }
 
     startEdit = (rowId: string, columnId: string): void => {
@@ -121,6 +121,18 @@ export class Editing<TRow> {
         return { rowId: tx.rowId, changes: before }
     }
 
+    /** Reports every cell a transaction wrote, paired with its prior value. */
+    #emitCellEdits(applied: EditTransaction, before: EditTransaction): void {
+        for (const [columnId, newValue] of Object.entries(applied.changes)) {
+            this.#grid.events.emit('cellEdited', {
+                rowId: applied.rowId,
+                columnId,
+                oldValue: before.changes[columnId],
+                newValue
+            })
+        }
+    }
+
     #commitValue(node: RowNode<TRow>, def: ColumnDef<TRow>, validated: Validated): boolean {
         if (validated.error !== null) {
             this.error = validated.error
@@ -128,21 +140,16 @@ export class Editing<TRow> {
             return false
         }
         const columnId = def.id
-        const oldValue = getCellValue(node.row, def)
-        const before = this.#applyTransaction({
+        const after: EditTransaction = {
             rowId: node.id,
             changes: { [columnId]: validated.value }
-        })
-        this.#undo = pushCommand(this.#undo, {
-            before: [before],
-            after: [{ rowId: node.id, changes: { [columnId]: validated.value } }]
-        })
-        this.#grid.events.emit('cellEdited', {
-            rowId: node.id,
-            columnId,
-            oldValue,
-            newValue: validated.value
-        })
+        }
+        // The inverse transaction carries the values as they were at write
+        // time, which is what the event should report — `node` may have been
+        // captured before an async validation resolved.
+        const before = this.#applyTransaction(after)
+        this.#undo = pushCommand(this.#undo, { before: [before], after: [after] })
+        this.#emitCellEdits(after, before)
         this.active = null
         this.draft = undefined
         this.error = null
@@ -260,17 +267,29 @@ export class Editing<TRow> {
         this.rowErrors = {}
     }
 
+    /**
+     * Undo and redo write through the same path as a direct edit, so a
+     * consumer syncing to a server sees them as edits too — otherwise a
+     * reverted change would silently drift from the server's copy.
+     */
+    #replay(transactions: EditTransaction[]): void {
+        for (const tx of transactions) {
+            const before = this.#applyTransaction(tx)
+            this.#emitCellEdits(tx, before)
+        }
+    }
+
     undo = (): void => {
         const result = undo(this.#undo)
         if (!result) return
-        for (const tx of result.command.before) this.#applyTransaction(tx)
+        this.#replay(result.command.before)
         this.#undo = result.state
     }
 
     redo = (): void => {
         const result = redo(this.#undo)
         if (!result) return
-        for (const tx of result.command.after) this.#applyTransaction(tx)
+        this.#replay(result.command.after)
         this.#undo = result.state
     }
 
@@ -329,13 +348,8 @@ export class Editing<TRow> {
         const before = after.map((tx) => this.#applyTransaction(tx))
         this.#undo = pushCommand(this.#undo, { before, after })
 
-        for (const entry of entries) {
-            this.#grid.events.emit('cellEdited', {
-                rowId: entry.node.id,
-                columnId: entry.columnId,
-                oldValue: before.find((tx) => tx.rowId === entry.node.id)?.changes[entry.columnId],
-                newValue: entry.validated.value
-            })
+        for (let index = 0; index < after.length; index++) {
+            this.#emitCellEdits(after[index], before[index])
         }
         return true
     }

@@ -7,14 +7,16 @@ export function rafBatch(apply: (value: number) => void): (value: number) => voi
             return
         }
 
-        const hadPending = pending !== null
+        const scheduled = pending !== null
         pending = value
-        if (hadPending) return
+        if (scheduled) return
 
         requestAnimationFrame(() => {
-            if (pending === null) return
-            apply(pending)
+            // Cleared before applying, so a value that arrives while `apply`
+            // runs schedules the next frame instead of being swallowed.
+            const next = pending
             pending = null
+            if (next !== null) apply(next)
         })
     }
 }

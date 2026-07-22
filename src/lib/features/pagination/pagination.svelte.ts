@@ -17,11 +17,24 @@ export interface PaginationOptions {
 }
 
 export class Pagination<TRow> {
-    page = $state(1)
     pageSize = $state<number | null>(null)
     rowCount = $state<number | null>(null)
 
+    #page = $state(1)
     #grid: GridState<TRow>
+
+    /**
+     * Clamped on read, not just on write: rows can disappear without going
+     * through `setPage` — a shrinking `data` prop, a row deleted upstream —
+     * and a page number past the end would strand the user on empty rows.
+     */
+    get page(): number {
+        return Math.min(this.#page, this.pageCount)
+    }
+
+    set page(value: number) {
+        this.#page = value
+    }
 
     constructor(grid: GridState<TRow>, options: PaginationOptions) {
         this.#grid = grid
@@ -64,13 +77,12 @@ export class Pagination<TRow> {
     }
 
     /**
-     * Reports the server's total. Clamps the page when the total shrinks
-     * under it — deleting the last row of the last page must not strand the
-     * user on an empty page.
+     * Reports the server's total. The page clamps itself on read, so this
+     * only normalizes the stored value and announces the move.
      */
     setRowCount = (rowCount: number | null): void => {
         this.rowCount = rowCount
-        if (this.page > this.pageCount) this.setPage(this.pageCount)
+        if (this.#page > this.pageCount) this.setPage(this.pageCount)
     }
 }
 

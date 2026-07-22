@@ -42,6 +42,14 @@ describe('number predicates', () => {
         expect(passes({ kind: 'number', op: 'blank', value: undefined }, null)).toBe(true)
         expect(passes({ kind: 'number', op: 'gt', value: 5 }, null)).toBe(false)
     })
+
+    it('rejects blanks in a between range spanning zero', () => {
+        const range: ColumnFilter = { kind: 'number', op: 'between', value: -10, to: 10 }
+        expect(passes(range, null)).toBe(false)
+        expect(passes(range, undefined)).toBe(false)
+        expect(passes(range, '')).toBe(false)
+        expect(passes(range, 0)).toBe(true)
+    })
 })
 
 describe('date predicates', () => {
