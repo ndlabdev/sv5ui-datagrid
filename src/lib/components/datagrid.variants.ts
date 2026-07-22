@@ -19,8 +19,12 @@ export const datagridVariants = tv({
             'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
         resizeHandle:
             'absolute inset-y-0 end-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
+        // Revealed on hover, but a touch device has no hover to give: the last
+        // rule keeps the button visible wherever hovering is impossible.
+        // Tailwind emits arbitrary media variants last, so it wins over the
+        // base `opacity-0` without touching the pointer-device behaviour.
         menuButton:
-            'opacity-0 transition-opacity group-hover/head:opacity-100 group-focus-within/head:opacity-100',
+            'opacity-0 transition-opacity group-hover/head:opacity-100 group-focus-within/head:opacity-100 [@media(hover:none)]:opacity-100',
         dropIndicator: 'pointer-events-none absolute inset-y-0 z-20 w-0.5 bg-primary',
         pinnedCell:
             'sticky z-[5] bg-surface group-hover/row:bg-surface-container-low border-outline-variant',

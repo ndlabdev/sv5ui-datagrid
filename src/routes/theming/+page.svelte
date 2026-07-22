@@ -59,6 +59,7 @@
             id: 'dueInDays',
             header: 'Due (days)',
             sortable: true,
+            filter: 'number',
             align: 'right',
             cellClass: (ctx) => Number(ctx.value) < 0 && 'text-error'
         }
