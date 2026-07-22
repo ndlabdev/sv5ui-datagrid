@@ -46,8 +46,23 @@ export function resolveColumnSnapshot(
         orderIds: order.length === 0 ? [] : [...order, ...missing],
         widthOverrides: pruneRecord(stored?.widths ?? {}, known),
         hiddenOverrides: pruneRecord(stored?.hidden ?? {}, known),
-        pinnedOverrides: pruneRecord(stored?.pinned ?? {}, known)
+        pinnedOverrides: prunePinned(stored?.pinned ?? {}, known)
     }
+}
+
+/**
+ * Values are checked too, not just keys: a hand-edited or corrupt entry must
+ * not put an unknown side into the pinning model.
+ */
+function prunePinned(
+    stored: Record<string, PinnedSide | null>,
+    known: Set<string>
+): Record<string, PinnedSide | null> {
+    const pinned: Record<string, PinnedSide | null> = {}
+    for (const [id, side] of Object.entries(pruneRecord(stored, known))) {
+        pinned[id] = side === 'left' || side === 'right' ? side : null
+    }
+    return pinned
 }
 
 export function isDensity(value: unknown): value is Density {

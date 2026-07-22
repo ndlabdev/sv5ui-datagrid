@@ -1,51 +1,37 @@
-// Components
+/**
+ * The public API. Everything exported here is covered by semver from 1.0 on,
+ * so it stays deliberately small: what an app needs to render a grid, what a
+ * feature module needs to plug into one, and nothing else. Internal helpers
+ * live in their own modules and are free to change.
+ */
+
+// Components and theming
 export * from './components/index.js'
 
-// Headless core
+// Grid instance
+export { createDataGrid, GridState } from './core/grid.svelte.js'
+export { buildRowNodes } from './core/row-node.js'
+export { getCellValue, isNullish } from './core/value.js'
+export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types.js'
+export type * from './core/types.js'
+
+// Models reachable from a grid instance
 export { Announcer, defaultLocale } from './core/announcer.svelte.js'
 export { ColumnModel } from './core/column-model.svelte.js'
-export { FocusModel, HEADER_ROW, type CellPosition } from './core/focus-model.svelte.js'
-export {
-    buildColumnCssVars,
-    columnTrackSize,
-    createColumnState,
-    pinOffsets,
-    prefixSums,
-    resolveColumnWidths,
-    toStyleString,
-    trackWidthEstimates
-} from './core/column-sizing.js'
-export {
-    buildGroupPaths,
-    buildHeaderLevels,
-    flattenColumns,
-    parentGroupIdOf
-} from './core/header-groups.js'
-export {
-    ColumnVirtualizer,
-    type ColumnVirtualizerOptions
-} from './core/column-virtualizer.svelte.js'
-export { fixedRowLayout, variableRowLayout, type RowLayout } from './core/row-layout.js'
 export { EventBus, type EventHandler } from './core/events.js'
 export { ExpansionModel } from './core/expansion.svelte.js'
-export { emptyIdSet, idSetOf, idSetWith, idSetWithout } from './core/id-set.js'
-export { clamp } from './core/math.js'
-export { rafBatch } from './core/raf-batch.js'
-export { scrollStart, setScrollStart } from './core/scroll.js'
-export { createDataGrid, GridState } from './core/grid.svelte.js'
-export { composePipeline, PIPELINE_ORDER, type Pipeline } from './core/pipeline.svelte.js'
-export { buildRowNodes } from './core/row-node.js'
-export type * from './core/types.js'
-export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types.js'
 export {
-    buildColumnSnapshot,
-    isDensity,
-    normalizeSnapshot,
-    resolveColumnSnapshot,
-    type ColumnSnapshotSource
-} from './core/snapshot.js'
+    FocusModel,
+    HEADER_ROW,
+    type CellPosition,
+    type GridSection
+} from './core/focus-model.svelte.js'
+
+// Writing a feature module
+export { PIPELINE_ORDER } from './core/pipeline.svelte.js'
+
+// Cell formatting, for custom renderers
 export {
-    clampToMax,
     DEFAULT_EMPTY_TEXT,
     formatCurrency,
     formatDate,
@@ -56,7 +42,13 @@ export {
     toNumber,
     type FormatOptions
 } from './core/format.js'
-export { getCellValue, isNullish } from './core/value.js'
+
+// Row measurement, for variable row heights
+export { fixedRowLayout, variableRowLayout, type RowLayout } from './core/row-layout.js'
+export {
+    ColumnVirtualizer,
+    type ColumnVirtualizerOptions
+} from './core/column-virtualizer.svelte.js'
 export {
     Virtualizer,
     type VirtualizerOptions,
@@ -64,11 +56,68 @@ export {
 } from './core/virtualizer.svelte.js'
 
 // Feature modules
-export * from './features/column-ops/index.js'
-export * from './features/editing/index.js'
-export * from './features/filtering/index.js'
-export * from './features/pagination/index.js'
-export * from './features/row-pinning/index.js'
-export * from './features/selection/index.js'
-export * from './features/sorting/index.js'
-export * from './features/virtualization/index.js'
+export {
+    COLUMN_OPS,
+    ColumnOps,
+    columnOps,
+    getColumnOps,
+    type ColumnOpsOptions
+} from './features/column-ops/index.js'
+export {
+    EDITING,
+    Editing,
+    editing,
+    getEditing,
+    type EditingOptions,
+    type EditMode
+} from './features/editing/index.js'
+export {
+    FILTERING,
+    Filtering,
+    filtering,
+    getFiltering,
+    type FilteringOptions
+} from './features/filtering/index.js'
+export {
+    PAGINATION,
+    Pagination,
+    getPagination,
+    pagination,
+    type PaginationOptions
+} from './features/pagination/index.js'
+export {
+    getRowPinning,
+    ROW_PINNING,
+    RowPinning,
+    rowPinning,
+    type RowPinningOptions
+} from './features/row-pinning/index.js'
+export {
+    getSelection,
+    SELECTION,
+    Selection,
+    selection,
+    toCsv,
+    toTsv,
+    type CopyOptions,
+    type ExportCsvOptions,
+    type SelectAllState,
+    type SelectionOptions
+} from './features/selection/index.js'
+export {
+    getSorting,
+    SORTING,
+    Sorting,
+    sorting,
+    type SortingOptions,
+    type SortNulls,
+    type ToggleSortOptions
+} from './features/sorting/index.js'
+export {
+    getVirtualization,
+    VIRTUALIZATION,
+    Virtualization,
+    virtualization,
+    type ColumnVirtualizationOptions,
+    type VirtualizationOptions
+} from './features/virtualization/index.js'

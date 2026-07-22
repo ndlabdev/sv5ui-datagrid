@@ -66,4 +66,3 @@ export type {
     GridToolbarProps,
     GridViewportProps
 } from './datagrid.types.js'
-export { columnWindowOf, windowStartOf, type ColumnEntry, type ColumnWindow } from './window.js'

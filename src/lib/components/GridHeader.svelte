@@ -2,6 +2,7 @@
     import { Badge, Icon } from 'sv5ui'
     import { HEADER_ROW } from '../core/focus-model.svelte.js'
     import { rafBatch } from '../core/raf-batch.js'
+    import { inlineDelta, inlineOffset, isRtl } from '../core/scroll.js'
     import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../core/types.js'
     import { getColumnOps } from '../features/column-ops/index.js'
     import { getFiltering } from '../features/filtering/index.js'
@@ -90,11 +91,13 @@
         const ops = columnOps
         if (!ops?.canResize) return
         event.stopPropagation()
-        capturePointer(event.currentTarget as HTMLElement, event.pointerId)
+        const handle = event.currentTarget as HTMLElement
+        capturePointer(handle, event.pointerId)
         const startX = event.clientX
         const startWidth = ops.currentWidth(columnId)
+        const rtl = isRtl(handle)
         resizing = rafBatch((clientX) =>
-            ops.setColumnWidth(columnId, startWidth + (clientX - startX))
+            ops.setColumnWidth(columnId, startWidth + inlineDelta(rtl, startX, clientX))
         )
     }
 
@@ -102,14 +105,16 @@
         const ops = columnOps
         if (!ops?.canResize || cell.isPlaceholder) return
         event.stopPropagation()
-        capturePointer(event.currentTarget as HTMLElement, event.pointerId)
+        const handle = event.currentTarget as HTMLElement
+        capturePointer(handle, event.pointerId)
         const startX = event.clientX
+        const rtl = isRtl(handle)
         const startWidths = cell.leafIds.map((id) => ops.currentWidth(id))
         const total = startWidths.reduce((sum, width) => sum + width, 0)
         const share = (index: number) =>
             total > 0 ? startWidths[index] / total : 1 / startWidths.length
         resizing = rafBatch((clientX) => {
-            const delta = clientX - startX
+            const delta = inlineDelta(rtl, startX, clientX)
             const widths: Record<string, number> = {}
             cell.leafIds.forEach((id, i) => {
                 widths[id] = startWidths[i] + delta * share(i)
@@ -152,7 +157,12 @@
             capturePointer(dragCandidate.element, dragCandidate.pointerId)
         }
         const rect = headerRowElement?.getBoundingClientRect()
-        if (rect) columnOps.updateDrag(dragCandidate.id, event.clientX - rect.left)
+        if (rect && headerRowElement) {
+            columnOps.updateDrag(
+                dragCandidate.id,
+                inlineOffset(isRtl(headerRowElement), rect, event.clientX)
+            )
+        }
     }
 
     let suppressClick = false
@@ -303,6 +313,9 @@
         {/each}
     </div>
     {#if columnOps?.drag}
-        <div class={slots.dropIndicator()} style:left={`${columnOps.drag.indicatorX}px`}></div>
+        <div
+            class={slots.dropIndicator()}
+            style:inset-inline-start={`${columnOps.drag.indicatorX}px`}
+        ></div>
     {/if}
 </div>

@@ -7,7 +7,7 @@ import {
     toStyleString,
     trackWidthEstimates
 } from './column-sizing.js'
-import { orderLeafDefs, sanitizeColumnState } from './column-order.js'
+import { orderLeafDefs } from './column-order.js'
 import {
     buildGroupPaths,
     buildHeaderLevels,
@@ -15,13 +15,7 @@ import {
     groupBoundaries
 } from './header-groups.js'
 import { clamp } from './math.js'
-import {
-    SELECTION_COLUMN_ID,
-    type ColumnDef,
-    type ColumnState,
-    type ColumnStateSnapshot,
-    type PinnedSide
-} from './types.js'
+import { SELECTION_COLUMN_ID, type ColumnDef, type ColumnState, type PinnedSide } from './types.js'
 
 const SELECTION_COLUMN_WIDTH = 44
 
@@ -144,25 +138,5 @@ export class ColumnModel<TRow> {
     setHidden(id: string, hidden: boolean): void {
         if (id === SELECTION_COLUMN_ID || !this.get(id)) return
         this.hiddenOverrides = { ...this.hiddenOverrides, [id]: hidden }
-    }
-
-    columnState(): ColumnStateSnapshot {
-        return {
-            order: this.all.map((column) => column.id).filter((id) => id !== SELECTION_COLUMN_ID),
-            widths: { ...this.widthOverrides },
-            hidden: { ...this.hiddenOverrides },
-            pinned: { ...this.pinnedOverrides }
-        }
-    }
-
-    applyColumnState(snapshot: ColumnStateSnapshot): void {
-        const sanitized = sanitizeColumnState(
-            snapshot,
-            this.leafDefs.map((def) => def.id)
-        )
-        this.orderIds = sanitized.order
-        this.widthOverrides = sanitized.widths
-        this.hiddenOverrides = sanitized.hidden
-        this.pinnedOverrides = sanitized.pinned
     }
 }

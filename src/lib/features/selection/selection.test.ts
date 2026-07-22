@@ -217,9 +217,11 @@ describe('synthetic selection column', () => {
         expect(grid.columns.visible[0].id).toBe(SELECTION_COLUMN_ID)
         expect(grid.columns.visible[0].pinned).toBe('left')
 
-        const snapshot = ops.getColumnState()
+        // Move a real column so the snapshot has an order to inspect at all.
+        ops.moveColumn('dept', 1)
+        const snapshot = grid.getState().columns!
         expect(snapshot.order).not.toContain(SELECTION_COLUMN_ID)
-        expect(snapshot.pinned).not.toHaveProperty(SELECTION_COLUMN_ID)
+        expect(snapshot.pinned ?? {}).not.toHaveProperty(SELECTION_COLUMN_ID)
     })
 
     it('keeps the selection column first when other columns move', () => {

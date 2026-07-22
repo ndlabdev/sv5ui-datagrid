@@ -1,4 +1,4 @@
-import type { ColumnDef, ColumnStateSnapshot, PinnedSide } from './types.js'
+import type { ColumnDef } from './types.js'
 
 export function orderLeafDefs<TRow>(
     leafDefs: ColumnDef<TRow>[],
@@ -19,25 +19,4 @@ export function orderLeafDefs<TRow>(
         if (!seen.has(def.id)) ordered.push(def)
     }
     return ordered
-}
-
-export function sanitizeColumnState(
-    snapshot: ColumnStateSnapshot,
-    knownIds: string[]
-): ColumnStateSnapshot {
-    const known = new Set(knownIds)
-    const pick = <T>(record: Record<string, T>): Record<string, T> =>
-        Object.fromEntries(Object.entries(record ?? {}).filter(([id]) => known.has(id)))
-
-    const pinned: Record<string, PinnedSide | null> = {}
-    for (const [id, side] of Object.entries(pick(snapshot.pinned))) {
-        pinned[id] = side === 'left' || side === 'right' ? side : null
-    }
-
-    return {
-        order: (snapshot.order ?? []).filter((id) => known.has(id)),
-        widths: pick(snapshot.widths),
-        hidden: pick(snapshot.hidden),
-        pinned
-    }
 }

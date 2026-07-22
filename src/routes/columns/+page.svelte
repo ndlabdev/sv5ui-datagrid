@@ -10,7 +10,7 @@
         sorting,
         virtualization,
         type ColumnDef,
-        type ColumnStateSnapshot,
+        type GridSnapshot,
         type DataGridCellContext,
         type GridState
     } from '$lib/index.js'
@@ -120,14 +120,17 @@
     })
     const ops = getColumnOps(grid)!
 
-    const savedLayout = useLocalStorage<ColumnStateSnapshot | null>('datagrid-columns-layout', null)
+    const savedLayout = useLocalStorage<GridSnapshot | null>('datagrid-columns-layout', null)
 
+    // A preset is just a snapshot narrowed to its columns: setState leaves sort,
+    // filter and density alone when the snapshot carries none of them.
     function saveLayout() {
-        savedLayout.current = ops.getColumnState()
+        const { version, columns } = grid.getState()
+        savedLayout.current = { version, columns }
     }
 
     function restoreLayout() {
-        if (savedLayout.current) ops.applyColumnState(savedLayout.current)
+        if (savedLayout.current) grid.setState(savedLayout.current)
     }
 
     const PERSIST_KEY = 'datagrid-columns-demo'
@@ -205,7 +208,7 @@
             />
             <Button variant="outline" size="sm" label="Quên state đã lưu" onclick={forgetState} />
             <span class="text-xs text-on-surface-variant">
-                Preset thủ công dùng <code>getColumnState()/applyColumnState()</code>; còn
+                Preset thủ công lưu snapshot chỉ có <code>columns</code>; còn
                 <code>persistState</code> bên dưới tự lưu <em>toàn bộ</em> state.
             </span>
         </div>

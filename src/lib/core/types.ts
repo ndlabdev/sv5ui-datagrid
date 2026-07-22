@@ -199,22 +199,6 @@ export const SELECTION_COLUMN_ID = '__dg-select__'
 export type SelectionMode = 'single' | 'multiple'
 
 /**
- * Serializable snapshot of the runtime column state — order, width,
- * visibility and pin overrides. Round-trips through
- * `getColumnState()` / `applyColumnState()`.
- */
-export interface ColumnStateSnapshot {
-    /** Leaf column ids in display order. */
-    order: string[]
-    /** Width overrides in pixels, keyed by column id. */
-    widths: Record<string, number>
-    /** Visibility overrides, keyed by column id. */
-    hidden: Record<string, boolean>
-    /** Pin overrides, keyed by column id. */
-    pinned: Record<string, PinnedSide | null>
-}
-
-/**
  * One rendered cell of a header group row.
  */
 export interface HeaderGroupCell {

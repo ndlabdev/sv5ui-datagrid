@@ -5,7 +5,6 @@ import { parentGroupIdOf } from '../../core/header-groups.js'
 import { clamp } from '../../core/math.js'
 import {
     SELECTION_COLUMN_ID,
-    type ColumnStateSnapshot,
     type GridFeature,
     type Keybinding,
     type PinnedSide
@@ -190,12 +189,6 @@ export class ColumnOps<TRow> {
         const column = this.#grid.columns.get(id)
         if (column) this.setColumnHidden(id, !column.hidden)
     }
-
-    getColumnState = (): ColumnStateSnapshot => this.#grid.columns.columnState()
-
-    applyColumnState = (snapshot: ColumnStateSnapshot): void => {
-        this.#grid.columns.applyColumnState(snapshot)
-    }
 }
 
 function activeColumnId<TRow>(grid: GridState<TRow>): string | null {
@@ -271,9 +264,7 @@ export function columnOps<TRow>(options: ColumnOpsOptions = {}): GridFeature<TRo
                 autoSizeColumns: state.autoSizeColumns,
                 moveColumn: state.moveColumn,
                 pinColumn: state.pinColumn,
-                setColumnHidden: state.setColumnHidden,
-                getColumnState: state.getColumnState,
-                applyColumnState: state.applyColumnState
+                setColumnHidden: state.setColumnHidden
             }
         },
         keybindings: createKeybindings<TRow>()

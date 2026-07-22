@@ -59,9 +59,7 @@ describe('ColumnOps', () => {
                 'autoSizeColumns',
                 'moveColumn',
                 'pinColumn',
-                'setColumnHidden',
-                'getColumnState',
-                'applyColumnState'
+                'setColumnHidden'
             ])
         )
     })
@@ -102,16 +100,16 @@ describe('ColumnOps', () => {
         expect(grouped.columns.visible.map((column) => column.id)).toEqual(['d', 'a', 'c'])
     })
 
-    it('round-trips column state through the api', () => {
+    it('round-trips column state through a snapshot', () => {
         const grid = createGrid()
         const ops = getColumnOps(grid)!
         ops.moveColumn('a', 1)
         ops.pinColumn('c', 'right')
         ops.setColumnWidth('b', 150)
-        const snapshot = ops.getColumnState()
+        const { version, columns } = grid.getState()
 
         const fresh = createGrid()
-        getColumnOps(fresh)!.applyColumnState(snapshot)
+        fresh.setState({ version, columns })
         expect(fresh.columns.visible.map((column) => column.id)).toEqual(
             grid.columns.visible.map((column) => column.id)
         )

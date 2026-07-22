@@ -64,55 +64,6 @@ describe('ColumnModel runtime state', () => {
         expect(model.cssVars[model.get('b')!.pinVar]).toBe('100px')
     })
 
-    it('round-trips the column state snapshot (exit criteria)', () => {
-        const model = createModel()
-        model.moveColumn('d', 0)
-        model.setWidth('b', 240)
-        model.setHidden('c', true)
-        model.setPinned('a', 'left')
-        const snapshot = model.columnState()
-
-        const restored = createModel()
-        restored.applyColumnState(JSON.parse(JSON.stringify(snapshot)))
-
-        expect(restored.visible.map((column) => column.id)).toEqual(
-            model.visible.map((column) => column.id)
-        )
-        expect(restored.widthOf('b')).toBe(240)
-        expect(restored.get('c')?.hidden).toBe(true)
-        expect(restored.get('a')?.pinned).toBe('left')
-        expect(restored.columnState()).toEqual(snapshot)
-    })
-
-    it('normalizes invalid pinned values instead of losing the column', () => {
-        const model = createModel()
-        model.applyColumnState({
-            order: [],
-            widths: {},
-            hidden: {},
-            pinned: { a: 'garbage' as never, b: 'right' }
-        })
-
-        expect(model.visible).toHaveLength(4)
-        expect(model.get('a')?.pinned).toBeNull()
-        expect(model.get('b')?.pinned).toBe('right')
-    })
-
-    it('drops unknown column ids when applying a snapshot', () => {
-        const model = createModel()
-        model.applyColumnState({
-            order: ['ghost', 'b', 'a'],
-            widths: { ghost: 500, a: 150 },
-            hidden: { ghost: true },
-            pinned: { ghost: 'left', d: 'right' }
-        })
-
-        expect(model.visible.map((column) => column.id)).toEqual(['b', 'a', 'c', 'd'])
-        expect(model.widthOf('a')).toBe(150)
-        expect(model.get('d')?.pinned).toBe('right')
-        expect(model.columnState().widths).not.toHaveProperty('ghost')
-    })
-
     it('builds header levels from grouped defs', () => {
         const model = new ColumnModel<Row>([
             {

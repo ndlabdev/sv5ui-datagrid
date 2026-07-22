@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
 import {
+    columnOps,
     createDataGrid,
     DataGrid,
     getPagination,
@@ -136,6 +137,49 @@ describe('tooltip on truncation', () => {
 
         expect(long.title).toBe('A note far too long to fit inside a narrow column')
         expect(short.title).toBe('')
+    })
+})
+
+describe('rtl pointer gestures', () => {
+    function resizeColumns(): ColumnDef<Person>[] {
+        return [
+            { id: 'name', header: 'Name', width: 160 },
+            { id: 'note', header: 'Note', width: 160 }
+        ]
+    }
+
+    async function dragHandleBy(dir: 'ltr' | 'rtl', travel: number) {
+        const grid = createDataGrid<Person>({
+            columns: resizeColumns(),
+            data: people,
+            getRowId: (person) => String(person.id),
+            features: [sorting(), columnOps()]
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        const viewport = screen.container.querySelector<HTMLElement>('[role="grid"]')!
+        await expect.poll(() => viewport.isConnected).toBe(true)
+        viewport.dir = dir
+
+        const handle = screen.container.querySelector<HTMLElement>(
+            '[aria-label="Resize Name column"]'
+        )!
+        const fire = (type: string, clientX: number) =>
+            handle.dispatchEvent(
+                new PointerEvent(type, { bubbles: true, composed: true, button: 0, clientX })
+            )
+
+        fire('pointerdown', 300)
+        fire('pointermove', 300 + travel)
+        await expect.poll(() => grid.columns.widthOf('name')).not.toBe(160)
+        fire('pointerup', 300 + travel)
+        return grid.columns.widthOf('name')
+    }
+
+    it('resizes by travel along the inline axis, not by raw clientX', async () => {
+        // Dragging toward the inline end widens the column in both directions;
+        // under RTL the inline end is to the left, so clientX moves the other way.
+        expect(await dragHandleBy('ltr', 60)).toBe(220)
+        expect(await dragHandleBy('rtl', -60)).toBe(220)
     })
 })
 

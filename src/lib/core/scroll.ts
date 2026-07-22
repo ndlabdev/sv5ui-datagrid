@@ -10,6 +10,22 @@ export function scrollStart(element: HTMLElement): number {
 }
 
 export function setScrollStart(element: HTMLElement, value: number): void {
-    const rtl = getComputedStyle(element).direction === 'rtl'
-    element.scrollLeft = rtl ? -value : value
+    element.scrollLeft = isRtl(element) ? -value : value
+}
+
+export function isRtl(element: HTMLElement): boolean {
+    return getComputedStyle(element).direction === 'rtl'
+}
+
+/**
+ * Turns a pointer's horizontal travel into travel along the inline axis, so a
+ * drag toward the inline end always reads as positive.
+ */
+export function inlineDelta(rtl: boolean, from: number, to: number): number {
+    return rtl ? from - to : to - from
+}
+
+/** A client x as an offset from the element's inline start. */
+export function inlineOffset(rtl: boolean, rect: DOMRect, clientX: number): number {
+    return rtl ? rect.right - clientX : clientX - rect.left
 }

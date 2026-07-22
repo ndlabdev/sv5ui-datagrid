@@ -57,6 +57,14 @@ describe('resolveColumnSnapshot', () => {
         expect(resolved.orderIds).toEqual(['b', 'a', 'c'])
     })
 
+    it('normalizes an invalid pinned value instead of losing the column', () => {
+        const resolved = resolveColumnSnapshot({ pinned: { a: 'garbage' as never, b: 'right' } }, [
+            'a',
+            'b'
+        ])
+        expect(resolved.pinnedOverrides).toEqual({ a: null, b: 'right' })
+    })
+
     it('leaves the order untouched when the snapshot has none', () => {
         expect(resolveColumnSnapshot(undefined, ['a', 'b']).orderIds).toEqual([])
     })

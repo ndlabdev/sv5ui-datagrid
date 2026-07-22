@@ -60,6 +60,16 @@ For simple cases, pass `data`/`columns` directly instead of creating a grid inst
 <DataGrid {data} {columns} pageSize={10} />
 ```
 
+## API stability
+
+Everything exported from the package root is public and covered by semver from 1.0 on. The
+surface is deliberately small — enough to render a grid, enough to write a feature module, and
+nothing else. Internal helpers (pipeline transforms, filter compilation, undo plumbing, column
+sizing maths, scroll normalisation) stay unexported and change freely between releases.
+
+If you need something that is not exported to build a feature, that is a gap in the extension
+points — open an issue rather than reaching into `dist`, and the extension point gets fixed.
+
 ## Extension points
 
 Every feature — the built-in ones and yours — is a plain object plugging into the same hooks,

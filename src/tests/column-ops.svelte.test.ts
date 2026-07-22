@@ -312,7 +312,7 @@ describe('column menu + chooser + state round-trip', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         const ops = getColumnOps(grid)!
-        const initial = ops.getColumnState()
+        const initial = grid.getState()
         const initialOrder = headerOrder(screen.container)
 
         ops.moveColumn('name', 2)
@@ -321,7 +321,7 @@ describe('column menu + chooser + state round-trip', () => {
         ops.setColumnHidden('name', true)
         await expect.poll(() => headerOrder(screen.container)).not.toEqual(initialOrder)
 
-        ops.applyColumnState(initial)
+        grid.setState(initial)
         await expect.poll(() => headerOrder(screen.container)).toEqual(initialOrder)
         expect(gridVar(screen, '--dg-col-email-w')).toBe('200px')
     })
