@@ -51,9 +51,7 @@ export interface EditorContext<TRow> {
     error: string | null
 }
 
-/**
- * Advanced editor configuration for a column.
- */
+/** Advanced editor configuration for a column. */
 export interface ColumnEditorDef<TRow> {
     /** Built-in editor family. */
     type: EditorType

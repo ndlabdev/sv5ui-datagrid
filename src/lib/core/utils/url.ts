@@ -1,23 +1,17 @@
-/**
- * A `link` column turns row data into an `href`, so a value the grid never
- * authored decides what a click executes. Only schemes that navigate are
- * allowed through; `javascript:`, `data:` and `vbscript:` are dropped so a
- * hostile row cannot run script in the host page.
- */
+/** A `link` column turns row data into an `href`, so only schemes that
+ * navigate are allowed through — `javascript:` and `data:` are not. */
 const NAVIGABLE_PROTOCOLS = new Set(['http', 'https', 'mailto', 'tel', 'sms', 'ftp'])
 
 /** A url is relative once one of these appears before any `:`. */
 const PATH_START = /[/?#]/
 
 /**
- * Returns the href to render, or `undefined` when the value is not safe to
- * navigate to. Relative urls and fragments carry no scheme and are kept.
+ * Returns the href to render, or `undefined` when it is not safe to navigate
+ * to. Relative urls and fragments carry no scheme and are kept.
  *
- * The scheme is matched raw against the allowlist rather than being cleaned
- * up first. A browser ignores control characters and whitespace when it
- * resolves a url, so `java\tscript:` and `java script:` both run script — but
- * neither spells a name on the list, so both are rejected without the grid
- * having to enumerate every character a browser might drop.
+ * The scheme is matched raw: a browser ignores control characters and
+ * whitespace, so `java\tscript:` runs script — but it does not spell a name on
+ * the list, so no cleanup pass is needed to reject it.
  */
 export function safeHref(value: unknown): string | undefined {
     if (value === null || value === undefined) return undefined

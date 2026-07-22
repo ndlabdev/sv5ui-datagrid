@@ -68,7 +68,6 @@
         return grid.columns.groupBoundaryFlags[index] ? `${base} ${boundaryClass}` : base
     }
 
-    // Resolved once: a grid with no decorating feature pays nothing per cell.
     const decorators = grid.features.filter((feature) => feature.cellDecoration)
 
     function decorationOf(

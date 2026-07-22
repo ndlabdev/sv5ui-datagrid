@@ -46,9 +46,7 @@ export class Virtualization<TRow> {
         if (this.element) this.element.scrollTop = 0
     }
 
-    // Scroll targets address a row's position in the windowed set, which is
-    // not `node.index`. Built lazily — a grid scrolled only by index never
-    // pays for it.
+    // Scroll targets address a row's position in the window, not `node.index`.
     #indexById = $derived.by(() => nodeIndexById(this.#grid.preWindowNodes))
 
     #indexOf(target: number | string): number {

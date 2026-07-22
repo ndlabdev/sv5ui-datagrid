@@ -23,11 +23,8 @@ export class Pagination<TRow> {
     #page = $state(1)
     #grid: GridState<TRow>
 
-    /**
-     * Clamped on read, not just on write: rows can disappear without going
-     * through `setPage` — a shrinking `data` prop, a row deleted upstream —
-     * and a page number past the end would strand the user on empty rows.
-     */
+    /** Clamped on read: rows can disappear without going through `setPage`,
+     * and a page past the end would strand the user on empty rows. */
     get page(): number {
         return Math.min(this.#page, this.pageCount)
     }
@@ -108,7 +105,6 @@ export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<T
             order: PIPELINE_ORDER.window,
             transform: (nodes, grid) => {
                 const state = getPagination(grid)
-                // In server mode the data already is the page.
                 if (!state || state.server) return nodes
                 return paginateNodes(nodes, state.page, state.pageSize)
             }

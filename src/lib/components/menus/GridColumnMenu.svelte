@@ -93,10 +93,7 @@
 
     const open = $derived(columnOps.menuFor === column.id)
 
-    /**
-     * Whether the trigger is worth rendering at all. Cheap enough to evaluate
-     * for every column, unlike the items themselves.
-     */
+    /** Cheap enough to evaluate per column, unlike the items themselves. */
     const hasItems = $derived(
         Boolean(sorting && column.def.sortable) ||
             columnOps.canPin ||
@@ -105,8 +102,7 @@
             Boolean(filteringState && filterTypeOf(column.def))
     )
 
-    // Built only while this column's menu is open: every visible column mounts
-    // one of these, and the entries are rebuilt on any sort or pin change.
+    // Built only while open: every visible column mounts one of these.
     const items = $derived(open ? [...sortItems(), ...pinItems(), ...actionItems()] : [])
 </script>
 

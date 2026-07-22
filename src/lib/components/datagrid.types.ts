@@ -228,10 +228,7 @@ export type DataGridProps<TRow> = {
           /** Rows per page. Omit to disable pagination. Ignored when `virtual` is set. */
           pageSize?: number
 
-          /**
-           * Enables row selection with the checkbox column, clipboard
-           * copy and CSV export.
-           */
+          /** Enables row selection with the checkbox column, clipboard copy and CSV export. */
           selection?: SelectionOptions<TRow> | true
 
           /** Enables inline editing (double-click / Enter / F2). */

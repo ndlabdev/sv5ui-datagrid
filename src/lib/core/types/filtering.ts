@@ -18,10 +18,7 @@ export type ColumnFilter =
     | { kind: 'set'; values: SetFilterValue[] }
     | { kind: 'boolean'; value: boolean }
 
-/**
- * Serializable filter model.
- * Drives state persistence and server-side row model requests.
- */
+/** Serializable filter model. Drives state persistence and server-side row model requests. */
 export interface FilterModel {
     /** Quick-filter query matched against all visible columns. */
     quick: string
@@ -31,9 +28,7 @@ export interface FilterModel {
 
 export type FilterType = ColumnFilter['kind']
 
-/**
- * Advanced per-column filter configuration.
- */
+/** Advanced per-column filter configuration. */
 export interface ColumnFilterDef<TRow> {
     /** Editor UI and default predicate family. */
     type: FilterType

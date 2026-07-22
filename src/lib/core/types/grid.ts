@@ -10,10 +10,7 @@ export type SelectionMode = 'single' | 'multiple'
 
 export type Density = 'compact' | 'standard' | 'comfortable'
 
-/**
- * Strings used by the aria-live announcer. Override via
- * `DataGridOptions.locale` for i18n.
- */
+/** Strings used by the aria-live announcer. Override via `DataGridOptions.locale` for i18n. */
 export interface DataGridLocale {
     /** Announced when a column becomes sorted. */
     sorted: (column: string, direction: SortDirection) => string
@@ -74,10 +71,7 @@ export interface PersistStateOptions {
     migrate?: (stored: GridSnapshot) => GridSnapshot | undefined
 }
 
-/**
- * Typed event map of the grid event bus.
- * Features and later phases extend this surface.
- */
+/** Typed event map of the grid event bus. Features and later phases extend this surface. */
 export interface GridEventMap {
     sortChanged: { sort: SortState[] }
     filterChanged: { filter: FilterModel }

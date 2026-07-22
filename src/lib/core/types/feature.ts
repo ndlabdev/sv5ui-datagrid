@@ -56,9 +56,7 @@ export interface CellDecoration {
     selected?: boolean
 }
 
-/**
- * Context handed to feature menu-item factories.
- */
+/** Context handed to feature menu-item factories. */
 export interface MenuContext<TRow> {
     grid: GridState<TRow>
     /** Set when the menu targets a column. */

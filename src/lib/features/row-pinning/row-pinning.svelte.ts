@@ -28,11 +28,8 @@ export class RowPinning<TRow> {
         return this.#isRowPinned?.(node.row) ?? null
     }
 
-    /**
-     * With no predicate and no overrides nothing can be pinned, so the two
-     * scans below are skipped entirely — the common case for a grid that
-     * merely has the feature registered.
-     */
+    /** With no predicate and no overrides nothing can pin, so the scans below
+     * are skipped entirely. */
     get #possible(): boolean {
         return this.#isRowPinned !== null || Object.keys(this.pinnedOverrides).length > 0
     }

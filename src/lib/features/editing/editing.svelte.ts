@@ -144,9 +144,8 @@ export class Editing<TRow> {
             rowId: node.id,
             changes: { [columnId]: validated.value }
         }
-        // The inverse transaction carries the values as they were at write
-        // time, which is what the event should report — `node` may have been
-        // captured before an async validation resolved.
+        // `node` may predate an async validation, so the event reports the
+        // inverse transaction's values, captured at write time.
         const before = this.#applyTransaction(after)
         this.#undo = pushCommand(this.#undo, { before: [before], after: [after] })
         this.#emitCellEdits(after, before)
@@ -267,11 +266,8 @@ export class Editing<TRow> {
         this.rowErrors = {}
     }
 
-    /**
-     * Undo and redo write through the same path as a direct edit, so a
-     * consumer syncing to a server sees them as edits too — otherwise a
-     * reverted change would silently drift from the server's copy.
-     */
+    /** Replays through the same reporting path as a direct edit, so a consumer
+     * syncing to a server sees a reverted change too. */
     #replay(transactions: EditTransaction[]): void {
         for (const tx of transactions) {
             const before = this.#applyTransaction(tx)

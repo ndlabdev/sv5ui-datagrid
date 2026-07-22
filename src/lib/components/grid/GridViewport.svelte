@@ -156,15 +156,8 @@
         }
     }
 
-    /**
-     * Cells delegate their click here instead of each carrying a handler. The
-     * viewport already owns the keyboard half of the same interaction, so the
-     * two halves stay together — and a grid renders thousands of cells that
-     * would otherwise each allocate a closure per render.
-     *
-     * A cell that wants to swallow its click stops propagation, exactly as it
-     * did when the handler was bound per cell.
-     */
+    /** Delegated so the click and keyboard halves stay together, and so cells
+     * do not each allocate a handler. A cell opts out by stopping propagation. */
     function focusClickedCell(event: MouseEvent) {
         const position = positionOf(event)
         if (position) grid.focus.focusCell(position)
@@ -228,18 +221,9 @@
     }
 </script>
 
-<!--
-    `grid` and `treegrid` are both interactive composite roles, and a
-    focusable container is exactly what the grid pattern calls for. The
-    compiler reads the role off a ternary, cannot resolve it to either
-    literal, and so falls back to treating the element as non-interactive.
-
-    The only way to satisfy it is a static role, which would mean branching
-    the element and duplicating every attribute on it — or hiding the
-    attributes behind a spread, which silences the check without answering
-    it and re-diffs the whole attribute set on each resize frame. Neither
-    trade is worth making for a false positive.
--->
+<!-- False positive: `grid` and `treegrid` are both interactive roles, but the
+     compiler reads the role off a ternary and cannot resolve either literal.
+     Satisfying it needs a static role, so a duplicated element or a spread. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
     bind:this={element}

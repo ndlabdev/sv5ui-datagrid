@@ -3,12 +3,8 @@ export type EventHandler<TPayload> = (payload: TPayload) => void
 export class EventBus<TMap> {
     #handlers = new Map<keyof TMap, Set<EventHandler<never>>>()
 
-    /**
-     * Dispatch runs over a snapshot, so a handler that subscribes or
-     * unsubscribes mid-dispatch cannot change the round already in flight.
-     * The snapshot is cached rather than rebuilt per emit: subscriptions
-     * change once at setup, while a batched edit emits once per cell.
-     */
+    /** Dispatch runs over a snapshot so mid-dispatch (un)subscribes cannot
+     * change the round in flight. Cached, because a batch emits per cell. */
     #dispatch = new Map<keyof TMap, EventHandler<never>[]>()
 
     on<K extends keyof TMap>(event: K, handler: EventHandler<TMap[K]>): () => void {

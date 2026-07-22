@@ -7,11 +7,8 @@
 
     let { grid, options }: { grid: GridState<TRow>; options: PersistStateOptions } = $props()
 
-    /**
-     * A column resize rewrites the width map every animation frame. Writing on
-     * each one costs a serialize plus a synchronous storage write per frame, so
-     * writes are coalesced onto a timer and the tail is flushed on teardown.
-     */
+    /** A column resize rewrites the width map every frame, so writes are
+     * coalesced onto a timer and the tail flushed on teardown. */
     const WRITE_INTERVAL_MS = 200
 
     // The key binds the storage slot for this component's lifetime; swapping it

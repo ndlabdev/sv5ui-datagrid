@@ -105,9 +105,7 @@ export type PinnedSide = 'left' | 'right'
  */
 export const SELECTION_COLUMN_ID = '__dg-select__'
 
-/**
- * One rendered cell of a header group row.
- */
+/** One rendered cell of a header group row. */
 export interface HeaderGroupCell {
     /** Group id, or a synthesized id for placeholder cells. */
     id: string
@@ -125,9 +123,7 @@ export interface HeaderGroupCell {
     pinned: PinnedSide | null
 }
 
-/**
- * Context passed to a custom cell snippet.
- */
+/** Context passed to a custom cell snippet. */
 export interface DataGridCellContext<TRow> {
     /** The pipeline node the cell belongs to. */
     node: RowNode<TRow>
@@ -144,10 +140,7 @@ export interface DataGridCellContext<TRow> {
 }
 
 export interface ColumnDef<TRow> {
-    /**
-     * Unique column identifier.
-     * Also used as the row property key when `accessor` is omitted.
-     */
+    /** Unique column identifier. Also used as the row property key when `accessor` is omitted. */
     id: string
 
     /**
@@ -162,9 +155,7 @@ export interface ColumnDef<TRow> {
      */
     accessor?: (row: TRow) => unknown
 
-    /**
-     * Fixed column width in pixels. Takes precedence over `flex`.
-     */
+    /** Fixed column width in pixels. Takes precedence over `flex`. */
     width?: number
 
     /**
@@ -179,9 +170,7 @@ export interface ColumnDef<TRow> {
      */
     minWidth?: number
 
-    /**
-     * Maximum column width in pixels. Applied to fixed widths.
-     */
+    /** Maximum column width in pixels. Applied to fixed widths. */
     maxWidth?: number
 
     /**
@@ -196,9 +185,7 @@ export interface ColumnDef<TRow> {
      */
     hidden?: boolean
 
-    /**
-     * Pins the column to the left or right edge of the viewport.
-     */
+    /** Pins the column to the left or right edge of the viewport. */
     pinned?: PinnedSide
 
     /**
@@ -226,19 +213,13 @@ export interface ColumnDef<TRow> {
      */
     filter?: FilterType | ColumnFilterDef<TRow> | false
 
-    /**
-     * Built-in cell renderer to use. Ignored when `cell` is given.
-     */
+    /** Built-in cell renderer to use. Ignored when `cell` is given. */
     type?: ColumnType
 
-    /**
-     * Configuration for `type`.
-     */
+    /** Configuration for `type`. */
     typeOptions?: ColumnTypeOptions<TRow>
 
-    /**
-     * Custom cell renderer.
-     */
+    /** Custom cell renderer. */
     cell?: Snippet<[DataGridCellContext<TRow>]>
 
     /**
