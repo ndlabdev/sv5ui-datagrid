@@ -13,11 +13,24 @@ import { benchColumns, makeBenchNodes, makeBenchRows } from './data.js'
 const nodes100k = makeBenchNodes(100_000)
 const benchColumnStates = benchColumns.map((def) => createColumnState(def))
 
+const SAMPLES = 3
+
+/**
+ * The fastest of several samples, after a warm-up. A genuine regression slows
+ * every sample, so the ceiling still catches it; background load on the
+ * machine only slows some, which is what made a single-sample measurement
+ * fail this suite intermittently.
+ */
 function measure(run: () => void): number {
     run()
-    const start = performance.now()
-    run()
-    return performance.now() - start
+
+    let best = Number.POSITIVE_INFINITY
+    for (let sample = 0; sample < SAMPLES; sample++) {
+        const start = performance.now()
+        run()
+        best = Math.min(best, performance.now() - start)
+    }
+    return best
 }
 
 describe('performance budgets (coarse regression ceilings; PLAN §8 targets are stricter)', () => {
