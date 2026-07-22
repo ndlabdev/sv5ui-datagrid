@@ -43,6 +43,18 @@ export {
     resolveColumnSnapshot,
     type ColumnSnapshotSource
 } from './core/snapshot.js'
+export {
+    clampToMax,
+    DEFAULT_EMPTY_TEXT,
+    formatCurrency,
+    formatDate,
+    formatNumber,
+    formatPercent,
+    isBlank,
+    toDate,
+    toNumber,
+    type FormatOptions
+} from './core/format.js'
 export { getCellValue, isNullish } from './core/value.js'
 export {
     Virtualizer,

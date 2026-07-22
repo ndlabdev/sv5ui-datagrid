@@ -87,6 +87,32 @@ const highlightNegative = (): GridFeature<Row> => ({
 })
 ```
 
+### Built-in cell renderers
+
+Set `type` on a column and the matching sv5ui component renders it — no snippet needed:
+
+```ts
+const columns: ColumnDef<Member>[] = [
+    { id: 'name', type: 'user', typeOptions: { avatar: (m) => m.avatar } },
+    { id: 'team', type: 'badge', typeOptions: { colors: { Core: 'primary' } } },
+    { id: 'salary', type: 'currency', typeOptions: { currency: 'EUR', locale: 'de-DE' } },
+    {
+        id: 'actions',
+        type: 'actions',
+        typeOptions: { actions: (m) => [{ label: 'Edit', onSelect: edit }] }
+    }
+]
+```
+
+`text`, `number`, `currency`, `percent`, `date`, `datetime`, `boolean`, `badge`, `user`,
+`progress`, `rating`, `link`, `actions`. Number and date types go through `Intl`, with the
+formatters cached per configuration because a renderer runs on every visible cell. `percent`
+expects a 0-1 ratio unless you set `wholePercent`. Null, undefined and empty string render as
+`—`, overridable with `emptyText`.
+
+A `cell` snippet always wins over `type`, so a column can start with a built-in renderer and
+graduate to a custom one without changing anything else.
+
 ### State persistence
 
 `persistState` mirrors column layout, sort, filter, page size and density into `localStorage`

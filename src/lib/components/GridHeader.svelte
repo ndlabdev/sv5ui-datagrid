@@ -269,6 +269,10 @@
                             <Badge label={sorting.priorityOf(column.id)!} size="xs" />
                         {/if}
                     </button>
+                {:else if column.header === ''}
+                    <!-- Action columns are usually headerless; a column header
+                         still needs an accessible name. -->
+                    <span class="sr-only">{column.id}</span>
                 {:else}
                     <span class="truncate">{column.header}</span>
                 {/if}

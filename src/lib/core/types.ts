@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Snippet } from 'svelte'
+import type { BadgeProps } from 'sv5ui'
 import type { GridState } from './grid.svelte.js'
 
 export type { StandardSchemaV1 }
@@ -98,6 +99,94 @@ export interface RowNode<TRow> {
 export type RowPinSide = 'top' | 'bottom'
 
 export type ColumnAlign = 'left' | 'center' | 'right'
+
+/**
+ * Built-in cell renderers, selected by `ColumnDef.type` and configured with
+ * `typeOptions`. A `cell` snippet always wins over the type.
+ */
+export type ColumnType =
+    | 'text'
+    | 'number'
+    | 'currency'
+    | 'percent'
+    | 'date'
+    | 'datetime'
+    | 'boolean'
+    | 'badge'
+    | 'user'
+    | 'progress'
+    | 'rating'
+    | 'link'
+    | 'actions'
+
+/** An entry in an `actions` column's menu. */
+export interface RowAction<TRow> {
+    label: string
+    /** Iconify name, e.g. `lucide:pencil`. */
+    icon?: string
+    onSelect: (row: TRow) => void
+    disabled?: boolean
+    /** Renders in the error colour, for delete and similar. */
+    destructive?: boolean
+}
+
+/**
+ * Configuration for the renderer named by `ColumnDef.type`. Every field is
+ * optional and only the ones belonging to that type are read.
+ */
+export interface ColumnTypeOptions<TRow> {
+    /** `number`, `currency`, `percent`, `date`, `datetime` — BCP 47 tag. Defaults to the browser locale. */
+    locale?: string
+
+    /** `number`, `currency`, `percent` — passed straight to `Intl.NumberFormat`. */
+    numberFormat?: Intl.NumberFormatOptions
+
+    /** `currency` — ISO 4217 code. @default 'USD' */
+    currency?: string
+
+    /**
+     * `percent` — set when the value is already 0-100 rather than 0-1.
+     * @default false
+     */
+    wholePercent?: boolean
+
+    /** `date`, `datetime` — passed straight to `Intl.DateTimeFormat`. */
+    dateFormat?: Intl.DateTimeFormatOptions
+
+    /** `badge` — value to colour, so statuses read at a glance. */
+    colors?: Record<string, BadgeColor>
+
+    /** `badge` — colour used for values missing from `colors`. @default 'surface' */
+    fallbackColor?: BadgeColor
+
+    /** `user` — avatar image URL. */
+    avatar?: (row: TRow) => string | undefined
+
+    /** `user` — secondary line under the name. */
+    description?: (row: TRow) => string | undefined
+
+    /** `progress`, `rating` — upper bound. @default 100 for progress, 5 for rating */
+    max?: number
+
+    /** `link` — defaults to the cell value. */
+    href?: (row: TRow) => string
+
+    /** `link` — anchor target, e.g. `_blank`. */
+    target?: string
+
+    /** `actions` — menu entries; return an empty array to render nothing. */
+    actions?: (row: TRow) => RowAction<TRow>[]
+
+    /** `boolean` — icons for the two states. */
+    trueIcon?: string
+    falseIcon?: string
+
+    /** Text shown for null and undefined. @default '—' */
+    emptyText?: string
+}
+
+/** Badge colours, taken from sv5ui so the two never drift apart. */
+export type BadgeColor = NonNullable<BadgeProps['color']>
 
 export type PinnedSide = 'left' | 'right'
 
@@ -355,6 +444,16 @@ export interface ColumnDef<TRow> {
      * with a custom predicate, or `false` to disable filtering.
      */
     filter?: FilterType | ColumnFilterDef<TRow> | false
+
+    /**
+     * Built-in cell renderer to use. Ignored when `cell` is given.
+     */
+    type?: ColumnType
+
+    /**
+     * Configuration for `type`.
+     */
+    typeOptions?: ColumnTypeOptions<TRow>
 
     /**
      * Custom cell renderer.

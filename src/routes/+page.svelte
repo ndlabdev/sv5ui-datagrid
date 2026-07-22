@@ -143,7 +143,8 @@
                 <Link href="/filters">Data ops demo →</Link> ·
                 <Link href="/selection">Selection demo →</Link> ·
                 <Link href="/rows">Row structures demo →</Link> ·
-                <Link href="/editing">Editing demo →</Link>
+                <Link href="/editing">Editing demo →</Link> ·
+                <Link href="/renderers">Cell renderers demo →</Link>
             </p>
         </div>
         <ThemeModeButton />

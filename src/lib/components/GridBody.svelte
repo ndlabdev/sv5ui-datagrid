@@ -12,6 +12,7 @@
     import { getVirtualization } from '../features/virtualization/index.js'
     import { getGridContext } from './context.js'
     import GridCellEditor from './GridCellEditor.svelte'
+    import GridCellValue from './GridCellValue.svelte'
     import type { GridBodyProps } from './datagrid.types.js'
     import { datagridVariants } from './datagrid.variants.js'
     import GridSelectionCell from './GridSelectionCell.svelte'
@@ -155,6 +156,8 @@
                 value: grid.getValue(node, column),
                 rowIndex
             })}
+        {:else if column.def.type}
+            <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
         {:else}
             {grid.getValue(node, column)}
         {/if}
