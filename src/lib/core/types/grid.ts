@@ -62,6 +62,13 @@ export interface GridSnapshot {
     features?: Record<string, unknown>
 }
 
+/**
+ * Restores from `localStorage` synchronously before the first client paint, so
+ * a client-rendered grid shows the saved layout with no flash. Under SSR the
+ * server cannot read `localStorage`, so it paints the defaults and the client
+ * corrects them after hydration — render a persisted grid client-side (e.g.
+ * `export const ssr = false`) to avoid that flash.
+ */
 export interface PersistStateOptions {
     /** localStorage key. */
     key: string

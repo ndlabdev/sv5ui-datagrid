@@ -1,6 +1,5 @@
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
-    import { useLocalStorage } from 'sv5ui'
     import type { GridState } from '../../core/grid/grid.svelte.js'
     import { normalizeSnapshot } from '../../core/grid/snapshot.js'
     import type { GridSnapshot, PersistStateOptions } from '../../core/types/index.js'
@@ -11,17 +10,26 @@
      * coalesced onto a timer and the tail flushed on teardown. */
     const WRITE_INTERVAL_MS = 200
 
-    // The key binds the storage slot for this component's lifetime; swapping it
-    // later means a different grid, which is a remount, not a reactive update.
-    const stored = useLocalStorage<GridSnapshot | null>(
-        untrack(() => options.key),
-        null
-    )
+    // Bound once: swapping the key later means a different grid, which is a
+    // remount, not a reactive update.
+    const key = untrack(() => options.key)
 
-    // useLocalStorage reads storage in an effect of its own, created here and
-    // therefore flushed before both effects below — so the restore never races
-    // the read, and the save never writes defaults over a stored snapshot.
-    let restored = $state(false)
+    // Restore synchronously during setup, before the grid renders, so the first
+    // client paint already shows the saved state. Reading it in an effect
+    // instead would paint the defaults first and correct them a frame later —
+    // a visible flash. `localStorage` is client-only; an SSR'd grid has nothing
+    // to read on the server and still paints defaults for that one frame.
+    untrack(() => {
+        if (typeof localStorage === 'undefined') return
+        try {
+            const raw = localStorage.getItem(key)
+            if (raw === null) return
+            const snapshot = normalizeSnapshot(JSON.parse(raw) as unknown, options.migrate)
+            if (snapshot) grid.setState(snapshot)
+        } catch {
+            // A malformed or unreadable entry must not break the grid.
+        }
+    })
 
     let timer: ReturnType<typeof setTimeout> | null = null
     let pending: GridSnapshot | null = null
@@ -32,20 +40,24 @@
             timer = null
         }
         if (pending === null) return
-        stored.current = pending
+        try {
+            localStorage.setItem(key, JSON.stringify(pending))
+        } catch {
+            // ignore serialization / quota errors
+        }
         pending = null
     }
 
-    $effect(() => {
-        if (restored) return
-        const snapshot = normalizeSnapshot(stored.current, options.migrate)
-        if (snapshot) grid.setState(snapshot)
-        restored = true
-    })
+    let mounted = false
 
     $effect(() => {
         const snapshot = grid.getState()
-        if (!restored) return
+        // The first run reads the state just restored; writing it back would be
+        // a no-op, so it is skipped. Later runs are real user changes.
+        if (!mounted) {
+            mounted = true
+            return
+        }
         pending = snapshot
         timer ??= setTimeout(flush, WRITE_INTERVAL_MS)
     })
