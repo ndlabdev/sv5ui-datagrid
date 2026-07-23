@@ -13,8 +13,14 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
+    // The active page size may not be one of the offered choices — a grid can
+    // be created with any `pageSize`. Fold it in and keep the list sorted, so
+    // the Select always has an item to show its value against instead of
+    // rendering blank.
     const sizeItems = $derived(
-        pageSizes.map((size) => ({ label: `${size} / page`, value: String(size) }))
+        [...new Set([...pageSizes, pagination?.pageSize].filter((size): size is number => !!size))]
+            .sort((a, b) => a - b)
+            .map((size) => ({ label: `${size} / page`, value: String(size) }))
     )
     const rangeStart = $derived(
         pagination?.pageSize ? (pagination.page - 1) * pagination.pageSize + 1 : 1
@@ -27,10 +33,10 @@
 
 {#if pagination && pagination.pageSize && total > 0}
     <div class={slots.footer({ class: [theme('footer'), className] })}>
-        <span class="text-xs text-on-surface-variant">
+        <span class="text-xs whitespace-nowrap text-on-surface-variant">
             {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {total.toLocaleString()}
         </span>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
             <Select
                 items={sizeItems}
                 aria-label="Rows per page"

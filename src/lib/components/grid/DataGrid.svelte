@@ -95,7 +95,7 @@
             <GridBody {emptyText} {loading} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
     </GridContextMenu>
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <GridStatusBar />
         <GridPagination class="grow" />
     </div>

@@ -57,7 +57,7 @@ export const datagridVariants = tv({
             'fixed z-50 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
         filterChips: 'flex flex-wrap items-center gap-1.5',
         statusBar: 'flex items-center justify-between gap-4 px-1 text-xs text-on-surface-variant',
-        footer: 'flex items-center justify-between gap-4'
+        footer: 'flex flex-wrap items-center justify-between gap-x-4 gap-y-2'
     },
     variants: {
         align: {
