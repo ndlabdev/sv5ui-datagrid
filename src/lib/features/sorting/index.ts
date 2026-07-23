@@ -4,6 +4,7 @@ export {
     Sorting,
     sorting,
     SORTING,
+    type SortCycle,
     type SortingOptions,
     type ToggleSortOptions
 } from './sorting.svelte.js'

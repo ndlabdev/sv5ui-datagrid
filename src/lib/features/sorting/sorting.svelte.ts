@@ -6,9 +6,20 @@ import { sortNodes, type SortNulls } from './sort.js'
 
 export const SORTING = 'sorting'
 
+/**
+ * The states a header click walks through, in order. `null` is the unsorted
+ * state; reaching it drops the column from the sort. A cycle with no `null`
+ * (e.g. `['asc', 'desc']`) never clears — clicking always flips.
+ */
+export type SortCycle = (SortDirection | null)[]
+
+const DEFAULT_CYCLE: SortCycle = ['asc', 'desc', null]
+
 export interface SortingOptions {
     initial?: SortState[]
     nulls?: SortNulls
+    /** Order a header click cycles through. @default ['asc', 'desc', null] */
+    cycle?: SortCycle
 }
 
 export interface ToggleSortOptions {
@@ -19,6 +30,7 @@ export class Sorting<TRow> {
     sort = $state.raw<SortState[]>([])
 
     readonly nulls: SortNulls
+    readonly cycle: SortCycle
 
     #grid: GridState<TRow>
 
@@ -26,25 +38,35 @@ export class Sorting<TRow> {
         this.#grid = grid
         this.sort = options.initial ?? []
         this.nulls = options.nulls ?? 'first'
+        // A cycle needs at least one direction to be usable; fall back otherwise.
+        this.cycle =
+            options.cycle?.some((state) => state !== null) === true ? options.cycle : DEFAULT_CYCLE
+    }
+
+    /** The state a column moves to on the next click, per the configured cycle. */
+    #nextState(current: SortDirection | null): SortDirection | null {
+        const index = this.cycle.indexOf(current)
+        return this.cycle[(index + 1) % this.cycle.length]
     }
 
     toggleSort = (columnId: string, options: ToggleSortOptions = {}): void => {
         const column = this.#grid.columns.get(columnId)
         if (!column?.def.sortable) return
 
-        const existing = this.sort.find((entry) => entry.columnId === columnId)
-        let next: SortState[]
+        const current = this.directionOf(columnId) ?? null
+        const target = this.#nextState(current)
 
-        if (!existing) {
-            const added: SortState = { columnId, direction: 'asc' }
-            next = options.append ? [...this.sort, added] : [added]
-        } else if (existing.direction === 'asc') {
-            const flipped: SortState = { columnId, direction: 'desc' }
-            next = options.append
-                ? this.sort.map((entry) => (entry.columnId === columnId ? flipped : entry))
-                : [flipped]
+        let next: SortState[]
+        if (!options.append) {
+            next = target ? [{ columnId, direction: target }] : []
+        } else if (target === null) {
+            next = this.sort.filter((entry) => entry.columnId !== columnId)
+        } else if (current === null) {
+            next = [...this.sort, { columnId, direction: target }]
         } else {
-            next = options.append ? this.sort.filter((entry) => entry.columnId !== columnId) : []
+            next = this.sort.map((entry) =>
+                entry.columnId === columnId ? { columnId, direction: target } : entry
+            )
         }
 
         this.sort = next

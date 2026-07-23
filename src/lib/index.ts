@@ -67,6 +67,7 @@ export {
 } from './features/selection/index.js'
 export {
     sorting,
+    type SortCycle,
     type SortingOptions,
     type SortNulls,
     type ToggleSortOptions
