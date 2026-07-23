@@ -123,6 +123,10 @@
     /** The cell an event landed in, read back from its descriptor attribute. */
     function positionOf(event: Event): CellPosition | null {
         const target = event.target as HTMLElement | null
+        // The filter panel is a popover rendered inside a header cell, so its
+        // events bubble here. Interacting with it is not a cell interaction —
+        // treating it as one would yank focus out of the panel's inputs.
+        if (target?.closest('[role="dialog"]')) return null
         const pinned = target?.closest('[data-dg-pinned-cell]')?.getAttribute('data-dg-pinned-cell')
         if (pinned) {
             const [section, row, col] = pinned.split(':')

@@ -114,6 +114,27 @@ describe('column filters', () => {
         expect(Math.abs(panelRect.top - triggerRect.bottom)).toBeLessThan(20)
     })
 
+    it('keeps focus in the panel when its inputs are clicked and typed into', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns,
+            getRowId,
+            toolbar: true
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        await page.getByRole('button', { name: 'Filter Name' }).click()
+        const input = page.getByRole('dialog', { name: 'Filter Name' }).getByRole('textbox')
+        await input.click()
+        // Type key-by-key (not .fill), the path that used to lose focus to the
+        // header cell the panel is rendered inside.
+        await userEvent.keyboard('car')
+
+        const active = document.activeElement
+        expect(active?.closest('[role="dialog"]')).not.toBeNull()
+        expect((active as HTMLInputElement).value).toBe('car')
+    })
+
     it('filters numbers with the between operator', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
