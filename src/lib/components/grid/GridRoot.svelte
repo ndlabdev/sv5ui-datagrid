@@ -2,12 +2,16 @@
     import { untrack } from 'svelte'
     import { setGridContext } from '../internal/context.js'
     import { setGridTheme } from '../internal/theme.js'
+    import { registerDataGridIcons } from '../internal/icons.js'
     import { getDataGridConfig } from '../datagrid.config.js'
     import type { GridRootProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import GridStatePersistence from './GridStatePersistence.svelte'
 
     let { grid, persistState, ui, class: className, children }: GridRootProps<TRow> = $props()
+
+    // Serves the grid's icons from the bundle, so its UI never fetches them.
+    registerDataGridIcons()
 
     setGridContext(untrack(() => grid))
     // A getter, so changing `ui` restyles the parts instead of remounting them.
