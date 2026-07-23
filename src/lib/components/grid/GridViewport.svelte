@@ -195,6 +195,22 @@
     }
 
     /**
+     * Fills cells from the clipboard starting at the focused cell. Handled as a
+     * paste event, not a Ctrl+V binding, so it reads the data synchronously
+     * without a permission prompt and works with a right-click paste too. An
+     * open editor keeps its own paste — the event is left alone there.
+     */
+    function handlePaste(event: ClipboardEvent) {
+        if (!editing || editing.active || editing.rowEditId) return
+        if ((event.target as HTMLElement | null)?.closest('input, textarea, [contenteditable]'))
+            return
+        const text = event.clipboardData?.getData('text') ?? ''
+        if (!text) return
+        event.preventDefault()
+        void editing.pasteText(text)
+    }
+
+    /**
      * Adds a tooltip only to text that is actually cut off, measured on hover
      * rather than during render: comparing widths forces layout, and doing
      * that for every visible cell on every frame would cost more than the
@@ -236,6 +252,7 @@
     class={slots.viewport({ class: [theme('viewport'), className] })}
     style={grid.columns.style}
     onkeydown={handleKeydown}
+    onpaste={handlePaste}
     onclick={focusClickedCell}
     onfocus={redirectFocus}
     onfocusin={syncFocus}

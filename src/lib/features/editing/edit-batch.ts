@@ -15,3 +15,14 @@ export function groupChangesByRow(
     }
     return [...byRow].map(([rowId, changes]) => ({ rowId, changes }))
 }
+
+/**
+ * Parses clipboard text into a cell grid, the inverse of the TSV copy format:
+ * newlines separate rows, tabs separate cells. A single trailing newline is
+ * dropped, since spreadsheets append one to every copy.
+ */
+export function parseClipboardMatrix(text: string): string[][] {
+    const normalized = text.replace(/\r\n?/g, '\n').replace(/\n$/, '')
+    if (normalized === '') return []
+    return normalized.split('\n').map((line) => line.split('\t'))
+}

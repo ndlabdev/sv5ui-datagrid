@@ -277,5 +277,9 @@
                 size="sm">Shift</Kbd
             >+<Kbd size="sm">Z</Kbd> redo</span
         >
+        <span
+            ><Kbd size="sm">Ctrl</Kbd>+<Kbd size="sm">V</Kbd> dán từ clipboard (TSV) vào ô đang focus,
+            trải phải + xuống</span
+        >
     </div>
 </Container>

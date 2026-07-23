@@ -9,7 +9,7 @@ import type {
     Keybinding,
     RowNode
 } from '../../core/types/index.js'
-import { groupChangesByRow } from './edit-batch.js'
+import { groupChangesByRow, parseClipboardMatrix } from './edit-batch.js'
 import type { EditingCell, EditingOptions, MoveDirection } from './editing.types.js'
 import {
     canRedo,
@@ -316,6 +316,33 @@ export class Editing<TRow> {
         )
     }
 
+    /**
+     * Applies clipboard text starting at the focused cell, spreading rightward
+     * and downward. Cells that fall on a non-editable column or past the last
+     * row are dropped — `applyEdits` filters them and runs the same parse and
+     * validation a typed edit does, so the whole paste lands as one undo step.
+     */
+    pasteText = (text: string): boolean | Promise<boolean> => {
+        const matrix = parseClipboardMatrix(text)
+        const { row, col } = this.#grid.focus.active
+        if (matrix.length === 0 || row < 0) return false
+
+        const nodes = this.#grid.preWindowNodes
+        const columns = this.#grid.columns.visible
+        const edits: EditTransaction[] = []
+        for (let r = 0; r < matrix.length; r++) {
+            const node = nodes[row + r]
+            if (!node) break
+            const changes: Record<string, unknown> = {}
+            for (let c = 0; c < matrix[r].length; c++) {
+                const column = columns[col + c]
+                if (column) changes[column.id] = matrix[r][c]
+            }
+            if (Object.keys(changes).length > 0) edits.push({ rowId: node.id, changes })
+        }
+        return this.applyEdits(edits)
+    }
+
     #writeEdits(
         entries: {
             node: RowNode<TRow>
@@ -409,6 +436,7 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
                 startRowEdit: state.startRowEdit,
                 commitRow: state.commitRow,
                 applyEdits: state.applyEdits,
+                pasteText: state.pasteText,
                 undo: state.undo,
                 redo: state.redo
             }
