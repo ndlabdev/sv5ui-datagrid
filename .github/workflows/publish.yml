@@ -1,0 +1,54 @@
+# Dormant until a version tag is pushed. Nothing publishes on ordinary pushes
+# or PRs — the workflow only runs for a `vX.Y.Z` tag, and only then if the
+# `NPM_TOKEN` secret exists. Prerequisites before the first release (§16
+# Stage 2): the npm org `sv5ui` is registered, the repo is public (npm
+# provenance needs a public source repo), and `NPM_TOKEN` is set in the repo
+# secrets. To cut a release: bump the version, then push a matching tag.
+name: Publish to npm
+
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            # Lets npm attach build provenance to the published package.
+            id-token: write
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: pnpm/action-setup@v6
+              with:
+                  version: 10
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: pnpm
+                  registry-url: 'https://registry.npmjs.org'
+
+            - run: pnpm install --frozen-lockfile
+
+            # Guard against a tag that does not match package.json, so a
+            # mistyped tag cannot publish the wrong version.
+            - name: Verify tag matches package version
+              run: |
+                  PKG=$(node -p "require('./package.json').version")
+                  TAG=${GITHUB_REF_NAME#v}
+                  if [ "$PKG" != "$TAG" ]; then
+                      echo "Tag $GITHUB_REF_NAME does not match package version $PKG"
+                      exit 1
+                  fi
+
+            - name: Build package
+              run: pnpm run build
+
+            - name: Publish to npm
+              run: npm publish --access public --provenance
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
