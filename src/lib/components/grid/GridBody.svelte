@@ -6,6 +6,7 @@
         type ColumnState,
         type RowNode
     } from '../../core/types/index.js'
+    import { rowColSpans } from '../../core/columns/col-span.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getSelection } from '../../features/selection/index.js'
@@ -144,6 +145,17 @@
         return !active.section && active.row === row && active.col === col
     }
 
+    /** A spanning cell owns the active column when it falls anywhere in its span. */
+    function isActiveInSpan(row: number, col: number, span: number): boolean {
+        const active = grid.focus.active
+        return !active.section && active.row === row && active.col >= col && active.col < col + span
+    }
+
+    function spanColumn(colIndex: number, span: number): string | undefined {
+        if (columnWindow.windowed) return `${colIndex + 1} / span ${span}`
+        return span > 1 ? `span ${span}` : undefined
+    }
+
     function isPinnedActive(section: 'top' | 'bottom', row: number, col: number): boolean {
         const active = grid.focus.active
         return active.section === section && active.row === row && active.col === col
@@ -244,38 +256,47 @@
                     {/if}
                 </div>
             {:else}
+                {@const spans = rowColSpans(grid, node, rowIndex)}
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
-                    {@const editingCell = isEditingCell(node, column)}
-                    {@const decoration = decorationOf(node, column, rowIndex, colIndex)}
-                    <div
-                        role="gridcell"
-                        aria-colindex={colIndex + 1}
-                        aria-selected={decoration?.selected}
-                        tabindex={isActive(rowIndex, colIndex) ? 0 : -1}
-                        data-dg-cell="{rowIndex}:{colIndex}"
-                        class={classOfCell({
-                            node,
-                            column,
-                            colIndex,
-                            rowIndex,
-                            editing: editingCell,
-                            decoration
-                        })}
-                        style:grid-column={columnWindow.windowed ? colIndex + 1 : undefined}
-                        style:inset-inline-start={pinLeftVar(column)}
-                        style:inset-inline-end={pinRightVar(column)}
-                        style:padding={editingCell ? '0' : undefined}
-                        style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
-                        ondblclick={() => startEdit(node, column)}
-                    >
-                        {#if editingCell}
-                            <GridCellEditor {node} {column} rowMode={editing?.active === null} />
-                        {:else}
-                            {@render cellContent(node, column, colIndex, rowIndex)}
-                        {/if}
-                    </div>
+                    {#if spans.owner[colIndex] === colIndex}
+                        {@const colSpan = spans.span[colIndex]}
+                        {@const editingCell = isEditingCell(node, column)}
+                        {@const decoration = decorationOf(node, column, rowIndex, colIndex)}
+                        <div
+                            role="gridcell"
+                            aria-colindex={colIndex + 1}
+                            aria-colspan={colSpan > 1 ? colSpan : undefined}
+                            aria-selected={decoration?.selected}
+                            tabindex={isActiveInSpan(rowIndex, colIndex, colSpan) ? 0 : -1}
+                            data-dg-cell="{rowIndex}:{colIndex}"
+                            class={classOfCell({
+                                node,
+                                column,
+                                colIndex,
+                                rowIndex,
+                                editing: editingCell,
+                                decoration
+                            })}
+                            style:grid-column={spanColumn(colIndex, colSpan)}
+                            style:inset-inline-start={pinLeftVar(column)}
+                            style:inset-inline-end={pinRightVar(column)}
+                            style:padding={editingCell ? '0' : undefined}
+                            style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
+                            ondblclick={() => startEdit(node, column)}
+                        >
+                            {#if editingCell}
+                                <GridCellEditor
+                                    {node}
+                                    {column}
+                                    rowMode={editing?.active === null}
+                                />
+                            {:else}
+                                {@render cellContent(node, column, colIndex, rowIndex)}
+                            {/if}
+                        </div>
+                    {/if}
                 {/each}
             {/if}
         </div>

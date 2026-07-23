@@ -163,6 +163,52 @@
             virtualization({ rowHeight: 40, overscan: 6, columns: true })
         ]
     })
+
+    // ── Column spanning ──────────────────────────────────────────────────
+    interface Line {
+        id: number
+        label: string
+        q1: number | null
+        q2: number | null
+        q3: number | null
+        note: string
+    }
+
+    const lines: Line[] = [
+        { id: 1, label: 'Revenue', q1: 120, q2: 138, q3: 151, note: '' },
+        { id: 2, label: 'Costs', q1: 74, q2: 80, q3: 88, note: '' },
+        {
+            id: 3,
+            label: 'Audited figures — quarterly totals restated',
+            q1: null,
+            q2: null,
+            q3: null,
+            note: 'banner'
+        },
+        { id: 4, label: 'Net', q1: 46, q2: 58, q3: 63, note: '' }
+    ]
+
+    // The banner row spans its label across every quarter column; data rows
+    // keep one cell per column.
+    const spanColumns: ColumnDef<Line>[] = [
+        {
+            id: 'label',
+            header: 'Line',
+            flex: 1,
+            minWidth: 160,
+            colSpan: (ctx) => (ctx.row.note === 'banner' ? 4 : 1),
+            cellClass: (ctx) => ctx.row.note === 'banner' && 'font-medium text-primary'
+        },
+        { id: 'q1', header: 'Q1', type: 'currency', align: 'right' },
+        { id: 'q2', header: 'Q2', type: 'currency', align: 'right' },
+        { id: 'q3', header: 'Q3', type: 'currency', align: 'right' }
+    ]
+
+    const spanGrid: GridState<Line> = createDataGrid<Line>({
+        data: lines,
+        columns: spanColumns,
+        getRowId: (line) => String(line.id)
+    })
 </script>
 
 {#snippet deptCell({ value }: DataGridCellContext<Employee>)}
@@ -235,5 +281,16 @@
             </p>
         </div>
         <DataGrid grid={wideGrid} class="h-100" />
+    </section>
+
+    <section class="space-y-3">
+        <div class="space-y-1">
+            <h2 class="text-lg font-medium text-on-surface">Column spanning</h2>
+            <p class="text-sm text-on-surface-variant">
+                <code>colSpan(ctx)</code> theo từng ô: hàng banner trải nhãn qua cả bốn cột, hàng dữ liệu
+                giữ nguyên. Điều hướng bàn phím nhảy qua ô bị phủ; span bị chặn không vượt ranh giới pin.
+            </p>
+        </div>
+        <DataGrid grid={spanGrid} />
     </section>
 </Container>

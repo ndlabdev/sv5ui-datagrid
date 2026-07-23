@@ -1,3 +1,4 @@
+import { rowColSpans, type RowSpans } from '../columns/col-span.js'
 import { clamp } from '../utils/math.js'
 import type { GridState } from '../grid/grid.svelte.js'
 import type { Keybinding, RowNode } from '../types/index.js'
@@ -70,6 +71,14 @@ export class FocusModel<TRow> {
         return { row: index - top - body - 1, col: 0, section: 'bottom' }
     }
 
+    /** Column spans of a body row, so focus can land on the covering cell. */
+    #bodySpans(row: number): RowSpans | null {
+        if (row < 0) return null
+        const node = this.#grid.preWindowNodes[row]
+        if (!node || node.meta?.fullWidth) return null
+        return rowColSpans(this.#grid, node, row)
+    }
+
     focusCell = (position: CellPosition): void => {
         if (this.maxCol < 0) return
         const section = position.section ?? 'body'
@@ -84,15 +93,32 @@ export class FocusModel<TRow> {
 
         const row = clamp(position.row, HEADER_ROW, Math.max(HEADER_ROW, this.maxRow))
         const fullWidth = row >= 0 && this.#grid.preWindowNodes[row]?.meta?.fullWidth
-        this.active = { row, col: fullWidth ? 0 : col }
+        if (fullWidth) {
+            this.active = { row, col: 0 }
+            return
+        }
+        // A covered column snaps to the cell that spans over it, so focus never
+        // lands on a position no cell renders.
+        const spans = this.#bodySpans(row)
+        this.active = { row, col: spans ? spans.owner[col] : col }
+    }
+
+    /** Steps one column, skipping the columns a span covers. */
+    #stepCol(cols: number): number {
+        const active = this.active
+        if (active.section || active.row < 0 || Math.abs(cols) !== 1) return active.col + cols
+        const spans = this.#bodySpans(active.row)
+        if (!spans) return active.col + cols
+        const start = spans.owner[active.col]
+        return cols > 0 ? start + spans.span[start] : start - 1
     }
 
     moveBy = (rows: number, cols: number): void => {
-        const col = this.active.col + cols
         if (rows === 0) {
-            this.focusCell({ ...this.active, col })
+            this.focusCell({ ...this.active, col: this.#stepCol(cols) })
             return
         }
+        const col = this.active.col + cols
 
         const last = this.rowsIn('top') + this.#grid.totalRows + this.rowsIn('bottom')
         const target = clamp(this.#toLinear(this.active) + rows, 0, last)

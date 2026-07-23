@@ -231,6 +231,13 @@ export interface ColumnDef<TRow> {
     cellClass?: (ctx: DataGridCellContext<TRow>) => ClassNameValue
 
     /**
+     * How many columns this cell spans, starting here — the covered cells to
+     * its right are not rendered. Return 1 (or omit) for a normal cell. A span
+     * is clamped so it never crosses a pin boundary. Applies to body rows.
+     */
+    colSpan?: (ctx: DataGridCellContext<TRow>) => number
+
+    /**
      * Whether cells in this column can be edited. A predicate receives
      * the row, node and value.
      * @default false

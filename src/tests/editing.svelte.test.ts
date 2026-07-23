@@ -351,3 +351,38 @@ describe('editing a11y + virtualization', () => {
         expect(cellAt(screen.container, 0, 0).textContent).toContain('Edited')
     })
 })
+
+describe('clipboard paste', () => {
+    function pasteInto(cell: HTMLElement, text: string) {
+        const data = new DataTransfer()
+        data.setData('text', text)
+        cell.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, clipboardData: data }))
+    }
+
+    it('fills cells from a focused cell via a paste event', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        const target = cellAt(screen.container, 0, 0)
+        target.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        pasteInto(target, 'Alicia\t31')
+
+        await expect.poll(() => grid.data[0].name).toBe('Alicia')
+        expect(grid.data[0].age).toBe(31)
+        await expect.element(page.getByRole('gridcell', { name: 'Alicia' })).toBeVisible()
+    })
+
+    it('leaves an open editor to handle its own paste', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        const state = getEditing(grid)!
+        state.startEdit('1', 'name')
+        await expect.element(page.getByRole('textbox')).toBeVisible()
+
+        const input = screen.container.querySelector<HTMLElement>('input')!
+        pasteInto(input, 'FromEditor')
+        // The grid paste must not fire while an editor owns the event.
+        expect(grid.data[0].name).toBe('Alice')
+    })
+})
