@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
-import { createDataGrid, DataGrid, pagination, type ColumnDef } from '$lib/index.js'
+import {
+    createDataGrid,
+    DataGrid,
+    getSelection,
+    pagination,
+    selection,
+    type ColumnDef
+} from '$lib/index.js'
 
 interface Row {
     id: number
@@ -54,5 +61,40 @@ describe('footer layout', () => {
         // off a single crowded line on a phone.
         expect(footer?.className).toContain('flex-col')
         expect(footer?.className).toContain('sm:flex-row')
+    })
+
+    it('constrains the page-size select instead of letting it stretch', async () => {
+        render(DataGrid as never, { grid: grid(12) } as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+        // A select that fills the footer is what made it look broken. The
+        // trigger still fills its root, but the root is now a fixed width.
+        const root = sizeTrigger().closest('.w-32')
+        expect(root).not.toBeNull()
+        expect(root!.getBoundingClientRect().width).toBeLessThan(200)
+    })
+
+    it('states the row range once, not the page number twice', async () => {
+        render(DataGrid as never, { grid: grid(12) } as never)
+        await expect.element(page.getByText('1–12 of 60')).toBeVisible()
+        // The range lives in the pagination footer; the status bar must not
+        // repeat it as "page 1 of 5".
+        expect(document.body.textContent).not.toMatch(/page \d+ of \d+/)
+    })
+})
+
+describe('status bar', () => {
+    it('shows the selection count when rows are selected', async () => {
+        const g = createDataGrid<Row>({
+            columns,
+            data: rows,
+            getRowId: (row) => String(row.id),
+            features: [selection(), pagination({ pageSize: 12 })]
+        })
+        render(DataGrid as never, { grid: g } as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        getSelection(g)!.select('1')
+        getSelection(g)!.select('2')
+        await expect.element(page.getByText('2 selected')).toBeVisible()
     })
 })

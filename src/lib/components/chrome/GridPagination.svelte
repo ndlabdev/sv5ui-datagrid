@@ -33,25 +33,25 @@
 
 {#if pagination && pagination.pageSize && total > 0}
     <div class={slots.footer({ class: [theme('footer'), className] })}>
-        <span class="text-xs whitespace-nowrap text-on-surface-variant">
+        <span class="me-auto text-xs whitespace-nowrap text-on-surface-variant sm:me-0">
             {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {total.toLocaleString()}
         </span>
-        <div class="flex flex-wrap items-center justify-end gap-2">
-            <Select
-                items={sizeItems}
-                aria-label="Rows per page"
-                bind:value={
-                    () => String(pagination.pageSize),
-                    (value) => pagination.setPageSize(Number(value))
-                }
+        <Select
+            class="w-32"
+            size="sm"
+            items={sizeItems}
+            aria-label="Rows per page"
+            bind:value={
+                () => String(pagination.pageSize), (value) => pagination.setPageSize(Number(value))
+            }
+        />
+        {#if total > pagination.pageSize}
+            <Pagination
+                size="sm"
+                {total}
+                itemsPerPage={pagination.pageSize}
+                bind:page={() => pagination.page, (page) => pagination.setPage(page)}
             />
-            {#if total > pagination.pageSize}
-                <Pagination
-                    {total}
-                    itemsPerPage={pagination.pageSize}
-                    bind:page={() => pagination.page, (page) => pagination.setPage(page)}
-                />
-            {/if}
-        </div>
+        {/if}
     </div>
 {/if}

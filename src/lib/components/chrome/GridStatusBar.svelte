@@ -35,11 +35,8 @@
         {filtered === total
             ? `${total.toLocaleString()} rows`
             : `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`}
-        {#if selected > 0}
-            · {selected.toLocaleString()} selected
-        {/if}
     </span>
-    {#if pagination?.pageSize}
-        <span>page {pagination.page} of {pagination.pageCount}</span>
+    {#if selected > 0}
+        <span class="text-primary">{selected.toLocaleString()} selected</span>
     {/if}
 </div>
