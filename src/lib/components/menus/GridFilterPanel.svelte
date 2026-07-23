@@ -111,19 +111,22 @@
     let triggerElement = $state<HTMLElement | null>(null)
     let position = $state({ x: 0, y: 0 })
 
+    // Anchor the panel to its trigger whenever it opens — however it opened.
+    // Positioning only inside the click handler left the panel at the top-left
+    // corner when opened from the column menu, which sets `filterFor` directly.
+    // `$effect.pre` runs before the panel is inserted, so it never flashes at
+    // the wrong spot.
+    $effect.pre(() => {
+        if (!open || !triggerElement) return
+        const rect = triggerElement.getBoundingClientRect()
+        position = {
+            x: Math.max(8, Math.min(rect.right - 272, window.innerWidth - 280)),
+            y: rect.bottom + 4
+        }
+    })
+
     function toggleOpen() {
-        if (open) {
-            filteringState.filterFor = null
-            return
-        }
-        const rect = triggerElement?.getBoundingClientRect()
-        if (rect) {
-            position = {
-                x: Math.max(8, Math.min(rect.right - 272, window.innerWidth - 280)),
-                y: rect.bottom + 4
-            }
-        }
-        filteringState.filterFor = column.id
+        filteringState.filterFor = open ? null : column.id
     }
 
     function onClickOutside(event: PointerEvent) {

@@ -88,6 +88,32 @@ describe('column filters', () => {
         await expect.element(page.getByRole('button', { name: /Remove filter Name/ })).toBeVisible()
     })
 
+    it('anchors the panel to its trigger when opened from the column menu', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns,
+            getRowId,
+            toolbar: true
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        // Open via the column menu, not the filter icon — the path that used to
+        // leave the panel stranded at the top-left corner.
+        await page.getByRole('button', { name: 'Name column menu' }).click()
+        await page.getByRole('menuitem', { name: 'Filter…' }).click()
+
+        const dialog = page.getByRole('dialog', { name: 'Filter Name' })
+        await expect.element(dialog).toBeVisible()
+
+        const trigger = screen.container.querySelector<HTMLElement>('[aria-label="Filter Name"]')!
+        const panelRect = (dialog.element() as HTMLElement).getBoundingClientRect()
+        const triggerRect = trigger.getBoundingClientRect()
+        // Not parked at the corner, and sitting just below its trigger.
+        expect(panelRect.top).toBeGreaterThan(0)
+        expect(panelRect.left).toBeGreaterThan(0)
+        expect(Math.abs(panelRect.top - triggerRect.bottom)).toBeLessThan(20)
+    })
+
     it('filters numbers with the between operator', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
