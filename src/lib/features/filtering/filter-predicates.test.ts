@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { defaultLabels } from '../../core/interaction/labels.js'
 import { buildRowNodes } from '../../core/grid/row-node.js'
 import type { ColumnDef, ColumnFilter } from '../../core/types/index.js'
 import { DISTINCT_VALUES_CAP, distinctValues } from './distinct-values.js'
@@ -24,6 +25,31 @@ describe('text predicates', () => {
         expect(passes({ kind: 'text', op: 'blank', value: '' }, null)).toBe(true)
         expect(passes({ kind: 'text', op: 'blank', value: '' }, 'x')).toBe(false)
         expect(passes({ kind: 'text', op: 'contains', value: 'a' }, null)).toBe(false)
+    })
+
+    it('reads the negated ops as the inverse, blanks included', () => {
+        expect(passes({ kind: 'text', op: 'notContains', value: 'xyz' }, 'Alice')).toBe(true)
+        expect(passes({ kind: 'text', op: 'notContains', value: 'ali' }, 'Alice')).toBe(false)
+        expect(passes({ kind: 'text', op: 'notEqual', value: 'bob' }, 'Alice')).toBe(true)
+        expect(passes({ kind: 'text', op: 'notEqual', value: 'ALICE' }, 'Alice')).toBe(false)
+        expect(passes({ kind: 'text', op: 'notBlank', value: '' }, 'Alice')).toBe(true)
+        expect(passes({ kind: 'text', op: 'notBlank', value: '' }, '')).toBe(false)
+        expect(passes({ kind: 'text', op: 'notBlank', value: '' }, null)).toBe(false)
+        // A blank cell holds neither the query nor its equal, so it passes both.
+        expect(passes({ kind: 'text', op: 'notContains', value: 'a' }, null)).toBe(true)
+        expect(passes({ kind: 'text', op: 'notEqual', value: 'a' }, '')).toBe(true)
+    })
+
+    it('honours case sensitivity when asked', () => {
+        const filter = { kind: 'text', op: 'equals', value: 'ALICE', caseSensitive: true } as const
+        expect(passes(filter, 'Alice')).toBe(false)
+        expect(passes(filter, 'ALICE')).toBe(true)
+        expect(
+            passes({ kind: 'text', op: 'contains', value: 'Ali', caseSensitive: true }, 'Alice')
+        ).toBe(true)
+        expect(
+            passes({ kind: 'text', op: 'contains', value: 'ali', caseSensitive: true }, 'Alice')
+        ).toBe(false)
     })
 })
 
@@ -138,6 +164,51 @@ describe('compileColumnFilters', () => {
         expect(custom).toHaveBeenCalledTimes(3)
     })
 
+    it('combines two conditions on one column with and / or', () => {
+        const and = compileColumnFilters(columns, {
+            name: {
+                kind: 'group',
+                join: 'and',
+                conditions: [
+                    { kind: 'text', op: 'contains', value: 'a' },
+                    { kind: 'text', op: 'notContains', value: 'lice' }
+                ]
+            }
+        })!
+        expect(nodes.filter(and).map((node) => node.row.name)).toEqual(['Carol'])
+
+        const or = compileColumnFilters(columns, {
+            name: {
+                kind: 'group',
+                join: 'or',
+                conditions: [
+                    { kind: 'text', op: 'equals', value: 'alice' },
+                    { kind: 'text', op: 'equals', value: 'bob' }
+                ]
+            }
+        })!
+        expect(nodes.filter(or).map((node) => node.row.name)).toEqual(['Alice', 'Bob'])
+    })
+
+    it('runs a custom predicate once per condition of a group', () => {
+        const custom = vi.fn(() => true)
+        const withCustom: ColumnDef<Row>[] = [
+            { id: 'name', filter: { type: 'text', predicate: custom } }
+        ]
+        const predicate = compileColumnFilters(withCustom, {
+            name: {
+                kind: 'group',
+                join: 'and',
+                conditions: [
+                    { kind: 'text', op: 'contains', value: 'a' },
+                    { kind: 'text', op: 'contains', value: 'b' }
+                ]
+            }
+        })!
+        nodes.filter(predicate)
+        expect(custom).toHaveBeenCalledTimes(6)
+    })
+
     it('reads filter type from plain and advanced defs', () => {
         expect(filterTypeOf(columns[0])).toBe('text')
         expect(filterTypeOf({ id: 'x', filter: { type: 'set' } })).toBe('set')
@@ -148,17 +219,55 @@ describe('compileColumnFilters', () => {
 
 describe('describeFilter', () => {
     it('formats every kind compactly', () => {
-        expect(describeFilter({ kind: 'text', op: 'contains', value: 'ali' })).toBe(
-            'contains "ali"'
+        expect(describeFilter({ kind: 'text', op: 'contains', value: 'ali' }, defaultLabels)).toBe(
+            'Contains "ali"'
         )
-        expect(describeFilter({ kind: 'text', op: 'blank', value: '' })).toBe('is blank')
-        expect(describeFilter({ kind: 'number', op: 'gte', value: 50 })).toBe('≥ 50')
-        expect(describeFilter({ kind: 'number', op: 'between', value: 1, to: 9 })).toBe('1 – 9')
-        expect(describeFilter({ kind: 'date', op: 'before', value: '2026-01-01' })).toBe(
-            'before 2026-01-01'
+        expect(describeFilter({ kind: 'text', op: 'blank', value: '' }, defaultLabels)).toBe(
+            'Is blank'
         )
-        expect(describeFilter({ kind: 'set', values: ['a', 'b', 'c'] })).toBe('a, b +1')
-        expect(describeFilter({ kind: 'boolean', value: true })).toBe('true')
+        expect(describeFilter({ kind: 'number', op: 'gte', value: 50 }, defaultLabels)).toBe('≥ 50')
+        expect(
+            describeFilter({ kind: 'number', op: 'between', value: 1, to: 9 }, defaultLabels)
+        ).toBe('1 – 9')
+        expect(
+            describeFilter({ kind: 'date', op: 'before', value: '2026-01-01' }, defaultLabels)
+        ).toBe('Before 2026-01-01')
+        expect(describeFilter({ kind: 'set', values: ['a', 'b', 'c'] }, defaultLabels)).toBe(
+            'a, b +1'
+        )
+        expect(describeFilter({ kind: 'boolean', value: true }, defaultLabels)).toBe('True')
+    })
+
+    it('formats the negated and presence ops', () => {
+        expect(describeFilter({ kind: 'text', op: 'notContains', value: 'x' }, defaultLabels)).toBe(
+            'Does not contain "x"'
+        )
+        expect(describeFilter({ kind: 'text', op: 'notEqual', value: 'x' }, defaultLabels)).toBe(
+            'Not equal "x"'
+        )
+        expect(describeFilter({ kind: 'text', op: 'notBlank', value: '' }, defaultLabels)).toBe(
+            'Is not blank'
+        )
+        expect(describeFilter({ kind: 'number', op: 'notBlank' }, defaultLabels)).toBe(
+            'Is not blank'
+        )
+        expect(describeFilter({ kind: 'date', op: 'blank' }, defaultLabels)).toBe('Is blank')
+    })
+
+    it('spells out a group with its join', () => {
+        expect(
+            describeFilter(
+                {
+                    kind: 'group',
+                    join: 'or',
+                    conditions: [
+                        { kind: 'text', op: 'contains', value: 'a' },
+                        { kind: 'text', op: 'contains', value: 'b' }
+                    ]
+                },
+                defaultLabels
+            )
+        ).toBe('Contains "a" Or Contains "b"')
     })
 })
 

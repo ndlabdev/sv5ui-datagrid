@@ -3,8 +3,9 @@ import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
 import { nodeIndexById } from '../../core/grid/row-node.js'
 import { scrollStart, setScrollStart } from '../../core/utils/scroll.js'
-import type { GridFeature } from '../../core/types/index.js'
-import { Virtualizer } from '../../core/virtual/virtualizer.svelte.js'
+import { SvelteMap } from 'svelte/reactivity'
+import type { GridFeature, RowNode } from '../../core/types/index.js'
+import { DEFAULT_ROW_HEIGHT, Virtualizer } from '../../core/virtual/virtualizer.svelte.js'
 import type { VirtualizationOptions } from './virtualization.types.js'
 
 export const VIRTUALIZATION = 'virtualization'
@@ -16,17 +17,32 @@ export class Virtualization<TRow> {
     element = $state<HTMLElement | null>(null)
 
     #grid: GridState<TRow>
+    #getRowHeight?: (node: RowNode<TRow>) => number | 'auto'
+    /**
+     * Measured heights of `'auto'` rows, keyed by row id so a measurement
+     * survives re-sorting. Reactive per key: the layout re-derives when a row
+     * it actually read changes, not on every observer callback.
+     */
+    #measured = new SvelteMap<string, number>()
 
     constructor(grid: GridState<TRow>, options: VirtualizationOptions<TRow>) {
         this.#grid = grid
         const getRowHeight = options.getRowHeight
+        this.#getRowHeight = getRowHeight
+        const estimate = options.rowHeight ?? DEFAULT_ROW_HEIGHT
         this.virtualizer = new Virtualizer({
             rowHeight: options.rowHeight,
             overscan: options.overscan,
             initialRows: options.initialRows,
             getCount: () => grid.totalRows,
             getRowHeight: getRowHeight
-                ? (index) => getRowHeight(grid.preWindowNodes[index])
+                ? (index) => {
+                      const node = grid.preWindowNodes[index]
+                      if (!node) return estimate
+                      const height = getRowHeight(node)
+                      if (height !== 'auto') return height
+                      return this.#measured.get(node.id) ?? estimate
+                  }
                 : undefined
         })
         this.columnVirtualizer = options.columns
@@ -39,6 +55,21 @@ export class Virtualization<TRow> {
 
         grid.events.on('sortChanged', this.#resetScroll)
         grid.events.on('filterChanged', this.#resetScroll)
+    }
+
+    /** True when this row sizes itself, so the renderer leaves its height off. */
+    isAutoRow = (node: RowNode<TRow>): boolean => this.#getRowHeight?.(node) === 'auto'
+
+    /**
+     * Records what an `'auto'` row actually rendered at. Sub-pixel noise is
+     * ignored: re-deriving the layout would re-render the row, which would
+     * measure it again.
+     */
+    measureRow = (id: string, height: number): void => {
+        if (height <= 0) return
+        const previous = this.#measured.get(id)
+        if (previous !== undefined && Math.abs(previous - height) < 0.5) return
+        this.#measured.set(id, height)
     }
 
     #resetScroll = (): void => {

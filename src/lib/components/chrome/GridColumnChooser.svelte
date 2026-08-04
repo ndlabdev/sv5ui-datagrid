@@ -29,7 +29,7 @@
                 variant="outline"
                 size="sm"
                 icon="lucide:columns-3"
-                aria-label="Choose columns"
+                aria-label={grid.labels.chooseColumns}
                 class={className}
             />
         {/snippet}

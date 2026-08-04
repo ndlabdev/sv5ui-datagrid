@@ -3,6 +3,7 @@
     import type { RowNode } from '../../core/types/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import { getGridContext } from '../internal/context.js'
+    import { notTabbable } from '../internal/focus.js'
 
     let { node }: { node?: RowNode<TRow> } = $props()
 
@@ -31,22 +32,28 @@
 
 {#if selectionState}
     {#if node}
-        <span onclickcapture={rememberModifiers} class="contents">
+        <span use:notTabbable onclickcapture={rememberModifiers} class="contents">
             <Checkbox
                 checked={selectionState.isSelected(node.id)}
                 onCheckedChange={onRowChecked}
                 disabled={!selectable}
-                label={`Select row ${node.index + 1}`}
+                label={grid.labels.selectRow(node.index + 1)}
                 ui={{ label: 'sr-only' }}
             />
         </span>
     {:else if selectionState.mode === 'multiple'}
-        <Checkbox
-            checked={selectionState.allState === 'all'}
-            indeterminate={selectionState.allState === 'some'}
-            onCheckedChange={selectionState.toggleAll}
-            label="Select all rows"
-            ui={{ label: 'sr-only' }}
-        />
+        <!-- Out of the tab order like every other control in the grid: the
+             cells carry the roving tabindex, and Space on the focused cell is
+             what toggles. Tabbable checkboxes made a thousand-row grid a
+             thousand tab stops. -->
+        <span use:notTabbable class="contents">
+            <Checkbox
+                checked={selectionState.allState === 'all'}
+                indeterminate={selectionState.allState === 'some'}
+                onCheckedChange={selectionState.toggleAll}
+                label={grid.labels.selectAllRows}
+                ui={{ label: 'sr-only' }}
+            />
+        </span>
     {/if}
 {/if}

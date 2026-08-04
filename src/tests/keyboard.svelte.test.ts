@@ -179,7 +179,7 @@ describe('density and toolbar', () => {
         const root = screen.container.firstElementChild as HTMLElement
         expect(root.className).toContain('[--dg-row-h:2.5rem]')
 
-        await screen.getByRole('button', { name: 'Compact density' }).click()
+        await screen.getByRole('radio', { name: 'Compact density' }).click()
         expect(root.className).toContain('[--dg-row-h:2rem]')
     })
 

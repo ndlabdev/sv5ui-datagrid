@@ -9,6 +9,7 @@ import {
     filtering,
     getPagination,
     pagination,
+    PIPELINE_ORDER,
     rowPinning,
     sorting,
     type ColumnDef,
@@ -182,6 +183,36 @@ describe('rtl pointer gestures', () => {
         // under RTL the inline end is to the left, so clientX moves the other way.
         expect(await dragHandleBy('ltr', 60)).toBe(220)
         expect(await dragHandleBy('rtl', -60)).toBe(220)
+    })
+})
+
+describe('rtl layout', () => {
+    it('indents a nested row from the inline start, not from the left', async () => {
+        const grid = createDataGrid<Person>({
+            columns: [{ id: 'name', header: 'Name', width: 200 }],
+            data: people,
+            getRowId: (person) => String(person.id),
+            features: [
+                {
+                    id: 'depth',
+                    pipelineStage: {
+                        order: PIPELINE_ORDER.group,
+                        transform: (nodes) =>
+                            nodes.map((node, index) =>
+                                index === 1 ? { ...node, meta: { level: 2 } } : node
+                            )
+                    }
+                }
+            ]
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const indented = screen.container.querySelector<HTMLElement>('[data-dg-cell="1:0"]')!
+        // The logical property is what carries the indent; the physical one is
+        // resolved by the browser and flips with the direction.
+        expect(indented.style.paddingInlineStart).not.toBe('')
+        expect(indented.style.paddingLeft).toBe('')
     })
 })
 

@@ -225,6 +225,8 @@
             '[data-dg-truncate]'
         )
         if (!target) return
+        // The column decides its own tooltip; measuring would fight it.
+        if (target.closest('[data-dg-manual-tooltip]')) return
 
         const text = target.textContent ?? ''
         if (text !== '' && target.scrollWidth > target.clientWidth + 1) {

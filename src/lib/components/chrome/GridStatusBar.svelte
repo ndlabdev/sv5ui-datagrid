@@ -33,10 +33,10 @@
 <div class={slots.statusBar({ class: [theme('statusBar'), className] })}>
     <span>
         {filtered === total
-            ? `${total.toLocaleString()} rows`
-            : `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`}
+            ? grid.labels.totalRows(total)
+            : grid.labels.filteredRows(filtered, total)}
     </span>
     {#if selected > 0}
-        <span class="text-primary">{selected.toLocaleString()} selected</span>
+        <span class="text-primary">{grid.labels.selectedRows(selected)}</span>
     {/if}
 </div>

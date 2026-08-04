@@ -1,5 +1,20 @@
 export { DISTINCT_VALUES_CAP, distinctValues, distinctValuesCached } from './distinct-values.js'
-export { buildColumnFilter, draftFromFilter, emptyDraft, type FilterDraft } from './filter-draft.js'
+export {
+    buildColumnFilter,
+    draftFromFilter,
+    emptyCondition,
+    emptyDraft,
+    isPresenceOp,
+    MAX_CONDITIONS,
+    type ConditionDraft,
+    type FilterDraft
+} from './filter-draft.js'
+export {
+    filterConditions,
+    isFilterGroup,
+    normalizeFilterEntry,
+    toFilterRequest
+} from './filter-model.js'
 export {
     compileColumnFilters,
     describeFilter,

@@ -5,11 +5,7 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridQuickFilterProps } from '../datagrid.types.js'
 
-    let {
-        placeholder = 'Search...',
-        debounce = 200,
-        class: className
-    }: GridQuickFilterProps = $props()
+    let { placeholder, debounce = 200, class: className }: GridQuickFilterProps = $props()
 
     const grid = getGridContext()
     const filteringState = getFiltering(grid)
@@ -26,5 +22,10 @@
 </script>
 
 {#if filteringState}
-    <Input {placeholder} icon="lucide:search" class={className} bind:value={search.current} />
+    <Input
+        placeholder={placeholder ?? grid.labels.search}
+        icon="lucide:search"
+        class={className}
+        bind:value={search.current}
+    />
 {/if}

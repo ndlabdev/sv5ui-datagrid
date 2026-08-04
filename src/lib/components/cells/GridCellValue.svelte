@@ -11,6 +11,7 @@
     } from '../../core/utils/format.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
     import { safeHref } from '../../core/utils/url.js'
+    import { getGridLabels } from '../internal/context.js'
 
     let {
         def,
@@ -21,6 +22,8 @@
         row: TRow
         value: unknown
     } = $props()
+
+    const labels = getGridLabels()
 
     const options = $derived(def.typeOptions ?? {})
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
@@ -70,7 +73,7 @@
                     square
                     tabindex={-1}
                     icon="lucide:ellipsis"
-                    label="Row actions"
+                    label={labels.rowActions}
                     ui={{ label: 'sr-only' }}
                 />
             {/snippet}

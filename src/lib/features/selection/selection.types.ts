@@ -1,4 +1,5 @@
 import type { SelectionMode } from '../../core/types/index.js'
+import type { ExportFormatter } from './clipboard.js'
 
 export interface SelectionOptions<TRow> {
     /**
@@ -34,7 +35,7 @@ export interface CopyOptions {
     headers?: boolean
 }
 
-export interface ExportCsvOptions {
+export interface ExportCsvOptions<TRow = unknown> {
     /**
      * Download file name.
      * @default 'export.csv'
@@ -53,4 +54,25 @@ export interface ExportCsvOptions {
      * @default false
      */
     allRows?: boolean
+
+    /**
+     * Column separator. Excel follows the list separator of the machine's
+     * locale, so `';'` is what much of Europe expects to open cleanly.
+     * @default ','
+     */
+    delimiter?: string
+
+    /**
+     * Column ids to export, in this order. Hidden columns are fair game — an
+     * id column left out of the grid can still belong in the file.
+     * @default every visible column
+     */
+    columns?: string[]
+
+    /**
+     * Turns a cell into the exported text. Without it a value is written raw,
+     * so a spreadsheet keeps it as a number or a date; with it the file can be
+     * made to read the way the grid does.
+     */
+    formatValue?: ExportFormatter<TRow>
 }

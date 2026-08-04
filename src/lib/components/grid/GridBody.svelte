@@ -1,14 +1,18 @@
 <script lang="ts" generics="TRow">
     import { Empty, Icon, Skeleton } from 'sv5ui'
     import {
+        isSyntheticColumn,
+        ROW_HANDLE_COLUMN_ID,
         SELECTION_COLUMN_ID,
         type CellDecoration,
         type ColumnState,
         type RowNode
     } from '../../core/types/index.js'
     import { rowColSpans } from '../../core/columns/col-span.js'
+    import { isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
+    import { getRowReorder } from '../../features/row-reorder/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import { getVirtualization } from '../../features/virtualization/index.js'
     import { twMerge } from 'tailwind-merge'
@@ -18,11 +22,12 @@
     import GridCellValue from '../cells/GridCellValue.svelte'
     import type { GridBodyProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import GridRowHandleCell from '../cells/GridRowHandleCell.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar, windowStartOf } from '../internal/window.js'
 
     let {
-        emptyText = 'No data',
+        emptyText,
         loading = false,
         loadingRows = 5,
         error = null,
@@ -32,7 +37,9 @@
     }: GridBodyProps<TRow> = $props()
 
     const grid = getGridContext<TRow>()
+    const labels = grid.labels
     const virtualization = getVirtualization(grid)
+    const reorder = getRowReorder(grid)
     const selectionState = getSelection(grid)
     const pinning = getRowPinning(grid)
     const editing = getEditing(grid)
@@ -58,10 +65,12 @@
     const rowSelectedClass = $derived(
         `${rowClass} ${slots.rowSelected({ class: theme('rowSelected') })}`
     )
+    const rowDraggingClass = $derived(slots.rowDragging({ class: theme('rowDragging') }))
 
     /** Only pays for `twMerge` when the app actually returns classes. */
     function classOfRow(node: RowNode<TRow>): string {
-        const base = selectionState?.isSelected(node.id) ? rowSelectedClass : rowClass
+        let base = selectionState?.isSelected(node.id) ? rowSelectedClass : rowClass
+        if (reorder?.drag?.sourceId === node.id) base += ` ${rowDraggingClass}`
         const custom = grid.rowClass?.(node)
         return custom ? twMerge(base, custom) : base
     }
@@ -72,6 +81,10 @@
         right: slots.cell({ align: 'right', class: theme('cell') })
     } as const)
     const pinnedCellClass = $derived(slots.pinnedCell({ class: theme('pinnedCell') }))
+    const cellEditingClass = $derived(slots.cellEditing({ class: theme('cellEditing') }))
+    const dropIndicatorClass = $derived(
+        slots.rowDropIndicator({ class: theme('rowDropIndicator') })
+    )
     const boundaryClass = slots.groupBoundary()
 
     interface CellClassInput {
@@ -88,7 +101,8 @@
         let result = column.pinned
             ? `${cellClass[column.align]} ${pinnedCellClass}`
             : cellClass[column.align]
-        if (!input.editing && isEditable(node, column)) result += ` ${editableClass}`
+        if (input.editing) result += ` ${cellEditingClass}`
+        else if (isEditable(node, column)) result += ` ${editableClass}`
         if (decoration?.class) result += ` ${decoration.class}`
         result = withBoundary(result, colIndex)
 
@@ -138,7 +152,11 @@
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(grid.columns.headerRowCount)
     const topRows = $derived(pinning?.topNodes.length ?? 0)
-    const firstDataIndex = $derived(grid.columns.visible[0]?.id === SELECTION_COLUMN_ID ? 1 : 0)
+    // Indent, expand toggles and full-width fallbacks belong to the first column
+    // that carries data, not to the grid's own grip or checkbox.
+    const firstDataIndex = $derived(
+        grid.columns.visible.findIndex((column) => !isSyntheticColumn(column.id))
+    )
 
     function isActive(row: number, col: number): boolean {
         const active = grid.focus.active
@@ -161,15 +179,64 @@
         return active.section === section && active.row === row && active.col === col
     }
 
-    function rowHeightOf(row: number): string | undefined {
+    function rowHeightOf(node: RowNode<TRow>, row: number): string | undefined {
         if (!virtualization) return undefined
+        // An auto row is measured, not sized: pinning it to the last measured
+        // height would stop it from ever growing with its content.
+        if (virtualization.isAutoRow(node)) return undefined
         return `${virtualization.virtualizer.sizeOf(row)}px`
     }
 
+    /**
+     * Reports an auto row's rendered height back to the virtualizer, which
+     * needs it for scroll offsets. One observer per rendered row, and only the
+     * window is ever rendered.
+     */
+    function measureRow(element: HTMLElement, id: string | null) {
+        if (!id || !virtualization) return
+        const observer = new ResizeObserver(() =>
+            virtualization.measureRow(id, element.offsetHeight)
+        )
+        observer.observe(element)
+        return { destroy: () => observer.disconnect() }
+    }
+
+    /** Tree and group indent. Logical, so it moves to the right edge in RTL. */
     function indentOf(node: RowNode<TRow>, colIndex: number): string | undefined {
         const level = node.meta?.level ?? 0
         if (colIndex !== firstDataIndex || level === 0) return undefined
         return `calc(0.75rem + ${level * 1.25}rem)`
+    }
+
+    /**
+     * The title a cell carries from the start. Columns that say nothing about
+     * tooltips return undefined and are left to the viewport's hover measure,
+     * which only titles text that is actually cut off — so the common case
+     * costs nothing per cell here.
+     */
+    function tooltipOf(
+        node: RowNode<TRow>,
+        column: (typeof columnWindow.renderColumns)[number]['column'],
+        rowIndex: number
+    ): string | undefined {
+        const tooltip = column.def.tooltip
+        if (tooltip === undefined || tooltip === false) return undefined
+        const value = grid.getValue(node, column)
+        if (tooltip === true) return isBlank(value) ? undefined : String(value)
+        return tooltip({ node, row: node.row, value, rowIndex })
+    }
+
+    /**
+     * Which edge of this row the drop line sits on, or undefined. Dropping
+     * below the source draws under the target, above it draws over — so the
+     * line always shows where the row will end up.
+     */
+    function dropEdgeOf(rowIndex: number): 'top' | 'bottom' | undefined {
+        const drag = reorder?.drag
+        if (!drag || drag.targetIndex !== rowIndex) return undefined
+        const from = grid.preWindowNodes.findIndex((node) => node.id === drag.sourceId)
+        if (from === rowIndex) return undefined
+        return rowIndex > from ? 'bottom' : 'top'
     }
 
     function ariaExpanded(node: RowNode<TRow>): boolean | undefined {
@@ -183,14 +250,18 @@
     colIndex: number,
     rowIndex: number
 )}
-    {#if column.id === SELECTION_COLUMN_ID}
+    {#if column.id === ROW_HANDLE_COLUMN_ID}
+        <GridRowHandleCell {node} position={rowIndex + 1} />
+    {:else if column.id === SELECTION_COLUMN_ID}
         <GridSelectionCell {node} />
     {:else}
         {#if colIndex === firstDataIndex && node.meta?.expandable}
             <button
                 type="button"
                 tabindex="-1"
-                aria-label={grid.expansion.isExpanded(node.id) ? 'Collapse row' : 'Expand row'}
+                aria-label={grid.expansion.isExpanded(node.id)
+                    ? labels.collapseRow
+                    : labels.expandRow}
                 class={slots.toggleButton({ class: theme('toggleButton') })}
                 onclick={(event) => {
                     event.stopPropagation()
@@ -221,7 +292,8 @@
 {#snippet rows()}
     {#each grid.nodes as node, viewIndex (node.id)}
         {@const rowIndex = windowStart + viewIndex}
-        {@const rowHeight = rowHeightOf(rowIndex)}
+        {@const rowHeight = rowHeightOf(node, rowIndex)}
+        {@const dropEdge = dropEdgeOf(rowIndex)}
         <div
             role="row"
             aria-rowindex={rowIndex + 1 + headerRows + topRows}
@@ -232,6 +304,7 @@
             aria-posinset={node.meta?.posInSet}
             data-dg-row-id={node.id}
             class={classOfRow(node)}
+            use:measureRow={virtualization?.isAutoRow(node) ? node.id : null}
             style:height={rowHeight}
             style:--dg-row-h={rowHeight}
             style:width={columnWindow.rowWidth}
@@ -271,6 +344,10 @@
                             aria-selected={decoration?.selected}
                             tabindex={isActiveInSpan(rowIndex, colIndex, colSpan) ? 0 : -1}
                             data-dg-cell="{rowIndex}:{colIndex}"
+                            title={tooltipOf(node, column, rowIndex)}
+                            data-dg-manual-tooltip={column.def.tooltip === undefined
+                                ? undefined
+                                : ''}
                             class={classOfCell({
                                 node,
                                 column,
@@ -283,7 +360,9 @@
                             style:inset-inline-start={pinLeftVar(column)}
                             style:inset-inline-end={pinRightVar(column)}
                             style:padding={editingCell ? '0' : undefined}
-                            style:padding-left={editingCell ? undefined : indentOf(node, colIndex)}
+                            style:padding-inline-start={editingCell
+                                ? undefined
+                                : indentOf(node, colIndex)}
                             ondblclick={() => startEdit(node, column)}
                         >
                             {#if editingCell}
@@ -298,6 +377,13 @@
                         </div>
                     {/if}
                 {/each}
+            {/if}
+            {#if dropEdge}
+                <div
+                    class={dropIndicatorClass}
+                    style:top={dropEdge === 'top' ? '0' : undefined}
+                    style:bottom={dropEdge === 'bottom' ? '0' : undefined}
+                ></div>
             {/if}
         </div>
     {/each}
@@ -367,7 +453,7 @@
                     title={error}
                     variant="naked"
                     size="sm"
-                    actions={onRetry ? [{ label: 'Retry', size: 'sm', onclick: onRetry }] : []}
+                    actions={onRetry ? [{ label: labels.retry, size: 'sm', onclick: onRetry }] : []}
                 />
             </div>
         </div>
@@ -392,7 +478,12 @@
                 class={slots.empty({ class: theme('empty') })}
                 style="grid-column: 1 / -1"
             >
-                <Empty icon="lucide:inbox" title={emptyText} variant="naked" size="sm" />
+                <Empty
+                    icon="lucide:inbox"
+                    title={emptyText ?? labels.noData}
+                    variant="naked"
+                    size="sm"
+                />
             </div>
         </div>
     {:else if virtualization}

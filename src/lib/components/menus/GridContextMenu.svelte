@@ -8,6 +8,7 @@
     let { exportFilename, children }: GridContextMenuProps = $props()
 
     const grid = getGridContext()
+    const labels = grid.labels
     const selectionState = getSelection(grid)
     const hasItems = Boolean(selectionState || grid.features.some((feature) => feature.menuItems))
 
@@ -27,26 +28,26 @@
         const none = selectionState.count === 0
         return [
             {
-                label: 'Copy',
+                label: labels.copy,
                 icon: 'lucide:copy',
                 disabled: none,
                 onSelect: () => void selectionState.copySelection()
             },
             {
-                label: 'Copy with headers',
+                label: labels.copyWithHeaders,
                 icon: 'lucide:copy-plus',
                 disabled: none,
                 onSelect: () => void selectionState.copySelection({ headers: true })
             },
             { type: 'separator' },
             {
-                label: 'Export CSV',
+                label: labels.exportCsv,
                 icon: 'lucide:download',
                 onSelect: () => selectionState.exportCsv({ filename: exportFilename })
             },
             { type: 'separator' },
             {
-                label: 'Clear selection',
+                label: labels.clearSelection,
                 icon: 'lucide:x',
                 disabled: none,
                 onSelect: selectionState.clear

@@ -12,7 +12,8 @@
         type ColumnDef,
         type GridSnapshot,
         type DataGridCellContext,
-        type GridState
+        type GridState,
+        type HeaderContext
     } from '$lib/index.js'
 
     interface Employee {
@@ -85,6 +86,7 @@
                 {
                     id: 'salary',
                     header: 'Salary',
+                    headerCell: moneyHeader,
                     sortable: true,
                     align: 'right',
                     width: 120,
@@ -219,13 +221,21 @@
     {money.format(Number(value))}
 {/snippet}
 
+<!-- The sort control, filter icon, column menu and resize handle stay: a
+     headerCell snippet draws the label, not the whole header cell. -->
+{#snippet moneyHeader({ header }: HeaderContext<Employee>)}
+    <span class="truncate" data-dg-truncate>{header}</span>
+    <span class="text-[10px] font-normal text-on-surface-variant/70">USD</span>
+{/snippet}
+
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">Columns UX — Phase 3</h1>
             <p class="text-sm text-on-surface-variant">
                 Resize (kéo mép / double-click autosize) · Reorder (kéo header) · Pin · Ẩn/hiện ·
-                Header groups · Column menu — tất cả điều khiển được bằng bàn phím.
+                Header groups · Column menu · <code>headerCell</code> (cột Salary) — tất cả điều
+                khiển được bằng bàn phím.
                 <strong>Sắp xếp lại rồi F5</strong>: layout, sort, filter, page size và density đều
                 được giữ nguyên.
             </p>

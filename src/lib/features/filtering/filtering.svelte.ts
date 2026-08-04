@@ -1,6 +1,6 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
-import type { ColumnFilter, FilterModel, GridFeature } from '../../core/types/index.js'
+import type { ColumnFilterEntry, FilterModel, GridFeature } from '../../core/types/index.js'
 import { distinctValuesCached } from './distinct-values.js'
 import { compileColumnFilters } from './filter-predicates.js'
 import { quickFilterNodes } from './quick-filter.js'
@@ -9,12 +9,12 @@ export const FILTERING = 'filtering'
 
 export interface FilteringOptions {
     initialQuick?: string
-    initialColumns?: Record<string, ColumnFilter>
+    initialColumns?: Record<string, ColumnFilterEntry>
 }
 
 export class Filtering<TRow> {
     quick = $state('')
-    columnFilters = $state.raw<Record<string, ColumnFilter>>({})
+    columnFilters = $state.raw<Record<string, ColumnFilterEntry>>({})
     filterFor = $state<string | null>(null)
 
     #grid: GridState<TRow>
@@ -43,7 +43,7 @@ export class Filtering<TRow> {
         this.#emit()
     }
 
-    setColumnFilter = (columnId: string, filter: ColumnFilter | null): void => {
+    setColumnFilter = (columnId: string, filter: ColumnFilterEntry | null): void => {
         const next = { ...this.columnFilters }
         if (filter === null) delete next[columnId]
         else next[columnId] = filter

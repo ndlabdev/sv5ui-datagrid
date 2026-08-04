@@ -16,11 +16,23 @@ export * from './components/index.js'
 export { createDataGrid } from './core/grid/grid.svelte.js'
 export type { GridState } from './core/grid/grid.svelte.js'
 export { getCellValue } from './core/utils/value.js'
-export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './core/types/index.js'
+export {
+    isSyntheticColumn,
+    ROW_HANDLE_COLUMN_ID,
+    SELECTION_COLUMN_ID,
+    SNAPSHOT_VERSION
+} from './core/types/index.js'
 export type * from './core/types/index.js'
 
 // Models reachable from a grid instance
 export { defaultLocale } from './core/interaction/announcer.svelte.js'
+export {
+    DATE_OPS,
+    defaultLabels,
+    mergeLabels,
+    NUMBER_OPS,
+    TEXT_OPS
+} from './core/interaction/labels.js'
 export { HEADER_ROW } from './core/interaction/focus-model.svelte.js'
 export type { Announcer } from './core/interaction/announcer.svelte.js'
 export type { ColumnModel } from './core/columns/column-model.svelte.js'
@@ -53,13 +65,34 @@ export {
 // Feature modules
 export { columnOps, type ColumnOpsOptions } from './features/column-ops/index.js'
 export { editing, type EditingOptions, type EditMode } from './features/editing/index.js'
-export { filtering, type FilteringOptions } from './features/filtering/index.js'
+export {
+    filterConditions,
+    filtering,
+    isFilterGroup,
+    normalizeFilterEntry,
+    toFilterRequest,
+    type FilteringOptions
+} from './features/filtering/index.js'
 export { pagination, type PaginationOptions } from './features/pagination/index.js'
 export { rowPinning, type RowPinningOptions } from './features/row-pinning/index.js'
 export {
+    rowReorder,
+    type RowDragState,
+    type RowReorderOptions
+} from './features/row-reorder/index.js'
+export {
+    dataColumns,
+    DEFAULT_CSV_DELIMITER,
+    downloadCsv,
+    neutralizeFormula,
+    pickColumns,
+    rowsToMatrix,
     selection,
     toCsv,
     toTsv,
+    withHeaderRow,
+    type CellMatrix,
+    type ExportFormatter,
     type CopyOptions,
     type ExportCsvOptions,
     type SelectAllState,
@@ -84,6 +117,7 @@ export { getEditing } from './features/editing/index.js'
 export { getFiltering } from './features/filtering/index.js'
 export { getPagination } from './features/pagination/index.js'
 export { getRowPinning } from './features/row-pinning/index.js'
+export { getRowReorder } from './features/row-reorder/index.js'
 export { getSelection } from './features/selection/index.js'
 export { getSorting } from './features/sorting/index.js'
 export { getVirtualization } from './features/virtualization/index.js'
@@ -93,6 +127,7 @@ export type { Editing } from './features/editing/index.js'
 export type { Filtering } from './features/filtering/index.js'
 export type { Pagination } from './features/pagination/index.js'
 export type { RowPinning } from './features/row-pinning/index.js'
+export type { RowReorder } from './features/row-reorder/index.js'
 export type { Selection } from './features/selection/index.js'
 export type { Sorting } from './features/sorting/index.js'
 export type { Virtualization } from './features/virtualization/index.js'

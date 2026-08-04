@@ -17,7 +17,7 @@
         if (!filteringState) return []
         return Object.entries(filteringState.columnFilters).map(([columnId, filter]) => ({
             columnId,
-            label: `${grid.columns.get(columnId)?.header ?? columnId}: ${describeFilter(filter)}`
+            label: `${grid.columns.get(columnId)?.header ?? columnId}: ${describeFilter(filter, grid.labels)}`
         }))
     })
 </script>
@@ -26,7 +26,7 @@
     <div
         class={slots.filterChips({ class: [theme('filterChips'), className] })}
         role="group"
-        aria-label="Active filters"
+        aria-label={grid.labels.activeFilters}
     >
         {#each chips as chip (chip.columnId)}
             <Button
@@ -35,7 +35,7 @@
                 icon="lucide:x"
                 trailing
                 label={chip.label}
-                aria-label={`Remove filter ${chip.label}`}
+                aria-label={grid.labels.removeFilter(chip.label)}
                 onclick={() => filteringState.setColumnFilter(chip.columnId, null)}
             />
         {/each}
@@ -43,7 +43,7 @@
             <Button
                 variant="ghost"
                 size="xs"
-                label="Clear all"
+                label={grid.labels.clearAllFilters}
                 onclick={filteringState.clearColumnFilters}
             />
         {/if}

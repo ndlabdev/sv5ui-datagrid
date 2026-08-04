@@ -106,6 +106,20 @@ export type PinnedSide = 'left' | 'right'
  */
 export const SELECTION_COLUMN_ID = '__dg-select__'
 
+/**
+ * Id of the synthetic grip column prepended by the row-reorder feature.
+ * Excluded from the same places as the checkbox column.
+ */
+export const ROW_HANDLE_COLUMN_ID = '__dg-row-handle__'
+
+/**
+ * True for a column the grid added itself. Those carry no data, so exports,
+ * clipboard, reordering, pinning, hiding and snapshots all skip them.
+ */
+export function isSyntheticColumn(id: string): boolean {
+    return id === SELECTION_COLUMN_ID || id === ROW_HANDLE_COLUMN_ID
+}
+
 /** One rendered cell of a header group row. */
 export interface HeaderGroupCell {
     /** Group id, or a synthesized id for placeholder cells. */
@@ -122,6 +136,14 @@ export interface HeaderGroupCell {
     leafIds: string[]
     /** Pin side shared by the spanned leaves, if any. */
     pinned: PinnedSide | null
+}
+
+/** Context passed to a custom header snippet. */
+export interface HeaderContext<TRow> {
+    /** Runtime state of the column: id, alignment, pin side, width. */
+    column: ColumnState<TRow>
+    /** The resolved header label, i.e. `header` or the column id. */
+    header: string
 }
 
 /** Context passed to a custom cell snippet. */
@@ -145,10 +167,23 @@ export interface ColumnDef<TRow> {
     id: string
 
     /**
-     * Header label text.
+     * Header label text. Always plain text, because it is the column's
+     * accessible name and the label every non-visual surface reuses: column
+     * menu, column chooser, filter chips, announcer, clipboard and exports.
+     * Use `headerCell` to change how it is drawn without losing the text.
      * @default the column `id`
      */
     header?: string
+
+    /**
+     * Draws the header label — an icon beside the text, a unit on a second
+     * line, a coloured badge. The sort control, filter icon, column menu and
+     * resize handle are rendered by the grid around it and stay put.
+     *
+     * `header` remains the accessible name of the column while this is set,
+     * so keep it meaningful even when the snippet renders something else.
+     */
+    headerCell?: Snippet<[HeaderContext<TRow>]>
 
     /**
      * Extracts the cell value from a row.
@@ -195,6 +230,28 @@ export interface ColumnDef<TRow> {
      * options belong to the leaf children. Nesting is unlimited.
      */
     children?: ColumnDef<TRow>[]
+
+    /**
+     * Whether this column can be resized, when the column-ops feature allows
+     * resizing at all. Set false to freeze a checkbox or id column.
+     * @default true
+     */
+    resizable?: boolean
+
+    /**
+     * Cell tooltip. Left unset, a cell whose text is cut off gets one on hover
+     * showing the full text. `true` always titles the cell with its value,
+     * a function decides the text, and `false` turns the tooltip off — useful
+     * for a cell that renders its own.
+     */
+    tooltip?: boolean | ((ctx: DataGridCellContext<TRow>) => string | undefined)
+
+    /**
+     * Anything the app wants to hang off a column. The grid never reads it;
+     * it travels with the definition so a custom renderer, a menu item or a
+     * feature module can find it.
+     */
+    meta?: Record<string, unknown>
 
     /**
      * Enables click-to-sort on the header.
@@ -296,6 +353,8 @@ export interface ColumnState<TRow> {
     align: ColumnAlign
     /** Resolved pin side. */
     pinned: PinnedSide | null
+    /** Resolved resizability. */
+    resizable: boolean
     /** CSS custom property holding this column's track size. */
     cssVar: string
     /** CSS custom property holding this column's sticky pin offset. */

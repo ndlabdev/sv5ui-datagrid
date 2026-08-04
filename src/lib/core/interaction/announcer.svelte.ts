@@ -16,6 +16,7 @@ export const defaultLocale: DataGridLocale = {
     copied: (count) => `${count} rows copied`,
     rowExpanded: (expanded) => (expanded ? 'row expanded' : 'row collapsed'),
     rowPinned: (side) => (side ? `row pinned ${side}` : 'row unpinned'),
+    rowMoved: (position) => `row moved to position ${position}`,
     editInvalid: (message) => message
 }
 
@@ -70,6 +71,9 @@ export class Announcer<TRow> {
         })
         grid.events.on('rowPinnedChanged', ({ side }) => {
             this.message = locale.rowPinned(side)
+        })
+        grid.events.on('rowMoved', ({ to }) => {
+            this.message = locale.rowMoved(to + 1)
         })
     }
 }

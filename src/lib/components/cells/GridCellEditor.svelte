@@ -16,6 +16,7 @@
     import { editorTypeOf, getEditing } from '../../features/editing/index.js'
     import { getGridContext } from '../internal/context.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { isInPortal } from '../internal/portal.js'
     import { getGridTheme } from '../internal/theme.js'
     import {
         fromDateValue,
@@ -130,8 +131,7 @@
     // otherwise picking a date would commit the pre-pick draft.
     function onClickOutside(event: PointerEvent) {
         if (!inputBased || rowMode || !editing.commitOnBlur || !editing.active) return
-        const target = event.target as HTMLElement | null
-        if (target?.closest?.('[data-bits-floating-content-wrapper]')) return
+        if (isInPortal(event.target)) return
         void editing.commit()
     }
 

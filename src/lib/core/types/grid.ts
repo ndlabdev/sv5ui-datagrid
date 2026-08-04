@@ -1,4 +1,5 @@
 import type { ColumnDef, PinnedSide } from './columns.js'
+import type { DataGridLabelsInput } from './labels.js'
 import type { FilterModel } from './filtering.js'
 import type { GridFeature } from './feature.js'
 import type { ClassNameValue } from 'tailwind-merge'
@@ -37,6 +38,8 @@ export interface DataGridLocale {
     rowExpanded: (expanded: boolean) => string
     /** Announced when a row is pinned or unpinned. */
     rowPinned: (side: RowPinSide | null) => string
+    /** Announced with the row's new 1-based position after a move. */
+    rowMoved: (position: number) => string
     /** Announced when a commit is blocked by validation. */
     editInvalid: (message: string) => string
 }
@@ -92,6 +95,7 @@ export interface GridEventMap {
     rowsCopied: { count: number }
     rowExpanded: { id: string; expanded: boolean }
     rowPinnedChanged: { id: string; side: RowPinSide | null }
+    rowMoved: { id: string; from: number; to: number }
     cellEdited: { rowId: string; columnId: string; oldValue: unknown; newValue: unknown }
     rowEdited: { rowId: string; changes: Record<string, unknown> }
 }
@@ -130,8 +134,14 @@ export interface DataGridOptions<TRow> {
      */
     rowModel?: RowModel
 
-    /** Announcer string overrides for i18n. */
+    /** Announcer string overrides for i18n — what a screen reader says. */
     locale?: Partial<DataGridLocale>
+
+    /**
+     * Overrides for the strings the grid renders — menus, filter panel,
+     * toolbar, footer, overlays. Any subset; the rest keep their defaults.
+     */
+    labels?: DataGridLabelsInput
 
     /**
      * Classes added to every row — the escape hatch for data-driven row

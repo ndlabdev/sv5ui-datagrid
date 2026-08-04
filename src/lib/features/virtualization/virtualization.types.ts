@@ -17,10 +17,15 @@ export interface VirtualizationOptions<TRow = unknown> {
     rowHeight?: number
 
     /**
-     * Per-row height in pixels. Enables the variable-height layout
-     * (Fenwick-tree offset cache) instead of the fixed fast path.
+     * Per-row height in pixels, or `'auto'` to let the row size itself to its
+     * content. Either answer switches the virtualizer to the variable-height
+     * layout (Fenwick-tree offset cache) instead of the fixed fast path.
+     *
+     * An `'auto'` row renders at `rowHeight` for one frame, is measured, and
+     * keeps its measured height from then on — so scroll offsets settle after
+     * the first paint rather than being guessed forever.
      */
-    getRowHeight?: (node: RowNode<TRow>) => number
+    getRowHeight?: (node: RowNode<TRow>) => number | 'auto'
 
     /**
      * Extra rows rendered above and below the visible window.

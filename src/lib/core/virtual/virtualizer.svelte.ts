@@ -2,6 +2,9 @@ import { clamp } from '../utils/math.js'
 import { rafBatch } from '../utils/raf-batch.js'
 import { fixedRowLayout, variableRowLayout, type RowLayout } from './row-layout.js'
 
+/** The height a row is assumed to have until told otherwise. */
+export const DEFAULT_ROW_HEIGHT = 40
+
 export interface VirtualRange {
     start: number
     end: number
@@ -52,7 +55,7 @@ export class Virtualizer {
     constructor(options: VirtualizerOptions) {
         this.#getCount = options.getCount
         this.#getRowHeight = options.getRowHeight
-        this.rowHeight = options.rowHeight ?? 40
+        this.rowHeight = options.rowHeight ?? DEFAULT_ROW_HEIGHT
         this.overscan = options.overscan ?? 5
         this.initialRows = options.initialRows ?? 20
     }

@@ -1,7 +1,14 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { nodesById } from '../../core/grid/row-node.js'
-import type { GridFeature, Keybinding, RowNode, SelectionMode } from '../../core/types/index.js'
-import { downloadCsv, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
+import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
+import {
+    SELECTION_COLUMN_ID,
+    type GridFeature,
+    type Keybinding,
+    type RowNode,
+    type SelectionMode
+} from '../../core/types/index.js'
+import { downloadCsv, pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {
     allSelection,
     emptySelection,
@@ -155,14 +162,22 @@ export class Selection<TRow> {
         this.#grid.events.emit('rowsCopied', { count: this.selectedNodes.length })
     }
 
-    exportCsv = (options: ExportCsvOptions = {}): void => {
+    exportCsv = (options: ExportCsvOptions<TRow> = {}): void => {
         const selected = this.selectedNodes
         const nodes =
             options.allRows || selected.length === 0 ? this.#grid.preWindowNodes : selected
         if (nodes.length === 0) return
-        const columns = this.#grid.columns.visible
-        const matrix = rowsToMatrix(nodes, columns)
-        const csv = toCsv((options.headers ?? true) ? withHeaderRow(matrix, columns) : matrix)
+        // Named columns are resolved against every column, not just the visible
+        // ones, so a file can carry a key the grid does not show.
+        const source = options.columns ? this.#grid.columns.all : this.#grid.columns.visible
+        const columns = pickColumns(source, options.columns)
+        if (columns.length === 0) return
+
+        const matrix = rowsToMatrix(nodes, columns, options.formatValue)
+        const csv = toCsv(
+            (options.headers ?? true) ? withHeaderRow(matrix, columns) : matrix,
+            options.delimiter
+        )
         downloadCsv(csv, options.filename ?? 'export.csv')
     }
 }
@@ -175,8 +190,24 @@ function onBodyRow<TRow>(grid: GridState<TRow>): boolean {
     return grid.focus.active.row >= 0 && getSelection(grid) !== undefined
 }
 
+/**
+ * The checkbox column's header cell. Its checkbox is out of the tab order like
+ * every control in the grid, so Space on the cell is what has to reach it —
+ * `Ctrl+A` only ever selects, and would leave no way back.
+ */
+function onSelectAllCell<TRow>(grid: GridState<TRow>): boolean {
+    if (grid.focus.active.row !== HEADER_ROW) return false
+    const column = grid.columns.visible[grid.focus.active.col]
+    return column?.id === SELECTION_COLUMN_ID && getSelection(grid) !== undefined
+}
+
 function createKeybindings<TRow>(): Keybinding<TRow>[] {
     return [
+        {
+            key: ' ',
+            when: onSelectAllCell,
+            handler: (grid) => getSelection(grid)!.toggleAll()
+        },
         {
             key: ' ',
             when: onBodyRow,

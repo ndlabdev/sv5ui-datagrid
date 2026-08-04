@@ -20,7 +20,7 @@
     const sizeItems = $derived(
         [...new Set([...pageSizes, pagination?.pageSize].filter((size): size is number => !!size))]
             .sort((a, b) => a - b)
-            .map((size) => ({ label: `${size} / page`, value: String(size) }))
+            .map((size) => ({ label: grid.labels.pageSizeOption(size), value: String(size) }))
     )
     const rangeStart = $derived(
         pagination?.pageSize ? (pagination.page - 1) * pagination.pageSize + 1 : 1
@@ -34,13 +34,13 @@
 {#if pagination && pagination.pageSize && total > 0}
     <div class={slots.footer({ class: [theme('footer'), className] })}>
         <span class="me-auto text-xs whitespace-nowrap text-on-surface-variant sm:me-0">
-            {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {total.toLocaleString()}
+            {grid.labels.pageRange(rangeStart, rangeEnd, total)}
         </span>
         <Select
             class="w-32"
             size="sm"
             items={sizeItems}
-            aria-label="Rows per page"
+            aria-label={grid.labels.rowsPerPage}
             bind:value={
                 () => String(pagination.pageSize), (value) => pagination.setPageSize(Number(value))
             }

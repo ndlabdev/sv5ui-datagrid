@@ -212,6 +212,50 @@ describe('clipboard + export', () => {
         vi.restoreAllMocks()
     })
 
+    it('exports the named columns, in that order, with the chosen delimiter', async () => {
+        const grid = makeGrid()
+        await renderGrid(grid)
+        const state = getSelection(grid)!
+        state.select('2')
+
+        const blobs: Blob[] = []
+        vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+            blobs.push(blob as Blob)
+            return 'blob:mock'
+        })
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+        state.exportCsv({ columns: ['dept', 'name'], delimiter: ';' })
+
+        expect(await blobs[0].text()).toBe('Dept;Name\r\nData;Bob')
+        vi.restoreAllMocks()
+    })
+
+    it('writes what the formatter returns rather than the raw value', async () => {
+        const grid = makeGrid()
+        await renderGrid(grid)
+        const state = getSelection(grid)!
+        state.select('2')
+
+        const blobs: Blob[] = []
+        vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+            blobs.push(blob as Blob)
+            return 'blob:mock'
+        })
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+        state.exportCsv({
+            columns: ['active'],
+            headers: false,
+            formatValue: ({ value }) => (value ? 'Có' : 'Không')
+        })
+
+        expect(await blobs[0].text()).toBe('Không')
+        vi.restoreAllMocks()
+    })
+
     it('opens the context menu with copy and export items', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)

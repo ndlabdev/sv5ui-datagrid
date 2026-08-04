@@ -1,4 +1,5 @@
 import { Announcer, defaultLocale } from '../interaction/announcer.svelte.js'
+import { mergeLabels } from '../interaction/labels.js'
 import { ColumnModel } from '../columns/column-model.svelte.js'
 import { EventBus } from './events.js'
 import { ExpansionModel } from '../interaction/expansion.svelte.js'
@@ -10,6 +11,7 @@ import type { ClassNameValue } from 'tailwind-merge'
 import {
     SNAPSHOT_VERSION,
     type ColumnState,
+    type DataGridLabels,
     type DataGridOptions,
     type Density,
     type GridEventMap,
@@ -40,6 +42,8 @@ export class GridState<TRow> {
     readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
+    /** Every string the grid's own UI renders, defaults merged with `labels`. */
+    readonly labels: DataGridLabels
     readonly expansion: ExpansionModel
 
     #baseNodes = $derived.by(() => buildRowNodes(this.data, this.getRowId))
@@ -56,6 +60,7 @@ export class GridState<TRow> {
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.density = options.density ?? 'standard'
+        this.labels = mergeLabels(options.labels)
 
         for (const feature of this.features) {
             if (feature.createState) this.state[feature.id] = feature.createState(this)
