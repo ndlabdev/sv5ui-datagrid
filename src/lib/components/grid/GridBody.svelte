@@ -9,6 +9,7 @@
         type RowNode
     } from '../../core/types/index.js'
     import { rowColSpans } from '../../core/columns/col-span.js'
+    import { rowSpansOf } from '../../core/columns/row-span.js'
     import { isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -81,7 +82,54 @@
         right: slots.cell({ align: 'right', class: theme('cell') })
     } as const)
     const pinnedCellClass = $derived(slots.pinnedCell({ class: theme('pinnedCell') }))
+    const pinnedCellRaisedClass = $derived(
+        slots.pinnedCellRaised({ class: theme('pinnedCellRaised') })
+    )
+    const pinnedCellSelectedClass = $derived(
+        slots.pinnedCellSelected({ class: theme('pinnedCellSelected') })
+    )
     const cellEditingClass = $derived(slots.cellEditing({ class: theme('cellEditing') }))
+    const cellRowSpanClass = $derived(slots.cellRowSpan({ class: theme('cellRowSpan') }))
+    const rowSpanFillClass = $derived({
+        left: slots.rowSpanFill({ align: 'left', class: theme('rowSpanFill') }),
+        center: slots.rowSpanFill({ align: 'center', class: theme('rowSpanFill') }),
+        right: slots.rowSpanFill({ align: 'right', class: theme('rowSpanFill') })
+    } as const)
+    const rowSpanFillLastClass = $derived(
+        slots.rowSpanFillLast({ class: theme('rowSpanFillLast') })
+    )
+    const rowSpanEdgeClass = $derived(slots.rowSpanEdge({ class: theme('rowSpanEdge') }))
+    const rowSpanEdgeStartClass = $derived(
+        slots.rowSpanEdgeStart({ class: theme('rowSpanEdgeStart') })
+    )
+
+    /**
+     * The vertical edges a spanning column draws. Both sides would double the
+     * line wherever two spanning columns meet, so the start edge is left to
+     * whichever column opens the group.
+     */
+    function edgeClasses(colIndex: number): string {
+        const columns = grid.columns.visible
+        if (!rowSpans.has(columns[colIndex]?.id)) return ''
+        const previous = columns[colIndex - 1]
+        const opensGroup = !previous || !rowSpans.has(previous.id)
+        return opensGroup ? `${rowSpanEdgeClass} ${rowSpanEdgeStartClass}` : rowSpanEdgeClass
+    }
+
+    /**
+     * The overhang draws the separator at its foot, except where the run ends
+     * with the data — there the grid's own edge is the line.
+     */
+    function fillClass(
+        align: ColumnState<TRow>['align'],
+        colIndex: number,
+        owner: number,
+        length: number
+    ): string {
+        let result = `${rowSpanFillClass[align]} ${edgeClasses(colIndex)}`
+        if (owner + length >= grid.preWindowNodes.length) result += ` ${rowSpanFillLastClass}`
+        return result
+    }
     const dropIndicatorClass = $derived(
         slots.rowDropIndicator({ class: theme('rowDropIndicator') })
     )
@@ -94,13 +142,30 @@
         rowIndex: number
         editing?: boolean
         decoration?: CellDecoration
+        rowSpanning?: boolean
+    }
+
+    /**
+     * A pinned cell in a grid that spans rows is raised over those spans, and
+     * so has to draw the separator and selection tint it now covers. A grid
+     * that spans nothing keeps exactly the classes it always had.
+     */
+    function pinnedClasses(node: RowNode<TRow>): string {
+        if (rowSpans.size === 0) return pinnedCellClass
+        const selected = selectionState?.isSelected(node.id)
+        return `${pinnedCellClass} ${pinnedCellRaisedClass}${selected ? ` ${pinnedCellSelectedClass}` : ''}`
     }
 
     function classOfCell(input: CellClassInput): string {
         const { node, column, colIndex, rowIndex, decoration } = input
-        let result = column.pinned
-            ? `${cellClass[column.align]} ${pinnedCellClass}`
-            : cellClass[column.align]
+        let result = cellClass[column.align]
+        if (column.pinned) result += ` ${pinnedClasses(node)}`
+        // A cell taller than its row overhangs the rows below, whose separators
+        // and selection tint would otherwise show straight through it.
+        if (input.rowSpanning) result += ` ${cellRowSpanClass}`
+        // A run of one has no overhang to carry the column's vertical edges, so
+        // the cell draws them and the line stays unbroken down the column.
+        else result += edgeClasses(colIndex) ? ` ${edgeClasses(colIndex)}` : ''
         if (input.editing) result += ` ${cellEditingClass}`
         else if (isEditable(node, column)) result += ` ${editableClass}`
         if (decoration?.class) result += ` ${decoration.class}`
@@ -163,14 +228,27 @@
         return !active.section && active.row === row && active.col === col
     }
 
-    /** A spanning cell owns the active column when it falls anywhere in its span. */
-    function isActiveInSpan(row: number, col: number, span: number): boolean {
+    /**
+     * A spanning cell owns the active position when it falls anywhere in the
+     * rectangle it covers — the covered cells are not rendered, so the tab stop
+     * has to be the one cell that stands for all of them.
+     */
+    function isActiveInSpan(row: number, col: number, colSpan: number, rowSpan: number): boolean {
         const active = grid.focus.active
-        return !active.section && active.row === row && active.col >= col && active.col < col + span
+        if (active.section) return false
+        return (
+            active.row >= row &&
+            active.row < row + rowSpan &&
+            active.col >= col &&
+            active.col < col + colSpan
+        )
     }
 
     function spanColumn(colIndex: number, span: number): string | undefined {
-        if (columnWindow.windowed) return `${colIndex + 1} / span ${span}`
+        // A covered cell is not rendered, so auto-placement would slide the
+        // next one into its track. Both windowing and row spans leave those
+        // holes, and both need every cell pinned to its own column.
+        if (columnWindow.windowed || rowSpans.size > 0) return `${colIndex + 1} / span ${span}`
         return span > 1 ? `span ${span}` : undefined
     }
 
@@ -185,6 +263,53 @@
         // height would stop it from ever growing with its content.
         if (virtualization.isAutoRow(node)) return undefined
         return `${virtualization.virtualizer.sizeOf(row)}px`
+    }
+
+    /**
+     * Vertical spans, held across scrolls: they are resolved against the whole
+     * row list, so recomputing them per frame would walk every row on every
+     * scroll tick. Only columns declaring `rowSpan` cost anything.
+     */
+    const rowSpans = $derived(rowSpansOf(grid, grid.preWindowNodes))
+
+    interface VerticalSpan {
+        /** The row whose cell covers this one. */
+        owner: number
+        /** Rows it covers, counted from the owner. */
+        length: number
+    }
+
+    function verticalSpan(column: ColumnState<TRow>, row: number): VerticalSpan {
+        const spans = rowSpans.get(column.id)
+        if (!spans) return { owner: row, length: 1 }
+        const owner = spans.owner[row] ?? row
+        return { owner, length: spans.span[owner] ?? 1 }
+    }
+
+    /**
+     * The height of a run of rows. Virtualized rows carry measured sizes; an
+     * unvirtualized grid lays every row out at the density variable, so the
+     * span multiplies that rather than guessing a pixel count.
+     */
+    function spanHeight(owner: number, length: number): string {
+        if (!virtualization) return `calc(var(--dg-row-h) * ${length})`
+        let total = 0
+        for (let i = 0; i < length; i++) total += virtualization.virtualizer.sizeOf(owner + i)
+        return `${total}px`
+    }
+
+    /**
+     * How far above the current row the spanning cell starts. Only ever
+     * non-zero for the row the window opens on: when a span begins above the
+     * rendered range its owner is not on screen, so the cell is drawn here and
+     * pulled back up into place.
+     */
+    function spanOffset(owner: number, row: number): string {
+        if (owner >= row) return '0'
+        if (!virtualization) return `calc(var(--dg-row-h) * -${row - owner})`
+        let total = 0
+        for (let i = owner; i < row; i++) total += virtualization.virtualizer.sizeOf(i)
+        return `-${total}px`
     }
 
     /**
@@ -333,46 +458,66 @@
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
-                    {#if spans.owner[colIndex] === colIndex}
+                    {@const vertical = verticalSpan(column, rowIndex)}
+                    <!-- A cell is drawn by its owner. The one exception is a
+                         span that began above the rendered window: its owner is
+                         off screen, so the window's first row draws it and
+                         pulls it back up. -->
+                    {#if spans.owner[colIndex] === colIndex && (vertical.owner === rowIndex || rowIndex === windowStart)}
                         {@const colSpan = spans.span[colIndex]}
-                        {@const editingCell = isEditingCell(node, column)}
-                        {@const decoration = decorationOf(node, column, rowIndex, colIndex)}
+                        {@const spanRow = vertical.owner}
+                        {@const rowSpan = vertical.length}
+                        {@const spanNode =
+                            spanRow === rowIndex ? node : (grid.preWindowNodes[spanRow] ?? node)}
+                        {@const editingCell = isEditingCell(spanNode, column)}
+                        {@const decoration = decorationOf(spanNode, column, spanRow, colIndex)}
                         <div
                             role="gridcell"
                             aria-colindex={colIndex + 1}
                             aria-colspan={colSpan > 1 ? colSpan : undefined}
+                            aria-rowspan={rowSpan > 1 ? rowSpan : undefined}
                             aria-selected={decoration?.selected}
-                            tabindex={isActiveInSpan(rowIndex, colIndex, colSpan) ? 0 : -1}
-                            data-dg-cell="{rowIndex}:{colIndex}"
-                            title={tooltipOf(node, column, rowIndex)}
+                            tabindex={isActiveInSpan(spanRow, colIndex, colSpan, rowSpan) ? 0 : -1}
+                            data-dg-cell="{spanRow}:{colIndex}"
+                            title={tooltipOf(spanNode, column, spanRow)}
                             data-dg-manual-tooltip={column.def.tooltip === undefined
                                 ? undefined
                                 : ''}
                             class={classOfCell({
-                                node,
+                                node: spanNode,
                                 column,
                                 colIndex,
-                                rowIndex,
+                                rowIndex: spanRow,
                                 editing: editingCell,
-                                decoration
+                                decoration,
+                                rowSpanning: rowSpan > 1
                             })}
                             style:grid-column={spanColumn(colIndex, colSpan)}
                             style:inset-inline-start={pinLeftVar(column)}
                             style:inset-inline-end={pinRightVar(column)}
-                            style:padding={editingCell ? '0' : undefined}
-                            style:padding-inline-start={editingCell
+                            style:padding={editingCell && rowSpan === 1 ? '0' : undefined}
+                            style:padding-inline-start={editingCell || rowSpan > 1
                                 ? undefined
-                                : indentOf(node, colIndex)}
-                            ondblclick={() => startEdit(node, column)}
+                                : indentOf(spanNode, colIndex)}
+                            ondblclick={() => startEdit(spanNode, column)}
                         >
-                            {#if editingCell}
+                            {#if rowSpan > 1}
+                                <div
+                                    class={fillClass(column.align, colIndex, spanRow, rowSpan)}
+                                    style:height={spanHeight(spanRow, rowSpan)}
+                                    style:top={spanOffset(spanRow, rowIndex)}
+                                    style:padding-inline-start={indentOf(spanNode, colIndex)}
+                                >
+                                    {@render cellContent(spanNode, column, colIndex, spanRow)}
+                                </div>
+                            {:else if editingCell}
                                 <GridCellEditor
-                                    {node}
+                                    node={spanNode}
                                     {column}
                                     rowMode={editing?.active === null}
                                 />
                             {:else}
-                                {@render cellContent(node, column, colIndex, rowIndex)}
+                                {@render cellContent(spanNode, column, colIndex, spanRow)}
                             {/if}
                         </div>
                     {/if}

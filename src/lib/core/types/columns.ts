@@ -266,6 +266,17 @@ export interface ColumnDef<TRow> {
     sortFn?: (a: TRow, b: TRow) => number
 
     /**
+     * The field this column sorts by, when that is not what it displays — a
+     * name column showing "Ada Lovelace" but sorting by `lastName`.
+     *
+     * On the client it names the row property to read instead of `accessor`
+     * or `id`. Under `rowModel: 'server'` it is what `toSortRequest` puts on
+     * the wire, so a column whose id is a UI concern can still name a real
+     * database column. `sortFn` wins over it.
+     */
+    sortField?: string
+
+    /**
      * Column filter: a built-in filter type, an advanced definition
      * with a custom predicate, or `false` to disable filtering.
      */
@@ -293,6 +304,18 @@ export interface ColumnDef<TRow> {
      * is clamped so it never crosses a pin boundary. Applies to body rows.
      */
     colSpan?: (ctx: DataGridCellContext<TRow>) => number
+
+    /**
+     * How many rows this cell spans, starting here — the covered cells below it
+     * are not rendered. Return 1 (or omit) for a normal cell. A span stops at a
+     * full-width row, and is resolved against the whole row list, so it holds
+     * while scrolling through it. Applies to body rows.
+     *
+     * Rows are laid out at a known height, so the spanning cell is sized from
+     * the rows it covers: use it with uniform row heights, not `rowHeight:
+     * 'auto'`.
+     */
+    rowSpan?: (ctx: DataGridCellContext<TRow>) => number
 
     /**
      * Whether cells in this column can be edited. A predicate receives

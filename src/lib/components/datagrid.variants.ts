@@ -69,6 +69,43 @@ export const datagridVariants = tv({
         // An open editor shows its validation message just below the cell, so
         // the cell must stop clipping while one is mounted.
         cellEditing: 'overflow-visible',
+        // A row-spanning cell keeps its own row's height: making the cell
+        // itself taller would grow the row's grid track and stretch every
+        // sibling with it. The overhang is drawn by an overlay inside it, so
+        // the cell must stop clipping and hand its padding over.
+        // `relative` so the overlay is bounded by this cell: without it the
+        // nearest positioned ancestor is the row, and the overlay stretches
+        // across every column. The cell carries the z-index rather than
+        // leaving it to the overlay, because a pinned cell is already a
+        // stacking context at z-5 — the overlay would be trapped under it and
+        // the row separator (z-6) would draw straight through the span.
+        cellRowSpan: 'relative z-[7] overflow-visible p-0',
+        // The overhang. Opaque and above the row separator (z-6) and the
+        // selection tint (z-6), or both would show through what is meant to
+        // read as one tall cell; `items-start` keeps the text at the top rather
+        // than centred down the whole span.
+        // The overhang covers everything it crosses, including the separator at
+        // its own foot — where a new run begins and the line has to be. So it
+        // draws that one itself, the way the row it hides would have.
+        rowSpanFill:
+            'absolute inset-x-0 z-[7] flex min-w-0 items-start overflow-hidden bg-surface px-3 py-(--dg-cell-py) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant',
+        /** A span reaching the last row ends at the grid's own edge. */
+        rowSpanFillLast: 'after:hidden',
+        // Merging rows takes the horizontal lines away, and without a vertical
+        // one the merged block has no edge left at all — it reads as a hole
+        // rather than a cell. These put the column's own edges back, and only
+        // a column that spans gets them.
+        rowSpanEdge: 'border-e border-outline-variant',
+        rowSpanEdgeStart: 'border-s border-outline-variant',
+        // Only in a grid that spans rows. A spanning cell has to sit above the
+        // row separator, which sits above pinned cells — a cycle, since pinned
+        // cells must in turn stay above anything scrolling under them. Lifting
+        // pinned cells over the spans breaks it, and they then draw the
+        // separator and selection tint themselves, having risen above both.
+        pinnedCellRaised:
+            'z-[8] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant group-last/row:after:hidden',
+        pinnedCellSelected:
+            'before:pointer-events-none before:absolute before:inset-0 before:bg-primary/8',
         empty: 'w-full p-4',
         toggleButton:
             'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
@@ -100,12 +137,21 @@ export const datagridVariants = tv({
     },
     variants: {
         align: {
-            left: { headerCell: 'justify-start text-start', cell: 'justify-start text-start' },
+            left: {
+                headerCell: 'justify-start text-start',
+                cell: 'justify-start text-start',
+                rowSpanFill: 'justify-start text-start'
+            },
             center: {
                 headerCell: 'justify-center text-center',
-                cell: 'justify-center text-center'
+                cell: 'justify-center text-center',
+                rowSpanFill: 'justify-center text-center'
             },
-            right: { headerCell: 'justify-end text-end', cell: 'justify-end text-end' }
+            right: {
+                headerCell: 'justify-end text-end',
+                cell: 'justify-end text-end',
+                rowSpanFill: 'justify-end text-end'
+            }
         },
         density: {
             compact: { root: '[--dg-row-h:2rem] [--dg-cell-py:0.25rem]' },

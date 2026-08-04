@@ -8,11 +8,14 @@
 
     const grid = getGridContext()
 
-    const options: { value: Density; icon: string; label: string }[] = [
+    // Derived, not a plain array: read once at mount these would be a snapshot
+    // of whatever language the grid started in, and switching it would leave
+    // the density buttons behind.
+    const options: { value: Density; icon: string; label: string }[] = $derived([
         { value: 'compact', icon: 'lucide:rows-4', label: grid.labels.densityCompact },
         { value: 'standard', icon: 'lucide:rows-3', label: grid.labels.densityStandard },
         { value: 'comfortable', icon: 'lucide:rows-2', label: grid.labels.densityComfortable }
-    ]
+    ])
 
     /**
      * One setting, so one tab stop. Three tabbable buttons made a keyboard user

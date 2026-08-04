@@ -24,11 +24,27 @@ published; entries are grouped for the first `0.x` release.
   survives sorting and filtering.
 - **Columns** — resize (drag, double-click autosize, keyboard), reorder (drag +
   keyboard), 3-section pinning, visibility chooser, unlimited header groups,
-  per-cell column spanning via `ColumnDef.colSpan`, and a `ColumnDef.headerCell`
-  snippet that draws the header label while `header` stays the plain text every
-  non-visual surface reuses.
+  per-cell spanning via `ColumnDef.colSpan` and `ColumnDef.rowSpan`, and a
+  `ColumnDef.headerCell` snippet that draws the header label while `header`
+  stays the plain text every non-visual surface reuses.
+
+    A `rowSpan` cell stands in for the rows it covers: they render no cell of
+    their own, it carries `aria-rowspan`, and it is the single tab stop for the
+    whole run. Spans are resolved against the entire row list rather than the
+    rendered window, so scrolling into the middle of one still draws it —
+    otherwise its first row leaving the window would take the cell with it.
+    Sized from the rows it covers, so it wants uniform row heights rather than
+    `getRowHeight: 'auto'`.
+
+    Merging rows takes the horizontal separators away inside a run, so a
+    spanning column draws vertical edges instead — without them the merged
+    block has no border left at all and reads as a hole rather than a cell. The
+    separator at a run's foot stays, since that one belongs to the run below.
+    A grid that spans nothing is untouched by any of it.
+
 - **Sorting** — multi-sort with priority badges, per-type comparators with
-  configurable null ordering, custom `sortFn`, and a configurable header cycle
+  configurable null ordering, custom `sortFn`, `sortField` for a column that
+  orders by something other than what it shows, and a configurable header cycle
   via `sorting({ cycle })`.
 - **Filtering** — quick filter, per-column text / number / date / set / boolean
   filters with a serializable model, filter chips, and custom predicates. Each
@@ -37,9 +53,11 @@ published; entries are grouped for the first `0.x` release.
   out the text filter, and `blank` / `notBlank` now reach date columns too.
 - **Server requests** — `toFilterRequest` collapses a filter model into
   `FilterRequest`, the normalized shape a server row model sends: every column
-  is a list of conditions and a join, whichever shorthand the grid held. The
-  wire format is deliberately separate from `FilterModel` so it can stay frozen
-  while the client-side model grows.
+  is a list of conditions and a join, whichever shorthand the grid held.
+  `toSortRequest` does the same for the sort, in priority order and carrying
+  each column's `sortField` — a server has no use for an id that is a UI
+  concern. Both wire formats are deliberately separate from the models they
+  come from, so they can stay frozen while the client-side ones grow.
 - **Selection** — single / multi row selection with a checkbox column,
   select-all, Shift-range, `isRowSelectable`, TSV copy and CSV export. The
   export takes a `delimiter` (`';'` for locales where Excel expects it), an
@@ -75,6 +93,10 @@ published; entries are grouped for the first `0.x` release.
   `setRowCount`).
 - **State persistence** — versioned JSON snapshots via `getState`/`setState`,
   `persistState` auto-sync to `localStorage` with a `migrate` hook.
+- **Toolbar** — quick filter, active filter chips, an export menu, the column
+  chooser and the density toggle. The export menu offers every row the filter
+  left or just the selection, and takes its file name from `exportFilename`,
+  the same prop the right-click menu uses.
 - **Theming** — `defineDataGridConfig` app defaults, per-instance `ui` slot
   overrides, and `cellClass` / `rowClass` data-driven callbacks.
 - **Localization** — hand the grid the languages it may use and it takes it
@@ -110,10 +132,10 @@ published; entries are grouped for the first `0.x` release.
   renders its icons offline instead of fetching them.
 - **Demos** — one playground route per feature (basic, columns, filters,
   selection, editing, renderers, rows, reorder, virtual, theming, persistence,
-  headless), plus three review routes: `qa` runs every Community feature in one
-  grid with live state and loading / error / empty / RTL switches, `i18n`
-  swaps a full Vietnamese translation against the defaults and reports any key
-  it misses, and `export` shows the exact bytes a CSV export produces.
+  headless, spans), plus three review routes: `qa` runs every Community feature
+  in one grid with live state and loading / error / empty / RTL switches, `i18n`
+  switches between the twelve shipped languages in place, and `export` shows the
+  exact bytes a CSV export produces.
 
 ### Fixed
 

@@ -96,6 +96,8 @@ export const zhCN: DataGridLocalePack = {
         copy: '复制',
         copyWithHeaders: '复制并包含表头',
         exportCsv: '导出 CSV',
+        exportAllRows: '全部行',
+        exportSelectedRows: '已选行',
         clearSelection: '取消选择'
     },
     announcer: {

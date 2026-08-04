@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
-import { getCellValue, isNullish } from '../../core/utils/value.js'
+import { isNullish, sortValueGetter } from '../../core/utils/value.js'
 
 export type SortNulls = 'first' | 'last'
 
@@ -17,10 +17,11 @@ export function sortNodes<TRow>(
         if (!column) return []
 
         const factor = entry.direction === 'asc' ? 1 : -1
+        // Resolved once per sort, not once per comparison: this runs on the
+        // order of n log n times for 100k rows, so the branch belongs here.
+        const valueOf = sortValueGetter(column)
         const compare =
-            column.sortFn ??
-            ((a: TRow, b: TRow) =>
-                compareValues(getCellValue(a, column), getCellValue(b, column), nullSign))
+            column.sortFn ?? ((a: TRow, b: TRow) => compareValues(valueOf(a), valueOf(b), nullSign))
 
         return [(a: RowNode<TRow>, b: RowNode<TRow>) => compare(a.row, b.row) * factor]
     })

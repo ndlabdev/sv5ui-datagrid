@@ -97,6 +97,8 @@ export const idID: DataGridLocalePack = {
         copy: 'Salin',
         copyWithHeaders: 'Salin dengan judul kolom',
         exportCsv: 'Ekspor CSV',
+        exportAllRows: 'Semua baris',
+        exportSelectedRows: 'Baris terpilih',
         clearSelection: 'Batalkan pilihan'
     },
     announcer: {

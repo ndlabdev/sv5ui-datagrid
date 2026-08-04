@@ -2,6 +2,7 @@ import Body from './grid/GridBody.svelte'
 import ColumnChooser from './chrome/GridColumnChooser.svelte'
 import ContextMenu from './menus/GridContextMenu.svelte'
 import DensityToggle from './chrome/GridDensityToggle.svelte'
+import ExportMenu from './chrome/GridExportMenu.svelte'
 import FilterChips from './chrome/GridFilterChips.svelte'
 import Header from './grid/GridHeader.svelte'
 import Pagination from './chrome/GridPagination.svelte'
@@ -24,6 +25,7 @@ export interface GridParts {
     QuickFilter: typeof QuickFilter
     DensityToggle: typeof DensityToggle
     ColumnChooser: typeof ColumnChooser
+    ExportMenu: typeof ExportMenu
     ContextMenu: typeof ContextMenu
     FilterChips: typeof FilterChips
     StatusBar: typeof StatusBar
@@ -39,6 +41,7 @@ export const Grid: GridParts = {
     QuickFilter,
     DensityToggle,
     ColumnChooser,
+    ExportMenu,
     ContextMenu,
     FilterChips,
     StatusBar
@@ -62,6 +65,7 @@ export type {
     DataGridProps,
     GridBodyProps,
     GridContextMenuProps,
+    GridExportMenuProps,
     GridPaginationProps,
     GridQuickFilterProps,
     GridRootProps

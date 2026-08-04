@@ -160,6 +160,16 @@ export interface GridColumnChooserProps {
     class?: ClassNameValue
 }
 
+export interface GridExportMenuProps {
+    /**
+     * Name for the downloaded file.
+     * @default 'export.csv'
+     */
+    filename?: string
+    /** Additional classes applied to the trigger button. */
+    class?: ClassNameValue
+}
+
 export interface GridColumnMenuProps<TRow> {
     /** The column the menu operates on. */
     column: ColumnState<TRow>
@@ -192,8 +202,18 @@ export type DataGridProps<TRow> = {
      */
     emptyText?: string
 
-    /** Renders the default toolbar (quick filter + density toggle). */
+    /**
+     * Renders the default toolbar: quick filter, active filter chips, the
+     * export menu, the column chooser and the density toggle.
+     */
     toolbar?: boolean
+
+    /**
+     * File name for the toolbar's export menu and the context menu's
+     * Export CSV item.
+     * @default 'export.csv'
+     */
+    exportFilename?: string
 
     /** Renders skeleton rows instead of data rows. */
     loading?: boolean

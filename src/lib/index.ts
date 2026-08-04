@@ -101,6 +101,7 @@ export {
 } from './features/selection/index.js'
 export {
     sorting,
+    toSortRequest,
     type SortCycle,
     type SortingOptions,
     type SortNulls,

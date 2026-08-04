@@ -96,6 +96,8 @@ export const koKR: DataGridLocalePack = {
         copy: '복사',
         copyWithHeaders: '머리글 포함 복사',
         exportCsv: 'CSV 내보내기',
+        exportAllRows: '모든 행',
+        exportSelectedRows: '선택한 행',
         clearSelection: '선택 해제'
     },
     announcer: {

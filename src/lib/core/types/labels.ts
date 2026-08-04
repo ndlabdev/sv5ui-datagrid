@@ -80,10 +80,12 @@ export interface DataGridLabels {
     noData: string
     retry: string
 
-    // Context menu
+    // Context menu and the toolbar's export menu
     copy: string
     copyWithHeaders: string
     exportCsv: string
+    exportAllRows: string
+    exportSelectedRows: string
     clearSelection: string
 }
 
