@@ -37,7 +37,7 @@
     }: GridBodyProps<TRow> = $props()
 
     const grid = getGridContext<TRow>()
-    const labels = grid.labels
+    const labels = $derived(grid.labels)
     const virtualization = getVirtualization(grid)
     const reorder = getRowReorder(grid)
     const selectionState = getSelection(grid)

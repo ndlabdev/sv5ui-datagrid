@@ -140,16 +140,20 @@ export const defaultLabels: DataGridLabels = {
 }
 
 /**
- * Overrides applied over the defaults. The operator maps merge per entry, so
- * translating one operator does not mean restating the other seven.
+ * Overrides applied over a base — the chosen language, or English when there
+ * is none. The operator maps merge per entry, so wording one operator
+ * differently does not mean restating the other seven.
  */
-export function mergeLabels(overrides: DataGridLabelsInput | undefined): DataGridLabels {
-    if (!overrides) return defaultLabels
+export function mergeLabels(
+    overrides: DataGridLabelsInput | undefined,
+    base: DataGridLabels = defaultLabels
+): DataGridLabels {
+    if (!overrides) return base
     return {
-        ...defaultLabels,
+        ...base,
         ...overrides,
-        textOps: { ...defaultLabels.textOps, ...overrides.textOps },
-        numberOps: { ...defaultLabels.numberOps, ...overrides.numberOps },
-        dateOps: { ...defaultLabels.dateOps, ...overrides.dateOps }
+        textOps: { ...base.textOps, ...overrides.textOps },
+        numberOps: { ...base.numberOps, ...overrides.numberOps },
+        dateOps: { ...base.dateOps, ...overrides.dateOps }
     }
 }

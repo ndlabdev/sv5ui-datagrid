@@ -404,6 +404,34 @@ describe('filter panel positioning', () => {
         await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '2')
     })
 
+    it('keeps a long translation inside the panel', async () => {
+        const grid = createDataGrid<Person>({
+            columns: wide,
+            data: people,
+            getRowId,
+            // German is the length the English default never reaches; the row
+            // holding it used to push the add-condition button out through the
+            // panel's right edge.
+            labels: { matchCase: 'Groß-/Kleinschreibung beachten' },
+            features: [filtering(), sorting(), columnOps()]
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        await page.getByRole('button', { name: 'Filter Name' }).click()
+
+        const panel = page.getByRole('dialog', { name: 'Filter Name' })
+        await expect.element(panel).toBeVisible()
+        await expect.element(page.getByText('Groß-/Kleinschreibung beachten')).toBeVisible()
+
+        const box = (panel.element() as HTMLElement).getBoundingClientRect()
+        const escaping = [...(panel.element() as HTMLElement).querySelectorAll('*')]
+            .map((node) => node.getBoundingClientRect())
+            .filter(
+                (rect) => rect.width > 0 && (rect.right > box.right + 1 || rect.left < box.left - 1)
+            )
+        expect(escaping).toHaveLength(0)
+    })
+
     it('follows its trigger when the grid scrolls sideways', async () => {
         const { screen, panel } = await openOn('Age')
         const before = panel.getBoundingClientRect().x

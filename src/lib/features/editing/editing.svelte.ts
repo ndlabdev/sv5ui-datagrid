@@ -136,7 +136,7 @@ export class Editing<TRow> {
     #commitValue(node: RowNode<TRow>, def: ColumnDef<TRow>, validated: Validated): boolean {
         if (validated.error !== null) {
             this.error = validated.error
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(validated.error))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(validated.error))
             return false
         }
         const columnId = def.id
@@ -245,7 +245,7 @@ export class Editing<TRow> {
         if (Object.keys(errors).length > 0) {
             this.rowErrors = errors
             const [first] = Object.values(errors)
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(first))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(first))
             return false
         }
         const before = this.#applyTransaction({ rowId: node.id, changes })
@@ -355,7 +355,7 @@ export class Editing<TRow> {
         if (invalid) {
             const message = invalid.validated.error!
             this.error = message
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(message))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(message))
             return false
         }
         if (entries.length === 0) return false

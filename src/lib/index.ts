@@ -25,7 +25,8 @@ export {
 export type * from './core/types/index.js'
 
 // Models reachable from a grid instance
-export { defaultLocale } from './core/interaction/announcer.svelte.js'
+export { defaultAnnouncerStrings } from './core/interaction/announcer.svelte.js'
+export { documentLocale, resolveLocale } from './core/interaction/locale.js'
 export {
     DATE_OPS,
     defaultLabels,

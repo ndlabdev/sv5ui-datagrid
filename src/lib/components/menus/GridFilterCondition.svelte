@@ -7,7 +7,8 @@
 
     let { type, condition, ordinal }: GridFilterConditionProps = $props()
 
-    const labels = getGridContext().labels
+    const grid = getGridContext()
+    const labels = $derived(grid.labels)
 
     // Order lives with the operators, the wording with the labels: overriding
     // one translation cannot reshuffle the list.

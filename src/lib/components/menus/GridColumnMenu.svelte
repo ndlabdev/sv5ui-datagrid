@@ -15,7 +15,7 @@
     const sorting = getSorting(grid)
     const filteringState = getFiltering(grid)
     const slots = datagridVariants()
-    const labels = grid.labels
+    const labels = $derived(grid.labels)
     const theme = getGridTheme()
 
     interface MenuEntry {

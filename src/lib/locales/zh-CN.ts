@@ -1,0 +1,117 @@
+import type { DataGridLocalePack } from '../core/types/index.js'
+
+/** Simplified Chinese. */
+export const zhCN: DataGridLocalePack = {
+    tag: 'zh-CN',
+    labels: {
+        search: '搜索...',
+        activeFilters: '已启用的筛选',
+        removeFilter: (column) => `清除${column}的筛选`,
+        clearAllFilters: '全部清除',
+        chooseColumns: '选择列',
+        rowDensity: '行密度',
+        densityCompact: '紧凑',
+        densityStandard: '标准',
+        densityComfortable: '宽松',
+
+        columnMenu: (column) => `${column}列菜单`,
+        resizeColumn: (column) => `调整${column}列宽`,
+        resizeGroup: (group) => `调整${group}组宽`,
+        sortAscending: '升序排序',
+        sortDescending: '降序排序',
+        clearSort: '取消排序',
+        pinLeft: '固定到左侧',
+        pinRight: '固定到右侧',
+        unpin: '取消固定',
+        openFilter: '筛选…',
+        autosize: '适应内容',
+        hideColumn: '隐藏此列',
+
+        filterColumn: (column) => `筛选${column}`,
+        filterOperator: (ordinal) => (ordinal > 1 ? `筛选条件 ${ordinal}` : '筛选条件'),
+        filterValue: (ordinal) => (ordinal > 1 ? `筛选值 ${ordinal}` : '筛选值'),
+        filterUpperBound: (ordinal) => (ordinal > 1 ? `上限值 ${ordinal}` : '上限值'),
+        valuePlaceholder: '值...',
+        upperBoundPlaceholder: '至...',
+        searchValues: '搜索值...',
+        blankValue: '(空白)',
+        combineConditions: '条件组合方式',
+        addCondition: '添加条件',
+        removeCondition: '删除条件',
+        matchCase: '区分大小写',
+        apply: '应用',
+        clear: '清除',
+        and: '并且',
+        or: '或者',
+        yes: '是',
+        no: '否',
+        textOps: {
+            contains: '包含',
+            notContains: '不包含',
+            equals: '等于',
+            notEqual: '不等于',
+            startsWith: '开头是',
+            endsWith: '结尾是',
+            blank: '为空',
+            notBlank: '不为空'
+        },
+        numberOps: {
+            eq: '=',
+            neq: '≠',
+            gt: '>',
+            gte: '≥',
+            lt: '<',
+            lte: '≤',
+            between: '介于',
+            blank: '为空',
+            notBlank: '不为空'
+        },
+        dateOps: {
+            equals: '等于',
+            before: '早于',
+            after: '晚于',
+            between: '介于',
+            blank: '为空',
+            notBlank: '不为空'
+        },
+
+        selectRow: (position) => `选择第 ${position} 行`,
+        selectAllRows: '选择所有行',
+        rowActions: '行操作',
+        dragRow: (position) => `移动第 ${position} 行`,
+        expandRow: '展开行',
+        collapseRow: '折叠行',
+
+        rowsPerPage: '每页行数',
+        pageSizeOption: (size) => `${size} 行/页`,
+        pageRange: (from, to, total) =>
+            `${from.toLocaleString('zh-CN')}–${to.toLocaleString('zh-CN')}，共 ${total.toLocaleString('zh-CN')} 行`,
+        totalRows: (total) => `共 ${total.toLocaleString('zh-CN')} 行`,
+        filteredRows: (filtered, total) =>
+            `${filtered.toLocaleString('zh-CN')} / ${total.toLocaleString('zh-CN')} 行`,
+        selectedRows: (count) => `已选 ${count.toLocaleString('zh-CN')} 行`,
+        noData: '暂无数据',
+        retry: '重试',
+
+        copy: '复制',
+        copyWithHeaders: '复制并包含表头',
+        exportCsv: '导出 CSV',
+        clearSelection: '取消选择'
+    },
+    announcer: {
+        sorted: (column, direction) => `已按${column}${direction === 'asc' ? '升序' : '降序'}排序`,
+        sortCleared: () => '已取消排序',
+        filtered: (count) => `筛选后剩余 ${count} 行`,
+        page: (page) => `第 ${page} 页`,
+        columnResized: (column, width) => `${column}列宽已调整为 ${width} 像素`,
+        columnMoved: (column, position) => `${column}列已移动到第 ${position} 位`,
+        columnPinned: (column, side) => (side ? `已固定${column}列` : `已取消固定${column}列`),
+        columnVisibility: (column, hidden) => (hidden ? `已隐藏${column}列` : `已显示${column}列`),
+        selected: (count) => `已选择 ${count} 行`,
+        copied: (count) => `已复制 ${count} 行`,
+        rowExpanded: (expanded) => (expanded ? '已展开该行' : '已折叠该行'),
+        rowPinned: (side) => (side ? '已固定该行' : '已取消固定该行'),
+        rowMoved: (position) => `该行已移动到第 ${position} 位`,
+        editInvalid: (message) => message
+    }
+}

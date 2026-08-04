@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Card, Container, Link, ThemeModeButton, ToggleGroup } from 'sv5ui'
+    import { Card, Container, Link, Select, ThemeModeButton } from 'sv5ui'
     import {
         columnOps,
         createDataGrid,
@@ -11,10 +11,40 @@
         selection,
         sorting,
         type ColumnDef,
-        type DataGridLabelsInput,
-        type DataGridLocale,
         type GridState
     } from '$lib/index.js'
+    import {
+        deDE,
+        enUS,
+        esES,
+        frFR,
+        idID,
+        jaJP,
+        koKR,
+        ptBR,
+        ruRU,
+        thTH,
+        viVN,
+        zhCN
+    } from '$lib/locales/index.js'
+
+    const packs = [enUS, viVN, zhCN, jaJP, koKR, frFR, deDE, esES, ptBR, ruRU, idID, thTH]
+
+    /** Each language names itself, the way a language picker should read. */
+    const languages = [
+        { value: 'en-US', label: 'English' },
+        { value: 'vi-VN', label: 'Tiếng Việt' },
+        { value: 'zh-CN', label: '简体中文' },
+        { value: 'ja-JP', label: '日本語' },
+        { value: 'ko-KR', label: '한국어' },
+        { value: 'fr-FR', label: 'Français' },
+        { value: 'de-DE', label: 'Deutsch' },
+        { value: 'es-ES', label: 'Español' },
+        { value: 'pt-BR', label: 'Português (Brasil)' },
+        { value: 'ru-RU', label: 'Русский' },
+        { value: 'id-ID', label: 'Bahasa Indonesia' },
+        { value: 'th-TH', label: 'ไทย' }
+    ]
 
     interface Order {
         id: number
@@ -56,7 +86,9 @@
             sortable: true,
             filter: 'number',
             type: 'currency',
-            typeOptions: { currency: 'VND', locale: 'vi-VN' },
+            // No `locale` here on purpose: the column inherits the grid's, so
+            // the amounts reformat when the language changes.
+            typeOptions: { currency: 'VND' },
             editable: true,
             editor: 'number'
         },
@@ -78,142 +110,28 @@
         }
     ]
 
-    /** A complete translation — every key of `DataGridLabels`, nothing left over. */
-    const vi: DataGridLabelsInput = {
-        search: 'Tìm kiếm...',
-        activeFilters: 'Bộ lọc đang bật',
-        removeFilter: (column) => `Bỏ lọc ${column}`,
-        clearAllFilters: 'Xoá hết',
-        chooseColumns: 'Chọn cột',
-        rowDensity: 'Mật độ dòng',
-        densityCompact: 'Dày',
-        densityStandard: 'Vừa',
-        densityComfortable: 'Thưa',
+    // The packs handed in are the whole configuration: the grid takes the
+    // page's language from here. Assigning `grid.locale` switches it in place —
+    // the sort, filter and selection on screen all survive.
+    const grid: GridState<Order> = createDataGrid<Order>({
+        data: orders,
+        columns,
+        getRowId: (order) => String(order.id),
+        locales: packs,
+        features: [
+            sorting(),
+            filtering(),
+            columnOps(),
+            selection(),
+            editing(),
+            pagination({ pageSize: 8 })
+        ]
+    })
 
-        columnMenu: (column) => `Menu cột ${column}`,
-        resizeColumn: (column) => `Đổi rộng cột ${column}`,
-        resizeGroup: (group) => `Đổi rộng nhóm ${group}`,
-        sortAscending: 'Sắp xếp tăng dần',
-        sortDescending: 'Sắp xếp giảm dần',
-        clearSort: 'Bỏ sắp xếp',
-        pinLeft: 'Ghim trái',
-        pinRight: 'Ghim phải',
-        unpin: 'Bỏ ghim',
-        openFilter: 'Lọc…',
-        autosize: 'Vừa nội dung',
-        hideColumn: 'Ẩn cột',
-
-        filterColumn: (column) => `Lọc ${column}`,
-        filterOperator: (ordinal) => (ordinal > 1 ? `Toán tử lọc ${ordinal}` : 'Toán tử lọc'),
-        filterValue: (ordinal) => (ordinal > 1 ? `Giá trị lọc ${ordinal}` : 'Giá trị lọc'),
-        filterUpperBound: (ordinal) => (ordinal > 1 ? `Giá trị đến ${ordinal}` : 'Giá trị đến'),
-        valuePlaceholder: 'Giá trị...',
-        upperBoundPlaceholder: 'Đến...',
-        searchValues: 'Tìm giá trị...',
-        blankValue: '(trống)',
-        combineConditions: 'Kết hợp điều kiện',
-        addCondition: 'Thêm điều kiện',
-        removeCondition: 'Bớt điều kiện',
-        matchCase: 'Phân biệt hoa thường',
-        apply: 'Áp dụng',
-        clear: 'Xoá',
-        and: 'Và',
-        or: 'Hoặc',
-        yes: 'Có',
-        no: 'Không',
-        textOps: {
-            contains: 'Chứa',
-            notContains: 'Không chứa',
-            equals: 'Bằng',
-            notEqual: 'Khác',
-            startsWith: 'Bắt đầu bằng',
-            endsWith: 'Kết thúc bằng',
-            blank: 'Đang trống',
-            notBlank: 'Không trống'
-        },
-        numberOps: {
-            eq: '=',
-            neq: '≠',
-            gt: '>',
-            gte: '≥',
-            lt: '<',
-            lte: '≤',
-            between: 'Trong khoảng',
-            blank: 'Đang trống',
-            notBlank: 'Không trống'
-        },
-        dateOps: {
-            equals: 'Đúng ngày',
-            before: 'Trước ngày',
-            after: 'Sau ngày',
-            between: 'Trong khoảng',
-            blank: 'Đang trống',
-            notBlank: 'Không trống'
-        },
-
-        selectRow: (position) => `Chọn dòng ${position}`,
-        selectAllRows: 'Chọn tất cả các dòng',
-        rowActions: 'Thao tác dòng',
-        dragRow: (position) => `Chuyển dòng ${position}`,
-        expandRow: 'Mở dòng',
-        collapseRow: 'Thu dòng',
-
-        rowsPerPage: 'Số dòng mỗi trang',
-        pageSizeOption: (size) => `${size} dòng/trang`,
-        pageRange: (from, to, total) =>
-            `${from.toLocaleString('vi-VN')}–${to.toLocaleString('vi-VN')} trên ${total.toLocaleString('vi-VN')}`,
-        totalRows: (total) => `${total.toLocaleString('vi-VN')} dòng`,
-        filteredRows: (filtered, total) =>
-            `${filtered.toLocaleString('vi-VN')} / ${total.toLocaleString('vi-VN')} dòng`,
-        selectedRows: (count) => `đã chọn ${count.toLocaleString('vi-VN')}`,
-        noData: 'Không có dữ liệu',
-        retry: 'Thử lại',
-
-        copy: 'Sao chép',
-        copyWithHeaders: 'Sao chép kèm tiêu đề',
-        exportCsv: 'Xuất CSV',
-        clearSelection: 'Bỏ chọn'
-    }
-
-    /** What a screen reader says — a separate surface from the visible labels. */
-    const viLocale: Partial<DataGridLocale> = {
-        sorted: (column, direction) =>
-            `đã sắp xếp theo ${column} ${direction === 'asc' ? 'tăng dần' : 'giảm dần'}`,
-        sortCleared: () => 'đã bỏ sắp xếp',
-        filtered: (count) => `còn ${count} dòng`,
-        page: (page) => `trang ${page}`,
-        selected: (count) => `đã chọn ${count} dòng`,
-        copied: (count) => `đã sao chép ${count} dòng`,
-        columnResized: (column, width) => `cột ${column} rộng ${width} pixel`,
-        columnMoved: (column, position) => `cột ${column} chuyển tới vị trí ${position}`,
-        columnPinned: (column, side) =>
-            side ? `đã ghim cột ${column}` : `đã bỏ ghim cột ${column}`,
-        columnVisibility: (column, hidden) =>
-            hidden ? `đã ẩn cột ${column}` : `đã hiện cột ${column}`
-    }
-
-    let lang = $state<'vi' | 'en'>('vi')
-
-    function makeGrid(current: 'vi' | 'en'): GridState<Order> {
-        return createDataGrid<Order>({
-            data: orders,
-            columns,
-            getRowId: (order) => String(order.id),
-            labels: current === 'vi' ? vi : undefined,
-            locale: current === 'vi' ? viLocale : undefined,
-            features: [
-                sorting(),
-                filtering(),
-                columnOps(),
-                selection(),
-                editing(),
-                pagination({ pageSize: 8 })
-            ]
-        })
-    }
-
-    // Labels are read when the grid is built, so switching language rebuilds it.
-    const grid = $derived(makeGrid(lang))
+    let lang = $state(grid.locale ?? 'vi-VN')
+    $effect(() => {
+        grid.locale = lang
+    })
 
     const surfaces = [
         'Toolbar: ô tìm kiếm, nút chọn cột, nút mật độ',
@@ -228,7 +146,8 @@
         'Trạng thái rỗng và nút thử lại (xem trang QA)'
     ]
 
-    const missing = $derived(Object.keys(defaultLabels).filter((key) => !(key in vi)))
+    const active = $derived(packs.find((pack) => pack.tag === lang) ?? enUS)
+    const missing = $derived(Object.keys(defaultLabels).filter((key) => !(key in active.labels)))
 </script>
 
 <Container class="space-y-6 py-10">
@@ -236,9 +155,9 @@
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">i18n — phủ hết chuỗi hiển thị</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
-                Cùng một lưới, đổi qua lại giữa bản dịch tiếng Việt đầy đủ và mặc định tiếng Anh.
-                Mọi chuỗi lưới tự vẽ đều đến từ <code>labels</code>; phần đọc cho screen reader nằm
-                riêng ở <code>locale</code>.
+                Chỉ khai báo <code>locales: [enUS, viVN, …]</code> — không cấu hình chuỗi nào. Lưới
+                tự chọn theo ngôn ngữ của trang, và đổi <code>grid.locale</code> là đổi tại chỗ: sort,
+                lọc, dòng đang chọn đều giữ nguyên, số tiền cũng định dạng lại theo.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -248,24 +167,17 @@
     </div>
 
     <div class="flex items-center gap-3">
-        <ToggleGroup
-            items={[
-                { label: 'Tiếng Việt', value: 'vi' },
-                { label: 'English', value: 'en' }
-            ]}
-            bind:value={lang}
-            aria-label="Ngôn ngữ"
-        />
+        <div class="w-56">
+            <Select items={languages} bind:value={lang} aria-label="Ngôn ngữ" />
+        </div>
         <p class="text-sm text-on-surface-variant">
             {missing.length === 0
-                ? `Bản dịch phủ đủ ${Object.keys(defaultLabels).length} khoá.`
+                ? `${active.tag} phủ đủ ${Object.keys(defaultLabels).length} khoá — ${packs.length} ngôn ngữ đóng sẵn.`
                 : `Còn thiếu: ${missing.join(', ')}`}
         </p>
     </div>
 
-    {#key lang}
-        <DataGrid {grid} toolbar />
-    {/key}
+    <DataGrid {grid} toolbar />
 
     <Card class="space-y-2 p-4">
         <h2 class="font-medium text-on-surface">Danh sách cần mở để soi</h2>

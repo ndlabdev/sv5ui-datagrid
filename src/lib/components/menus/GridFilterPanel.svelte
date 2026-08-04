@@ -28,7 +28,7 @@
     let { column }: GridFilterPanelProps<TRow> = $props()
 
     const grid = getGridContext<TRow>()
-    const labels = grid.labels
+    const labels = $derived(grid.labels)
     const filteringState = getFiltering(grid)!
     const slots = datagridVariants()
     const theme = getGridTheme()
@@ -40,10 +40,10 @@
     const open = $derived(filteringState.filterFor === column.id)
     const active = $derived(column.id in filteringState.columnFilters)
 
-    const joinOps: { label: string; value: FilterJoin }[] = [
+    const joinOps: { label: string; value: FilterJoin }[] = $derived([
         { label: labels.and, value: 'and' },
         { label: labels.or, value: 'or' }
-    ]
+    ])
 
     // The draft is small, shallow and rebuilt on every open: a deep `$state`
     // buys `bind:` straight into a condition row and costs nothing at this
@@ -192,7 +192,10 @@
                     {/if}
                     <GridFilterCondition {type} {condition} ordinal={index + 1} />
                 {/each}
-                <div class="flex items-center justify-between gap-2 pt-0.5">
+                <!-- Wraps because a long translation ("Groß-/Kleinschreibung
+                     beachten") takes both lines and would otherwise push the
+                     button out through the panel's right edge. -->
+                <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-0.5">
                     {#if type === 'text'}
                         <Checkbox
                             label={labels.matchCase}

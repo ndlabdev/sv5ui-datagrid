@@ -11,7 +11,8 @@
     } from '../../core/utils/format.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
     import { safeHref } from '../../core/utils/url.js'
-    import { getGridLabels } from '../internal/context.js'
+    import { defaultLabels } from '../../core/interaction/labels.js'
+    import { getGridOrNull } from '../internal/context.js'
 
     let {
         def,
@@ -23,9 +24,15 @@
         value: unknown
     } = $props()
 
-    const labels = getGridLabels()
+    const grid = getGridOrNull()
+    const labels = $derived(grid?.labels ?? defaultLabels)
 
-    const options = $derived(def.typeOptions ?? {})
+    /**
+     * A column that says nothing about locale formats in the grid's language,
+     * so switching language reformats the numbers and dates with it. Setting
+     * `typeOptions.locale` still wins, for the odd column that must not move.
+     */
+    const options = $derived({ locale: grid?.locale, ...def.typeOptions })
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))
 

@@ -1,5 +1,5 @@
 import type { ColumnDef, PinnedSide } from './columns.js'
-import type { DataGridLabelsInput } from './labels.js'
+import type { DataGridLabelsInput, DataGridLocalePack } from './labels.js'
 import type { FilterModel } from './filtering.js'
 import type { GridFeature } from './feature.js'
 import type { ClassNameValue } from 'tailwind-merge'
@@ -12,8 +12,8 @@ export type SelectionMode = 'single' | 'multiple'
 
 export type Density = 'compact' | 'standard' | 'comfortable'
 
-/** Strings used by the aria-live announcer. Override via `DataGridOptions.locale` for i18n. */
-export interface DataGridLocale {
+/** Strings the aria-live announcer speaks. Seen strings live in `DataGridLabels`. */
+export interface DataGridAnnouncerStrings {
     /** Announced when a column becomes sorted. */
     sorted: (column: string, direction: SortDirection) => string
     /** Announced when sorting is cleared. */
@@ -134,14 +134,33 @@ export interface DataGridOptions<TRow> {
      */
     rowModel?: RowModel
 
-    /** Announcer string overrides for i18n — what a screen reader says. */
-    locale?: Partial<DataGridLocale>
+    /**
+     * Languages the grid may use. It picks one from `locale`, or from the
+     * page's own language when that is not set, so an app that imports a pack
+     * is translated without configuring anything else.
+     *
+     * Only what is imported ends up in the bundle: the grid cannot reach for a
+     * language it was never handed.
+     */
+    locales?: DataGridLocalePack[]
 
     /**
-     * Overrides for the strings the grid renders — menus, filter panel,
-     * toolbar, footer, overlays. Any subset; the rest keep their defaults.
+     * BCP-47 tag forcing one of `locales`, e.g. `'vi-VN'`. Leave it out to
+     * follow the page. It is also what number, currency and date columns
+     * format against, so one setting covers wording and formatting alike.
+     *
+     * Settable later through `grid.locale` to switch language in place.
+     */
+    locale?: string
+
+    /**
+     * Overrides on top of the chosen language — a term this app words its own
+     * way. Any subset; the rest come from the language.
      */
     labels?: DataGridLabelsInput
+
+    /** The same, for what the announcer says. */
+    announcer?: Partial<DataGridAnnouncerStrings>
 
     /**
      * Classes added to every row — the escape hatch for data-driven row

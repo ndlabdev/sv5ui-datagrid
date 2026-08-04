@@ -8,6 +8,8 @@ import {
     DataGrid,
     defaultLabels,
     filtering,
+    getSelection,
+    getSorting,
     mergeLabels,
     selection,
     sorting,
@@ -15,6 +17,7 @@ import {
     type DataGridProps,
     type GridState
 } from '$lib/index.js'
+import { enUS, viVN } from '$lib/locales/index.js'
 
 interface Person {
     id: number
@@ -133,5 +136,94 @@ describe('translated grid', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         await expect.element(page.getByText('Trống')).toBeVisible()
+    })
+})
+
+describe('language packs', () => {
+    const packed = (locale?: string) =>
+        createDataGrid<Person>({
+            columns,
+            data: people,
+            getRowId: (person) => String(person.id),
+            locales: [enUS, viVN],
+            locale,
+            features: [sorting(), filtering(), columnOps(), selection()]
+        })
+
+    it('picks the language from the page when none is forced', async () => {
+        document.documentElement.lang = 'vi'
+        const grid = packed()
+        const screen = await render(TypedDataGrid, { grid, toolbar: true })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        // Nothing configured but the two packs: the page decides.
+        await expect.element(page.getByPlaceholder('Tìm kiếm...')).toBeVisible()
+        document.documentElement.lang = ''
+    })
+
+    it('switches in place, keeping the sort and selection', async () => {
+        const grid = packed('vi-VN')
+        const screen = await render(TypedDataGrid, { grid, toolbar: true })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        getSorting(grid)!.setSort([{ columnId: 'name', direction: 'desc' }])
+        getSelection(grid)!.select('1')
+        await expect.element(page.getByPlaceholder('Tìm kiếm...')).toBeVisible()
+
+        grid.locale = 'en-US'
+
+        await expect.element(page.getByPlaceholder('Search...')).toBeVisible()
+        // The grid was never rebuilt, so what the user had set is still set.
+        expect(getSorting(grid)!.sort).toHaveLength(1)
+        expect(getSelection(grid)!.count).toBe(1)
+    })
+
+    it("lets a column inherit the grid's locale for its formatting", async () => {
+        const grid = createDataGrid<Person>({
+            columns: [
+                { id: 'name', header: 'Name', flex: 1 },
+                // No `locale` of its own: it follows the grid.
+                {
+                    id: 'id',
+                    header: 'Total',
+                    width: 160,
+                    type: 'currency',
+                    typeOptions: { currency: 'EUR' }
+                }
+            ],
+            data: people,
+            getRowId: (person) => String(person.id),
+            locales: [enUS, viVN],
+            locale: 'en-US'
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const cell = () => screen.container.querySelector('[data-dg-cell="0:1"]')?.textContent ?? ''
+        expect(cell()).toContain('€1.00')
+
+        grid.locale = 'vi-VN'
+        // Same value, the other locale's grouping and symbol placement.
+        await expect.poll(cell).toContain('1,00')
+    })
+
+    it('keeps overrides on top of the chosen language', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: people,
+            getRowId: (person) => String(person.id),
+            locales: [viVN],
+            locale: 'vi-VN',
+            labels: { apply: 'Xác nhận' },
+            features: [filtering(), columnOps()]
+        })
+        await render(TypedDataGrid, { grid })
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        await page.getByRole('button', { name: 'Lọc Tên' }).click()
+        const dialog = page.getByRole('dialog', { name: 'Lọc Tên' })
+        // The override wins; the rest of the pack stays.
+        await expect.element(dialog.getByRole('button', { name: 'Xác nhận' })).toBeVisible()
+        await expect.element(dialog.getByRole('button', { name: 'Xoá' })).toBeVisible()
     })
 })

@@ -8,7 +8,7 @@
     let { exportFilename, children }: GridContextMenuProps = $props()
 
     const grid = getGridContext()
-    const labels = grid.labels
+    const labels = $derived(grid.labels)
     const selectionState = getSelection(grid)
     const hasItems = Boolean(selectionState || grid.features.some((feature) => feature.menuItems))
 

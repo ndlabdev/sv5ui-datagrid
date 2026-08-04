@@ -64,7 +64,9 @@ describe('i18n demo', () => {
 
         // The page compares its own object against `defaultLabels`, so a label
         // added to the library without a translation shows up here.
-        await expect.element(page.getByText(/Bản dịch phủ đủ \d+ khoá\./)).toBeVisible()
+        await expect
+            .element(page.getByText(/vi-VN phủ đủ \d+ khoá — \d+ ngôn ngữ đóng sẵn\./))
+            .toBeVisible()
         await expect.element(page.getByPlaceholder('Tìm kiếm...')).toBeVisible()
         await expect.element(page.getByText('1–8 trên 60')).toBeVisible()
         await expect
@@ -80,12 +82,28 @@ describe('i18n demo', () => {
         await expect.element(page.getByRole('menuitem', { name: 'Ghim trái' })).toBeVisible()
         await userEvent.keyboard('{Escape}')
 
-        // sv5ui ToggleGroup renders its items as radios, not buttons.
-        await page.getByRole('radio', { name: 'English' }).click()
+        await page.getByRole('button', { name: 'Ngôn ngữ' }).click()
+        await page.getByRole('option', { name: 'English' }).click()
         await expect.element(page.getByPlaceholder('Search...')).toBeVisible()
         // The footer belongs to the label set too, not to the Pagination
         // component's own wording.
         await expect.element(page.getByText('1–8 of 60')).toBeVisible()
+    })
+
+    it('reaches a language beyond the pair the demo started with', async () => {
+        render(I18n as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        await page.getByRole('button', { name: 'Ngôn ngữ' }).click()
+        await page.getByRole('option', { name: '日本語' }).click()
+
+        await expect.element(page.getByPlaceholder('検索...')).toBeVisible()
+        await expect.element(page.getByText('60件中 1–8件')).toBeVisible()
+        // The date column names no locale, so it follows the grid: Japanese
+        // writes the year first where Vietnamese writes the day.
+        await expect
+            .poll(() => document.querySelector('[data-dg-cell="0:5"]')?.textContent)
+            .toContain('2026/01/10')
     })
 })
 

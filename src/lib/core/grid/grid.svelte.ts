@@ -1,5 +1,6 @@
-import { Announcer, defaultLocale } from '../interaction/announcer.svelte.js'
-import { mergeLabels } from '../interaction/labels.js'
+import { Announcer, defaultAnnouncerStrings } from '../interaction/announcer.svelte.js'
+import { defaultLabels, mergeLabels } from '../interaction/labels.js'
+import { resolveLocale } from '../interaction/locale.js'
 import { ColumnModel } from '../columns/column-model.svelte.js'
 import { EventBus } from './events.js'
 import { ExpansionModel } from '../interaction/expansion.svelte.js'
@@ -11,7 +12,10 @@ import type { ClassNameValue } from 'tailwind-merge'
 import {
     SNAPSHOT_VERSION,
     type ColumnState,
+    type DataGridAnnouncerStrings,
     type DataGridLabels,
+    type DataGridLabelsInput,
+    type DataGridLocalePack,
     type DataGridOptions,
     type Density,
     type GridEventMap,
@@ -42,13 +46,47 @@ export class GridState<TRow> {
     readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
-    /** Every string the grid's own UI renders, defaults merged with `labels`. */
-    readonly labels: DataGridLabels
+
+    /**
+     * BCP-47 tag in force. Assign to it to switch language in place — labels,
+     * announcer and cell formatting all derive from it, so nothing has to be
+     * rebuilt and the grid keeps its sort, filter and selection.
+     *
+     * Undefined means "follow the page", which is what it does by default.
+     */
+    locale = $state<string | undefined>(undefined)
+
+    // Set in the constructor, before anything below is ever read.
+    #locales: DataGridLocalePack[] = []
+    #labelOverrides: DataGridLabelsInput | undefined = undefined
+    #announcerOverrides: Partial<DataGridAnnouncerStrings> | undefined = undefined
+
+    /** The pack answering for `locale`, or none when English will do. */
+    #pack = $derived(resolveLocale(this.#locales, this.locale))
+
+    /** Every string the grid's own UI renders. */
+    labels: DataGridLabels = $derived(
+        mergeLabels(this.#labelOverrides, this.#pack?.labels ?? defaultLabels)
+    )
+
+    /** Every string it announces. */
+    announcerStrings: DataGridAnnouncerStrings = $derived({
+        ...(this.#pack?.announcer ?? defaultAnnouncerStrings),
+        ...this.#announcerOverrides
+    })
     readonly expansion: ExpansionModel
 
     #baseNodes = $derived.by(() => buildRowNodes(this.data, this.getRowId))
     #baseById = $derived.by(() => nodesById(this.#baseNodes))
     #pipeline: Pipeline<TRow>
+
+    /** Kept apart so the constructor stays one thing: wiring the pipeline. */
+    #applyLocale(options: DataGridOptions<TRow>): void {
+        this.#locales = options.locales ?? []
+        this.#labelOverrides = options.labels
+        this.#announcerOverrides = options.announcer
+        this.locale = options.locale
+    }
 
     constructor(options: DataGridOptions<TRow>) {
         this.data = options.data ?? []
@@ -60,7 +98,7 @@ export class GridState<TRow> {
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.density = options.density ?? 'standard'
-        this.labels = mergeLabels(options.labels)
+        this.#applyLocale(options)
 
         for (const feature of this.features) {
             if (feature.createState) this.state[feature.id] = feature.createState(this)
@@ -78,7 +116,7 @@ export class GridState<TRow> {
             this,
             this.features.flatMap((feature) => feature.keybindings ?? [])
         )
-        this.announcer = new Announcer(this, { ...defaultLocale, ...options.locale })
+        this.announcer = new Announcer(this, () => this.announcerStrings)
 
         const stages = this.features.flatMap((feature) => feature.pipelineStage ?? [])
         if (stages.filter((stage) => stage.order === PIPELINE_ORDER.window).length > 1) {

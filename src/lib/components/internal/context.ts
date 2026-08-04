@@ -1,7 +1,5 @@
 import { getContext, setContext } from 'svelte'
 import type { GridState } from '../../core/grid/grid.svelte.js'
-import { defaultLabels } from '../../core/interaction/labels.js'
-import type { DataGridLabels } from '../../core/types/index.js'
 
 const GRID_CONTEXT_KEY = Symbol('sv5ui-datagrid')
 
@@ -16,10 +14,10 @@ export function getGridContext<TRow>(): GridState<TRow> {
 }
 
 /**
- * Labels for parts that may legitimately render outside a grid — a cell
- * renderer reused in a card, say. Those fall back to the defaults rather than
- * throwing, because a missing translation is not worth an error.
+ * The grid, or null. For parts that may legitimately render outside one — a
+ * cell renderer reused in a card, say — where a missing grid is not an error.
+ * Read through it inside a `$derived` so language changes still land.
  */
-export function getGridLabels(): DataGridLabels {
-    return getContext<GridState<unknown> | undefined>(GRID_CONTEXT_KEY)?.labels ?? defaultLabels
+export function getGridOrNull<TRow>(): GridState<TRow> | null {
+    return getContext<GridState<TRow> | undefined>(GRID_CONTEXT_KEY) ?? null
 }

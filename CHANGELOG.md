@@ -77,12 +77,32 @@ published; entries are grouped for the first `0.x` release.
   `persistState` auto-sync to `localStorage` with a `migrate` hook.
 - **Theming** — `defineDataGridConfig` app defaults, per-instance `ui` slot
   overrides, and `cellClass` / `rowClass` data-driven callbacks.
-- **Localization** — `labels` covers every string the grid renders (toolbar,
-  column menu, filter panel and its operator lists, status bar, footer,
-  overlays, row controls, the footer's page-size choices and its "1-25 of 300"
-  summary); any subset overrides the defaults, and the operator maps merge one
-  entry at a time. `locale` keeps its separate job of wording
-  what the announcer speaks.
+- **Localization** — hand the grid the languages it may use and it takes it
+  from there: `locales: [enUS, viVN]` and nothing else. It picks from the
+  page's own language, `locale` forces a tag, and assigning `grid.locale`
+  switches in place — the sort, filter and selection on screen all survive,
+  where rebuilding the grid would have lost them.
+
+    A language is one pack: `labels` for the ~60 strings the grid shows, and
+    `announcer` for the ones it speaks. Twelve ship from
+    `@sv5ui/datagrid/locales` — `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`,
+    `fr-FR`, `de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only the
+    packs an app imports are bundled, because the grid cannot reach for a
+    language it was never handed; there is deliberately no "all languages"
+    export to import by accident. A tag nobody answers for falls back to
+    English rather than throwing, and `vi` is answered by `vi-VN` — roughly the
+    right language beats the wrong one.
+
+    Every label is typed, so a pack missing a key fails the build rather than
+    rendering a blank. Because labels can be functions, a language states its
+    own grammar: Russian counts rows through `Intl.PluralRules` (1 строка,
+    2 строки, 5 строк), and French and German agree their singular.
+
+    The same tag drives `Intl`, so a number, currency or date column that says
+    nothing about locale formats in the grid's language and reformats when the
+    language changes. `labels` and `announcer` options still override single
+    strings on top of the chosen pack, an operator map one entry at a time.
+
 - **Built-in cell renderers** selected by column `type`: text, number, currency,
   percent, date, datetime, boolean, badge, user, progress, rating, link,
   actions.
