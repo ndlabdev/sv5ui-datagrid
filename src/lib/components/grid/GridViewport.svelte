@@ -108,11 +108,7 @@
         }
     })
 
-    /**
-     * Pinned rows sit outside the pipeline, so they carry their own descriptor
-     * rather than overloading `data-dg-cell` — whose row index every consumer
-     * reads as an index into `preWindowNodes`.
-     */
+    /** Pinned rows are outside the pipeline, so they carry their own descriptor. */
     function selectorFor(position: CellPosition): string {
         const section = sectionOf(position)
         return section === 'body'
@@ -123,9 +119,8 @@
     /** The cell an event landed in, read back from its descriptor attribute. */
     function positionOf(event: Event): CellPosition | null {
         const target = event.target as HTMLElement | null
-        // The filter panel is a popover rendered inside a header cell, so its
-        // events bubble here. Interacting with it is not a cell interaction —
-        // treating it as one would yank focus out of the panel's inputs.
+        // The filter panel renders inside a header cell, so its events bubble
+        // here; treating them as cell interactions steals its focus.
         if (target?.closest('[role="dialog"]')) return null
         const pinned = target?.closest('[data-dg-pinned-cell]')?.getAttribute('data-dg-pinned-cell')
         if (pinned) {
@@ -162,8 +157,7 @@
         }
     }
 
-    /** Delegated so the click and keyboard halves stay together, and so cells
-     * do not each allocate a handler. A cell opts out by stopping propagation. */
+    /** Delegated, so cells do not each allocate a handler. */
     function focusClickedCell(event: MouseEvent) {
         const position = positionOf(event)
         if (position) grid.focus.focusCell(position)
@@ -199,10 +193,8 @@
     }
 
     /**
-     * Fills cells from the clipboard starting at the focused cell. Handled as a
-     * paste event, not a Ctrl+V binding, so it reads the data synchronously
-     * without a permission prompt and works with a right-click paste too. An
-     * open editor keeps its own paste — the event is left alone there.
+     * A paste event rather than a Ctrl+V binding: it reads synchronously
+     * without a permission prompt, and covers right-click paste too.
      */
     function handlePaste(event: ClipboardEvent) {
         if (!editing || editing.active || editing.rowEditId) return
@@ -214,12 +206,7 @@
         void editing.pasteText(text)
     }
 
-    /**
-     * Adds a tooltip only to text that is actually cut off, measured on hover
-     * rather than during render: comparing widths forces layout, and doing
-     * that for every visible cell on every frame would cost more than the
-     * tooltip is worth.
-     */
+    /** Measured on hover: comparing widths per cell per frame forces layout. */
     function maybeTooltip(event: PointerEvent) {
         const target = (event.target as HTMLElement | null)?.closest?.<HTMLElement>(
             '[data-dg-truncate]'

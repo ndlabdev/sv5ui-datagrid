@@ -19,10 +19,8 @@
 
     function start(event: PointerEvent) {
         if (!draggable) return
-        // A finger keeps its default for now: until the hold completes the
-        // gesture is still the browser's, and taking it away here would stop
-        // the list scrolling from the grip. A mouse has nothing to lose, and
-        // suppressing the default keeps it from selecting text mid-drag.
+        // A finger keeps its default until the hold completes, or the list
+        // could not be scrolled from the grip.
         if (event.pointerType !== 'touch') event.preventDefault()
         beginRowDrag(event, {
             ghostClass,

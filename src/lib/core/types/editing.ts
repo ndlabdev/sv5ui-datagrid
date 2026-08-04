@@ -3,14 +3,7 @@ import type { RowNode } from './rows.js'
 
 /** Inline editing: editor selection, its context and the write unit. */
 
-/**
- * Built-in inline editor mapped from a column's `editor`, each backed
- * by a real sv5ui component:
- * text → Input, number → InputNumber, select → Select,
- * selectMenu → SelectMenu (searchable), checkbox → Checkbox,
- * date → DatePicker, time → TimeField, textarea → Textarea,
- * rating → Rating, tags → InputTags.
- */
+/** Built-in inline editors, each backed by the sv5ui component of that name. */
 export type EditorType =
     | 'text'
     | 'number'
@@ -29,11 +22,7 @@ export interface EditorOption {
     value: string
 }
 
-/**
- * Context handed to a custom editor snippet. The snippet reads `value`,
- * pushes changes through `setValue`, and ends the edit with `commit`
- * (validated) or `cancel`.
- */
+/** Handed to a custom editor snippet: read `value`, push through `setValue`. */
 export interface EditorContext<TRow> {
     /** Current draft value. */
     value: unknown
@@ -65,10 +54,7 @@ export interface ColumnEditorDef<TRow> {
 export type Editable<TRow> =
     boolean | ((ctx: { row: TRow; node: RowNode<TRow>; value: unknown }) => boolean)
 
-/**
- * A single-row edit: the changed fields keyed by column id.
- * The unit of the transaction and undo/redo APIs.
- */
+/** One row's changed fields, keyed by column id. */
 export interface EditTransaction {
     /** Target row id (from `getRowId`). */
     rowId: string

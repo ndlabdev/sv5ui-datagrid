@@ -7,10 +7,7 @@ export function buildRowNodes<TRow>(
     return data.map((row, index) => ({ id: getRowId(row), row, index }))
 }
 
-/**
- * Indexes nodes by row id. Rebuilt whole by the derived that owns it and never
- * mutated, so a plain Map is the right container.
- */
+/** Rebuilt whole by the derived that owns it, so a plain Map suffices. */
 export function nodesById<TRow>(nodes: RowNode<TRow>[]): ReadonlyMap<string, RowNode<TRow>> {
     return new Map(nodes.map((node) => [node.id, node]))
 }

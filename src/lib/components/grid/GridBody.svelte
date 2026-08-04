@@ -103,11 +103,7 @@
         slots.rowSpanEdgeStart({ class: theme('rowSpanEdgeStart') })
     )
 
-    /**
-     * The vertical edges a spanning column draws. Both sides would double the
-     * line wherever two spanning columns meet, so the start edge is left to
-     * whichever column opens the group.
-     */
+    /** Only the column opening a group draws the start edge, or it doubles. */
     function edgeClasses(colIndex: number): string {
         const columns = grid.columns.visible
         if (!rowSpans.has(columns[colIndex]?.id)) return ''
@@ -116,10 +112,7 @@
         return opensGroup ? `${rowSpanEdgeClass} ${rowSpanEdgeStartClass}` : rowSpanEdgeClass
     }
 
-    /**
-     * The overhang draws the separator at its foot, except where the run ends
-     * with the data — there the grid's own edge is the line.
-     */
+    /** No foot where the run ends with the data: the grid's edge is the line. */
     function fillClass(
         align: ColumnState<TRow>['align'],
         colIndex: number,
@@ -145,11 +138,7 @@
         rowSpanning?: boolean
     }
 
-    /**
-     * A pinned cell in a grid that spans rows is raised over those spans, and
-     * so has to draw the separator and selection tint it now covers. A grid
-     * that spans nothing keeps exactly the classes it always had.
-     */
+    /** Raised over the spans, so it draws what it now covers. */
     function pinnedClasses(node: RowNode<TRow>): string {
         if (rowSpans.size === 0) return pinnedCellClass
         const selected = selectionState?.isSelected(node.id)
@@ -160,11 +149,8 @@
         const { node, column, colIndex, rowIndex, decoration } = input
         let result = cellClass[column.align]
         if (column.pinned) result += ` ${pinnedClasses(node)}`
-        // A cell taller than its row overhangs the rows below, whose separators
-        // and selection tint would otherwise show straight through it.
         if (input.rowSpanning) result += ` ${cellRowSpanClass}`
-        // A run of one has no overhang to carry the column's vertical edges, so
-        // the cell draws them and the line stays unbroken down the column.
+        // A run of one has no overhang to carry the column's edges.
         else result += edgeClasses(colIndex) ? ` ${edgeClasses(colIndex)}` : ''
         if (input.editing) result += ` ${cellEditingClass}`
         else if (isEditable(node, column)) result += ` ${editableClass}`
@@ -217,8 +203,7 @@
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(grid.columns.headerRowCount)
     const topRows = $derived(pinning?.topNodes.length ?? 0)
-    // Indent, expand toggles and full-width fallbacks belong to the first column
-    // that carries data, not to the grid's own grip or checkbox.
+    // Indent and expand toggles belong to the first column carrying data.
     const firstDataIndex = $derived(
         grid.columns.visible.findIndex((column) => !isSyntheticColumn(column.id))
     )
@@ -228,11 +213,7 @@
         return !active.section && active.row === row && active.col === col
     }
 
-    /**
-     * A spanning cell owns the active position when it falls anywhere in the
-     * rectangle it covers — the covered cells are not rendered, so the tab stop
-     * has to be the one cell that stands for all of them.
-     */
+    /** The covered cells are not rendered, so this one is their tab stop. */
     function isActiveInSpan(row: number, col: number, colSpan: number, rowSpan: number): boolean {
         const active = grid.focus.active
         if (active.section) return false
@@ -245,9 +226,8 @@
     }
 
     function spanColumn(colIndex: number, span: number): string | undefined {
-        // A covered cell is not rendered, so auto-placement would slide the
-        // next one into its track. Both windowing and row spans leave those
-        // holes, and both need every cell pinned to its own column.
+        // Windowing and row spans both leave holes that auto-placement
+        // would fill with the next cell.
         if (columnWindow.windowed || rowSpans.size > 0) return `${colIndex + 1} / span ${span}`
         return span > 1 ? `span ${span}` : undefined
     }
@@ -259,17 +239,12 @@
 
     function rowHeightOf(node: RowNode<TRow>, row: number): string | undefined {
         if (!virtualization) return undefined
-        // An auto row is measured, not sized: pinning it to the last measured
-        // height would stop it from ever growing with its content.
+        // An auto row is measured, not sized, or it could never grow.
         if (virtualization.isAutoRow(node)) return undefined
         return `${virtualization.virtualizer.sizeOf(row)}px`
     }
 
-    /**
-     * Vertical spans, held across scrolls: they are resolved against the whole
-     * row list, so recomputing them per frame would walk every row on every
-     * scroll tick. Only columns declaring `rowSpan` cost anything.
-     */
+    /** Held across scrolls: resolving these walks the whole row list. */
     const rowSpans = $derived(rowSpansOf(grid, grid.preWindowNodes))
 
     interface VerticalSpan {
@@ -286,11 +261,7 @@
         return { owner, length: spans.span[owner] ?? 1 }
     }
 
-    /**
-     * The height of a run of rows. Virtualized rows carry measured sizes; an
-     * unvirtualized grid lays every row out at the density variable, so the
-     * span multiplies that rather than guessing a pixel count.
-     */
+    /** Measured sizes when virtualized, the density variable otherwise. */
     function spanHeight(owner: number, length: number): string {
         if (!virtualization) return `calc(var(--dg-row-h) * ${length})`
         let total = 0
@@ -299,10 +270,8 @@
     }
 
     /**
-     * How far above the current row the spanning cell starts. Only ever
-     * non-zero for the row the window opens on: when a span begins above the
-     * rendered range its owner is not on screen, so the cell is drawn here and
-     * pulled back up into place.
+     * Non-zero only for the row the window opens on: a span beginning above
+     * the rendered range is drawn there and pulled back up into place.
      */
     function spanOffset(owner: number, row: number): string {
         if (owner >= row) return '0'
@@ -312,11 +281,7 @@
         return `-${total}px`
     }
 
-    /**
-     * Reports an auto row's rendered height back to the virtualizer, which
-     * needs it for scroll offsets. One observer per rendered row, and only the
-     * window is ever rendered.
-     */
+    /** Feeds an auto row's rendered height back into the scroll offsets. */
     function measureRow(element: HTMLElement, id: string | null) {
         if (!id || !virtualization) return
         const observer = new ResizeObserver(() =>
@@ -333,12 +298,7 @@
         return `calc(0.75rem + ${level * 1.25}rem)`
     }
 
-    /**
-     * The title a cell carries from the start. Columns that say nothing about
-     * tooltips return undefined and are left to the viewport's hover measure,
-     * which only titles text that is actually cut off — so the common case
-     * costs nothing per cell here.
-     */
+    /** Columns saying nothing are left to the viewport's hover measure. */
     function tooltipOf(
         node: RowNode<TRow>,
         column: (typeof columnWindow.renderColumns)[number]['column'],
@@ -351,11 +311,7 @@
         return tooltip({ node, row: node.row, value, rowIndex })
     }
 
-    /**
-     * Which edge of this row the drop line sits on, or undefined. Dropping
-     * below the source draws under the target, above it draws over — so the
-     * line always shows where the row will end up.
-     */
+    /** The edge the drop line sits on, so it shows where the row lands. */
     function dropEdgeOf(rowIndex: number): 'top' | 'bottom' | undefined {
         const drag = reorder?.drag
         if (!drag || drag.targetIndex !== rowIndex) return undefined

@@ -34,11 +34,7 @@ export function buildColumnSnapshot(
     return isEmpty(columns) ? undefined : columns
 }
 
-/**
- * Resolves a stored column slice against the columns that exist now. Ids that
- * disappeared are dropped and ids that appeared keep their defaults, so a
- * snapshot never resurrects a column the app no longer defines.
- */
+/** Ids that disappeared are dropped; ids that appeared keep their defaults. */
 export function resolveColumnSnapshot(
     stored: GridSnapshot['columns'],
     knownIds: string[]
@@ -55,10 +51,7 @@ export function resolveColumnSnapshot(
     }
 }
 
-/**
- * Values are checked too, not just keys: a hand-edited or corrupt entry must
- * not put an unknown side into the pinning model.
- */
+/** Values too, not just keys: a corrupt entry must not reach the model. */
 function prunePinned(
     stored: Record<string, PinnedSide | null>,
     known: Set<string>
@@ -75,9 +68,8 @@ export function isDensity(value: unknown): value is Density {
 }
 
 /**
- * Accepts a snapshot only when it is well-formed and of the current version,
- * running `migrate` first when it is older. Anything else is discarded rather
- * than half-applied — a corrupt localStorage entry must not brick the grid.
+ * Only a well-formed snapshot of the current version, `migrate` first when it
+ * is older. Anything else is discarded rather than half-applied.
  */
 export function normalizeSnapshot(
     stored: unknown,

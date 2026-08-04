@@ -6,10 +6,7 @@ import type {
     TextFilterOp
 } from '../types/index.js'
 
-/**
- * The order operators are offered in. Kept apart from their wording so a
- * translation replaces words without reshuffling the list.
- */
+/** Order, kept apart from wording so a translation cannot reshuffle it. */
 export const TEXT_OPS: TextFilterOp[] = [
     'contains',
     'notContains',
@@ -141,11 +138,7 @@ export const defaultLabels: DataGridLabels = {
     clearSelection: 'Clear selection'
 }
 
-/**
- * Overrides applied over a base — the chosen language, or English when there
- * is none. The operator maps merge per entry, so wording one operator
- * differently does not mean restating the other seven.
- */
+/** Overrides over a base language; operator maps merge one entry at a time. */
 export function mergeLabels(
     overrides: DataGridLabelsInput | undefined,
     base: DataGridLabels = defaultLabels

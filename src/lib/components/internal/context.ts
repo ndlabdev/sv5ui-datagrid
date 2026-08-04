@@ -13,11 +13,7 @@ export function getGridContext<TRow>(): GridState<TRow> {
     return grid
 }
 
-/**
- * The grid, or null. For parts that may legitimately render outside one — a
- * cell renderer reused in a card, say — where a missing grid is not an error.
- * Read through it inside a `$derived` so language changes still land.
- */
+/** For parts that may render outside a grid, where missing is not an error. */
 export function getGridOrNull<TRow>(): GridState<TRow> | null {
     return getContext<GridState<TRow> | undefined>(GRID_CONTEXT_KEY) ?? null
 }

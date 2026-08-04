@@ -290,10 +290,8 @@ export class Editing<TRow> {
     }
 
     /**
-     * Writes many cells at once — the path a paste or any programmatic edit
-     * takes. Every value goes through the column's `parse` and validation;
-     * one invalid cell rejects the whole batch, and a successful batch lands
-     * as a single undo step.
+     * Many cells at once, each through the column's `parse` and validation.
+     * One invalid cell rejects the batch; a successful one is a single undo.
      */
     applyEdits = (edits: EditTransaction[]): boolean | Promise<boolean> => {
         const resolved = edits.flatMap((edit) => {
@@ -317,10 +315,8 @@ export class Editing<TRow> {
     }
 
     /**
-     * Applies clipboard text starting at the focused cell, spreading rightward
-     * and downward. Cells that fall on a non-editable column or past the last
-     * row are dropped — `applyEdits` filters them and runs the same parse and
-     * validation a typed edit does, so the whole paste lands as one undo step.
+     * Clipboard text from the focused cell, spreading right and down. Cells
+     * landing on a non-editable column or past the last row are dropped.
      */
     pasteText = (text: string): boolean | Promise<boolean> => {
         const matrix = parseClipboardMatrix(text)

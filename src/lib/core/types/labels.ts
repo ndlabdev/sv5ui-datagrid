@@ -2,14 +2,9 @@ import type { DateFilterOp, NumberFilterOp, TextFilterOp } from './filtering.js'
 import type { DataGridAnnouncerStrings } from './grid.js'
 
 /**
- * Every string the grid renders itself. Anything a user reads and did not
- * supply lives here, so translating the grid is one object rather than a hunt
- * through components.
- *
- * Entries are plain strings unless a value has to be interpolated, in which
- * case they are functions — a translation can then put the number wherever its
- * language needs it. Announcer strings are separate, in
- * `DataGridAnnouncerStrings`: those are spoken, these are seen.
+ * Every string the grid renders. Functions where a value is interpolated, so
+ * a language can put the number where it needs it. What the grid *speaks*
+ * lives in `DataGridAnnouncerStrings`.
  */
 export interface DataGridLabels {
     // Toolbar
@@ -89,10 +84,7 @@ export interface DataGridLabels {
     clearSelection: string
 }
 
-/**
- * What an app passes as `labels`: any subset, with the operator maps
- * overridable one entry at a time rather than whole.
- */
+/** Any subset; operator maps override one entry at a time. */
 export type DataGridLabelsInput = Partial<
     Omit<DataGridLabels, 'textOps' | 'numberOps' | 'dateOps'>
 > & {
@@ -101,14 +93,7 @@ export type DataGridLabelsInput = Partial<
     dateOps?: Partial<Record<DateFilterOp, string>>
 }
 
-/**
- * One language, ready to use: what the grid shows and what it announces,
- * under the tag they belong to.
- *
- * An app hands the grid the packs it wants available and the grid picks one
- * from the page's language — no per-string configuration, and only the packs
- * actually imported end up in the bundle.
- */
+/** One language: what the grid shows and announces, under its tag. */
 export interface DataGridLocalePack {
     /** BCP-47 tag, e.g. `'vi-VN'`. Matched against the page's language. */
     tag: string

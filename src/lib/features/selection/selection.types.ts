@@ -14,10 +14,7 @@ export interface SelectionOptions<TRow> {
      */
     checkbox?: boolean
 
-    /**
-     * Excludes rows from selection. Unselectable rows are skipped by
-     * select-all and range selection and render a disabled checkbox.
-     */
+    /** Skipped by select-all and range selection, with a disabled checkbox. */
     isRowSelectable?: (row: TRow) => boolean
 }
 
@@ -49,30 +46,24 @@ export interface ExportCsvOptions<TRow = unknown> {
     headers?: boolean
 
     /**
-     * Exports every filtered row instead of only the selected ones.
-     * Also the fallback when nothing is selected.
+     * Every filtered row rather than the selection; also the fallback when
+     * nothing is selected.
      * @default false
      */
     allRows?: boolean
 
     /**
-     * Column separator. Excel follows the list separator of the machine's
-     * locale, so `';'` is what much of Europe expects to open cleanly.
+     * Excel follows the machine's list separator, so much of Europe needs `';'`.
      * @default ','
      */
     delimiter?: string
 
     /**
-     * Column ids to export, in this order. Hidden columns are fair game — an
-     * id column left out of the grid can still belong in the file.
+     * Ids to export, in this order. Hidden columns are fair game.
      * @default every visible column
      */
     columns?: string[]
 
-    /**
-     * Turns a cell into the exported text. Without it a value is written raw,
-     * so a spreadsheet keeps it as a number or a date; with it the file can be
-     * made to read the way the grid does.
-     */
+    /** Without it a value is written raw, so a spreadsheet keeps its type. */
     formatValue?: ExportFormatter<TRow>
 }

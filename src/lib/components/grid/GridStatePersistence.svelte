@@ -6,19 +6,13 @@
 
     let { grid, options }: { grid: GridState<TRow>; options: PersistStateOptions } = $props()
 
-    /** A column resize rewrites the width map every frame, so writes are
-     * coalesced onto a timer and the tail flushed on teardown. */
+    /** A resize rewrites the map every frame, so writes are coalesced. */
     const WRITE_INTERVAL_MS = 200
 
-    // Bound once: swapping the key later means a different grid, which is a
-    // remount, not a reactive update.
     const key = untrack(() => options.key)
 
-    // Restore synchronously during setup, before the grid renders, so the first
-    // client paint already shows the saved state. Reading it in an effect
-    // instead would paint the defaults first and correct them a frame later —
-    // a visible flash. `localStorage` is client-only; an SSR'd grid has nothing
-    // to read on the server and still paints defaults for that one frame.
+    // Synchronous, before the first paint: an effect would show the defaults
+    // and correct them a frame later.
     untrack(() => {
         if (typeof localStorage === 'undefined') return
         try {
@@ -52,8 +46,7 @@
 
     $effect(() => {
         const snapshot = grid.getState()
-        // The first run reads the state just restored; writing it back would be
-        // a no-op, so it is skipped. Later runs are real user changes.
+        // The first run is the state just restored, not a user change.
         if (!mounted) {
             mounted = true
             return

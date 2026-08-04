@@ -1,9 +1,6 @@
 import type { EditTransaction } from '../../core/types/index.js'
 
-/**
- * Collapses per-cell edits into one transaction per row, preserving the order
- * rows were first touched, so a batch applies and undoes as a single step.
- */
+/** One transaction per row, in the order rows were touched: one undo step. */
 export function groupChangesByRow(
     entries: { rowId: string; columnId: string; value: unknown }[]
 ): EditTransaction[] {
@@ -17,9 +14,8 @@ export function groupChangesByRow(
 }
 
 /**
- * Parses clipboard text into a cell grid, the inverse of the TSV copy format:
- * newlines separate rows, tabs separate cells. A single trailing newline is
- * dropped, since spreadsheets append one to every copy.
+ * Clipboard text as a cell grid, the inverse of the TSV copy. One trailing
+ * newline is dropped: spreadsheets append one to every copy.
  */
 export function parseClipboardMatrix(text: string): string[][] {
     const normalized = text.replace(/\r\n?/g, '\n').replace(/\n$/, '')

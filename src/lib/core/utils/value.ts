@@ -6,12 +6,8 @@ export function getCellValue<TRow>(row: TRow, column: ColumnDef<TRow>): unknown 
 }
 
 /**
- * How a sort reads its value from a row. `sortField` names a different property
- * from the one on screen — a column rendering a full name can still order by
- * surname — and without one the sort compares what the cell shows.
- *
- * Returned as a getter rather than resolved per call: a sort asks for it on the
- * order of n log n times, and which branch applies is fixed for the column.
+ * How a sort reads its value. A getter rather than a per-call branch: a sort
+ * asks n log n times and which branch applies is fixed for the column.
  */
 export function sortValueGetter<TRow>(column: ColumnDef<TRow>): (row: TRow) => unknown {
     const { sortField } = column

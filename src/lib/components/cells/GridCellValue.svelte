@@ -27,11 +27,7 @@
     const grid = getGridOrNull()
     const labels = $derived(grid?.labels ?? defaultLabels)
 
-    /**
-     * A column that says nothing about locale formats in the grid's language,
-     * so switching language reformats the numbers and dates with it. Setting
-     * `typeOptions.locale` still wins, for the odd column that must not move.
-     */
+    /** Inherits the grid's language unless `typeOptions.locale` says otherwise. */
     const options = $derived({ locale: grid?.locale, ...def.typeOptions })
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))

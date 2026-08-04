@@ -223,12 +223,9 @@ describe('rowSpan', () => {
         // the owner's index instead, which is the very thing under test.
         const firstBodyRow = () => firstRowOf(2)
 
-        // Where the window opens is the virtualizer's business — overscan and
-        // the sticky header both move it — so rather than predicting it, the
-        // test scrolls until it observes the case it cares about: a window
-        // whose first row is inside a run rather than at its head. Regions
-        // repeat every six rows as APAC, APAC, APAC, EMEA, EMEA, AMER, so the
-        // heads sit at offsets 0, 3 and 5.
+        // Overscan and the sticky header both move where the window opens,
+        // so it is observed rather than predicted. Regions repeat every six
+        // rows, putting the run heads at offsets 0, 3 and 5.
         const scrollTo = async (row: number) => {
             viewport.scrollTop = row * ROW_HEIGHT
             viewport.dispatchEvent(new Event('scroll', { bubbles: true }))

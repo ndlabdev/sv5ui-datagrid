@@ -60,10 +60,9 @@ export class RowReorder<TRow> {
     }
 
     /**
-     * Moves a row to a position in the rendered order. The data array is
-     * rewritten so the new order survives a re-render, which is why the target
-     * is translated back through the node the user actually dropped onto: with
-     * a sort or filter active, rendered position and data position differ.
+     * Moves a row in the rendered order, rewriting `data` so it survives a
+     * re-render — hence translating the target back through the node dropped
+     * onto, since a sort makes rendered and data positions differ.
      */
     moveRow = (id: string, toRenderedIndex: number): void => {
         const nodes = this.#grid.preWindowNodes

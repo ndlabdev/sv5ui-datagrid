@@ -1,12 +1,6 @@
 /**
- * The surface `@sv5ui/datagrid-pro` builds on. Pro consumes only public
- * exports, but nothing else in this repo forces that surface to hold still —
- * renaming a member here is a silent break there, discovered at runtime in a
- * customer's app.
- *
- * Every assertion below stands for a real call site in the pro repo. Deleting
- * one means deciding to break Pro; the lockstep release then has to carry the
- * matching change.
+ * The surface `@sv5ui/datagrid-pro` builds on. Every assertion stands for a
+ * real call site there, so deleting one is a decision to break Pro.
  */
 import { describe, expect, it } from 'vitest'
 import {

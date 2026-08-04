@@ -1,13 +1,8 @@
 import type { DataGridLocalePack } from '../types/index.js'
 
 /**
- * Picking a language without being told which one.
- *
- * An app registers the packs it wants and the grid takes it from there: the
- * page's own language decides, the way it already decides date and number
- * formatting. Nothing is configured per string, and only the packs actually
- * imported reach the bundle — the grid cannot fetch a language it was never
- * given.
+ * Picking a language without being told which one: an app registers the packs
+ * it wants and the page's own language decides.
  */
 
 /** What the page says it is written in, best source first. */
@@ -21,11 +16,8 @@ export function documentLocale(): string | undefined {
 }
 
 /**
- * How well a pack answers for a requested tag: 2 for the same tag, 1 for the
- * same language in another region, 0 for no relation.
- *
- * `vi` is answered by `vi-VN`, and `en-GB` by `en-US`, because a grid in
- * roughly the right language beats one in the wrong one.
+ * 2 for the same tag, 1 for the same language elsewhere, 0 for no relation:
+ * roughly the right language beats the wrong one.
  */
 function matchScore(tag: string, wanted: string): number {
     const a = tag.toLowerCase()
@@ -35,11 +27,8 @@ function matchScore(tag: string, wanted: string): number {
 }
 
 /**
- * The pack to use, or undefined to stay with the built-in English.
- *
- * `requested` wins when given; otherwise the page decides. A tag nobody
- * answers for falls through rather than throwing: a missing translation is
- * not a reason to refuse to render.
+ * The pack to use, or undefined for the built-in English. A tag nobody
+ * answers for falls through rather than throwing.
  */
 export function resolveLocale(
     packs: DataGridLocalePack[],

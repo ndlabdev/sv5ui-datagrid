@@ -1,12 +1,7 @@
 /**
- * The public API. Everything exported here is covered by semver from 1.0 on,
- * so it stays deliberately small: what an app needs to render a grid, what a
- * feature module needs to plug into one, and nothing else. Internal helpers
- * live in their own modules and are free to change.
- *
- * Classes the grid constructs for you are exported as types only. You reach
- * their instances through the grid or a `getX(grid)` accessor, so naming one
- * in an annotation stays possible while `new`-ing one does not.
+ * The public API, covered by semver from 1.0 on and kept deliberately small.
+ * Classes the grid constructs are exported as types only: you reach instances
+ * through the grid or a `getX(grid)` accessor.
  */
 
 // Components and theming

@@ -1,10 +1,6 @@
 import type { EditTransaction } from '../../core/types/index.js'
 
-/**
- * One undoable edit. `before` restores the prior values, `after` re-applies
- * the change. Both are lists so a row-mode edit or a paste spanning many
- * rows undoes in a single step.
- */
+/** One undoable edit. Lists, so a row edit or a paste undoes in one step. */
 export interface UndoCommand {
     before: EditTransaction[]
     after: EditTransaction[]

@@ -18,11 +18,7 @@ export class Virtualization<TRow> {
 
     #grid: GridState<TRow>
     #getRowHeight?: (node: RowNode<TRow>) => number | 'auto'
-    /**
-     * Measured heights of `'auto'` rows, keyed by row id so a measurement
-     * survives re-sorting. Reactive per key: the layout re-derives when a row
-     * it actually read changes, not on every observer callback.
-     */
+    /** Keyed by row id, so a measurement survives re-sorting. Reactive per key. */
     #measured = new SvelteMap<string, number>()
 
     constructor(grid: GridState<TRow>, options: VirtualizationOptions<TRow>) {
@@ -60,11 +56,7 @@ export class Virtualization<TRow> {
     /** True when this row sizes itself, so the renderer leaves its height off. */
     isAutoRow = (node: RowNode<TRow>): boolean => this.#getRowHeight?.(node) === 'auto'
 
-    /**
-     * Records what an `'auto'` row actually rendered at. Sub-pixel noise is
-     * ignored: re-deriving the layout would re-render the row, which would
-     * measure it again.
-     */
+    /** Sub-pixel noise is ignored, or measuring would feed back on itself. */
     measureRow = (id: string, height: number): void => {
         if (height <= 0) return
         const previous = this.#measured.get(id)

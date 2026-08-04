@@ -1,23 +1,13 @@
 /**
- * The pointer half of row reordering: what the grip does between pressing and
- * letting go. The feature module owns *what* a move means; this owns the
- * gesture — when it counts as a drag at all, what follows the cursor, how the
- * list scrolls when the cursor reaches an edge, and how the copy settles when
- * it is dropped.
- *
- * Kept out of Svelte state on purpose. The ghost moves with the pointer, which
- * is every frame; routing that through a rune would re-render the rows behind
- * it for no reason.
+ * The pointer half of row reordering: the gesture, not what a move means.
+ * Kept out of Svelte state — the ghost moves every frame, and a rune would
+ * re-render the rows behind it for nothing.
  */
 
 /** Movement before a press counts as a drag, so a tap never reorders. */
 const DRAG_THRESHOLD = 4
 
-/**
- * A finger has to rest this long before it takes hold of a row. Under it, the
- * gesture belongs to the browser and scrolls the list — which is why the grip
- * allows vertical panning until a drag actually starts.
- */
+/** Under this, the gesture is still the browser's and scrolls the list. */
 const TOUCH_HOLD_MS = 250
 
 /** How far a finger may stray during the hold before it counts as a scroll. */
@@ -49,13 +39,9 @@ export interface RowDragOptions {
 }
 
 /**
- * The grid drives its whole geometry from custom properties set on ancestors of
- * a row — column widths, pinned offsets, row height, cell padding. A copy moved
- * to `<body>` leaves those behind, so every `var()` in it resolves to nothing:
- * the tracks collapse and pinned cells lose their offset, painting their
- * background over the copy's own edge.
- *
- * Carrying the resolved values along is what keeps the copy a faithful one.
+ * The grid's geometry lives in custom properties on a row's ancestors. Moved
+ * to `<body>` every `var()` would resolve to nothing: tracks collapse and
+ * pinned cells lose their offset.
  */
 function copyGridVariables(row: HTMLElement, ghost: HTMLElement): void {
     const resolved = getComputedStyle(row)
@@ -98,11 +84,7 @@ function createGhost(row: HTMLElement, ghostClass: string): HTMLElement {
     return ghost
 }
 
-/**
- * Flies the copy to where the row ends up instead of blinking it away. The
- * landing spot is measured before the reorder, because after it the row under
- * the cursor is a different one.
- */
+/** Measured before the reorder: after it, a different row is under the cursor. */
 function settleGhost(ghost: HTMLElement, to: DOMRect | null, offset: { x: number; y: number }) {
     const finish = () => ghost.remove()
     if (!to || typeof ghost.animate !== 'function') {
@@ -137,10 +119,7 @@ function scrollable(element: HTMLElement | null): element is HTMLElement {
     return Boolean(element) && element!.scrollHeight > element!.clientHeight + 1
 }
 
-/**
- * Takes over a press on the grip. Installs its own listeners and removes them
- * all again on release, so a caller only has to forward `pointerdown`.
- */
+/** Takes over a press on the grip; a caller only forwards `pointerdown`. */
 export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void {
     const handle = event.currentTarget as HTMLElement
     const row = handle.closest<HTMLElement>('[data-dg-row-id]')
@@ -171,10 +150,7 @@ export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void
         if (id) options.onOver(id)
     }
 
-    /**
-     * The grid scrolls itself when it has its own overflow; a grid sized to its
-     * content does not, and then the page is what has to move.
-     */
+    /** A grid sized to its content has no overflow, so the page moves instead. */
     function autoScroll() {
         const target = scrollable(viewport) ? viewport : null
         const rect = target
@@ -192,8 +168,7 @@ export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void
         else window.scrollBy(0, delta)
     }
 
-    // One loop for both jobs: the target has to be recomputed while the list
-    // scrolls under a cursor that is not moving.
+    // The target is recomputed while the list scrolls under a still cursor.
     function tick() {
         frame = requestAnimationFrame(tick)
         autoScroll()
@@ -208,10 +183,9 @@ export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void
     }
 
     /**
-     * Follows the cursor on both axes. Locking it to the column it came from
-     * left it sitting flush on the list, where a copy is indistinguishable
-     * from the row under it; free of the grid it plainly reads as lifted.
-     * Only the vertical position decides where it lands.
+     * Both axes: held to its own column the copy sits flush on the list and
+     * cannot be told from the row under it. Only the vertical decides where
+     * it lands.
      */
     function moveGhost() {
         if (!ghost) return
@@ -265,8 +239,7 @@ export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void
         }
 
         options.onCommit()
-        // Measured after the commit, once the row has taken its new place, so
-        // the copy lands where the row actually is.
+        // After the commit, once the row has taken its new place.
         requestAnimationFrame(() => {
             const landed = rowId
                 ? document.querySelector<HTMLElement>(`[data-dg-row-id="${CSS.escape(rowId)}"]`)
@@ -293,8 +266,7 @@ export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void
     window.addEventListener('pointercancel', onCancel)
     window.addEventListener('keydown', onKey)
 
-    // A finger gets a hold instead of a distance: it has to stay put, which is
-    // what tells a reorder apart from a swipe down the list.
+    // A hold rather than a distance: it is what tells a reorder from a swipe.
     if (touch) {
         hold = window.setTimeout(() => {
             hold = 0

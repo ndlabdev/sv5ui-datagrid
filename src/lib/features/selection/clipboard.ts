@@ -13,11 +13,7 @@ export function dataColumns<TRow>(columns: ColumnState<TRow>[]): ColumnState<TRo
     return columns.filter((column) => !isSyntheticColumn(column.id))
 }
 
-/**
- * Turns a cell into the text that lands in the file. Return the value
- * unformatted and a spreadsheet sees the raw number or date; format it and the
- * file reads like the grid does.
- */
+/** Unformatted keeps a spreadsheet's number or date; formatted reads as the grid. */
 export type ExportFormatter<TRow> = (context: {
     value: unknown
     node: RowNode<TRow>
@@ -38,11 +34,7 @@ export function rowsToMatrix<TRow>(
     )
 }
 
-/**
- * The columns an export writes, in the order asked for. Ids that name no
- * column are skipped rather than producing blank columns, and the selection
- * checkbox is never exportable.
- */
+/** In the order asked for; unknown ids are skipped, not left blank. */
 export function pickColumns<TRow>(
     columns: ColumnState<TRow>[],
     ids?: string[]
@@ -65,13 +57,9 @@ export function toTsv(matrix: CellMatrix): string {
 }
 
 /**
- * A spreadsheet reads a cell opening with `=`, `+`, `-`, `@` or a control
- * character as a formula, so exported data can execute on the machine that
- * opens the file. Prefixing an apostrophe makes the cell literal text \u2014 the
- * mitigation Excel, Sheets and LibreOffice all understand.
- *
- * Only the file export is neutralized: clipboard copy is normally a
- * grid-to-grid round trip, and quoting there would corrupt the paste back.
+ * A cell opening with `=`, `+`, `-`, `@` or a control character executes as a
+ * formula on the machine that opens the file; an apostrophe makes it literal.
+ * The clipboard is left alone: quoting there would corrupt the paste back.
  */
 export function neutralizeFormula(cell: string): string {
     return /^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell

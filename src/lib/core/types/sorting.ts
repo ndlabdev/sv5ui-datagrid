@@ -10,10 +10,8 @@ export interface SortState {
 }
 
 /**
- * One sort as it leaves the grid for a server. Deliberately separate from
- * `SortState`: this shape crosses the network into code the grid does not own,
- * so it carries the column's `sortField` rather than an id that is a UI
- * concern. Build a list with `toSortRequest`.
+ * One sort as it leaves for a server: the column's `sortField` rather than an
+ * id that is a UI concern. Built by `toSortRequest`.
  */
 export interface SortRequestEntry {
     /** The column's `sortField`, or its id when it names none. */

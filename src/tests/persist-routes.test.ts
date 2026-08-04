@@ -6,10 +6,8 @@ import { describe, expect, it } from 'vitest'
 const ROUTES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../routes')
 
 /**
- * A grid with `persistState` restores from localStorage, which only exists on
- * the client. Server-rendering it paints the default layout and corrects it
- * after hydration — a visible flash on reload. Every demo that persists state
- * must opt out of SSR, so this invariant is enforced rather than remembered.
+ * `persistState` reads localStorage, so an SSR'd grid paints defaults and
+ * corrects them after hydration. Every persisting demo must opt out of SSR.
  */
 describe('persisted demo routes disable SSR', () => {
     const offenders: string[] = []

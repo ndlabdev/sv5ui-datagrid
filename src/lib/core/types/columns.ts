@@ -10,10 +10,7 @@ import type { RowNode } from './rows.js'
 
 export type ColumnAlign = 'left' | 'center' | 'right'
 
-/**
- * Built-in cell renderers, selected by `ColumnDef.type` and configured with
- * `typeOptions`. A `cell` snippet always wins over the type.
- */
+/** Built-in renderers, selected by `type`. A `cell` snippet wins over them. */
 export type ColumnType =
     | 'text'
     | 'number'
@@ -40,10 +37,7 @@ export interface RowAction<TRow> {
     destructive?: boolean
 }
 
-/**
- * Configuration for the renderer named by `ColumnDef.type`. Every field is
- * optional and only the ones belonging to that type are read.
- */
+/** Options for the renderer named by `type`; only its own fields are read. */
 export interface ColumnTypeOptions<TRow> {
     /** `number`, `currency`, `percent`, `date`, `datetime` — BCP 47 tag. Defaults to the browser locale. */
     locale?: string
@@ -100,22 +94,13 @@ export type BadgeColor = NonNullable<BadgeProps['color']>
 
 export type PinnedSide = 'left' | 'right'
 
-/**
- * Id of the synthetic checkbox column prepended by the selection
- * feature. Excluded from reorder, pin, hide and state snapshots.
- */
+/** The selection feature's checkbox column. */
 export const SELECTION_COLUMN_ID = '__dg-select__'
 
-/**
- * Id of the synthetic grip column prepended by the row-reorder feature.
- * Excluded from the same places as the checkbox column.
- */
+/** The row-reorder feature's grip column. */
 export const ROW_HANDLE_COLUMN_ID = '__dg-row-handle__'
 
-/**
- * True for a column the grid added itself. Those carry no data, so exports,
- * clipboard, reordering, pinning, hiding and snapshots all skip them.
- */
+/** A column the grid added itself: no data, so every data path skips it. */
 export function isSyntheticColumn(id: string): boolean {
     return id === SELECTION_COLUMN_ID || id === ROW_HANDLE_COLUMN_ID
 }
@@ -154,11 +139,7 @@ export interface DataGridCellContext<TRow> {
     row: TRow
     /** The resolved cell value (from `accessor` or `row[id]`). */
     value: unknown
-    /**
-     * Zero-based position of the row within the filtered/sorted set.
-     * Window offsets (page, virtual range) are already applied, so the value
-     * is stable while scrolling or paging.
-     */
+    /** Position within the filtered/sorted set, stable while scrolling. */
     rowIndex: number
 }
 
@@ -167,21 +148,16 @@ export interface ColumnDef<TRow> {
     id: string
 
     /**
-     * Header label text. Always plain text, because it is the column's
-     * accessible name and the label every non-visual surface reuses: column
-     * menu, column chooser, filter chips, announcer, clipboard and exports.
-     * Use `headerCell` to change how it is drawn without losing the text.
+     * Header label. Plain text, because it is the accessible name and the
+     * label every non-visual surface reuses; `headerCell` changes how it is
+     * drawn without losing it.
      * @default the column `id`
      */
     header?: string
 
     /**
-     * Draws the header label — an icon beside the text, a unit on a second
-     * line, a coloured badge. The sort control, filter icon, column menu and
-     * resize handle are rendered by the grid around it and stay put.
-     *
-     * `header` remains the accessible name of the column while this is set,
-     * so keep it meaningful even when the snippet renders something else.
+     * Draws the header label; the grid renders its own controls around it.
+     * `header` stays the accessible name, so keep it meaningful.
      */
     headerCell?: Snippet<[HeaderContext<TRow>]>
 
@@ -225,32 +201,24 @@ export interface ColumnDef<TRow> {
     pinned?: PinnedSide
 
     /**
-     * Child columns. Turns this definition into a header group: only
-     * `id` and `header` apply to the group itself; all data-facing
-     * options belong to the leaf children. Nesting is unlimited.
+     * Child columns, making this a header group: only `id` and `header` apply
+     * to it, the rest belong to the leaves. Nesting is unlimited.
      */
     children?: ColumnDef<TRow>[]
 
     /**
-     * Whether this column can be resized, when the column-ops feature allows
-     * resizing at all. Set false to freeze a checkbox or id column.
+     * Set false to freeze one column's width.
      * @default true
      */
     resizable?: boolean
 
     /**
-     * Cell tooltip. Left unset, a cell whose text is cut off gets one on hover
-     * showing the full text. `true` always titles the cell with its value,
-     * a function decides the text, and `false` turns the tooltip off — useful
-     * for a cell that renders its own.
+     * Unset, a cell whose text is cut off is titled on hover. `true` always
+     * titles it, a function decides the text, `false` turns it off.
      */
     tooltip?: boolean | ((ctx: DataGridCellContext<TRow>) => string | undefined)
 
-    /**
-     * Anything the app wants to hang off a column. The grid never reads it;
-     * it travels with the definition so a custom renderer, a menu item or a
-     * feature module can find it.
-     */
+    /** App data travelling with the definition; the grid never reads it. */
     meta?: Record<string, unknown>
 
     /**
@@ -266,13 +234,10 @@ export interface ColumnDef<TRow> {
     sortFn?: (a: TRow, b: TRow) => number
 
     /**
-     * The field this column sorts by, when that is not what it displays — a
-     * name column showing "Ada Lovelace" but sorting by `lastName`.
-     *
-     * On the client it names the row property to read instead of `accessor`
-     * or `id`. Under `rowModel: 'server'` it is what `toSortRequest` puts on
-     * the wire, so a column whose id is a UI concern can still name a real
-     * database column. `sortFn` wins over it.
+     * The field this column sorts by when that is not what it displays — a
+     * name column showing "Ada Lovelace" but ordering by `lastName`. On the
+     * client it names the row property; under `rowModel: 'server'` it is what
+     * `toSortRequest` sends. `sortFn` wins over it.
      */
     sortField?: string
 
@@ -291,70 +256,43 @@ export interface ColumnDef<TRow> {
     /** Custom cell renderer. */
     cell?: Snippet<[DataGridCellContext<TRow>]>
 
-    /**
-     * Classes added to this column's cells, per row — the escape hatch for
-     * data-driven styling such as marking negative amounts. Runs for every
-     * rendered cell of the column, so keep it cheap.
-     */
+    /** Per-row classes for this column. Runs per rendered cell, so keep it cheap. */
     cellClass?: (ctx: DataGridCellContext<TRow>) => ClassNameValue
 
     /**
-     * How many columns this cell spans, starting here — the covered cells to
-     * its right are not rendered. Return 1 (or omit) for a normal cell. A span
-     * is clamped so it never crosses a pin boundary. Applies to body rows.
+     * How many columns this cell spans; the covered cells are not rendered.
+     * Clamped so it never crosses a pin boundary. Body rows only.
      */
     colSpan?: (ctx: DataGridCellContext<TRow>) => number
 
     /**
-     * How many rows this cell spans, starting here — the covered cells below it
-     * are not rendered. Return 1 (or omit) for a normal cell. A span stops at a
-     * full-width row, and is resolved against the whole row list, so it holds
-     * while scrolling through it. Applies to body rows.
-     *
-     * Rows are laid out at a known height, so the spanning cell is sized from
-     * the rows it covers: use it with uniform row heights, not `rowHeight:
-     * 'auto'`.
+     * How many rows this cell spans; the covered cells are not rendered. Stops
+     * at a full-width row, and holds while scrolling through it. Sized from
+     * the rows it covers, so it wants uniform row heights, not `'auto'`.
+     * Body rows only.
      */
     rowSpan?: (ctx: DataGridCellContext<TRow>) => number
 
     /**
-     * Whether cells in this column can be edited. A predicate receives
-     * the row, node and value.
+     * A predicate receives the row, node and value.
      * @default false
      */
     editable?: Editable<TRow>
 
-    /**
-     * Inline editor: a built-in editor type or an advanced definition
-     * with options / a custom snippet. Defaults to `'text'` when the
-     * column is editable and no editor is set.
-     */
+    /** A built-in editor type or a definition with options; `'text'` by default. */
     editor?: EditorType | ColumnEditorDef<TRow>
 
-    /**
-     * Standard-schema (zod / valibot / arktype / …) validating a
-     * committed value. Invalid commits are blocked with an error.
-     */
+    /** Standard-schema validating a commit; invalid ones are blocked. */
     schema?: StandardSchemaV1
 
-    /**
-     * Imperative validator, an alternative to `schema`. Returns an error
-     * message, or null when valid.
-     */
+    /** An alternative to `schema`: an error message, or null when valid. */
     validate?: (value: unknown, row: TRow) => string | null
 
-    /**
-     * Transforms the editor's raw output into the value written to the
-     * row (e.g. parse a number). Runs before validation.
-     */
+    /** Turns the editor's output into the stored value, before validation. */
     parse?: (input: unknown, row: TRow) => unknown
 }
 
-/**
- * Runtime state of a column, derived from its definition.
- * Mutable aspects (order, live width, visibility, pin side) migrate here
- * in the columns-UX phase.
- */
+/** Runtime state of a column, derived from its definition. */
 export interface ColumnState<TRow> {
     /** The column id, mirrored from the definition. */
     id: string

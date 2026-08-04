@@ -48,9 +48,8 @@ export interface DataGridAnnouncerStrings {
 export const SNAPSHOT_VERSION = 1
 
 /**
- * A versioned, JSON-serializable view of everything the user can rearrange.
- * Column identity is by id, so adding or removing columns between sessions is
- * safe: unknown ids are dropped and new ones keep their defaults.
+ * A versioned JSON view of everything the user can rearrange. Identity is by
+ * column id, so unknown ids are dropped and new ones keep their defaults.
  */
 export interface GridSnapshot {
     version: number
@@ -66,19 +65,14 @@ export interface GridSnapshot {
 }
 
 /**
- * Restores from `localStorage` synchronously before the first client paint, so
- * a client-rendered grid shows the saved layout with no flash. Under SSR the
- * server cannot read `localStorage`, so it paints the defaults and the client
- * corrects them after hydration — render a persisted grid client-side (e.g.
- * `export const ssr = false`) to avoid that flash.
+ * Restores from `localStorage` before the first client paint. SSR cannot read
+ * it, so an SSR'd grid paints defaults and corrects after hydration — render
+ * a persisted grid client-side to avoid the flash.
  */
 export interface PersistStateOptions {
     /** localStorage key. */
     key: string
-    /**
-     * Upgrades a snapshot written by an older version of your app. Return
-     * undefined to discard it and start from the column defaults.
-     */
+    /** Upgrades an older snapshot; undefined discards it. */
     migrate?: (stored: GridSnapshot) => GridSnapshot | undefined
 }
 
@@ -107,64 +101,45 @@ export interface DataGridOptions<TRow> {
     /** The rows to display (client row model). */
     data?: TRow[]
 
-    /**
-     * Returns a stable unique id for a row.
-     * Required: selection, editing and keyed rendering need identity.
-     */
+    /** A stable unique id; selection, editing and keyed rendering need it. */
     getRowId: (row: TRow) => string
 
     /** Feature modules to register. Order does not matter. */
     features?: GridFeature<TRow>[]
 
     /**
-     * Row density. Drives row height and cell padding via CSS variables.
+     * Drives row height and cell padding through CSS variables.
      * @default 'standard'
      */
     density?: Density
 
     /**
-     * Where filtering, sorting and windowing happen.
-     *
-     * `'server'` makes those pipeline stages pass their rows through
-     * untouched, because `data` already holds exactly what should be shown.
-     * The features stay registered: their state, UI and events are what a
-     * server row model listens to in order to fetch the next page.
-     *
+     * Where filtering, sorting and windowing happen. `'server'` passes those
+     * stages through untouched — `data` already holds what to show — while
+     * the features stay registered as what a server model listens to.
      * @default 'client'
      */
     rowModel?: RowModel
 
     /**
-     * Languages the grid may use. It picks one from `locale`, or from the
-     * page's own language when that is not set, so an app that imports a pack
-     * is translated without configuring anything else.
-     *
-     * Only what is imported ends up in the bundle: the grid cannot reach for a
-     * language it was never handed.
+     * Languages the grid may use, chosen from `locale` or the page's own.
+     * Only what is imported ends up in the bundle.
      */
     locales?: DataGridLocalePack[]
 
     /**
-     * BCP-47 tag forcing one of `locales`, e.g. `'vi-VN'`. Leave it out to
-     * follow the page. It is also what number, currency and date columns
-     * format against, so one setting covers wording and formatting alike.
-     *
-     * Settable later through `grid.locale` to switch language in place.
+     * BCP-47 tag forcing one of `locales`; omit to follow the page. Number,
+     * currency and date columns format against it too. Settable later through
+     * `grid.locale`.
      */
     locale?: string
 
-    /**
-     * Overrides on top of the chosen language — a term this app words its own
-     * way. Any subset; the rest come from the language.
-     */
+    /** Overrides on top of the chosen language; any subset. */
     labels?: DataGridLabelsInput
 
     /** The same, for what the announcer says. */
     announcer?: Partial<DataGridAnnouncerStrings>
 
-    /**
-     * Classes added to every row — the escape hatch for data-driven row
-     * styling such as flagging overdue records. Runs per rendered row.
-     */
+    /** Per-row classes. Runs per rendered row. */
     rowClass?: (node: RowNode<TRow>) => ClassNameValue
 }

@@ -1,9 +1,6 @@
 import { parseDate, parseTime, Time, type DateValue } from '@internationalized/date'
 
-/**
- * Converts a stored ISO date string (`YYYY-MM-DD`, or the date part of
- * a longer ISO value) into a `DateValue` for the DatePicker editor.
- */
+/** An ISO date string as the DatePicker's `DateValue`. */
 export function toDateValue(value: unknown): DateValue | undefined {
     if (value === null || value === undefined || value === '') return undefined
     const text = String(value).slice(0, 10)
@@ -14,11 +11,7 @@ export function toDateValue(value: unknown): DateValue | undefined {
     }
 }
 
-/**
- * Serializes a DatePicker value back to an ISO date string. The calendar
- * hands back a value whose `toString()` is locale-formatted, so build the
- * ISO form from the date parts instead.
- */
+/** Back to ISO, built from the parts: `toString()` is locale-formatted. */
 export function fromDateValue(
     value: { year: number; month: number; day: number } | undefined
 ): string {

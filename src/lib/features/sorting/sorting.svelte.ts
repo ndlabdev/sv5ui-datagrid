@@ -7,9 +7,8 @@ import { sortNodes, type SortNulls } from './sort.js'
 export const SORTING = 'sorting'
 
 /**
- * The states a header click walks through, in order. `null` is the unsorted
- * state; reaching it drops the column from the sort. A cycle with no `null`
- * (e.g. `['asc', 'desc']`) never clears — clicking always flips.
+ * What a header click walks through. `null` drops the column; a cycle without
+ * one never clears.
  */
 export type SortCycle = (SortDirection | null)[]
 

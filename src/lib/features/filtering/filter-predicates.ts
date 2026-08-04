@@ -145,10 +145,7 @@ export function valuePredicateFor(filter: ColumnFilter): (value: unknown) => boo
     }
 }
 
-/**
- * One column's conditions collapsed into a single value test. The column's
- * value is read once per row by the caller and shared across the conditions.
- */
+/** One column's conditions as a single test; the value is read once per row. */
 function entryPredicate<TRow>(
     def: ColumnDef<TRow>,
     entry: ColumnFilterEntry
@@ -203,10 +200,7 @@ export function compileColumnFilters<TRow>(
     }
 }
 
-/**
- * Chip text for one condition. Wording comes from the grid's labels, so a
- * chip reads in the same language as the operator that produced it.
- */
+/** Chip text, worded from the labels so it matches the operator list. */
 function describeText(
     filter: Extract<ColumnFilter, { kind: 'text' }>,
     labels: DataGridLabels

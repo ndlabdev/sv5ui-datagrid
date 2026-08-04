@@ -37,22 +37,15 @@ export class GridState<TRow> {
     readonly api: Record<string, unknown> = {}
     readonly getRowId: (row: TRow) => string
     readonly rowClass?: (node: RowNode<TRow>) => ClassNameValue
-    /**
-     * The density the app asked for, or undefined when it never said. The
-     * presentation layer fills the gap from the theme config, so a grid built
-     * headlessly still reports a concrete `density`.
-     */
+    /** Undefined until the presentation layer fills it from the theme config. */
     readonly configuredDensity: Density | undefined
     readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
 
     /**
-     * BCP-47 tag in force. Assign to it to switch language in place — labels,
-     * announcer and cell formatting all derive from it, so nothing has to be
-     * rebuilt and the grid keeps its sort, filter and selection.
-     *
-     * Undefined means "follow the page", which is what it does by default.
+     * BCP-47 tag in force; undefined follows the page. Assign to switch
+     * language in place, keeping the sort, filter and selection.
      */
     locale = $state<string | undefined>(undefined)
 

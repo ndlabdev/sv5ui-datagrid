@@ -9,10 +9,8 @@ export interface RowDragState {
 }
 
 /**
- * Row reordering rewrites the `data` array. With a sort active the pipeline
- * re-sorts that array immediately, so a drag changes the stored order without
- * changing what is on screen — clear the sort before offering the grip, the
- * same constraint AG Grid documents for managed row drag.
+ * Reordering rewrites `data`, which an active sort immediately re-sorts: the
+ * stored order changes and the screen does not. Clear the sort first.
  */
 export interface RowReorderOptions<TRow> {
     /**
@@ -21,16 +19,10 @@ export interface RowReorderOptions<TRow> {
      */
     handle?: boolean
 
-    /**
-     * Excludes rows from being dragged. An unexcluded row can still be
-     * dropped next to one of these, which only refuse to move themselves.
-     */
+    /** These refuse to move themselves; others can still land beside them. */
     isRowDraggable?: (row: TRow) => boolean
 
-    /**
-     * Called after a move, with the data array already in its new order.
-     * Use it to persist. Leave it out and the reorder is client-only.
-     */
+    /** After a move, with `data` already reordered. Omit for client-only. */
     onReorder?: (context: {
         /** The row that moved. */
         node: RowNode<TRow>

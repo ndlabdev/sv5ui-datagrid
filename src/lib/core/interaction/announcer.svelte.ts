@@ -27,11 +27,7 @@ export class Announcer<TRow> {
         this.message = message
     }
 
-    /**
-     * The strings are read when something is announced, not when the announcer
-     * is built: switching language has to reach a grid that is already on
-     * screen, without tearing it down.
-     */
+    /** Read at announce time, so switching language reaches a mounted grid. */
     constructor(grid: GridState<TRow>, strings: () => DataGridAnnouncerStrings) {
         const locale = () => strings()
         grid.events.on('sortChanged', ({ sort }) => {

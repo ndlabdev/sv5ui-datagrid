@@ -190,11 +190,7 @@ function onBodyRow<TRow>(grid: GridState<TRow>): boolean {
     return grid.focus.active.row >= 0 && getSelection(grid) !== undefined
 }
 
-/**
- * The checkbox column's header cell. Its checkbox is out of the tab order like
- * every control in the grid, so Space on the cell is what has to reach it —
- * `Ctrl+A` only ever selects, and would leave no way back.
- */
+/** The checkbox is out of the tab order, so Space on the cell reaches it. */
 function onSelectAllCell<TRow>(grid: GridState<TRow>): boolean {
     if (grid.focus.active.row !== HEADER_ROW) return false
     const column = grid.columns.visible[grid.focus.active.col]

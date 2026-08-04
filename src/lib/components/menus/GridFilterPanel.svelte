@@ -45,9 +45,7 @@
         { label: labels.or, value: 'or' }
     ])
 
-    // The draft is small, shallow and rebuilt on every open: a deep `$state`
-    // buys `bind:` straight into a condition row and costs nothing at this
-    // size. Row data would use `$state.raw`; a two-row form does not.
+    // Deep `$state`, not raw: a two-row form binds straight into a condition.
     let draft = $state(emptyDraft('text'))
     let setSearch = $state('')
     let setSelected = $state.raw<SetFilterValue[]>([])
@@ -100,9 +98,8 @@
     let triggerElement = $state<HTMLElement | null>(null)
     let position = $state({ x: 0, y: 0 })
 
-    // Viewport coordinates from `getBoundingClientRect`, so `left` is the
-    // right property here even under RTL - a logical inset would mirror a
-    // position that is already absolute and land the panel off-screen.
+    // Viewport coordinates, so `left` even under RTL: a logical inset would
+    // mirror a position that is already absolute.
     function anchor() {
         if (!triggerElement) return
         const rect = triggerElement.getBoundingClientRect()
@@ -112,22 +109,14 @@
         }
     }
 
-    // Anchor the panel to its trigger whenever it opens — however it opened.
-    // Positioning only inside the click handler left the panel at the top-left
-    // corner when opened from the column menu, which sets `filterFor` directly.
-    // `$effect.pre` runs before the panel is inserted, so it never flashes at
-    // the wrong spot.
+    // However it opened: the column menu sets `filterFor` directly, and
+    // positioning in the click handler alone left the panel in the corner.
     $effect.pre(() => {
         if (!open) return
         anchor()
     })
 
-    /**
-     * The panel is fixed to the viewport, so scrolling the grid moves its
-     * trigger out from under it. Re-anchoring on every scroll keeps the two
-     * together; the listener is on capture so it hears the grid's own
-     * scroller, not just the window.
-     */
+    /** Fixed to the viewport, so scrolling moves its trigger out from under it. */
     $effect(() => {
         if (!open) return
         const reanchor = () => anchor()
@@ -145,8 +134,7 @@
 
     function onClickOutside(event: PointerEvent) {
         if (triggerElement?.contains(event.target as Node)) return
-        // Picking an operator or a join is not leaving the panel, even though
-        // the listbox lives in a portal outside it.
+        // A portalled listbox is still the panel.
         if (isInPortal(event.target)) return
         filteringState.filterFor = null
     }

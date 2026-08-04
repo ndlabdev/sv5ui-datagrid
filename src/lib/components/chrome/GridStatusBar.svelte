@@ -16,8 +16,7 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    // In server mode only one page is in memory, so the counts have to come
-    // from the server total rather than from the nodes on hand.
+    // Server mode holds one page, so the total comes from the server.
     const total = $derived(pagination?.server ? pagination.total : grid.sourceNodes.length)
     const filtered = $derived(
         pagination?.server

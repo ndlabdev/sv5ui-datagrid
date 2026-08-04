@@ -2,12 +2,9 @@ import type { GridState } from '../grid/grid.svelte.js'
 import type { ColumnState, RowNode } from '../types/index.js'
 
 /**
- * The vertical spans of one column. `owner[i]` is the row whose cell covers
- * row `i` — `i` itself for a normal or span-starting cell, an earlier row for
- * a covered one. `span[i]` is how many rows the cell starting at `i` covers.
- *
- * Indices are into the pre-window row list, the same numbering `data-dg-cell`
- * uses, so a span survives paging and scrolling.
+ * One column's vertical spans. `owner[i]` is the row drawing the cell that
+ * covers row `i`; `span[i]` is how many rows the cell at `i` covers. Indices
+ * are into the pre-window list, so a span survives paging and scrolling.
  */
 export interface ColumnRowSpans {
     owner: number[]
@@ -15,12 +12,9 @@ export interface ColumnRowSpans {
 }
 
 /**
- * Resolves every `rowSpan` column against the whole row list — not just the
- * rendered window, because a span reaching into view may start above it.
- *
- * The cost is one pass per column that declares `rowSpan`, and the caller is
- * expected to hold the result until the rows change. A grid whose columns
- * declare none gets an empty map and pays nothing.
+ * Resolved against the whole row list, because a span reaching into view may
+ * start above it. One pass per spanning column; hold the result until the
+ * rows change. A grid declaring none pays nothing.
  */
 export function rowSpansOf<TRow>(
     grid: GridState<TRow>,
@@ -36,10 +30,7 @@ export function rowSpansOf<TRow>(
     return result
 }
 
-/**
- * What the column asks for at this row. A full-width row renders one cell
- * across every column, so nothing can span out of it.
- */
+/** A full-width row draws one cell, so nothing can span out of it. */
 function requestedSpan<TRow>(
     grid: GridState<TRow>,
     column: ColumnState<TRow>,

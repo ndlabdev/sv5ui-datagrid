@@ -14,8 +14,7 @@
 
     let menuNode = $state.raw<RowNode<unknown> | null>(null)
 
-    // The source set is unfiltered, so it covers pinned rows too — they are
-    // lifted out of the pipeline downstream, not out of the source.
+    // Unfiltered, so it covers pinned rows too.
     function captureNode(event: MouseEvent) {
         const id = (event.target as HTMLElement | null)
             ?.closest('[data-dg-row-id]')

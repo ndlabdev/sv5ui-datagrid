@@ -6,12 +6,9 @@ const NAVIGABLE_PROTOCOLS = new Set(['http', 'https', 'mailto', 'tel', 'sms', 'f
 const PATH_START = /[/?#]/
 
 /**
- * Returns the href to render, or `undefined` when it is not safe to navigate
- * to. Relative urls and fragments carry no scheme and are kept.
- *
- * The scheme is matched raw: a browser ignores control characters and
- * whitespace, so `java\tscript:` runs script — but it does not spell a name on
- * the list, so no cleanup pass is needed to reject it.
+ * The href to render, or undefined when it is not safe. Relative urls carry no
+ * scheme and are kept. Matched raw: `java\tscript:` runs in a browser but does
+ * not spell a name on the list, so it is rejected without a cleanup pass.
  */
 export function safeHref(value: unknown): string | undefined {
     if (value === null || value === undefined) return undefined

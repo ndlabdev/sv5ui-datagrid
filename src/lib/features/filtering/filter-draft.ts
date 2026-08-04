@@ -147,11 +147,7 @@ function buildCondition(
     return null
 }
 
-/**
- * The filter a draft describes, or null when nothing usable was entered.
- * A group is only produced once two conditions are actually valid, so the
- * common case keeps the plain single-condition shape.
- */
+/** Null when nothing usable was entered; a group only once both are valid. */
 export function buildColumnFilter(type: FilterType, draft: FilterDraft): ColumnFilterEntry | null {
     if (type === 'set') {
         return draft.setSelected.length > 0 ? { kind: 'set', values: draft.setSelected } : null

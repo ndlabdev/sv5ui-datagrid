@@ -118,9 +118,8 @@ export class ColumnOps<TRow> {
         }
         if (contentWidth <= 0) return null
 
-        // Sizing to a measurement taken at the current width feeds back on
-        // itself: click autosize twice and the column creeps. Anything within a
-        // couple of pixels of where it already is counts as already sized.
+        // Measuring at the current width feeds back on itself, so a repeat
+        // click would creep the column wider.
         const target = Math.ceil(contentWidth + padding) + 2
         const current = this.currentWidth(id)
         return Math.abs(target - current) <= AUTOSIZE_EPSILON ? null : target
@@ -261,12 +260,8 @@ function createKeybindings<TRow>(): Keybinding<TRow>[] {
 const AUTOSIZE_EPSILON = 3
 
 /**
- * What a body cell needs to show its content in full.
- *
- * Content that stretches to the cell - a progress bar, anything on `w-full` -
- * measures as whatever the column happens to be right now, so sizing to it
- * would make every click drift the column wider. Such a cell contributes
- * nothing and the column sizes to its header and its other rows instead.
+ * What a body cell needs to show in full. Content that stretches to the cell
+ * measures as the current width, so it contributes nothing.
  */
 function bodyContentWidth(cell: HTMLElement, range: Range): number {
     const available = cell.clientWidth
@@ -301,11 +296,8 @@ function textWidth(cell: HTMLElement, range: Range): number {
 }
 
 /**
- * Everything a header cell has to fit: the label plus the sort, filter and
- * menu controls beside it. Measuring only the label used to autosize a column
- * down to the width of its text, and the controls then squeezed that text away
- * - worst on right-aligned columns, whose first child is a spacer of width
- * zero, which is what the old measurement read.
+ * The label plus the controls beside it. Measuring the label alone sized the
+ * column down until the controls squeezed the text away.
  */
 function headerContentWidth(cell: HTMLElement): number {
     const style = getComputedStyle(cell)

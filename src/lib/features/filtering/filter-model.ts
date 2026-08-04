@@ -13,11 +13,7 @@ export function isFilterGroup(
     return entry.kind === 'group'
 }
 
-/**
- * One entry in the shape everything downstream wants: a list of conditions and
- * the join between them. A lone condition reads as a one-item `and`, so a
- * consumer never has to branch on which shape it was given.
- */
+/** A lone condition reads as a one-item `and`, so no consumer has to branch. */
 export function normalizeFilterEntry(entry: ColumnFilterEntry): FilterRequestEntry {
     if (isFilterGroup(entry)) return { join: entry.join, conditions: entry.conditions }
     return { join: 'and', conditions: [entry] }
@@ -28,11 +24,7 @@ export function filterConditions(entry: ColumnFilterEntry): ColumnFilter[] {
     return isFilterGroup(entry) ? entry.conditions : [entry]
 }
 
-/**
- * Collapses a filter model into the normalized request a server row model
- * sends. Kept separate from the model itself so the wire format can stay
- * frozen while the model gains shorthands.
- */
+/** The normalized request a server model sends, frozen apart from the model. */
 export function toFilterRequest(model: FilterModel): FilterRequest {
     const columns: Record<string, FilterRequestEntry> = {}
     for (const [columnId, entry] of Object.entries(model.columns ?? {})) {

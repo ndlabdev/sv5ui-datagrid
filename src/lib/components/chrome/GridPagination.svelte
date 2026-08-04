@@ -13,10 +13,8 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    // The active page size may not be one of the offered choices — a grid can
-    // be created with any `pageSize`. Fold it in and keep the list sorted, so
-    // the Select always has an item to show its value against instead of
-    // rendering blank.
+    // A grid can hold any `pageSize`, so fold the active one in or the
+    // Select has nothing to show its value against.
     const sizeItems = $derived(
         [...new Set([...pageSizes, pagination?.pageSize].filter((size): size is number => !!size))]
             .sort((a, b) => a - b)

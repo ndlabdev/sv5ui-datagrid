@@ -1,8 +1,4 @@
-/**
- * The type surface of the grid, split by domain. This barrel is the only
- * import site the rest of the codebase uses, so moving a type between the
- * modules below is not a breaking change.
- */
+/** The only import site for types, so moving one between modules is safe. */
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 
 export type { StandardSchemaV1 }

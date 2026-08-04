@@ -55,11 +55,7 @@ export {
     resetDataGridConfig,
     type DataGridConfig
 } from './datagrid.config.js'
-/**
- * Only the props that carry real configuration. A part whose props are just
- * `class` and `children` is typed from the component itself with Svelte's
- * `ComponentProps`, so there is nothing here worth naming.
- */
+/** Only the props carrying real configuration; the rest use `ComponentProps`. */
 export type {
     DataGridFullWidthContext,
     DataGridProps,
