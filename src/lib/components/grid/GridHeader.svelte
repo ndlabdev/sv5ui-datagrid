@@ -45,6 +45,14 @@
     function withBoundary(base: string, endIndex: number): string {
         return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
     }
+
+    const dividerClass = $derived(slots.headerDivider({ class: theme('headerDivider') }))
+    const lastColumnIndex = $derived(grid.columns.visible.length - 1)
+
+    /** The last column's edge is the grid's own border. */
+    function withDivider(base: string, index: number): string {
+        return index === lastColumnIndex ? base : `${base} ${dividerClass}`
+    }
     const pinnedHeaderClass = $derived(slots.pinnedHeaderCell({ class: theme('pinnedHeaderCell') }))
     const hasControls = $derived(Boolean(filteringState || columnOps))
     const controlsBaseClass = $derived(slots.headerControls({ class: theme('headerControls') }))
@@ -52,11 +60,7 @@
         slots.headerControlsPinned({ class: theme('headerControlsPinned') })
     )
 
-    /**
-     * The controls hide until the header is hovered or focused, so the label
-     * gets the whole cell. A column with a filter on keeps its icon visible -
-     * otherwise the only sign the grid is filtered would be the row count.
-     */
+    /** Hidden until hovered, so the label gets the cell — unless filtered. */
     function controlsClass(columnId: string): string {
         const active = filteringState ? columnId in filteringState.columnFilters : false
         return active ? `${controlsBaseClass} ${controlsPinnedClass}` : controlsBaseClass
@@ -80,12 +84,7 @@
         return direction === 'asc' ? 'lucide:chevron-up' : 'lucide:chevron-down'
     }
 
-    /**
-     * A `headerCell` snippet may draw nothing a screen reader can read - an
-     * icon, a colour swatch - so the column is named from `header` instead of
-     * from what was drawn. Without a snippet the rendered text is the name
-     * already, and naming it twice would be worse than not naming it.
-     */
+    /** A snippet may draw nothing readable; without one the text is the name. */
     function headerName(column: ColumnState<unknown>): string | undefined {
         if (!column.def.headerCell) return undefined
         return column.header === '' ? column.id : column.header
@@ -181,8 +180,7 @@
             startX: event.clientX,
             pointerId: event.pointerId,
             element: event.currentTarget as HTMLElement,
-            // Read once: `isRtl` forces a style recalculation, and direction
-            // cannot change mid-drag.
+            // `isRtl` forces a style recalculation, and cannot change mid-drag.
             rtl: headerRowElement ? isRtl(headerRowElement) : false
         }
     }
@@ -303,10 +301,13 @@
                 aria-sort={ariaSort(column.id)}
                 tabindex={isActive(index) ? 0 : -1}
                 data-dg-cell="{HEADER_ROW}:{index}"
-                class={withBoundary(
-                    column.pinned
-                        ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
-                        : headerCellClass[column.align],
+                class={withDivider(
+                    withBoundary(
+                        column.pinned
+                            ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
+                            : headerCellClass[column.align],
+                        index
+                    ),
                     index
                 )}
                 style:grid-column={columnWindow.windowed ? index + 1 : undefined}

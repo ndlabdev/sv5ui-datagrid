@@ -93,6 +93,9 @@ published; entries are grouped for the first `0.x` release.
   `setRowCount`).
 - **State persistence** — versioned JSON snapshots via `getState`/`setState`,
   `persistState` auto-sync to `localStorage` with a `migrate` hook.
+- **Header** — a divider per column. The resize handle sits on that edge but
+  only appears on hover, so the line is what tells anyone where a column ends
+  and what can be dragged. The body keeps no vertical rules of its own.
 - **Toolbar** — quick filter, active filter chips, an export menu, the column
   chooser and the density toggle. The export menu offers every row the filter
   left or just the selection, and takes its file name from `exportFilename`,

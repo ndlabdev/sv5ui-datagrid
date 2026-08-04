@@ -38,7 +38,7 @@
                 onCheckedChange={onRowChecked}
                 disabled={!selectable}
                 label={grid.labels.selectRow(node.index + 1)}
-                ui={{ label: 'sr-only' }}
+                ui={{ label: 'sr-only', wrapper: 'ms-0 me-0' }}
             />
         </span>
     {:else if selectionState.mode === 'multiple'}
@@ -52,7 +52,7 @@
                 indeterminate={selectionState.allState === 'some'}
                 onCheckedChange={selectionState.toggleAll}
                 label={grid.labels.selectAllRows}
-                ui={{ label: 'sr-only' }}
+                ui={{ label: 'sr-only', wrapper: 'ms-0 me-0' }}
             />
         </span>
     {/if}

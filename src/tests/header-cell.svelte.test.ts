@@ -181,3 +181,43 @@ describe('headerCell snippet', () => {
         expect(grid.columns.get('revenue')?.header).toBe('Revenue')
     })
 })
+
+describe('header column dividers', () => {
+    it('draws one per column, and none past the last', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns: [
+                { id: 'name', header: 'Name', width: 200 },
+                { id: 'revenue', header: 'Revenue', width: 200 }
+            ] satisfies ColumnDef<Person>[],
+            getRowId
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const headers = [...screen.container.querySelectorAll('[role="columnheader"]')]
+        expect(headers).toHaveLength(2)
+
+        // The resize handle sits on this edge but only shows on hover, so the
+        // line is what says where a column ends and what can be dragged.
+        expect(getComputedStyle(headers[0]).borderInlineEndWidth).toBe('1px')
+        // The last column's edge is the grid's own border.
+        expect(getComputedStyle(headers[1]).borderInlineEndWidth).toBe('0px')
+    })
+
+    it('leaves the body cells alone', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns: [
+                { id: 'name', header: 'Name', width: 200 },
+                { id: 'revenue', header: 'Revenue', width: 200 }
+            ] satisfies ColumnDef<Person>[],
+            getRowId
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        // Dividers belong to the header: ruling the whole body would turn a
+        // reading surface into a spreadsheet.
+        const cell = screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
+        expect(getComputedStyle(cell).borderInlineEndWidth).toBe('0px')
+    })
+})

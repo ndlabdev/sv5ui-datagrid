@@ -291,3 +291,31 @@ describe('status bar + a11y', () => {
         expect(results.violations.map((violation) => violation.id)).toEqual([])
     })
 })
+
+describe('selection column layout', () => {
+    /** How far a control sits from the centre of the cell holding it. */
+    function offCentre(cell: HTMLElement): number {
+        const control = cell.querySelector('button, input, [role="checkbox"]')!
+        const box = cell.getBoundingClientRect()
+        const inner = control.getBoundingClientRect()
+        return inner.x + inner.width / 2 - (box.x + box.width / 2)
+    }
+
+    it('centres the checkbox in its column, header and rows alike', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        // The checkbox keeps a slot for its label even when only a screen
+        // reader reads it, and that reserved gap used to push the control
+        // several pixels off centre in a column this narrow.
+        const header = screen.container.querySelector<HTMLElement>('[data-dg-cell="-1:0"]')!
+        const row = screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
+        expect(Math.abs(offCentre(header))).toBeLessThanOrEqual(1)
+        expect(Math.abs(offCentre(row))).toBeLessThanOrEqual(1)
+
+        // Hidden from sight, still the accessible name.
+        await expect
+            .element(screen.getByRole('checkbox', { name: 'Select all rows' }))
+            .toBeInTheDocument()
+    })
+})

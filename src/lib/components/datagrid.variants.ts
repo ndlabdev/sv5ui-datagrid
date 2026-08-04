@@ -19,40 +19,18 @@ export const datagridVariants = tv({
             'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
         resizeHandle:
             'absolute inset-y-0 end-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
-        // The filter and menu triggers float over the end of the header rather
-        // than sitting in its flow: in flow they reserved their width even
-        // while invisible, and a 90px column had nothing left for its label.
-        //
-        // Inset vertically by the width of the focus ring. The wrapper is
-        // opaque, and stretched edge to edge it painted over the ring the cell
-        // draws inside itself, leaving the outline broken along the top and
-        // bottom wherever the controls sit.
-        //
-        // Revealed on hover, but a touch device has no hover to give: the last
-        // rule keeps them visible wherever hovering is impossible. Tailwind
-        // emits arbitrary media variants last, so it wins over the base
-        // `opacity-0` without touching the pointer-device behaviour.
-        // No z-index on purpose: any value here would open a stacking context
-        // and trap the filter panel rendered inside, leaving it painted under
-        // the pinned header cells. Coming after the label in the DOM is enough
-        // to draw over it.
+        // No z-index: it would open a stacking context and trap the filter
+        // panel rendered inside, under the pinned header cells.
         headerControls:
             'absolute inset-y-0.5 end-1.5 flex items-center gap-0.5 bg-surface-container ps-2 opacity-0 transition-opacity group-hover/head:opacity-100 group-focus-within/head:opacity-100 [@media(hover:none)]:opacity-100',
-        // A column that is actually filtered keeps its icon on show.
         headerControlsPinned: 'opacity-100',
         menuButton: 'shrink-0',
         dropIndicator: 'pointer-events-none absolute inset-y-0 z-20 w-0.5 bg-primary',
         rowHandle:
             'flex size-full cursor-grab items-center justify-center text-on-surface-variant outline-none touch-pan-y select-none hover:text-on-surface focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset active:cursor-grabbing disabled:cursor-default disabled:opacity-30',
         rowDropIndicator: 'pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-primary',
-        // The copy that follows the cursor, and what is left behind while it
-        // does. The source stays in place so the list keeps its shape; fading
-        // it is what says which row is in the air.
-        // Opaque on purpose: a row draws no background of its own - the body
-        // behind it does - so a bare copy would let the list show through it.
-        // `overflow-hidden` is what keeps the ring whole: the pinned cells
-        // carry a square opaque background, and without clipping they spill
-        // past the rounded corners and cover the ring's arc on the left.
+        // Opaque because a row has no background of its own; clipped because
+        // pinned cells would otherwise spill over the ring's rounded corners.
         rowGhost: 'overflow-hidden rounded-md bg-surface shadow-lg ring-1 ring-primary',
         rowDragging: 'opacity-40',
         pinnedCell:
@@ -62,46 +40,28 @@ export const datagridVariants = tv({
         body: 'relative',
         bodyOffset: 'will-change-transform',
         row: 'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
-        // The focus ring is inset, so anything painted above the cell eats an
-        // edge of it: the row separator sits at `z-6` and washed out the bottom
-        // one. Lifting a focused cell over it keeps the ring even all round.
+        // Focused above the row separator (z-6), or it eats the inset ring.
         cell: 'flex min-h-(--dg-row-h) min-w-0 items-center overflow-hidden px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
-        // An open editor shows its validation message just below the cell, so
-        // the cell must stop clipping while one is mounted.
+        // The validation message hangs below the cell.
         cellEditing: 'overflow-visible',
-        // A row-spanning cell keeps its own row's height: making the cell
-        // itself taller would grow the row's grid track and stretch every
-        // sibling with it. The overhang is drawn by an overlay inside it, so
-        // the cell must stop clipping and hand its padding over.
-        // `relative` so the overlay is bounded by this cell: without it the
-        // nearest positioned ancestor is the row, and the overlay stretches
-        // across every column. The cell carries the z-index rather than
-        // leaving it to the overlay, because a pinned cell is already a
-        // stacking context at z-5 — the overlay would be trapped under it and
-        // the row separator (z-6) would draw straight through the span.
+        // Keeps its row's height — a taller cell grows the grid track and
+        // stretches every sibling. `relative` bounds the overlay to this cell;
+        // the z-index is here, not on the overlay, which a pinned cell's own
+        // stacking context (z-5) would otherwise trap under the separator.
         cellRowSpan: 'relative z-[7] overflow-visible p-0',
-        // The overhang. Opaque and above the row separator (z-6) and the
-        // selection tint (z-6), or both would show through what is meant to
-        // read as one tall cell; `items-start` keeps the text at the top rather
-        // than centred down the whole span.
-        // The overhang covers everything it crosses, including the separator at
-        // its own foot — where a new run begins and the line has to be. So it
-        // draws that one itself, the way the row it hides would have.
+        // The overhang: opaque and above the separator and selection tint it
+        // crosses, and drawing the one at its own foot, where the next run
+        // begins.
         rowSpanFill:
             'absolute inset-x-0 z-[7] flex min-w-0 items-start overflow-hidden bg-surface px-3 py-(--dg-cell-py) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant',
-        /** A span reaching the last row ends at the grid's own edge. */
         rowSpanFillLast: 'after:hidden',
-        // Merging rows takes the horizontal lines away, and without a vertical
-        // one the merged block has no edge left at all — it reads as a hole
-        // rather than a cell. These put the column's own edges back, and only
-        // a column that spans gets them.
+        // Merging takes the horizontal lines away; without these the block has
+        // no edge left and reads as a hole.
         rowSpanEdge: 'border-e border-outline-variant',
         rowSpanEdgeStart: 'border-s border-outline-variant',
-        // Only in a grid that spans rows. A spanning cell has to sit above the
-        // row separator, which sits above pinned cells — a cycle, since pinned
-        // cells must in turn stay above anything scrolling under them. Lifting
-        // pinned cells over the spans breaks it, and they then draw the
-        // separator and selection tint themselves, having risen above both.
+        // Only where rows span. Separator over pinned, span over separator,
+        // pinned over span is a cycle; lifting pinned cells breaks it, so they
+        // draw the separator and tint they now cover.
         pinnedCellRaised:
             'z-[8] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant group-last/row:after:hidden',
         pinnedCellSelected:
@@ -125,10 +85,9 @@ export const datagridVariants = tv({
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
         groupBoundary: 'border-e border-outline-variant',
-        // Below the sv5ui popup layer on purpose. The panel is a surface, and
-        // the menus it opens - the operator select, the join select - belong
-        // above it. Sharing their `z-50` left the winner to DOM order, and the
-        // panel is appended last, so it covered its own listboxes.
+        // The resize handle sits on this edge but only shows on hover.
+        headerDivider: 'border-e border-outline-variant',
+        // Below the sv5ui popup layer (z-50), or it covers its own listboxes.
         filterPanel:
             'fixed z-40 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
         filterChips: 'flex flex-wrap items-center gap-1.5',
@@ -171,11 +130,7 @@ export type DataGridSlots = keyof ReturnType<typeof datagridVariants>
 /** Extra classes per visual slot, merged after the variant's own. */
 export type DataGridUi = Partial<Record<DataGridSlots, ClassNameValue>>
 
-/**
- * The shape `defineDataGridConfig` overrides, and the values used when it is
- * never called. `align` is deliberately absent: it is resolved per column from
- * `ColumnDef.align`, not as a whole-grid preference.
- */
+/** `align` is absent on purpose: it is resolved per column, not per grid. */
 export const datagridDefaults: { defaultVariants: { density: Density }; slots: DataGridUi } = {
     defaultVariants: { density: 'standard' },
     slots: {}
