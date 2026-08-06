@@ -2,8 +2,8 @@
 
 A data grid for Svelte 5, built on [sv5ui](https://github.com/ndlabdev/sv5ui).
 
-Virtualized to 100k rows, keyboard-navigable, translated into twelve languages,
-and assembled from feature modules you can write yourself.
+Virtualized past a million rows, keyboard-navigable, translated into twelve
+languages, and assembled from feature modules you can write yourself.
 
 > **Status: pre-release.** Not on npm yet. The API is frozen in intent but not
 > in practice — breaking changes may land between `0.x` minors and are always
@@ -14,7 +14,7 @@ and assembled from feature modules you can write yourself.
 - [Features](#features) · [Installation](#installation) · [Quick start](#quick-start)
 - [Architecture](#architecture) · [Feature modules](#feature-modules) · [Extension points](#extension-points)
 - [Columns](#columns) · [Localization](#localization) · [State persistence](#state-persistence) · [Server row model](#server-row-model)
-- [Theming](#theming) · [Accessibility](#accessibility) · [DOM contract](#dom-contract) · [API stability](#api-stability)
+- [Theming](#theming) · [Accessibility](#accessibility) · [Performance](#performance) · [DOM contract](#dom-contract) · [API stability](#api-stability)
 
 ## Features
 
@@ -325,6 +325,43 @@ defineDataGridConfig({
   under RTL.
 - Every demo route is asserted axe-clean in CI.
 
+## Performance
+
+Measured on Chromium, a 1500x950 viewport, 39 columns of mixed renderers
+(currency, percent, date, badge, progress, rating, boolean). The playground
+route `/stress` is what these come from, so they can be re-run rather than
+taken on trust.
+
+|                      | 100k rows | 500k rows | 1M rows |
+| -------------------- | --------- | --------- | ------- |
+| Data into the grid   | 219ms     | 251ms     | 416ms   |
+| JS heap              | 100MB     | 315MB     | 472MB   |
+| DOM nodes            | 779       | 779       | 779     |
+| Sort                 | 81ms      | 67ms      | 67ms    |
+| Scroll, median frame | 19ms      | 23ms      | 35ms    |
+| Quick filter         | 0.5s      | 1.1s      | 2.1s    |
+
+The DOM node count is the number worth reading: it is the same at a million
+rows as at a hundred thousand, because only the visible window is rendered.
+The heap is your data, not the grid's overhead.
+
+### What it costs, and where it stops
+
+- **Scrolling holds 60fps to roughly half a million rows** and falls to about
+  28fps at a million with this many columns. Fewer columns move that line out.
+- **Quick filter is O(rows x visible columns) on the main thread.** At a
+  million rows and 39 columns that is 39 million string comparisons and about
+  two seconds of blocked UI. Filter on fewer columns, or reach for
+  `rowModel: 'server'`, until this is made incremental.
+- **Beyond the browser's maximum element height** the scroll range is scaled
+  rather than clamped, so the last row stays reachable; a pixel of scrolling
+  simply covers more than a pixel of content. Engines differ on where that
+  starts — Chromium at 2^25px, others lower — so the grid caps below the
+  lowest in wide use.
+- **`getRowHeight: 'auto'`** switches the virtualizer to a Fenwick-tree offset
+  cache, which is O(log n) per lookup rather than the fixed path's arithmetic.
+  Prefer a fixed height when the rows allow it.
+
 ## DOM contract
 
 Body cells carry `data-dg-cell="rowIndex:colIndex"` — absolute indices within
@@ -359,8 +396,11 @@ pnpm lint     # prettier + eslint
 pnpm build    # package + publint
 ```
 
-The playground under `src/routes` has one page per feature, plus `qa`, `i18n`,
-`export` and `spans` for reviewing behaviour by hand.
+The playground under `src/routes` has one page per feature, plus review
+routes: `qa` runs everything in one grid, `i18n` switches language in place,
+`export` shows the bytes a CSV export produces, `spans` exercises cell
+spanning against a pinned column, `editors` puts every editor beside its
+validation rule, and `stress` loads up to a million rows across 39 columns.
 
 ## License
 

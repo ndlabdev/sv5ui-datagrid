@@ -171,6 +171,30 @@ Bugs found and closed before the first release.
 - **RTL** — indent tree and group rows from the inline start, so nesting reads
   correctly under `dir="rtl"`.
 
+### Known limits
+
+Measured rather than assumed, and stated here so nobody has to discover them
+in production. Numbers are Chromium at 39 columns; see the README for the
+full table.
+
+- **Quick filter is O(rows x visible columns) on the main thread** — about two
+  seconds at a million rows, which blocks the UI. Filter on fewer columns or
+  use `rowModel: 'server'` until it is made incremental.
+- **Scrolling holds 60fps to roughly half a million rows** and falls to about
+  28fps at a million with this many columns.
+- **Past the browser's maximum element height the scroll range is scaled**, so
+  every row stays reachable but a pixel of scrolling covers more than a pixel
+  of content.
+- **`rowSpan` resolves against the whole row list**, one pass per spanning
+  column on every sort or filter. Fine for the report-shaped data it is for,
+  costly at a million rows.
+- **`getRowHeight: 'auto'`** puts the virtualizer on its variable-height path;
+  a fixed height is cheaper where the rows allow it.
+- **Row reorder rewrites `data`**, so an active sort re-sorts it immediately:
+  clear the sort before offering the grip.
+- **Server row model covers filter, sort and paging.** Grouping, tree data and
+  infinite scroll belong to `@sv5ui/datagrid-pro`.
+
 ### Development
 
 - A playground route per feature (basic, columns, filters, selection, editing,
@@ -179,5 +203,8 @@ Bugs found and closed before the first release.
   and loading / error / empty / RTL switches, `i18n` switches between the
   twelve languages in place, `export` shows the exact bytes a CSV export
   produces, `spans` exercises row and column spanning against a pinned column,
-  and `editors` puts all ten built-in editors next to the validation rule each
-  column enforces.
+  `editors` puts all ten built-in editors next to the validation rule each
+  column enforces, and `stress` loads up to a million rows across 39 columns
+  and reports what each load cost.
+- Performance budgets in CI as coarse regression ceilings, measured best-of-3
+  so a loaded machine does not fail a build.
