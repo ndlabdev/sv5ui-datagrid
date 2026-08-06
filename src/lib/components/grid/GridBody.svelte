@@ -12,6 +12,7 @@
     import { rowSpansOf } from '../../core/columns/row-span.js'
     import { isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
+    import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getRowReorder } from '../../features/row-reorder/index.js'
     import { getSelection } from '../../features/selection/index.js'
@@ -30,7 +31,7 @@
     let {
         emptyText,
         loading = false,
-        loadingRows = 5,
+        loadingRows,
         error = null,
         onRetry,
         fullWidthRow,
@@ -161,8 +162,11 @@
         let result = `${cellClass[column.align]} ${editStateClasses(input)}`
         if (column.pinned) result += ` ${pinnedClasses(node)}`
         if (input.rowSpanning) result += ` ${cellRowSpanClass}`
-        // A run of one has no overhang to carry the column's edges.
-        else result += edgeClasses(colIndex) ? ` ${edgeClasses(colIndex)}` : ''
+        else {
+            // A run of one has no overhang to carry the column's edges.
+            const edges = edgeClasses(colIndex)
+            if (edges) result += ` ${edges}`
+        }
         if (decoration?.class) result += ` ${decoration.class}`
         result = withBoundary(result, colIndex)
 
@@ -207,6 +211,18 @@
         }
         return merged
     }
+
+    /**
+     * Enough skeleton rows to cover the area the real ones will. A flat count
+     * leaves most of a tall grid blank, which reads as broken rather than
+     * busy — the complaint the loading state exists to answer.
+     */
+    const skeletonRows = $derived(
+        loadingRows ??
+            virtualization?.virtualizer.visibleCount() ??
+            getPagination(grid)?.pageSize ??
+            5
+    )
 
     const windowStart = $derived(windowStartOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
@@ -568,7 +584,7 @@
             </div>
         </div>
     {:else if loading}
-        {#each Array.from({ length: loadingRows }, (_, i) => i) as i (i)}
+        {#each Array.from({ length: skeletonRows }, (_, i) => i) as i (i)}
             <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
                     <div

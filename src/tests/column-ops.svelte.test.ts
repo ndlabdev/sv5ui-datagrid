@@ -301,6 +301,48 @@ describe('column menu + chooser + state round-trip', () => {
         await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-colcount', '2')
     })
 
+    it('lists only the columns an app declared', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people.slice(0, 4),
+            columns: flatColumns,
+            getRowId,
+            selection: true,
+            toolbar: true
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        await screen.getByRole('button', { name: 'Choose columns' }).click()
+        const entries = page.getByRole('menuitemcheckbox').elements()
+
+        // The grid's own checkbox column carries no header and cannot be
+        // hidden, so it showed up as a blank row with a tick beside it.
+        expect(entries).toHaveLength(flatColumns.length)
+        expect(entries.every((entry) => entry.textContent?.trim())).toBe(true)
+    })
+
+    it('scrolls when there are more columns than fit on screen', async () => {
+        const many: ColumnDef<Person>[] = Array.from({ length: 40 }, (_, i) => ({
+            id: `c${i}`,
+            header: `Column ${i}`,
+            width: 120
+        }))
+        const screen = await render(TypedDataGrid, {
+            data: people.slice(0, 4),
+            columns: many,
+            getRowId,
+            toolbar: true
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        await screen.getByRole('button', { name: 'Choose columns' }).click()
+        const menu = document.querySelector<HTMLElement>('[role="menu"]')!
+
+        // Forty columns make a menu taller than the screen, which then has no
+        // way to reach its own end.
+        await expect.poll(() => menu.scrollHeight > menu.clientHeight).toBe(true)
+        expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1)
+    })
+
     it('round-trips the full column state through the api (exit criteria)', async () => {
         const grid = createDataGrid<Person>({
             data: people.slice(0, 4),

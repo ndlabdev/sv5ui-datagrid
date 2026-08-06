@@ -77,7 +77,7 @@ export interface GridBodyProps<TRow = unknown> {
 
     /**
      * Number of skeleton rows rendered while loading.
-     * @default 5
+     * @default enough to fill the viewport
      */
     loadingRows?: number
 
@@ -217,6 +217,12 @@ export type DataGridProps<TRow> = {
 
     /** Renders skeleton rows instead of data rows. */
     loading?: boolean
+
+    /**
+     * Number of skeleton rows rendered while loading.
+     * @default enough to fill the viewport
+     */
+    loadingRows?: number
 
     /** Error message shown instead of rows. */
     error?: string | null

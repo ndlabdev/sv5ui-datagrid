@@ -210,6 +210,35 @@ describe('overlays', () => {
         expect(screen.container.querySelectorAll('[role="gridcell"]')).toHaveLength(0)
     })
 
+    it('fills the grid with skeletons rather than a fixed few', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns,
+            getRowId,
+            pageSize: 25,
+            loading: true
+        })
+
+        // A flat count left most of a tall grid blank, which reads as broken
+        // rather than busy — the very thing the loading state answers.
+        const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')!
+        expect(body.querySelectorAll('[role="row"]')).toHaveLength(25)
+    })
+
+    it('takes an explicit count over the one it works out', async () => {
+        const screen = await render(TypedDataGrid, {
+            data: people,
+            columns,
+            getRowId,
+            pageSize: 25,
+            loading: true,
+            loadingRows: 3
+        })
+
+        const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')!
+        expect(body.querySelectorAll('[role="row"]')).toHaveLength(3)
+    })
+
     it('renders the error state with a retry action', async () => {
         let retried = false
         const screen = await render(TypedDataGrid, {

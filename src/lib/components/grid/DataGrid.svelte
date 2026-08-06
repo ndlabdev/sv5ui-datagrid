@@ -38,6 +38,7 @@
         exportFilename,
         emptyText,
         loading,
+        loadingRows,
         error,
         onRetry,
         fullWidthRow,
@@ -95,7 +96,7 @@
     <GridContextMenu {exportFilename}>
         <GridViewport class={isVirtual ? className : undefined}>
             <GridHeader />
-            <GridBody {emptyText} {loading} {error} {onRetry} {fullWidthRow} />
+            <GridBody {emptyText} {loading} {loadingRows} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
     </GridContextMenu>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
