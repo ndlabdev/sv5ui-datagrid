@@ -1,5 +1,6 @@
 import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
 import type { GridState } from '../../core/grid/grid.svelte.js'
+import { popupOpen } from '../../core/utils/popup.js'
 import { getCellValue } from '../../core/utils/value.js'
 import type {
     ColumnDef,
@@ -79,9 +80,16 @@ export class Editing<TRow> {
         this.error = null
     }
 
+    /**
+     * Opens an edit on the key that started it. Only an editor that takes
+     * typed text keeps the character: seeding a select or a rating with it
+     * would put a value in the draft that its own control cannot represent.
+     */
     startEditWith = (rowId: string, columnId: string, initial: string): void => {
         this.startEdit(rowId, columnId)
-        if (this.active) this.draft = initial
+        if (!this.active) return
+        const column = this.#grid.columns.get(columnId)
+        if (column && TYPED_EDITORS.has(editorTypeOf(column))) this.draft = initial
     }
 
     setDraft = (value: unknown): void => {
@@ -136,7 +144,7 @@ export class Editing<TRow> {
     #commitValue(node: RowNode<TRow>, def: ColumnDef<TRow>, validated: Validated): boolean {
         if (validated.error !== null) {
             this.error = validated.error
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(validated.error))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(validated.error))
             return false
         }
         const columnId = def.id
@@ -245,7 +253,7 @@ export class Editing<TRow> {
         if (Object.keys(errors).length > 0) {
             this.rowErrors = errors
             const [first] = Object.values(errors)
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(first))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(first))
             return false
         }
         const before = this.#applyTransaction({ rowId: node.id, changes })
@@ -290,10 +298,8 @@ export class Editing<TRow> {
     }
 
     /**
-     * Writes many cells at once — the path a paste or any programmatic edit
-     * takes. Every value goes through the column's `parse` and validation;
-     * one invalid cell rejects the whole batch, and a successful batch lands
-     * as a single undo step.
+     * Many cells at once, each through the column's `parse` and validation.
+     * One invalid cell rejects the batch; a successful one is a single undo.
      */
     applyEdits = (edits: EditTransaction[]): boolean | Promise<boolean> => {
         const resolved = edits.flatMap((edit) => {
@@ -317,10 +323,8 @@ export class Editing<TRow> {
     }
 
     /**
-     * Applies clipboard text starting at the focused cell, spreading rightward
-     * and downward. Cells that fall on a non-editable column or past the last
-     * row are dropped — `applyEdits` filters them and runs the same parse and
-     * validation a typed edit does, so the whole paste lands as one undo step.
+     * Clipboard text from the focused cell, spreading right and down. Cells
+     * landing on a non-editable column or past the last row are dropped.
      */
     pasteText = (text: string): boolean | Promise<boolean> => {
         const matrix = parseClipboardMatrix(text)
@@ -355,7 +359,7 @@ export class Editing<TRow> {
         if (invalid) {
             const message = invalid.validated.error!
             this.error = message
-            this.#grid.announcer.announce(this.#grid.announcer.locale.editInvalid(message))
+            this.#grid.announcer.announce(this.#grid.announcerStrings.editInvalid(message))
             return false
         }
         if (entries.length === 0) return false
@@ -401,10 +405,31 @@ function startActive<TRow>(grid: GridState<TRow>): void {
     if (cell) getEditing(grid)!.startEdit(cell.node.id, cell.def.id)
 }
 
+/**
+ * True while an edit is open and nothing it opened is covering it. A popup
+ * belongs to whoever opened it: Escape should shut the listbox first and only
+ * abandon the edit on the way back out.
+ */
+function isEditing<TRow>(grid: GridState<TRow>): boolean {
+    const state = getEditing(grid)
+    return Boolean(state && (state.active || state.rowEditId)) && !popupOpen()
+}
+
+function cancelEdit<TRow>(grid: GridState<TRow>): void {
+    const state = getEditing(grid)!
+    if (state.rowEditId) state.cancelRow()
+    else state.cancel()
+}
+
 function createKeybindings<TRow>(): Keybinding<TRow>[] {
     return [
         { key: 'Enter', when: canStartEdit, handler: startActive },
         { key: 'F2', when: canStartEdit, handler: startActive },
+        // Bound on the grid, not on the editor: a widget editor leaves focus on
+        // the cell, whose keydown never reaches a handler on the editor inside
+        // it. A popup the editor opened is portalled out of the grid, so its
+        // own Escape closes the popup and never arrives here.
+        { key: 'Escape', when: isEditing, handler: cancelEdit },
         {
             key: 'Ctrl+z',
             when: (grid) => getEditing(grid)?.canUndo ?? false,
@@ -448,6 +473,9 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
 export function getEditing<TRow>(grid: GridState<TRow>): Editing<TRow> | undefined {
     return grid.feature<Editing<TRow>>(EDITING)
 }
+
+/** Editors a printable key can sensibly start with. */
+const TYPED_EDITORS = new Set(['text', 'number', 'textarea'])
 
 export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
     const editor = column.def.editor

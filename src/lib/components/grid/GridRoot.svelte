@@ -10,15 +10,12 @@
 
     let { grid, persistState, ui, class: className, children }: GridRootProps<TRow> = $props()
 
-    // Serves the grid's icons from the bundle, so its UI never fetches them.
     registerDataGridIcons()
 
     setGridContext(untrack(() => grid))
-    // A getter, so changing `ui` restyles the parts instead of remounting them.
     setGridTheme(() => ui)
 
-    // A grid built without a density follows the app-wide default. Written back
-    // once so the toggle, the snapshot and the rendering all read one value.
+    // Written back once so toggle, snapshot and rendering read one value.
     untrack(() => {
         if (grid.configuredDensity === undefined) {
             grid.density = getDataGridConfig().defaultVariants.density

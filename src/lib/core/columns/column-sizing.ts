@@ -34,6 +34,7 @@ export function createColumnState<TRow>(
         hidden: overrides.hidden ?? def.hidden ?? false,
         align: def.align ?? 'left',
         pinned: resolvePinned(def, overrides),
+        resizable: def.resizable ?? true,
         cssVar: `--dg-col-${sanitized}-w`,
         pinVar: `--dg-col-${sanitized}-pin`
     }

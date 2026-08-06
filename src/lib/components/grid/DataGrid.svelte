@@ -19,6 +19,7 @@
     import GridQuickFilter from '../chrome/GridQuickFilter.svelte'
     import GridRoot from './GridRoot.svelte'
     import GridStatusBar from '../chrome/GridStatusBar.svelte'
+    import GridExportMenu from '../chrome/GridExportMenu.svelte'
     import GridToolbar from '../chrome/GridToolbar.svelte'
     import GridViewport from './GridViewport.svelte'
 
@@ -34,8 +35,10 @@
         virtual,
         density,
         toolbar = false,
+        exportFilename,
         emptyText,
         loading,
+        loadingRows,
         error,
         onRetry,
         fullWidthRow,
@@ -85,14 +88,15 @@
             <GridQuickFilter class="min-w-64" />
             <GridFilterChips />
             <div class="grow"></div>
+            <GridExportMenu filename={exportFilename} />
             <GridColumnChooser />
             <GridDensityToggle />
         </GridToolbar>
     {/if}
-    <GridContextMenu>
+    <GridContextMenu {exportFilename}>
         <GridViewport class={isVirtual ? className : undefined}>
             <GridHeader />
-            <GridBody {emptyText} {loading} {error} {onRetry} {fullWidthRow} />
+            <GridBody {emptyText} {loading} {loadingRows} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
     </GridContextMenu>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">

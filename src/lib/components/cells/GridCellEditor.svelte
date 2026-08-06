@@ -16,6 +16,7 @@
     import { editorTypeOf, getEditing } from '../../features/editing/index.js'
     import { getGridContext } from '../internal/context.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { isInPortal } from '../internal/portal.js'
     import { getGridTheme } from '../internal/theme.js'
     import {
         fromDateValue,
@@ -49,9 +50,8 @@
         return Number.isNaN(parsed) ? null : parsed
     })
 
-    // Editors typed into a field: they commit when the user leaves the editor,
-    // not on every internal change — date/time are typed segment by segment,
-    // so committing per change would close the editor mid-entry.
+    // Commit on leaving, not per change: date/time are typed segment by
+    // segment and would close the editor mid-entry.
     const inputBased = $derived(
         type === 'text' ||
             type === 'number' ||
@@ -60,28 +60,39 @@
             type === 'time' ||
             type === 'date'
     )
-    // Editors where Enter should commit rather than be handled by the widget
-    // (a textarea inserts a newline, InputTags adds a tag, popups own Enter).
+    // Where Enter commits rather than belonging to the widget.
     const enterCommits = $derived(
         type === 'text' || type === 'number' || type === 'time' || type === 'date'
     )
-    // Date and time are typed into segments; focus the first one on open so
-    // the user can type immediately instead of having to pick from a popup.
+    // Focus the first segment so the user can type instead of picking.
     const segmented = $derived(type === 'date' || type === 'time')
+    /**
+     * Opening the editor is the choice; the list is what the user came for, so
+     * it is already down rather than waiting for a second key.
+     */
+    const listEditor = $derived(type === 'select' || type === 'selectMenu')
+    let listOpen = $state(false)
+    $effect(() => {
+        if (listEditor) listOpen = true
+    })
 
-    // Text-field editors fill the cell edge-to-edge with a single crisp
-    // rectangular ring; widgets keep their own trigger chrome inside a
-    // lightly padded box.
     const flatText = $derived(
         type === 'text' || type === 'number' || type === 'textarea' || type === 'tags'
     )
     const containerClass = $derived(
-        `${slots.cellEditor({ class: theme('cellEditor') })} ${flatText ? slots.cellEditorFlat({ class: theme('cellEditorFlat') }) : slots.cellEditorPad({ class: theme('cellEditorPad') })}`
+        [
+            slots.cellEditor({ class: theme('cellEditor') }),
+            flatText
+                ? slots.cellEditorFlat({ class: theme('cellEditorFlat') })
+                : slots.cellEditorPad({ class: theme('cellEditorPad') }),
+            segmented ? slots.cellEditorWide({ class: theme('cellEditorWide') }) : ''
+        ]
+            .filter(Boolean)
+            .join(' ')
     )
     const fieldClass = $derived(slots.cellEditorField({ class: theme('cellEditorField') }))
     const fieldUi = { base: 'h-full min-h-(--dg-row-h) rounded-none border-0 bg-transparent px-3' }
-    // Number editor keeps InputNumber's formatting + arrow keys but drops the
-    // stepper buttons (their focus/controlled-state churn caused edit glitches).
+    // No stepper buttons: their focus churn glitched the edit.
     const numberUi = { ...fieldUi, increment: 'hidden', decrement: 'hidden', base: 'ps-0 pe-0' }
 
     function setValue(next: unknown) {
@@ -99,40 +110,51 @@
         else editing.cancel()
     }
 
-    // Widgets (select, date, checkbox, rating) that commit as soon as their
-    // value changes rather than on blur/Enter.
     function setAndCommit(next: unknown) {
         setValue(next)
         if (!rowMode) commit()
     }
 
-    function onKeydown(event: KeyboardEvent) {
-        if (event.key === 'Escape') {
-            event.stopPropagation()
-            cancel()
-        } else if (event.key === 'Enter' && enterCommits) {
-            event.preventDefault()
-            event.stopPropagation()
-            if (rowMode) commit()
-            else editing.commitAndMove('down')
-        } else if (event.key === 'Tab' && inputBased && !rowMode) {
-            event.preventDefault()
-            event.stopPropagation()
-            editing.commitAndMove(event.shiftKey ? 'left' : 'right')
-        }
+    /**
+     * What a key means inside an editor, or null to leave it to the widget.
+     * `Ctrl`/`Cmd`+`Enter` is the way out of one that owns Enter for itself —
+     * a textarea takes a newline, tags take a tag. `Tab` commits too, but only
+     * by leaving; this one stays on the cell.
+     */
+    function enterAction(event: KeyboardEvent): (() => void) | null {
+        if (event.ctrlKey || event.metaKey) return commit
+        if (!enterCommits) return null
+        return rowMode ? commit : () => editing.commitAndMove('down')
     }
 
-    // Commit on a genuine click outside the editor. Blur is unreliable for
-    // widgets with inner controls (a number stepper doesn't take focus, so
-    // the input blurs to <body>); an outside-click test ignores them.
-    // A popup the editor itself opened (calendar, listbox) is portaled to the
-    // body, so it reads as "outside" — treat it as part of the editor,
-    // otherwise picking a date would commit the pre-pick draft.
+    function editorAction(event: KeyboardEvent): (() => void) | null {
+        if (event.key === 'Escape') return cancel
+        if (event.key === 'Enter') return enterAction(event)
+        if (event.key === 'Tab' && inputBased && !rowMode) {
+            return () => editing.commitAndMove(event.shiftKey ? 'left' : 'right')
+        }
+        return null
+    }
+
+    function onKeydown(event: KeyboardEvent) {
+        const action = editorAction(event)
+        if (!action) return
+        // Escape keeps the browser's own default: it is the widget's cue to
+        // close whatever it opened.
+        if (event.key !== 'Escape') event.preventDefault()
+        event.stopPropagation()
+        action()
+    }
+
+    // Outside-click rather than blur: a widget's inner control blurs the
+    // input to <body>. A portalled popup the editor opened is not outside.
     function onClickOutside(event: PointerEvent) {
-        if (!inputBased || rowMode || !editing.commitOnBlur || !editing.active) return
-        const target = event.target as HTMLElement | null
-        if (target?.closest?.('[data-bits-floating-content-wrapper]')) return
-        void editing.commit()
+        if (rowMode || !editing.active || isInPortal(event.target)) return
+        // A widget commits as its value changes, so nothing is left pending
+        // and leaving simply ends the edit. Without this the editor stayed
+        // open with no way out but picking a value.
+        if (!inputBased) cancel()
+        else if (editing.commitOnBlur) void editing.commit()
     }
 
     let container = $state<HTMLElement | null>(null)
@@ -143,10 +165,21 @@
         container?.querySelector<HTMLElement>('[role="spinbutton"]')?.focus()
     }
 
-    // Picking from the calendar hands focus back to the grid cell, which sits
-    // outside this editor — Enter would then never reach it. Pull focus back
-    // only in that case; while typing, focus is already on a segment and
-    // moving it would restart entry at the first one.
+    /**
+     * A widget renders its own control, so the caret has to be handed over:
+     * left on the cell, the arrows never reach the list that just opened and
+     * Space never reaches the checkbox.
+     */
+    function focusWidget() {
+        container
+            ?.querySelector<HTMLElement>(
+                '[data-combobox-trigger],[data-select-trigger],button,[role="checkbox"],[role="radio"],[tabindex="0"]'
+            )
+            ?.focus()
+    }
+
+    // The calendar hands focus back to the cell, where Enter would never
+    // reach the editor. Only then — moving it while typing restarts entry.
     function setDate(next: { year: number; month: number; day: number } | undefined) {
         setValue(fromDateValue(next))
         requestAnimationFrame(() => {
@@ -160,7 +193,10 @@
             return
         }
         const field = inputRef ?? textareaRef
-        if (!field) return
+        if (!field) {
+            focusWidget()
+            return
+        }
         field.focus()
         if (type === 'text' || type === 'number') field.select()
     })
@@ -193,7 +229,7 @@
             checked={Boolean(value)}
             onCheckedChange={setAndCommit}
             label={column.header}
-            ui={{ label: 'sr-only' }}
+            ui={{ label: 'sr-only', wrapper: 'ms-0 me-0' }}
         />
     {:else if type === 'number'}
         <InputNumber
@@ -208,12 +244,14 @@
     {:else if type === 'select'}
         <Select
             items={selectItems}
+            bind:open={listOpen}
             bind:value={() => text, (next) => setAndCommit(next as string)}
             aria-label={column.header}
         />
     {:else if type === 'selectMenu'}
         <SelectMenu
             items={selectItems}
+            bind:open={listOpen}
             bind:value={() => text, (next) => setAndCommit(next as string)}
             aria-label={column.header}
         />

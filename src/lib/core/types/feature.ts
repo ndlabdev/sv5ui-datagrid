@@ -4,10 +4,7 @@ import type { RowNode } from './rows.js'
 
 /** The extension points a feature module plugs into. */
 
-/**
- * An ordered transform inserted into the row pipeline.
- * Every stage is a pure function of the node list and grid state.
- */
+/** An ordered, pure transform inserted into the row pipeline. */
 export interface PipelineStage<TRow> {
     /**
      * Position in the pipeline. Core orders: filter 100, sort 200,
@@ -18,27 +15,17 @@ export interface PipelineStage<TRow> {
     transform: (nodes: RowNode<TRow>[], grid: GridState<TRow>) => RowNode<TRow>[]
 }
 
-/**
- * A keyboard binding contributed to the focus model.
- * Dispatched by the FocusModel (phase 1, part 2).
- */
+/** A keyboard binding contributed to the focus model. */
 export interface Keybinding<TRow> {
     /** Key descriptor, e.g. `'ArrowDown'`, `'Ctrl+Home'`. */
     key: string
-    /**
-     * Guard evaluated before the handler. When it returns false the
-     * binding is skipped and later bindings may match the same key.
-     */
+    /** False skips the binding and lets a later one match the same key. */
     when?: (grid: GridState<TRow>) => boolean
     /** Invoked when the key matches while the grid has focus. */
     handler: (grid: GridState<TRow>, event: KeyboardEvent) => void
 }
 
-/**
- * The cell a `cellDecoration` hook is being asked about. `rowIndex` and
- * `colIndex` are absolute positions within the filtered/sorted set, matching
- * the cell's `data-dg-cell="row:col"` attribute.
- */
+/** The cell a `cellDecoration` hook is asked about, positioned as `data-dg-cell`. */
 export interface CellDecorationContext<TRow> {
     /** The grid, so a feature can read the state it registered. */
     grid: GridState<TRow>
@@ -73,10 +60,7 @@ export interface MenuItem {
     onSelect: () => void
 }
 
-/**
- * A feature is an object plugging into well-defined extension points.
- * Unused features are never imported, so they are never bundled.
- */
+/** An object plugging into the extension points; unused ones never bundle. */
 export interface GridFeature<TRow> {
     /** Unique feature id; also the key of its state on `grid.state`. */
     id: string
@@ -90,20 +74,10 @@ export interface GridFeature<TRow> {
     keybindings?: Keybinding<TRow>[]
     /** Column menu / context menu items contributed by the feature. */
     menuItems?: (ctx: MenuContext<TRow>) => MenuItem[]
-    /**
-     * Per-cell styling contributed by the feature — range highlights,
-     * validation marks, heatmaps. Runs for every rendered cell, so keep it
-     * cheap; grids without a decorating feature skip the work entirely.
-     */
+    /** Per-cell styling. Runs per rendered cell, so keep it cheap. */
     cellDecoration?: (ctx: CellDecorationContext<TRow>) => CellDecoration | undefined
-    /**
-     * The feature's slice of a state snapshot, stored under its id. Return
-     * undefined to stay out of the snapshot entirely. Must be JSON-safe.
-     */
+    /** The feature's JSON-safe slice of a snapshot; undefined stays out. */
     serialize?: (grid: GridState<TRow>) => unknown
-    /**
-     * Restores what `serialize` produced. Called only when the snapshot holds
-     * a slice for this feature, so a feature added later simply starts fresh.
-     */
+    /** Restores what `serialize` produced; a feature added later starts fresh. */
     hydrate?: (slice: unknown, grid: GridState<TRow>) => void
 }

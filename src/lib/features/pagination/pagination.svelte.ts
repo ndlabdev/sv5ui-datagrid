@@ -8,11 +8,7 @@ export const PAGINATION = 'pagination'
 export interface PaginationOptions {
     pageSize?: number
     page?: number
-    /**
-     * Total rows held by the server, for a grid created with
-     * `rowModel: 'server'`. Update it through `setRowCount` as responses
-     * arrive; the page count and the footer count against it.
-     */
+    /** The server's total under `rowModel: 'server'`; set via `setRowCount`. */
     rowCount?: number
 }
 
@@ -73,10 +69,7 @@ export class Pagination<TRow> {
         this.#grid.events.emit('pageChanged', { page: this.page, pageSize })
     }
 
-    /**
-     * Reports the server's total. The page clamps itself on read, so this
-     * only normalizes the stored value and announces the move.
-     */
+    /** The page clamps on read, so this only stores and announces. */
     setRowCount = (rowCount: number | null): void => {
         this.rowCount = rowCount
         if (this.#page > this.pageCount) this.setPage(this.pageCount)

@@ -15,11 +15,7 @@ function fromSchemaResult(result: StandardSchemaV1.Result<unknown>, input: unkno
     return { error: null, value: (result as { value: unknown }).value }
 }
 
-/**
- * Validates a committed value against a column's `schema` (standard-schema)
- * or imperative `validate`. Returns synchronously when the schema is
- * synchronous; a Promise only when the schema itself is async.
- */
+/** Against `schema` or `validate`; a Promise only when the schema is async. */
 export function runValidation<TRow>(
     value: unknown,
     row: TRow,

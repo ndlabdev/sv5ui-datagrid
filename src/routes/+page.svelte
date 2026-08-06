@@ -138,12 +138,24 @@
             <h1 class="text-2xl font-semibold text-on-surface">@sv5ui/datagrid — Phase 1 kernel</h1>
             <p class="text-sm text-on-surface-variant">
                 Feature modules · RowNode pipeline · ColumnModel (CSS vars) · compound parts · ARIA
-                grid · <Link href="/virtual">100k rows demo →</Link> ·
+                grid.
+            </p>
+            <p class="text-sm text-on-surface-variant">
+                <strong>Soi chất lượng:</strong>
+                <Link href="/qa">QA — mọi tính năng Free →</Link> ·
+                <Link href="/i18n">i18n — phủ hết chuỗi →</Link> ·
+                <Link href="/export">Xuất CSV →</Link>
+            </p>
+            <p class="text-sm text-on-surface-variant">
+                <Link href="/virtual">100k rows demo →</Link> ·
                 <Link href="/columns">Columns UX demo →</Link> ·
                 <Link href="/filters">Data ops demo →</Link> ·
                 <Link href="/selection">Selection demo →</Link> ·
                 <Link href="/rows">Row structures demo →</Link> ·
+                <Link href="/reorder">Row reorder demo →</Link> ·
                 <Link href="/editing">Editing demo →</Link> ·
+                <Link href="/editors">All editors + validation →</Link> ·
+                <Link href="/spans">Spanning demo →</Link> ·
                 <Link href="/renderers">Cell renderers demo →</Link> ·
                 <Link href="/theming">Theming demo →</Link> ·
                 <Link href="/persistence">Persistence demo →</Link> ·

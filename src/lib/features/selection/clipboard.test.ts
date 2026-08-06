@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createColumnState } from '../../core/columns/column-sizing.js'
 import { buildRowNodes } from '../../core/grid/row-node.js'
 import { SELECTION_COLUMN_ID, type ColumnDef } from '../../core/types/index.js'
-import { rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
+import { pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 
 interface Row {
     name: string
@@ -70,5 +70,38 @@ describe('toCsv', () => {
 
     it('leaves ordinary cells untouched', () => {
         expect(toCsv([['Alice', '2', 'a-b']])).toBe('Alice,2,a-b')
+    })
+
+    it('quotes against the delimiter in use, not against the comma', () => {
+        // A semicolon file: commas are ordinary text, semicolons are not.
+        expect(toCsv([['a,b', 'c;d']], ';')).toBe('a,b;"c;d"')
+        expect(toCsv([['a,b', 'c;d']])).toBe('"a,b",c;d')
+        expect(toCsv([['x', 'y']], '\t')).toBe('x\ty')
+    })
+})
+
+describe('pickColumns', () => {
+    it('drops the selection column and keeps every other by default', () => {
+        expect(pickColumns(columns).map((column) => column.id)).toEqual(['name', 'note', 'score'])
+    })
+
+    it('honours the requested order and ignores ids it does not know', () => {
+        expect(pickColumns(columns, ['score', 'name', 'ghost']).map((column) => column.id)).toEqual(
+            ['score', 'name']
+        )
+    })
+
+    it('refuses to export the selection checkbox even when named', () => {
+        expect(pickColumns(columns, [SELECTION_COLUMN_ID, 'name'])).toHaveLength(1)
+    })
+})
+
+describe('rowsToMatrix with a formatter', () => {
+    it('hands over the value, node and column and takes the text back', () => {
+        const matrix = rowsToMatrix(nodes, columns, ({ value, node, column }) =>
+            column.id === 'score' ? `${node.row.name}:${value}` : String(value ?? '—')
+        )
+        expect(matrix[0]).toEqual(['Alice', 'plain', 'Alice:2'])
+        expect(matrix[2]).toEqual(['Carol\tTab', '—', 'Carol\tTab:6'])
     })
 })

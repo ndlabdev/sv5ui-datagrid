@@ -8,13 +8,13 @@
     let { exportFilename, children }: GridContextMenuProps = $props()
 
     const grid = getGridContext()
+    const labels = $derived(grid.labels)
     const selectionState = getSelection(grid)
     const hasItems = Boolean(selectionState || grid.features.some((feature) => feature.menuItems))
 
     let menuNode = $state.raw<RowNode<unknown> | null>(null)
 
-    // The source set is unfiltered, so it covers pinned rows too — they are
-    // lifted out of the pipeline downstream, not out of the source.
+    // Unfiltered, so it covers pinned rows too.
     function captureNode(event: MouseEvent) {
         const id = (event.target as HTMLElement | null)
             ?.closest('[data-dg-row-id]')
@@ -27,26 +27,26 @@
         const none = selectionState.count === 0
         return [
             {
-                label: 'Copy',
+                label: labels.copy,
                 icon: 'lucide:copy',
                 disabled: none,
                 onSelect: () => void selectionState.copySelection()
             },
             {
-                label: 'Copy with headers',
+                label: labels.copyWithHeaders,
                 icon: 'lucide:copy-plus',
                 disabled: none,
                 onSelect: () => void selectionState.copySelection({ headers: true })
             },
             { type: 'separator' },
             {
-                label: 'Export CSV',
+                label: labels.exportCsv,
                 icon: 'lucide:download',
                 onSelect: () => selectionState.exportCsv({ filename: exportFilename })
             },
             { type: 'separator' },
             {
-                label: 'Clear selection',
+                label: labels.clearSelection,
                 icon: 'lucide:x',
                 disabled: none,
                 onSelect: selectionState.clear

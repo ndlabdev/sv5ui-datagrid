@@ -7,37 +7,53 @@ import {
     toStyleString,
     trackWidthEstimates
 } from './column-sizing.js'
-import { columnIndexById, columnsById, orderLeafDefs } from './column-order.js'
+import {
+    columnIndexById,
+    columnsById,
+    groupContiguousOrder,
+    orderLeafDefs
+} from './column-order.js'
 import {
     buildGroupPaths,
     buildHeaderLevels,
     flattenColumns,
-    groupBoundaries
+    groupBoundaries,
+    parentGroupIdOf
 } from './header-groups.js'
 import { clamp } from '../utils/math.js'
 import {
+    isSyntheticColumn,
+    ROW_HANDLE_COLUMN_ID,
     SELECTION_COLUMN_ID,
     type ColumnDef,
     type ColumnState,
     type PinnedSide
 } from '../types/index.js'
 
-const SELECTION_COLUMN_WIDTH = 44
+const SYNTHETIC_COLUMN_WIDTH = 44
 
-const selectionColumnDef: ColumnDef<unknown> = {
-    id: SELECTION_COLUMN_ID,
-    header: '',
-    width: SELECTION_COLUMN_WIDTH,
-    minWidth: SELECTION_COLUMN_WIDTH,
-    maxWidth: SELECTION_COLUMN_WIDTH,
-    align: 'center',
-    pinned: 'left'
+/** The grid's own columns: fixed width, pinned left, never resized or moved. */
+function syntheticColumnDef(id: string): ColumnDef<unknown> {
+    return {
+        id,
+        header: '',
+        width: SYNTHETIC_COLUMN_WIDTH,
+        minWidth: SYNTHETIC_COLUMN_WIDTH,
+        maxWidth: SYNTHETIC_COLUMN_WIDTH,
+        align: 'center',
+        pinned: 'left',
+        resizable: false
+    }
 }
+
+const selectionColumnDef = syntheticColumnDef(SELECTION_COLUMN_ID)
+const rowHandleColumnDef = syntheticColumnDef(ROW_HANDLE_COLUMN_ID)
 
 export class ColumnModel<TRow> {
     defs = $state.raw<ColumnDef<TRow>[]>([])
     containerWidth = $state(0)
     selectionColumn = $state(false)
+    rowHandleColumn = $state(false)
 
     orderIds = $state.raw<string[]>([])
     widthOverrides = $state.raw<Record<string, number>>({})
@@ -48,16 +64,26 @@ export class ColumnModel<TRow> {
     groupPaths = $derived.by(() => buildGroupPaths(this.defs))
 
     all = $derived.by(() => {
-        const ordered = orderLeafDefs(this.leafDefs, this.orderIds)
+        // Applied here rather than at the `setState` boundary so every route
+        // into `orderIds` gets the same guarantee.
+        const requested = groupContiguousOrder(this.orderIds, (leafId) =>
+            parentGroupIdOf(this.groupPaths, leafId)
+        )
+        const ordered = orderLeafDefs(this.leafDefs, requested)
         const states = ordered.map((def) =>
             createColumnState(def, {
                 hidden: this.hiddenOverrides[def.id],
                 pinned: this.pinnedOverrides[def.id]
             })
         )
-        const lead = this.selectionColumn
-            ? [createColumnState(selectionColumnDef as ColumnDef<TRow>)]
-            : []
+        // The grip sits outside the checkbox so dragging never toggles a row.
+        const lead: ColumnState<TRow>[] = []
+        if (this.rowHandleColumn) {
+            lead.push(createColumnState(rowHandleColumnDef as ColumnDef<TRow>))
+        }
+        if (this.selectionColumn) {
+            lead.push(createColumnState(selectionColumnDef as ColumnDef<TRow>))
+        }
         return [
             ...lead,
             ...states.filter((column) => column.pinned === 'left'),
@@ -125,26 +151,30 @@ export class ColumnModel<TRow> {
         this.widthOverrides = next
     }
 
+    /** How many synthetic columns lead the row; nothing may move before them. */
+    get #leadCount(): number {
+        return (this.rowHandleColumn ? 1 : 0) + (this.selectionColumn ? 1 : 0)
+    }
+
     moveColumn(id: string, toIndex: number): number {
-        if (id === SELECTION_COLUMN_ID) return -1
+        if (isSyntheticColumn(id)) return -1
         const order = this.all.map((column) => column.id)
         const from = order.indexOf(id)
         if (from < 0) return -1
-        const min = this.selectionColumn ? 1 : 0
-        const target = clamp(toIndex, min, order.length - 1)
+        const target = clamp(toIndex, this.#leadCount, order.length - 1)
         order.splice(from, 1)
         order.splice(target, 0, id)
-        this.orderIds = order.filter((columnId) => columnId !== SELECTION_COLUMN_ID)
+        this.orderIds = order.filter((columnId) => !isSyntheticColumn(columnId))
         return target
     }
 
     setPinned(id: string, side: PinnedSide | null): void {
-        if (id === SELECTION_COLUMN_ID || !this.get(id)) return
+        if (isSyntheticColumn(id) || !this.get(id)) return
         this.pinnedOverrides = { ...this.pinnedOverrides, [id]: side }
     }
 
     setHidden(id: string, hidden: boolean): void {
-        if (id === SELECTION_COLUMN_ID || !this.get(id)) return
+        if (isSyntheticColumn(id) || !this.get(id)) return
         this.hiddenOverrides = { ...this.hiddenOverrides, [id]: hidden }
     }
 }

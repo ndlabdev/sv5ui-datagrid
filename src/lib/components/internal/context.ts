@@ -12,3 +12,8 @@ export function getGridContext<TRow>(): GridState<TRow> {
     if (!grid) throw new Error('Grid parts must be used inside <Grid.Root>')
     return grid
 }
+
+/** For parts that may render outside a grid, where missing is not an error. */
+export function getGridOrNull<TRow>(): GridState<TRow> | null {
+    return getContext<GridState<TRow> | undefined>(GRID_CONTEXT_KEY) ?? null
+}

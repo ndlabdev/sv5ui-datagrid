@@ -16,8 +16,7 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    // In server mode only one page is in memory, so the counts have to come
-    // from the server total rather than from the nodes on hand.
+    // Server mode holds one page, so the total comes from the server.
     const total = $derived(pagination?.server ? pagination.total : grid.sourceNodes.length)
     const filtered = $derived(
         pagination?.server
@@ -33,10 +32,10 @@
 <div class={slots.statusBar({ class: [theme('statusBar'), className] })}>
     <span>
         {filtered === total
-            ? `${total.toLocaleString()} rows`
-            : `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`}
+            ? grid.labels.totalRows(total)
+            : grid.labels.filteredRows(filtered, total)}
     </span>
     {#if selected > 0}
-        <span class="text-primary">{selected.toLocaleString()} selected</span>
+        <span class="text-primary">{grid.labels.selectedRows(selected)}</span>
     {/if}
 </div>

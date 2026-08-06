@@ -44,19 +44,12 @@ export function allSelection(ids: string[]): ReadonlySet<string> {
     return new Set(ids)
 }
 
-/**
- * The selectable ids as a set for membership tests. Rebuilt whole by the
- * derived that owns it and never mutated.
- */
+/** A set for membership tests, rebuilt whole by the derived that owns it. */
 export function selectableIdsOf<TRow>(nodes: RowNode<TRow>[]): ReadonlySet<string> {
     return new Set(nodes.map((node) => node.id))
 }
 
-/**
- * Counts the selection against the selectable ids rather than the other way
- * round: the header checkbox re-reads this on every toggle, and a selection is
- * normally far smaller than the row set it is drawn from.
- */
+/** Counts the selection, not the rows: it is normally far the smaller set. */
 export function selectAllStateOf(
     set: ReadonlySet<string>,
     selectableIds: ReadonlySet<string>

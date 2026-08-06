@@ -51,9 +51,9 @@ describe('Announcer', () => {
         expect(grid.announcer.message).toBe('page 2')
     })
 
-    it('uses locale overrides', () => {
+    it('uses announcer overrides', () => {
         const grid = createGrid({
-            locale: { filtered: (count) => `còn ${count} dòng` }
+            announcer: { filtered: (count: number) => `còn ${count} dòng` }
         })
         getFiltering(grid)!.setQuickFilter('bob')
         expect(grid.announcer.message).toBe('còn 1 dòng')

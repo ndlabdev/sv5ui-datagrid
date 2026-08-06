@@ -2,8 +2,7 @@ import type { RowNode } from '../../core/types/index.js'
 
 export interface ColumnVirtualizationOptions {
     /**
-     * Horizontal overscan rendered on each side of the visible columns,
-     * in pixels.
+     * Horizontal overscan each side of the visible columns, in pixels.
      * @default 200
      */
     overscanPx?: number
@@ -17,10 +16,11 @@ export interface VirtualizationOptions<TRow = unknown> {
     rowHeight?: number
 
     /**
-     * Per-row height in pixels. Enables the variable-height layout
-     * (Fenwick-tree offset cache) instead of the fixed fast path.
+     * Per-row height, or `'auto'` to size to content. Either switches the
+     * virtualizer to its variable-height layout. An `'auto'` row renders at
+     * `rowHeight` for one frame, is measured, and keeps that height.
      */
-    getRowHeight?: (node: RowNode<TRow>) => number
+    getRowHeight?: (node: RowNode<TRow>) => number | 'auto'
 
     /**
      * Extra rows rendered above and below the visible window.
@@ -34,10 +34,6 @@ export interface VirtualizationOptions<TRow = unknown> {
      */
     initialRows?: number
 
-    /**
-     * Enables column virtualization: only columns intersecting the
-     * horizontal viewport (plus overscan) are rendered. Column widths are
-     * resolved to pixels from the container width.
-     */
+    /** Renders only the columns intersecting the viewport, plus overscan. */
     columns?: boolean | ColumnVirtualizationOptions
 }

@@ -3,7 +3,12 @@
     import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
     import { rafBatch } from '../../core/utils/raf-batch.js'
     import { inlineDelta, inlineOffset, isRtl } from '../../core/utils/scroll.js'
-    import { SELECTION_COLUMN_ID, type HeaderGroupCell } from '../../core/types/index.js'
+    import {
+        isSyntheticColumn,
+        SELECTION_COLUMN_ID,
+        type ColumnState,
+        type HeaderGroupCell
+    } from '../../core/types/index.js'
     import { getColumnOps } from '../../features/column-ops/index.js'
     import { getFiltering } from '../../features/filtering/index.js'
     import { getSorting } from '../../features/sorting/index.js'
@@ -40,7 +45,26 @@
     function withBoundary(base: string, endIndex: number): string {
         return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
     }
+
+    const dividerClass = $derived(slots.headerDivider({ class: theme('headerDivider') }))
+    const lastColumnIndex = $derived(grid.columns.visible.length - 1)
+
+    /** The last column's edge is the grid's own border. */
+    function withDivider(base: string, index: number): string {
+        return index === lastColumnIndex ? base : `${base} ${dividerClass}`
+    }
     const pinnedHeaderClass = $derived(slots.pinnedHeaderCell({ class: theme('pinnedHeaderCell') }))
+    const hasControls = $derived(Boolean(filteringState || columnOps))
+    const controlsBaseClass = $derived(slots.headerControls({ class: theme('headerControls') }))
+    const controlsPinnedClass = $derived(
+        slots.headerControlsPinned({ class: theme('headerControlsPinned') })
+    )
+
+    /** Hidden until hovered, so the label gets the cell — unless filtered. */
+    function controlsClass(columnId: string): string {
+        const active = filteringState ? columnId in filteringState.columnFilters : false
+        return active ? `${controlsBaseClass} ${controlsPinnedClass}` : controlsBaseClass
+    }
     const resizeHandleClass = $derived(slots.resizeHandle({ class: theme('resizeHandle') }))
 
     function isActive(index: number): boolean {
@@ -58,6 +82,12 @@
         const direction = sorting?.directionOf(columnId)
         if (!direction) return 'lucide:chevrons-up-down'
         return direction === 'asc' ? 'lucide:chevron-up' : 'lucide:chevron-down'
+    }
+
+    /** A snippet may draw nothing readable; without one the text is the name. */
+    function headerName(column: ColumnState<unknown>): string | undefined {
+        if (!column.def.headerCell) return undefined
+        return column.header === '' ? column.id : column.header
     }
 
     function cellVisible(cell: HeaderGroupCell): boolean {
@@ -143,15 +173,14 @@
     } | null = null
 
     function headerPointerDown(event: PointerEvent, columnId: string) {
-        if (!columnOps?.canReorder || columnId === SELECTION_COLUMN_ID) return
+        if (!columnOps?.canReorder || isSyntheticColumn(columnId)) return
         if ((event.target as HTMLElement).closest('[data-dg-noreorder]')) return
         dragCandidate = {
             id: columnId,
             startX: event.clientX,
             pointerId: event.pointerId,
             element: event.currentTarget as HTMLElement,
-            // Read once: `isRtl` forces a style recalculation, and direction
-            // cannot change mid-drag.
+            // `isRtl` forces a style recalculation, and cannot change mid-drag.
             rtl: headerRowElement ? isRtl(headerRowElement) : false
         }
     }
@@ -209,10 +238,14 @@
         >
             {#each level as cell (`${cell.id}-${cell.start}`)}
                 {#if cellVisible(cell)}
+                    <!-- A placeholder sits above columns that belong to no
+                         group. It names nothing, so exposing it as a header
+                         would put an unlabelled one in the accessibility tree;
+                         the leaf header below already describes the column. -->
                     <div
-                        role="columnheader"
-                        aria-colindex={cell.start + 1}
-                        aria-colspan={cell.span > 1 ? cell.span : undefined}
+                        role={cell.isPlaceholder ? 'presentation' : 'columnheader'}
+                        aria-colindex={cell.isPlaceholder ? undefined : cell.start + 1}
+                        aria-colspan={!cell.isPlaceholder && cell.span > 1 ? cell.span : undefined}
                         class={withBoundary(
                             cell.pinned ? `${groupCellClass} ${pinnedHeaderClass}` : groupCellClass,
                             cell.start + cell.span - 1
@@ -227,7 +260,7 @@
                                 data-dg-noreorder
                                 role="separator"
                                 aria-orientation="vertical"
-                                aria-label={`Resize ${cell.header} group`}
+                                aria-label={grid.labels.resizeGroup(cell.header)}
                                 class={resizeHandleClass}
                                 onpointerdown={(event) => startGroupResize(event, cell)}
                                 onpointermove={moveResize}
@@ -240,6 +273,17 @@
             {/each}
         </div>
     {/each}
+    {#snippet headerLabel(column: ColumnState<unknown>)}
+        {#if column.def.headerCell}
+            {@render column.def.headerCell({ column, header: column.header })}
+        {:else if column.header === ''}
+            <!-- Action columns are usually headerless; a column header
+                 still needs an accessible name. -->
+            <span class="sr-only">{column.id}</span>
+        {:else}
+            <span class="truncate" data-dg-truncate>{column.header}</span>
+        {/if}
+    {/snippet}
     <div
         role="row"
         aria-rowindex={leafRowIndex}
@@ -249,18 +293,21 @@
         {#each columnWindow.renderColumns as entry (entry.column.id)}
             {@const column = entry.column}
             {@const index = entry.index}
-            {@const spacer =
-                Boolean(columnOps || filteringState) && column.id !== SELECTION_COLUMN_ID}
+            {@const spacer = Boolean(columnOps || filteringState) && !isSyntheticColumn(column.id)}
             <div
                 role="columnheader"
                 aria-colindex={index + 1}
+                aria-label={headerName(column)}
                 aria-sort={ariaSort(column.id)}
                 tabindex={isActive(index) ? 0 : -1}
                 data-dg-cell="{HEADER_ROW}:{index}"
-                class={withBoundary(
-                    column.pinned
-                        ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
-                        : headerCellClass[column.align],
+                class={withDivider(
+                    withBoundary(
+                        column.pinned
+                            ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
+                            : headerCellClass[column.align],
+                        index
+                    ),
                     index
                 )}
                 style:grid-column={columnWindow.windowed ? index + 1 : undefined}
@@ -273,7 +320,7 @@
                 onpointercancel={headerPointerCancel}
             >
                 {#if spacer && column.align !== 'left'}
-                    <span class="grow"></span>
+                    <span data-dg-spacer class="grow"></span>
                 {/if}
                 {#if column.id === SELECTION_COLUMN_ID}
                     <GridSelectionCell />
@@ -285,33 +332,35 @@
                         onclick={(event) =>
                             sorting.toggleSort(column.id, { append: event.shiftKey })}
                     >
-                        {column.header}
+                        {@render headerLabel(column)}
                         <Icon name={sortIcon(column.id)} class="size-3.5 shrink-0" />
                         {#if sorting.priorityOf(column.id)}
                             <Badge label={sorting.priorityOf(column.id)!} size="xs" />
                         {/if}
                     </button>
-                {:else if column.header === ''}
-                    <!-- Action columns are usually headerless; a column header
-                         still needs an accessible name. -->
-                    <span class="sr-only">{column.id}</span>
                 {:else}
-                    <span class="truncate" data-dg-truncate>{column.header}</span>
+                    {@render headerLabel(column)}
                 {/if}
                 {#if spacer && column.align !== 'right'}
-                    <span class="grow"></span>
+                    <span data-dg-spacer class="grow"></span>
                 {/if}
-                {#if filteringState && column.id !== SELECTION_COLUMN_ID}
-                    <GridFilterPanel {column} />
+                {#if hasControls && !isSyntheticColumn(column.id)}
+                    <span data-dg-noreorder class={controlsClass(column.id)}>
+                        {#if filteringState}
+                            <GridFilterPanel {column} />
+                        {/if}
+                        {#if columnOps}
+                            <GridColumnMenu {column} />
+                        {/if}
+                    </span>
                 {/if}
-                {#if columnOps && column.id !== SELECTION_COLUMN_ID}
-                    <GridColumnMenu {column} />
-                    {#if columnOps.canResize}
+                {#if columnOps && !isSyntheticColumn(column.id)}
+                    {#if columnOps.canResizeColumn(column.id)}
                         <div
                             data-dg-noreorder
                             role="separator"
                             aria-orientation="vertical"
-                            aria-label={`Resize ${column.header} column`}
+                            aria-label={grid.labels.resizeColumn(column.header)}
                             class={resizeHandleClass}
                             onpointerdown={(event) => startResize(event, column.id)}
                             onpointermove={moveResize}

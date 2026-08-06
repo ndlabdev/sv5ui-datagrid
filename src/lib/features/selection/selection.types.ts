@@ -1,4 +1,5 @@
 import type { SelectionMode } from '../../core/types/index.js'
+import type { ExportFormatter } from './clipboard.js'
 
 export interface SelectionOptions<TRow> {
     /**
@@ -13,10 +14,7 @@ export interface SelectionOptions<TRow> {
      */
     checkbox?: boolean
 
-    /**
-     * Excludes rows from selection. Unselectable rows are skipped by
-     * select-all and range selection and render a disabled checkbox.
-     */
+    /** Skipped by select-all and range selection, with a disabled checkbox. */
     isRowSelectable?: (row: TRow) => boolean
 }
 
@@ -34,7 +32,7 @@ export interface CopyOptions {
     headers?: boolean
 }
 
-export interface ExportCsvOptions {
+export interface ExportCsvOptions<TRow = unknown> {
     /**
      * Download file name.
      * @default 'export.csv'
@@ -48,9 +46,24 @@ export interface ExportCsvOptions {
     headers?: boolean
 
     /**
-     * Exports every filtered row instead of only the selected ones.
-     * Also the fallback when nothing is selected.
+     * Every filtered row rather than the selection; also the fallback when
+     * nothing is selected.
      * @default false
      */
     allRows?: boolean
+
+    /**
+     * Excel follows the machine's list separator, so much of Europe needs `';'`.
+     * @default ','
+     */
+    delimiter?: string
+
+    /**
+     * Ids to export, in this order. Hidden columns are fair game.
+     * @default every visible column
+     */
+    columns?: string[]
+
+    /** Without it a value is written raw, so a spreadsheet keeps its type. */
+    formatValue?: ExportFormatter<TRow>
 }

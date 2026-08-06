@@ -1,25 +1,16 @@
 /** Rows as the pipeline sees them: identity, position and structure. */
 
+/** The unit of the row pipeline: a raw row with identity and position. */
 /**
- * The unit of the row pipeline after node building.
- * Wraps a raw row with identity and position; grouping and tree phases
- * extend this with depth, group info and expansion state.
- */
-/**
- * Structural metadata attached to a pipeline node by row-structure
- * features (grouping, tree data, master/detail, expandable rows).
- * Drives treegrid ARIA, first-column indent, the expand toggle and
- * full-width rendering. Absent on plain flat rows.
+ * Attached by row-structure features. Drives treegrid ARIA, indent, the
+ * expand toggle and full-width rendering; absent on plain rows.
  */
 export interface RowMeta {
     /** Treegrid depth, 0-based. Drives `aria-level` and indent. */
     level?: number
     /** Renders the expand/collapse toggle and `aria-expanded`. */
     expandable?: boolean
-    /**
-     * Full-width row: a single cell spanning every column, rendered
-     * through the `fullWidthRow` snippet instead of column cells.
-     */
+    /** One cell across every column, rendered through `fullWidthRow`. */
     fullWidth?: boolean
     /** `aria-setsize` — number of siblings at this level. */
     setSize?: number

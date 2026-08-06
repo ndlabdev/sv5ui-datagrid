@@ -6,10 +6,12 @@ import type {
     ColumnDef,
     ColumnState,
     Density,
+    FilterType,
     PersistStateOptions,
     RowNode
 } from '../core/types/index.js'
 import type { EditingOptions } from '../features/editing/index.js'
+import type { ConditionDraft } from '../features/filtering/index.js'
 import type { SelectionOptions } from '../features/selection/index.js'
 import type { VirtualizationOptions } from '../features/virtualization/index.js'
 
@@ -66,7 +68,7 @@ export interface GridBodyProps<TRow = unknown> {
 
     /**
      * Text shown when there are no rows to display.
-     * @default 'No data'
+     * @default `labels.noData`
      */
     emptyText?: string
 
@@ -75,7 +77,7 @@ export interface GridBodyProps<TRow = unknown> {
 
     /**
      * Number of skeleton rows rendered while loading.
-     * @default 5
+     * @default enough to fill the viewport
      */
     loadingRows?: number
 
@@ -105,6 +107,15 @@ export interface GridFilterPanelProps<TRow> {
     column: ColumnState<TRow>
 }
 
+export interface GridFilterConditionProps {
+    /** Which operator list and input type to render. */
+    type: FilterType
+    /** The draft row this editor writes into, mutated in place. */
+    condition: ConditionDraft
+    /** 1-based position, used to keep the accessible names apart. */
+    ordinal: number
+}
+
 export interface GridFilterChipsProps {
     /** Additional classes applied to the chips container. */
     class?: ClassNameValue
@@ -125,7 +136,7 @@ export interface GridToolbarProps {
 export interface GridQuickFilterProps {
     /**
      * Input placeholder text.
-     * @default 'Search...'
+     * @default `labels.search`
      */
     placeholder?: string
 
@@ -145,6 +156,16 @@ export interface GridDensityToggleProps {
 }
 
 export interface GridColumnChooserProps {
+    /** Additional classes applied to the trigger button. */
+    class?: ClassNameValue
+}
+
+export interface GridExportMenuProps {
+    /**
+     * Name for the downloaded file.
+     * @default 'export.csv'
+     */
+    filename?: string
     /** Additional classes applied to the trigger button. */
     class?: ClassNameValue
 }
@@ -177,15 +198,31 @@ export interface GridContextMenuProps {
 export type DataGridProps<TRow> = {
     /**
      * Text shown when there are no rows to display.
-     * @default 'No data'
+     * @default `labels.noData`
      */
     emptyText?: string
 
-    /** Renders the default toolbar (quick filter + density toggle). */
+    /**
+     * Renders the default toolbar: quick filter, active filter chips, the
+     * export menu, the column chooser and the density toggle.
+     */
     toolbar?: boolean
+
+    /**
+     * File name for the toolbar's export menu and the context menu's
+     * Export CSV item.
+     * @default 'export.csv'
+     */
+    exportFilename?: string
 
     /** Renders skeleton rows instead of data rows. */
     loading?: boolean
+
+    /**
+     * Number of skeleton rows rendered while loading.
+     * @default enough to fill the viewport
+     */
+    loadingRows?: number
 
     /** Error message shown instead of rows. */
     error?: string | null

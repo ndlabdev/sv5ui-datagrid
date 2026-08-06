@@ -1,4 +1,5 @@
 export { sortNodes, type SortNulls } from './sort.js'
+export { toSortRequest } from './sort-model.js'
 export {
     getSorting,
     Sorting,

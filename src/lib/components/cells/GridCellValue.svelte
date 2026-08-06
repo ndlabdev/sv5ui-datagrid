@@ -11,6 +11,8 @@
     } from '../../core/utils/format.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
     import { safeHref } from '../../core/utils/url.js'
+    import { defaultLabels } from '../../core/interaction/labels.js'
+    import { getGridOrNull } from '../internal/context.js'
 
     let {
         def,
@@ -22,7 +24,11 @@
         value: unknown
     } = $props()
 
-    const options = $derived(def.typeOptions ?? {})
+    const grid = getGridOrNull()
+    const labels = $derived(grid?.labels ?? defaultLabels)
+
+    /** Inherits the grid's language unless `typeOptions.locale` says otherwise. */
+    const options = $derived({ locale: grid?.locale, ...def.typeOptions })
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))
 
@@ -70,7 +76,7 @@
                     square
                     tabindex={-1}
                     icon="lucide:ellipsis"
-                    label="Row actions"
+                    label={labels.rowActions}
                     ui={{ label: 'sr-only' }}
                 />
             {/snippet}

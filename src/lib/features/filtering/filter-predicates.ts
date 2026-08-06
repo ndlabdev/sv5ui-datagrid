@@ -2,12 +2,15 @@ import type {
     ColumnDef,
     ColumnFilter,
     ColumnFilterDef,
+    ColumnFilterEntry,
+    DataGridLabels,
     FilterType,
     NumberFilterOp,
-    RowNode,
-    TextFilterOp
+    PresenceFilterOp,
+    RowNode
 } from '../../core/types/index.js'
 import { getCellValue, isNullish } from '../../core/utils/value.js'
+import { normalizeFilterEntry } from './filter-model.js'
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
     if (def.filter === false || def.filter === undefined) return null
@@ -27,23 +30,36 @@ function isBlank(value: unknown): boolean {
 function textPredicate(
     filter: Extract<ColumnFilter, { kind: 'text' }>
 ): (value: unknown) => boolean {
-    const query = filter.value.trim().toLowerCase()
+    if (filter.op === 'blank') return (value) => isBlank(value)
+    if (filter.op === 'notBlank') return (value) => !isBlank(value)
+
+    // Folding once here keeps `toLowerCase` out of the per-row loop.
+    const fold = filter.caseSensitive
+        ? (text: string) => text
+        : (text: string) => text.toLowerCase()
+    const query = fold(filter.value.trim())
+    const read = (value: unknown) => fold(String(value))
+
     switch (filter.op) {
-        case 'blank':
-            return (value) => isBlank(value)
         case 'equals':
-            return (value) => !isBlank(value) && String(value).toLowerCase() === query
+            return (value) => !isBlank(value) && read(value) === query
+        case 'notEqual':
+            // A blank cell is not the query, so it passes - the same reading
+            // `notContains` takes, and the one a spreadsheet takes.
+            return (value) => isBlank(value) || read(value) !== query
         case 'startsWith':
-            return (value) => !isBlank(value) && String(value).toLowerCase().startsWith(query)
+            return (value) => !isBlank(value) && read(value).startsWith(query)
         case 'endsWith':
-            return (value) => !isBlank(value) && String(value).toLowerCase().endsWith(query)
+            return (value) => !isBlank(value) && read(value).endsWith(query)
         case 'contains':
-            return (value) => !isBlank(value) && String(value).toLowerCase().includes(query)
+            return (value) => !isBlank(value) && read(value).includes(query)
+        case 'notContains':
+            return (value) => isBlank(value) || !read(value).includes(query)
     }
 }
 
 const numberComparators: Record<
-    Exclude<NumberFilterOp, 'blank' | 'between'>,
+    Exclude<NumberFilterOp, 'blank' | 'notBlank' | 'between'>,
     (value: number, target: number) => boolean
 > = {
     eq: (value, target) => value === target,
@@ -58,6 +74,7 @@ function numberPredicate(
     filter: Extract<ColumnFilter, { kind: 'number' }>
 ): (value: unknown) => boolean {
     if (filter.op === 'blank') return (value) => isBlank(value)
+    if (filter.op === 'notBlank') return (value) => !isBlank(value)
     const target = filter.value ?? Number.NaN
     if (filter.op === 'between') {
         const to = filter.to ?? Number.NaN
@@ -82,6 +99,9 @@ function toEpochDay(value: unknown): number {
 function datePredicate(
     filter: Extract<ColumnFilter, { kind: 'date' }>
 ): (value: unknown) => boolean {
+    if (filter.op === 'blank') return (value) => isBlank(value)
+    if (filter.op === 'notBlank') return (value) => !isBlank(value)
+
     const target = toEpochDay(filter.value)
     const to = toEpochDay(filter.to)
     switch (filter.op) {
@@ -125,23 +145,49 @@ export function valuePredicateFor(filter: ColumnFilter): (value: unknown) => boo
     }
 }
 
+/** One column's conditions as a single test; the value is read once per row. */
+function entryPredicate<TRow>(
+    def: ColumnDef<TRow>,
+    entry: ColumnFilterEntry
+): (value: unknown, row: TRow) => boolean {
+    const { join, conditions } = normalizeFilterEntry(entry)
+    const custom = customPredicateOf(def)
+
+    const tests = conditions.map((condition) => {
+        if (custom) return (value: unknown, row: TRow) => custom(value, row, condition)
+        const predicate = valuePredicateFor(condition)
+        return (value: unknown) => predicate(value)
+    })
+
+    if (tests.length === 1) return tests[0]
+    if (join === 'or') {
+        return (value, row) => {
+            for (const test of tests) {
+                if (test(value, row)) return true
+            }
+            return false
+        }
+    }
+    return (value, row) => {
+        for (const test of tests) {
+            if (!test(value, row)) return false
+        }
+        return true
+    }
+}
+
 export function compileColumnFilters<TRow>(
     columns: ColumnDef<TRow>[],
-    filters: Record<string, ColumnFilter>
+    filters: Record<string, ColumnFilterEntry>
 ): ((node: RowNode<TRow>) => boolean) | null {
     const compiled: ((node: RowNode<TRow>) => boolean)[] = []
 
-    for (const [columnId, filter] of Object.entries(filters)) {
+    for (const [columnId, entry] of Object.entries(filters)) {
         const def = columns.find((candidate) => candidate.id === columnId)
         if (!def || filterTypeOf(def) === null) continue
 
-        const custom = customPredicateOf(def)
-        if (custom) {
-            compiled.push((node) => custom(getCellValue(node.row, def), node.row, filter))
-            continue
-        }
-        const predicate = valuePredicateFor(filter)
-        compiled.push((node) => predicate(getCellValue(node.row, def)))
+        const test = entryPredicate(def, entry)
+        compiled.push((node) => test(getCellValue(node.row, def), node.row))
     }
 
     if (compiled.length === 0) return null
@@ -154,32 +200,34 @@ export function compileColumnFilters<TRow>(
     }
 }
 
-const textOpLabels: Record<TextFilterOp, string> = {
-    contains: 'contains',
-    equals: '=',
-    startsWith: 'starts with',
-    endsWith: 'ends with',
-    blank: 'is blank'
-}
-const numberOpLabels: Record<Exclude<NumberFilterOp, 'blank' | 'between'>, string> = {
-    eq: '=',
-    neq: '≠',
-    gt: '>',
-    gte: '≥',
-    lt: '<',
-    lte: '≤'
+/** Chip text, worded from the labels so it matches the operator list. */
+function describeText(
+    filter: Extract<ColumnFilter, { kind: 'text' }>,
+    labels: DataGridLabels
+): string {
+    const op = labels.textOps[filter.op]
+    if (isPresence(filter.op)) return op
+    return `${op} "${filter.value}"`
 }
 
-function describeText(filter: Extract<ColumnFilter, { kind: 'text' }>): string {
-    return filter.op === 'blank'
-        ? textOpLabels.blank
-        : `${textOpLabels[filter.op]} "${filter.value}"`
-}
-
-function describeNumber(filter: Extract<ColumnFilter, { kind: 'number' }>): string {
-    if (filter.op === 'blank') return 'is blank'
+function describeNumber(
+    filter: Extract<ColumnFilter, { kind: 'number' }>,
+    labels: DataGridLabels
+): string {
+    const op = labels.numberOps[filter.op]
+    if (isPresence(filter.op)) return op
     if (filter.op === 'between') return `${filter.value} – ${filter.to}`
-    return `${numberOpLabels[filter.op]} ${filter.value}`
+    return `${op} ${filter.value}`
+}
+
+function describeDate(
+    filter: Extract<ColumnFilter, { kind: 'date' }>,
+    labels: DataGridLabels
+): string {
+    const op = labels.dateOps[filter.op]
+    if (isPresence(filter.op)) return op
+    if (filter.op === 'between') return `${filter.value} – ${filter.to}`
+    return `${op} ${filter.value}`
 }
 
 function describeSet(filter: Extract<ColumnFilter, { kind: 'set' }>): string {
@@ -188,19 +236,27 @@ function describeSet(filter: Extract<ColumnFilter, { kind: 'set' }>): string {
     return more > 0 ? `${shown} +${more}` : shown
 }
 
-export function describeFilter(filter: ColumnFilter): string {
+function isPresence(op: string): op is PresenceFilterOp {
+    return op === 'blank' || op === 'notBlank'
+}
+
+function describeCondition(filter: ColumnFilter, labels: DataGridLabels): string {
     switch (filter.kind) {
         case 'text':
-            return describeText(filter)
+            return describeText(filter, labels)
         case 'number':
-            return describeNumber(filter)
+            return describeNumber(filter, labels)
         case 'date':
-            return filter.op === 'between'
-                ? `${filter.value} – ${filter.to}`
-                : `${filter.op} ${filter.value}`
+            return describeDate(filter, labels)
         case 'set':
             return describeSet(filter)
         case 'boolean':
-            return filter.value ? 'true' : 'false'
+            return filter.value ? labels.yes : labels.no
     }
+}
+
+export function describeFilter(entry: ColumnFilterEntry, labels: DataGridLabels): string {
+    if (entry.kind !== 'group') return describeCondition(entry, labels)
+    const join = entry.join === 'or' ? ` ${labels.or} ` : ` ${labels.and} `
+    return entry.conditions.map((filter) => describeCondition(filter, labels)).join(join)
 }

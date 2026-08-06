@@ -1,9 +1,6 @@
 import type { ColumnTypeOptions } from '../types/index.js'
 
-/**
- * The slice of `ColumnTypeOptions` the formatters read. Declared separately so
- * they stay independent of the row type.
- */
+/** The slice formatters read, declared apart from the row type. */
 export type FormatOptions = Pick<
     ColumnTypeOptions<never>,
     'locale' | 'numberFormat' | 'currency' | 'wholePercent' | 'dateFormat'
@@ -79,10 +76,7 @@ export function formatCurrency(value: unknown, options: FormatOptions = {}): str
     }).format(parsed)
 }
 
-/**
- * Formats a ratio as a percentage. Intl expects 0-1; set `wholePercent` when
- * the data already counts in whole percents.
- */
+/** Intl expects 0-1; `wholePercent` says the data already counts to 100. */
 export function formatPercent(value: unknown, options: FormatOptions = {}): string {
     const parsed = toNumber(value)
     if (parsed === null) return ''

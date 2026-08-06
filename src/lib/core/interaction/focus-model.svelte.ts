@@ -3,11 +3,7 @@ import { clamp } from '../utils/math.js'
 import type { GridState } from '../grid/grid.svelte.js'
 import type { Keybinding, RowNode } from '../types/index.js'
 
-/**
- * Which band of rows a position lives in. `row` is only ever an index into
- * `preWindowNodes` within the `body` section, so anything reading `active.row`
- * as a data index must check the section first.
- */
+/** `row` is a `preWindowNodes` index only in the `body` section. */
 export type GridSection = 'top' | 'body' | 'bottom'
 
 export interface CellPosition {
@@ -49,11 +45,8 @@ export class FocusModel<TRow> {
         return nodes?.length ?? 0
     }
 
-    /**
-     * Vertical order is header, pinned top, body, pinned bottom. Flattening it
-     * keeps arrow, page and Ctrl+Home/End movement to plain arithmetic instead
-     * of a special case per boundary.
-     */
+    /** Header, pinned top, body, pinned bottom — flattened so movement is
+     * arithmetic rather than a special case per boundary. */
     #toLinear(position: CellPosition): number {
         const section = position.section ?? 'body'
         const top = this.rowsIn('top')

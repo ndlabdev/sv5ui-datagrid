@@ -15,6 +15,7 @@
     const sorting = getSorting(grid)
     const filteringState = getFiltering(grid)
     const slots = datagridVariants()
+    const labels = $derived(grid.labels)
     const theme = getGridTheme()
 
     interface MenuEntry {
@@ -27,16 +28,20 @@
         if (!sorting || !column.def.sortable) return []
         return [
             {
-                label: 'Sort ascending',
+                label: labels.sortAscending,
                 icon: 'lucide:arrow-up-narrow-wide',
                 onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'asc' }])
             },
             {
-                label: 'Sort descending',
+                label: labels.sortDescending,
                 icon: 'lucide:arrow-down-wide-narrow',
                 onSelect: () => sorting.setSort([{ columnId: column.id, direction: 'desc' }])
             },
-            { label: 'Clear sort', icon: 'lucide:circle-x', onSelect: () => sorting.setSort([]) }
+            {
+                label: labels.clearSort,
+                icon: 'lucide:circle-x',
+                onSelect: () => sorting.setSort([])
+            }
         ]
     }
 
@@ -45,21 +50,21 @@
         const list: MenuEntry[] = []
         if (column.pinned !== 'left') {
             list.push({
-                label: 'Pin left',
+                label: labels.pinLeft,
                 icon: 'lucide:arrow-left-to-line',
                 onSelect: () => columnOps.pinColumn(column.id, 'left')
             })
         }
         if (column.pinned !== 'right') {
             list.push({
-                label: 'Pin right',
+                label: labels.pinRight,
                 icon: 'lucide:arrow-right-to-line',
                 onSelect: () => columnOps.pinColumn(column.id, 'right')
             })
         }
         if (column.pinned) {
             list.push({
-                label: 'Unpin',
+                label: labels.unpin,
                 icon: 'lucide:pin-off',
                 onSelect: () => columnOps.pinColumn(column.id, null)
             })
@@ -71,21 +76,21 @@
         const list: MenuEntry[] = []
         if (filteringState && filterTypeOf(column.def)) {
             list.push({
-                label: 'Filter…',
+                label: labels.openFilter,
                 icon: 'lucide:filter',
                 onSelect: () => (filteringState.filterFor = column.id)
             })
         }
         if (columnOps.canResize) {
             list.push({
-                label: 'Autosize',
+                label: labels.autosize,
                 icon: 'lucide:move-horizontal',
                 onSelect: () => columnOps.autoSizeColumn(column.id)
             })
         }
         if (columnOps.canHide) {
             list.push({
-                label: 'Hide column',
+                label: labels.hideColumn,
                 icon: 'lucide:eye-off',
                 onSelect: () => columnOps.setColumnHidden(column.id, true)
             })
@@ -126,7 +131,7 @@
                     variant="ghost"
                     size="xs"
                     icon="lucide:ellipsis-vertical"
-                    aria-label={`${column.header} column menu`}
+                    aria-label={labels.columnMenu(column.header)}
                     tabindex={-1}
                 />
             {/snippet}

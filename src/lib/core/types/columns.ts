@@ -10,10 +10,7 @@ import type { RowNode } from './rows.js'
 
 export type ColumnAlign = 'left' | 'center' | 'right'
 
-/**
- * Built-in cell renderers, selected by `ColumnDef.type` and configured with
- * `typeOptions`. A `cell` snippet always wins over the type.
- */
+/** Built-in renderers, selected by `type`. A `cell` snippet wins over them. */
 export type ColumnType =
     | 'text'
     | 'number'
@@ -40,10 +37,7 @@ export interface RowAction<TRow> {
     destructive?: boolean
 }
 
-/**
- * Configuration for the renderer named by `ColumnDef.type`. Every field is
- * optional and only the ones belonging to that type are read.
- */
+/** Options for the renderer named by `type`; only its own fields are read. */
 export interface ColumnTypeOptions<TRow> {
     /** `number`, `currency`, `percent`, `date`, `datetime` — BCP 47 tag. Defaults to the browser locale. */
     locale?: string
@@ -100,11 +94,16 @@ export type BadgeColor = NonNullable<BadgeProps['color']>
 
 export type PinnedSide = 'left' | 'right'
 
-/**
- * Id of the synthetic checkbox column prepended by the selection
- * feature. Excluded from reorder, pin, hide and state snapshots.
- */
+/** The selection feature's checkbox column. */
 export const SELECTION_COLUMN_ID = '__dg-select__'
+
+/** The row-reorder feature's grip column. */
+export const ROW_HANDLE_COLUMN_ID = '__dg-row-handle__'
+
+/** A column the grid added itself: no data, so every data path skips it. */
+export function isSyntheticColumn(id: string): boolean {
+    return id === SELECTION_COLUMN_ID || id === ROW_HANDLE_COLUMN_ID
+}
 
 /** One rendered cell of a header group row. */
 export interface HeaderGroupCell {
@@ -124,6 +123,14 @@ export interface HeaderGroupCell {
     pinned: PinnedSide | null
 }
 
+/** Context passed to a custom header snippet. */
+export interface HeaderContext<TRow> {
+    /** Runtime state of the column: id, alignment, pin side, width. */
+    column: ColumnState<TRow>
+    /** The resolved header label, i.e. `header` or the column id. */
+    header: string
+}
+
 /** Context passed to a custom cell snippet. */
 export interface DataGridCellContext<TRow> {
     /** The pipeline node the cell belongs to. */
@@ -132,11 +139,7 @@ export interface DataGridCellContext<TRow> {
     row: TRow
     /** The resolved cell value (from `accessor` or `row[id]`). */
     value: unknown
-    /**
-     * Zero-based position of the row within the filtered/sorted set.
-     * Window offsets (page, virtual range) are already applied, so the value
-     * is stable while scrolling or paging.
-     */
+    /** Position within the filtered/sorted set, stable while scrolling. */
     rowIndex: number
 }
 
@@ -145,10 +148,18 @@ export interface ColumnDef<TRow> {
     id: string
 
     /**
-     * Header label text.
+     * Header label. Plain text, because it is the accessible name and the
+     * label every non-visual surface reuses; `headerCell` changes how it is
+     * drawn without losing it.
      * @default the column `id`
      */
     header?: string
+
+    /**
+     * Draws the header label; the grid renders its own controls around it.
+     * `header` stays the accessible name, so keep it meaningful.
+     */
+    headerCell?: Snippet<[HeaderContext<TRow>]>
 
     /**
      * Extracts the cell value from a row.
@@ -190,11 +201,25 @@ export interface ColumnDef<TRow> {
     pinned?: PinnedSide
 
     /**
-     * Child columns. Turns this definition into a header group: only
-     * `id` and `header` apply to the group itself; all data-facing
-     * options belong to the leaf children. Nesting is unlimited.
+     * Child columns, making this a header group: only `id` and `header` apply
+     * to it, the rest belong to the leaves. Nesting is unlimited.
      */
     children?: ColumnDef<TRow>[]
+
+    /**
+     * Set false to freeze one column's width.
+     * @default true
+     */
+    resizable?: boolean
+
+    /**
+     * Unset, a cell whose text is cut off is titled on hover. `true` always
+     * titles it, a function decides the text, `false` turns it off.
+     */
+    tooltip?: boolean | ((ctx: DataGridCellContext<TRow>) => string | undefined)
+
+    /** App data travelling with the definition; the grid never reads it. */
+    meta?: Record<string, unknown>
 
     /**
      * Enables click-to-sort on the header.
@@ -207,6 +232,14 @@ export interface ColumnDef<TRow> {
      * The sort direction factor is applied on top of the result.
      */
     sortFn?: (a: TRow, b: TRow) => number
+
+    /**
+     * The field this column sorts by when that is not what it displays — a
+     * name column showing "Ada Lovelace" but ordering by `lastName`. On the
+     * client it names the row property; under `rowModel: 'server'` it is what
+     * `toSortRequest` sends. `sortFn` wins over it.
+     */
+    sortField?: string
 
     /**
      * Column filter: a built-in filter type, an advanced definition
@@ -223,58 +256,43 @@ export interface ColumnDef<TRow> {
     /** Custom cell renderer. */
     cell?: Snippet<[DataGridCellContext<TRow>]>
 
-    /**
-     * Classes added to this column's cells, per row — the escape hatch for
-     * data-driven styling such as marking negative amounts. Runs for every
-     * rendered cell of the column, so keep it cheap.
-     */
+    /** Per-row classes for this column. Runs per rendered cell, so keep it cheap. */
     cellClass?: (ctx: DataGridCellContext<TRow>) => ClassNameValue
 
     /**
-     * How many columns this cell spans, starting here — the covered cells to
-     * its right are not rendered. Return 1 (or omit) for a normal cell. A span
-     * is clamped so it never crosses a pin boundary. Applies to body rows.
+     * How many columns this cell spans; the covered cells are not rendered.
+     * Clamped so it never crosses a pin boundary. Body rows only.
      */
     colSpan?: (ctx: DataGridCellContext<TRow>) => number
 
     /**
-     * Whether cells in this column can be edited. A predicate receives
-     * the row, node and value.
+     * How many rows this cell spans; the covered cells are not rendered. Stops
+     * at a full-width row, and holds while scrolling through it. Sized from
+     * the rows it covers, so it wants uniform row heights, not `'auto'`.
+     * Body rows only.
+     */
+    rowSpan?: (ctx: DataGridCellContext<TRow>) => number
+
+    /**
+     * A predicate receives the row, node and value.
      * @default false
      */
     editable?: Editable<TRow>
 
-    /**
-     * Inline editor: a built-in editor type or an advanced definition
-     * with options / a custom snippet. Defaults to `'text'` when the
-     * column is editable and no editor is set.
-     */
+    /** A built-in editor type or a definition with options; `'text'` by default. */
     editor?: EditorType | ColumnEditorDef<TRow>
 
-    /**
-     * Standard-schema (zod / valibot / arktype / …) validating a
-     * committed value. Invalid commits are blocked with an error.
-     */
+    /** Standard-schema validating a commit; invalid ones are blocked. */
     schema?: StandardSchemaV1
 
-    /**
-     * Imperative validator, an alternative to `schema`. Returns an error
-     * message, or null when valid.
-     */
+    /** An alternative to `schema`: an error message, or null when valid. */
     validate?: (value: unknown, row: TRow) => string | null
 
-    /**
-     * Transforms the editor's raw output into the value written to the
-     * row (e.g. parse a number). Runs before validation.
-     */
+    /** Turns the editor's output into the stored value, before validation. */
     parse?: (input: unknown, row: TRow) => unknown
 }
 
-/**
- * Runtime state of a column, derived from its definition.
- * Mutable aspects (order, live width, visibility, pin side) migrate here
- * in the columns-UX phase.
- */
+/** Runtime state of a column, derived from its definition. */
 export interface ColumnState<TRow> {
     /** The column id, mirrored from the definition. */
     id: string
@@ -296,6 +314,8 @@ export interface ColumnState<TRow> {
     align: ColumnAlign
     /** Resolved pin side. */
     pinned: PinnedSide | null
+    /** Resolved resizability. */
+    resizable: boolean
     /** CSS custom property holding this column's track size. */
     cssVar: string
     /** CSS custom property holding this column's sticky pin offset. */
