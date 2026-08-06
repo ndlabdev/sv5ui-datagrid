@@ -18,19 +18,19 @@ and assembled from feature modules you can write yourself.
 
 ## Features
 
-| Area              | What you get                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Rows**          | Row and column virtualization, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows |
-| **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                |
-| **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                   |
-| **Filtering**     | Quick filter plus text / number / date / set / boolean column filters, two conditions per column, chips       |
-| **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                               |
-| **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste      |
-| **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                          |
-| **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                            |
-| **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                               |
-| **Accessibility** | ARIA `grid`/`treegrid`, one tab stop, full keyboard navigation, axe-clean                                     |
-| **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                 |
+| Area              | What you get                                                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Rows**          | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows |
+| **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                                    |
+| **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                       |
+| **Filtering**     | Quick filter plus text / number / date / set / boolean column filters, two conditions per column, chips                           |
+| **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                   |
+| **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                          |
+| **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                              |
+| **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                |
+| **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                                                   |
+| **Accessibility** | ARIA `grid`/`treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                                     |
 
 Every feature is opt-in: what you do not register is never imported, and never
 reaches your bundle.

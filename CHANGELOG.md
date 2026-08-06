@@ -28,6 +28,11 @@ than listed as a diff against a version nobody has.
   and `'auto'` on a Fenwick-tree offset cache. An `'auto'` row is measured back
   into the scroll offsets, keyed by row id so the measurement survives sorting.
 - `scrollToRow` and `ensureVisible`.
+- A list taller than the browser will render still reaches its last row.
+  Engines clamp an element's height, so at 40px a million rows want 40M px and
+  the last 160k used to be unreachable by scrolling; past the limit the spacer
+  is scaled and scroll positions map through it. A list the browser can render
+  at full height takes the same path it always did.
 - Column resize (drag, double-click autosize, keyboard), reorder (drag and
   keyboard), three-section pinning, a visibility chooser and nested header
   groups.
@@ -86,13 +91,17 @@ than listed as a diff against a version nobody has.
   `progress`, `rating`, `link`, `actions`.
 - Toolbar with a quick filter, active filter chips, an export menu, the column
   chooser and the density toggle. The export menu offers every row the filter
-  left or just the selection.
+  left or just the selection; the chooser lists only the columns an app
+  declared and scrolls once there are more of them than fit on screen.
 - A divider per header column. The resize handle sits on that edge but only
   appears on hover, so the line is what says where a column ends and what can
   be dragged; the body keeps no vertical rules of its own.
 - Theming through `defineDataGridConfig` for app-wide defaults, a per-instance
   `ui` prop for slot overrides, and `cellClass` / `rowClass` for data-driven
   styling.
+- Loading, empty and error states as replaceable surfaces. The skeleton fills
+  the grid rather than showing a fixed few rows, taking its count from what the
+  viewport or the page size would have held; `loadingRows` overrides it.
 - Icons bundled and registered into Iconify on mount, so a running grid never
   fetches them.
 
