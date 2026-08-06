@@ -54,6 +54,14 @@
     $effect(() => {
         if (!virtualization) return
         virtualization.virtualizer.viewportHeight = size.height
+        // The header scrolls with the spacer, so it is part of the range the
+        // scroller offers but not of the rows the range has to cover.
+        if (element) {
+            virtualization.virtualizer.chromeHeight = Math.max(
+                0,
+                element.scrollHeight - virtualization.virtualizer.totalHeight
+            )
+        }
     })
 
     $effect(() => {

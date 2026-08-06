@@ -102,7 +102,9 @@ export class Virtualization<TRow> {
         }
 
         const headerOffset = Math.max(0, element.scrollHeight - virtualizer.totalHeight)
-        const bottom = top + virtualizer.sizeOf(index) + headerOffset
+        // `top` is a scroll position, so the row's height has to be measured
+        // in the same space before the two are added.
+        const bottom = top + virtualizer.toScrollSpace(virtualizer.sizeOf(index)) + headerOffset
         if (top < element.scrollTop) {
             this.#setScrollTop(element, top)
         } else if (bottom > element.scrollTop + virtualizer.viewportHeight) {
