@@ -154,6 +154,8 @@
                 <Link href="/rows">Row structures demo →</Link> ·
                 <Link href="/reorder">Row reorder demo →</Link> ·
                 <Link href="/editing">Editing demo →</Link> ·
+                <Link href="/editors">All editors + validation →</Link> ·
+                <Link href="/spans">Spanning demo →</Link> ·
                 <Link href="/renderers">Cell renderers demo →</Link> ·
                 <Link href="/theming">Theming demo →</Link> ·
                 <Link href="/persistence">Persistence demo →</Link> ·

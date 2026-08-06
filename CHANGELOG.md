@@ -7,198 +7,168 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-The Community feature set, built on the feature-module kernel. Not yet
-published; entries are grouped for the first `0.x` release.
+The first release. Everything below is new, so it is grouped by area rather
+than listed as a diff against a version nobody has.
 
-### Added
+### Kernel
 
-- **Kernel** — feature-module system (`GridFeature` extension points: pipeline
-  stage, state, api, keybindings, menu items, cell decoration, serialize/
-  hydrate), RowNode pipeline, `ColumnModel` with a px/flex/min-max sizing
-  engine over CSS variables, `FocusModel` with full keyboard navigation, and a
-  div-based ARIA grid (`grid`/`treegrid`).
-- **Virtualization** — fixed and variable row virtualizer (Fenwick-tree offset
-  cache), column virtualizer, sticky header, `scrollToRow`/`ensureVisible`.
-  `getRowHeight` also answers `'auto'`: the row sizes itself to its content and
-  is measured back into the scroll offsets, keyed by row id so a measurement
-  survives sorting and filtering.
-- **Columns** — resize (drag, double-click autosize, keyboard), reorder (drag +
-  keyboard), 3-section pinning, visibility chooser, unlimited header groups,
-  per-cell spanning via `ColumnDef.colSpan` and `ColumnDef.rowSpan`, and a
-  `ColumnDef.headerCell` snippet that draws the header label while `header`
-  stays the plain text every non-visual surface reuses.
+- Feature-module system. A feature is a plain object plugging into
+  `pipelineStage`, `createState`, `createApi`, `keybindings`, `menuItems`,
+  `cellDecoration`, `serialize` and `hydrate` — the same hooks the built-in
+  features use, so nothing the package ships needs privileged access.
+- Row pipeline of pure transforms over `RowNode[]`, ordered by declaration so a
+  stage never has to know what else is registered.
+- `ColumnModel` with a px / flex / min-max sizing engine driven by CSS
+  variables, and `FocusModel` with full keyboard navigation.
+- Div-based ARIA `grid`, or `treegrid` once rows nest.
 
-    A `rowSpan` cell stands in for the rows it covers: they render no cell of
-    their own, it carries `aria-rowspan`, and it is the single tab stop for the
-    whole run. Spans are resolved against the entire row list rather than the
-    rendered window, so scrolling into the middle of one still draws it —
-    otherwise its first row leaving the window would take the cell with it.
-    Sized from the rows it covers, so it wants uniform row heights rather than
-    `getRowHeight: 'auto'`.
+### Rows and columns
 
-    Merging rows takes the horizontal separators away inside a run, so a
-    spanning column draws vertical edges instead — without them the merged
-    block has no border left at all and reads as a hole rather than a cell. The
-    separator at a run's foot stays, since that one belongs to the run below.
-    A grid that spans nothing is untouched by any of it.
-
-- **Sorting** — multi-sort with priority badges, per-type comparators with
-  configurable null ordering, custom `sortFn`, `sortField` for a column that
-  orders by something other than what it shows, and a configurable header cycle
-  via `sorting({ cycle })`.
-- **Filtering** — quick filter, per-column text / number / date / set / boolean
-  filters with a serializable model, filter chips, and custom predicates. Each
-  column takes up to two conditions joined with and / or; the negated operators
-  (`notContains`, `notEqual`, `notBlank`) and an opt-in `caseSensitive` round
-  out the text filter, and `blank` / `notBlank` now reach date columns too.
-- **Server requests** — `toFilterRequest` collapses a filter model into
-  `FilterRequest`, the normalized shape a server row model sends: every column
-  is a list of conditions and a join, whichever shorthand the grid held.
-  `toSortRequest` does the same for the sort, in priority order and carrying
-  each column's `sortField` — a server has no use for an id that is a UI
-  concern. Both wire formats are deliberately separate from the models they
-  come from, so they can stay frozen while the client-side ones grow.
-- **Selection** — single / multi row selection with a checkbox column,
-  select-all, Shift-range, `isRowSelectable`, TSV copy and CSV export. The
-  export takes a `delimiter` (`';'` for locales where Excel expects it), an
-  explicit `columns` list that may name hidden columns, and a `formatValue`
-  callback deciding what each cell becomes on disk.
-- **Editing** — cell and row editing with the sv5ui editors, standard-schema
-  validation, transactions, undo/redo, and clipboard paste (`Ctrl+V`) filling
-  from the focused cell.
-- **Row structures** — expansion model, row pinning (top/bottom), full-width
-  rows, treegrid ARIA.
-- **Row reorder** — `rowReorder()` adds a grip column, `Alt`+`ArrowUp`/
-  `ArrowDown` from the keyboard, `isRowDraggable`, an `onReorder` callback and a
-  `rowMoved` event. Dragging lifts an opaque copy of the row that follows the
-  cursor, dims the one left behind, draws a drop line on the target's edge,
-  scrolls when the cursor reaches an edge — the grid's own scroller when it has
-  one, the page otherwise — so a row can be moved past what is on screen, which
-  matters with virtualization. The copy carries the grid's custom properties
-  with it, so its columns and pinned cells keep the geometry they had in the
-  list rather than collapsing once it is moved out to `<body>`, and clips them
-  to its rounded corners so their square backgrounds cannot eat its outline. It
-  follows the cursor on both axes — held to the column it came from it sits
-  flush on the list and cannot be told apart from the row under it — while only
-  its vertical position decides where the row lands. On release it flies to
-  where the row ended up rather than blinking away, and `Escape` abandons the
-  move. A mouse has to
-  travel a few pixels before a press counts as a drag; a finger has to rest,
-  so swiping the grip still scrolls the list and only a hold picks a row up.
-  Reordering rewrites `data`, so it is meant for an unsorted grid.
-- **Column definitions** — `resizable` freezes one column's width, `tooltip`
+- Row and column virtualization: fixed heights on a fast path, per-row heights
+  and `'auto'` on a Fenwick-tree offset cache. An `'auto'` row is measured back
+  into the scroll offsets, keyed by row id so the measurement survives sorting.
+- `scrollToRow` and `ensureVisible`.
+- Column resize (drag, double-click autosize, keyboard), reorder (drag and
+  keyboard), three-section pinning, a visibility chooser and nested header
+  groups.
+- Cell spanning through `colSpan(ctx)` and `rowSpan(ctx)`. Covered cells are not
+  rendered, the merged cell carries `aria-colspan` / `aria-rowspan`, and it is
+  the single tab stop for the block. Row spans resolve against the whole row
+  list, so scrolling into the middle of one still draws it; they are sized from
+  the rows they cover and want uniform row heights rather than `'auto'`.
+- `headerCell` draws the header label while `header` stays the plain text every
+  non-visual surface reuses. `resizable` freezes a column's width, `tooltip`
   overrides or silences the hover tooltip, and `meta` carries app data the grid
   never reads.
-- **Pagination** — client paging plus the server hooks (`rowModel: 'server'`,
-  `setRowCount`).
-- **State persistence** — versioned JSON snapshots via `getState`/`setState`,
-  `persistState` auto-sync to `localStorage` with a `migrate` hook.
-- **Header** — a divider per column. The resize handle sits on that edge but
-  only appears on hover, so the line is what tells anyone where a column ends
-  and what can be dragged. The body keeps no vertical rules of its own.
-- **Toolbar** — quick filter, active filter chips, an export menu, the column
+- Expansion model, row pinning to top and bottom, full-width rows.
+- Row reorder: a grip column, `Alt`+`ArrowUp`/`ArrowDown`, `isRowDraggable`, an
+  `onReorder` callback and a `rowMoved` event. Dragging lifts a copy of the row
+  that follows the cursor and auto-scrolls at the edges — the grid's own
+  scroller when it has one, the page otherwise — so a row can be moved past
+  what is on screen. Reordering rewrites `data`, so it is meant for an unsorted
+  grid.
+
+### Data operations
+
+- Multi-sort with priority badges, per-type comparators, configurable null
+  ordering, custom `sortFn`, `sortField` for a column that orders by something
+  other than what it shows, and a configurable header cycle.
+- Quick filter plus text, number, date, set and boolean column filters, with a
+  serializable model, filter chips and custom predicates. Each column takes up
+  to two conditions joined with and / or, and the text filter carries the
+  negated operators and an opt-in `caseSensitive`.
+- Single and multi row selection with a checkbox column, select-all,
+  Shift-range and `isRowSelectable`. TSV copy, and CSV export taking a
+  `delimiter`, an explicit `columns` list that may name hidden columns, and a
+  `formatValue` callback.
+- Cell and row editing with the sv5ui editors, standard-schema validation,
+  transactions, undo/redo and clipboard paste from the focused cell.
+- Opening an editor hands it the keyboard: a select drops its list open, a
+  date lands on its first segment, a text field selects what is there. Typing
+  a printable key on a focused cell opens the editor on that character, for
+  the editors that can hold one.
+- `Enter` commits where the editor does not claim it, `Tab` commits and moves
+  on, and `Ctrl`/`Cmd`+`Enter` commits without leaving the cell — the way out
+  of a textarea or a tags field, which own `Enter` for a newline and a tag.
+- Client pagination, plus the server hooks `rowModel: 'server'` and
+  `setRowCount`.
+- `toFilterRequest` and `toSortRequest` produce normalized wire shapes for a
+  server row model, kept separate from the internal models so they can stay
+  frozen while those grow.
+- Versioned JSON state snapshots through `getState` / `setState`, with
+  `persistState` mirroring column layout, sort, filter, page size and density
+  into `localStorage` and a `migrate` hook for older snapshots.
+
+### Presentation
+
+- Thirteen built-in cell renderers selected by column `type`: `text`, `number`,
+  `currency`, `percent`, `date`, `datetime`, `boolean`, `badge`, `user`,
+  `progress`, `rating`, `link`, `actions`.
+- Toolbar with a quick filter, active filter chips, an export menu, the column
   chooser and the density toggle. The export menu offers every row the filter
-  left or just the selection, and takes its file name from `exportFilename`,
-  the same prop the right-click menu uses.
-- **Theming** — `defineDataGridConfig` app defaults, per-instance `ui` slot
-  overrides, and `cellClass` / `rowClass` data-driven callbacks.
-- **Localization** — hand the grid the languages it may use and it takes it
-  from there: `locales: [enUS, viVN]` and nothing else. It picks from the
-  page's own language, `locale` forces a tag, and assigning `grid.locale`
-  switches in place — the sort, filter and selection on screen all survive,
-  where rebuilding the grid would have lost them.
+  left or just the selection.
+- A divider per header column. The resize handle sits on that edge but only
+  appears on hover, so the line is what says where a column ends and what can
+  be dragged; the body keeps no vertical rules of its own.
+- Theming through `defineDataGridConfig` for app-wide defaults, a per-instance
+  `ui` prop for slot overrides, and `cellClass` / `rowClass` for data-driven
+  styling.
+- Icons bundled and registered into Iconify on mount, so a running grid never
+  fetches them.
 
-    A language is one pack: `labels` for the ~60 strings the grid shows, and
-    `announcer` for the ones it speaks. Twelve ship from
-    `@sv5ui/datagrid/locales` — `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`,
-    `fr-FR`, `de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only the
-    packs an app imports are bundled, because the grid cannot reach for a
-    language it was never handed; there is deliberately no "all languages"
-    export to import by accident. A tag nobody answers for falls back to
-    English rather than throwing, and `vi` is answered by `vi-VN` — roughly the
-    right language beats the wrong one.
+### Localization
 
-    Every label is typed, so a pack missing a key fails the build rather than
-    rendering a blank. Because labels can be functions, a language states its
-    own grammar: Russian counts rows through `Intl.PluralRules` (1 строка,
-    2 строки, 5 строк), and French and German agree their singular.
-
-    The same tag drives `Intl`, so a number, currency or date column that says
-    nothing about locale formats in the grid's language and reformats when the
-    language changes. `labels` and `announcer` options still override single
-    strings on top of the chosen pack, an operator map one entry at a time.
-
-- **Built-in cell renderers** selected by column `type`: text, number, currency,
-  percent, date, datetime, boolean, badge, user, progress, rating, link,
-  actions.
-- **Icons** bundled locally and registered into Iconify on mount, so the grid
-  renders its icons offline instead of fetching them.
-- **Demos** — one playground route per feature (basic, columns, filters,
-  selection, editing, renderers, rows, reorder, virtual, theming, persistence,
-  headless, spans), plus three review routes: `qa` runs every Community feature
-  in one grid with live state and loading / error / empty / RTL switches, `i18n`
-  switches between the twelve shipped languages in place, and `export` shows the
-  exact bytes a CSV export produces.
+- Twelve languages ship from `@sv5ui/datagrid/locales`: `en-US`, `vi-VN`,
+  `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`, `de-DE`, `es-ES`, `pt-BR`, `ru-RU`,
+  `id-ID`, `th-TH`. Only what an app imports is bundled.
+- The grid picks one from the page's own language; `locale` forces a tag, and
+  assigning `grid.locale` switches in place, keeping the sort, filter and
+  selection on screen. A tag nobody answers for falls back to English, and `vi`
+  is answered by `vi-VN`.
+- The same tag drives `Intl`, so number, currency and date columns that name no
+  locale of their own follow the grid and reformat with it.
+- A pack is `{ tag, labels, announcer }` with every key typed, so a language
+  missing one fails the build. Labels can be functions, so a language states
+  its own grammar — Russian counts rows through `Intl.PluralRules`.
+- `labels` and `announcer` override single strings on top of the chosen pack.
 
 ### Fixed
 
-- **Security** — reject script-bearing `href`s in link cells and neutralize
+Bugs found and closed before the first release.
+
+- **Security** — reject script-bearing `href`s in link cells; neutralize
   spreadsheet formulas in CSV export.
-- **Filtering** — anchor the filter panel to its trigger on every open path, and
-  stop the grid stealing focus from the panel's inputs.
-- **Persistence** — restore synchronously so a client-rendered grid does not
-  flash its default layout on reload.
-- **Pagination** — show the active page size in the footer select and stack the
-  controls cleanly on narrow viewports.
-- **Accessibility** — keep the header filter/menu triggers reachable on touch
-  devices that cannot hover.
-- **RTL** — indent tree and group rows from the inline start, so nesting reads
-  correctly under `dir="rtl"` instead of always indenting from the left.
-- **Keyboard** — the grid is one tab stop again. Every row's selection checkbox
-  was tabbable, so leaving a hundred-row grid took a hundred presses; the
-  checkboxes now sit outside the tab order like every other control in the
-  grid, and `Space` on the checkbox column's header cell toggles select-all,
-  which `Ctrl+A` alone could not undo.
-- **Keyboard** — the density control is one tab stop with arrow keys rather
-  than three stops in a row, and reports itself as a radio group: it is one
-  setting with three values, not three independent toggles.
-- **Focus ring** — one treatment across header, body and full-width cells: a
-  light inset ring that outranks whatever the grid paints over the cell. The
-  controls floating at the end of a header covered its top and bottom edges,
-  and the row separator washed out the bottom of every focused body cell, so
-  the same ring came out a different weight on each side.
+- **Keyboard** — the grid is one tab stop. Every row's selection checkbox used
+  to be tabbable, so leaving a hundred-row grid took a hundred presses; `Space`
+  on the header cell now toggles select-all.
+- **Keyboard** — the density control is one tab stop answering the arrow keys,
+  and reports itself as a radio group rather than three independent toggles.
+- **Focus ring** — one treatment across header, body and full-width cells. The
+  header's floating controls covered its top and bottom edges and the row
+  separator washed out its bottom, so the same ring came out a different weight
+  on each side.
 - **Accessibility** — the filler above an ungrouped column no longer reports
-  itself as a column header. It names nothing, so it read as an unlabelled
-  header to a screen reader; the leaf header below already describes the
-  column.
-- **Editing** — report undo/redo as edits; blank cells no longer match a numeric
-  `between` filter; a shrinking dataset no longer strands the page.
-- **Columns** — a long header on a sortable column now truncates with an
-  ellipsis and gets the hover tooltip, as unsorted columns already did.
+  itself as an unlabelled column header; keep the header filter and menu
+  triggers reachable on touch devices that cannot hover.
 - **Header layout** — the filter and column-menu triggers float over the end of
-  the header instead of sitting in its flow. In flow they reserved their width
-  even while invisible, so a column under ~130px had nothing left to render its
-  label in and showed a single letter or nothing at all.
-- **Cell overflow** — cells clip their content, so a badge, avatar or custom
-  renderer wider than its column no longer paints over the next one. An open
-  editor keeps overflowing on purpose, for its validation message.
-- **Filter panel** — the panel renders into `<body>` rather than inside the
-  header cell. Inside, it was clipped by the cell's overflow and trapped in the
-  stacking context the fading control wrapper opens, so the pinned header cells
-  painted over its top edge. It also re-anchors to its trigger while the grid
-  or the page scrolls, instead of staying where it was first placed, and now
-  sits one layer below the sv5ui popups: sharing their level left the winner to
-  DOM order, and the panel — appended last — covered its own operator list.
-- **Autosize** — double-click sizing measures the whole header, controls
-  included, rather than only its first child. Right-aligned columns measured
-  their leading spacer and collapsed to the minimum width. Repeating it is now
-  a no-op: content that stretches to the cell (a progress bar, anything on
-  `w-full`) is no longer measured as if it had that width, so autosizing twice
-  stopped feeding its own result back and creeping the column.
-- **Header groups** — a restored snapshot can no longer interleave two groups.
-  Dragging already refused to take a column out of its group; `setState` wrote
-  the order straight through, and the header then repeated group labels over
-  unrelated columns.
-- **Filtering** — picking an operator no longer closes the filter panel. The
-  listbox is portalled outside the panel, so choosing from it read as a click
-  outside; the cell editor already guarded against this and the panel did not.
+  the header rather than sitting in its flow, where they reserved their width
+  even while invisible and left a narrow column nothing to render its label in.
+- **Filter panel** — renders into `<body>`, so it is no longer clipped by the
+  header cell or trapped under the pinned headers; re-anchors to its trigger
+  while the grid or page scrolls; sits one layer below the sv5ui popups, so it
+  no longer covers its own operator list; and picking an operator no longer
+  reads as a click outside and closes it.
+- **Filtering** — blank cells no longer match a numeric `between` filter.
+- **Autosize** — measures the whole header including its controls, rather than
+  only its first child, which collapsed right-aligned columns to the minimum
+  width. Repeating it is now a no-op: content that stretches to the cell is no
+  longer measured as if it had that width, so autosizing twice stopped creeping
+  the column wider.
+- **Cell overflow** — cells clip their content, so a wide badge or avatar no
+  longer paints over the next column. An open editor still overflows, for its
+  validation message.
+- **Header groups** — a restored snapshot can no longer interleave two groups
+  and repeat their labels over unrelated columns.
+- **Selection** — the checkbox is centred in its column; sv5ui reserves a label
+  slot whether or not anything visible goes in it.
+- **Persistence** — restores synchronously, so a client-rendered grid does not
+  flash its default layout on reload.
+- **Pagination** — show the active page size in the footer select; stack the
+  controls cleanly on narrow viewports; a shrinking dataset no longer strands
+  the page.
+- **Editing** — report undo and redo as edits.
+- **Columns** — a long header on a sortable column truncates with an ellipsis
+  and gets the hover tooltip, as unsorted columns already did.
+- **RTL** — indent tree and group rows from the inline start, so nesting reads
+  correctly under `dir="rtl"`.
+
+### Development
+
+- A playground route per feature (basic, columns, filters, selection, editing,
+  renderers, rows, reorder, virtual, theming, persistence, headless, spans),
+  plus five review routes: `qa` runs every feature in one grid with live state
+  and loading / error / empty / RTL switches, `i18n` switches between the
+  twelve languages in place, `export` shows the exact bytes a CSV export
+  produces, `spans` exercises row and column spanning against a pinned column,
+  and `editors` puts all ten built-in editors next to the validation rule each
+  column enforces.

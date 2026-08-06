@@ -2,6 +2,7 @@ import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
+import Editors from '../routes/editors/+page.svelte'
 import Export from '../routes/export/+page.svelte'
 import I18n from '../routes/i18n/+page.svelte'
 import Qa from '../routes/qa/+page.svelte'
@@ -151,5 +152,54 @@ describe('CSV export demo', () => {
 
         // ...and still reaches the file.
         await expect.poll(() => document.querySelector('pre')?.textContent).toContain('chỉ nội bộ')
+    })
+})
+
+describe('editors demo', () => {
+    it('renders every built-in editor type alongside a custom one', async () => {
+        render(Editors as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const headers = [...document.querySelectorAll('[role="columnheader"]')].map((cell) =>
+            cell.textContent?.trim()
+        )
+        // text, number, select, selectMenu, checkbox, date, time, textarea,
+        // rating, tags, and the custom colour editor.
+        for (const header of ['Title', 'Estimate', 'Priority', 'Assignee', 'Done', 'Due']) {
+            expect(
+                headers.some((text) => text?.startsWith(header)),
+                header
+            ).toBe(true)
+        }
+    })
+
+    it('blocks a commit that fails the column schema and keeps the old value', async () => {
+        render(Editors as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const title = document.querySelector<HTMLElement>('[data-dg-cell="0:1"]')!
+        const before = title.textContent?.trim()
+        await userEvent.dblClick(title)
+        await page.getByRole('textbox').first().fill('ab')
+        await userEvent.keyboard('{Enter}')
+
+        await expect.element(page.getByRole('alert')).toHaveTextContent('At least 3 characters')
+
+        // The row keeps what it had: an invalid commit writes nothing, and the
+        // editor stays open on the value the user is still working on.
+        await userEvent.keyboard('{Escape}')
+        await expect.poll(() => title.textContent?.trim()).toBe(before)
+    })
+
+    it('runs parse before validation, so a decimal is rounded rather than rejected', async () => {
+        render(Editors as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const estimate = document.querySelector<HTMLElement>('[data-dg-cell="0:2"]')!
+        await userEvent.dblClick(estimate)
+        await page.getByRole('spinbutton').first().fill('3.7')
+        await userEvent.keyboard('{Enter}')
+
+        await expect.poll(() => estimate.textContent?.trim()).toBe('4')
     })
 })
