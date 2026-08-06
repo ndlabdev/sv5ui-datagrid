@@ -7,7 +7,7 @@
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getVirtualization } from '../../features/virtualization/index.js'
-    import { scrollStart } from '../../core/utils/scroll.js'
+    import { isRtl, scrollStart, setScrollStart } from '../../core/utils/scroll.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridViewportProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
@@ -75,6 +75,7 @@
     })
 
     let pendingFocus: CellPosition | null = null
+    let movedByKeyboard = false
 
     $effect.pre(() => {
         const active = grid.focus.active
@@ -104,9 +105,53 @@
         const cell = element.querySelector<HTMLElement>(selectorFor(pendingFocus))
         if (cell) {
             pendingFocus = null
+            const byKeyboard = movedByKeyboard
+            movedByKeyboard = false
             cell.focus()
+            // Next frame, not now: measuring forces a style flush, and doing
+            // that mid-effect mounts a popup the click that opened it is still
+            // propagating towards — which then reads as a click outside.
+            if (byKeyboard) requestAnimationFrame(() => revealColumn(cell))
         }
     })
+
+    /**
+     * The span of the viewport no pinned cell is sitting on. Which edge a
+     * pinned cell holds is a question of where it ended up rather than of its
+     * pin side, since under RTL the two swap over.
+     */
+    function clearSpan(row: Element, cell: HTMLElement, view: DOMRect) {
+        let start = view.left
+        let end = view.right
+        for (const sibling of row.children) {
+            if (sibling === cell || getComputedStyle(sibling).position !== 'sticky') continue
+            const box = sibling.getBoundingClientRect()
+            if (box.left - view.left <= view.right - box.right) start = Math.max(start, box.right)
+            else end = Math.min(end, box.left)
+        }
+        return { start, end }
+    }
+
+    /**
+     * Scrolls a focused cell clear of the pinned columns. The browser's own
+     * scroll-into-view stops at the viewport edge, which is exactly where the
+     * pinned columns sit, so a cell reached by keyboard parks underneath one.
+     */
+    function revealColumn(cell: HTMLElement): void {
+        const row = cell.parentElement
+        if (!element || !row || document.activeElement !== cell) return
+        if (getComputedStyle(cell).position === 'sticky') return
+
+        const { start, end } = clearSpan(row, cell, element.getBoundingClientRect())
+        const box = cell.getBoundingClientRect()
+        // A cell wider than the gap can only ever show one edge: its start.
+        const offset =
+            box.left < start || box.width > end - start
+                ? box.left - start
+                : Math.max(0, box.right - end)
+        if (offset === 0) return
+        setScrollStart(element, scrollStart(element) + (isRtl(element) ? -offset : offset))
+    }
 
     /** Pinned rows are outside the pipeline, so they carry their own descriptor. */
     function selectorFor(position: CellPosition): string {
@@ -179,7 +224,13 @@
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (grid.focus.handleKeydown(event)) return
+        // Set only where the focus model actually moved: a click reaches
+        // something the user can already see, and Escape leaving a popup must
+        // not drag the grid out from under the trigger they came from.
+        if (grid.focus.handleKeydown(event)) {
+            movedByKeyboard = true
+            return
+        }
         if (!editing || editing.active || editing.rowEditId || !isPrintable(event)) return
 
         const { row, col } = grid.focus.active

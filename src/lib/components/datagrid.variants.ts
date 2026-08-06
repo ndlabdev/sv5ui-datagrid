@@ -40,8 +40,12 @@ export const datagridVariants = tv({
         body: 'relative',
         bodyOffset: 'will-change-transform',
         row: 'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] transition-colors after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant last:after:hidden hover:bg-surface-container-low',
-        // Focused above the row separator (z-6), or it eats the inset ring.
-        cell: 'flex min-h-(--dg-row-h) min-w-0 items-center overflow-hidden px-3 py-(--dg-cell-py) text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        cell: 'flex min-h-(--dg-row-h) min-w-0 items-center overflow-hidden px-3 py-(--dg-cell-py) text-on-surface outline-none',
+        // Kept apart from `cell` so an editing cell can simply not have it: an
+        // open editor draws its own ring, and the two nested read as a mistake.
+        // Lifted above the row separator (z-6), or that eats the inset ring.
+        cellFocus:
+            'focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
         // The validation message hangs below the cell.
         cellEditing: 'overflow-visible',
         // Keeps its row's height — a taller cell grows the grid track and
@@ -59,9 +63,11 @@ export const datagridVariants = tv({
         // no edge left and reads as a hole.
         rowSpanEdge: 'border-e border-outline-variant',
         rowSpanEdgeStart: 'border-s border-outline-variant',
-        // Only where rows span. Separator over pinned, span over separator,
-        // pinned over span is a cycle; lifting pinned cells breaks it, so they
-        // draw the separator and tint they now cover.
+        // The separator sits over pinned cells so its line crosses them, a
+        // focused cell sits over the separator so the ring stays whole, and a
+        // pinned cell must sit over anything scrolling under it — a cycle.
+        // Lifting pinned cells breaks it; they then draw the separator and the
+        // selection tint they have risen above.
         pinnedCellRaised:
             'z-[8] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant group-last/row:after:hidden',
         pinnedCellSelected:
@@ -72,6 +78,12 @@ export const datagridVariants = tv({
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
         cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
         cellEditorPad: 'px-2',
+        // A date or time editor has an intrinsic width: fixed segments plus the
+        // icon its field reserves room for. Squeezed into a narrower column the
+        // segments overflow and run under that icon, so the editor is allowed
+        // to outgrow the cell instead — which is already `overflow-visible`
+        // while one is open.
+        cellEditorWide: 'min-w-max',
         cellEditorField: 'w-full',
         cellError:
             'absolute top-full start-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
@@ -80,8 +92,8 @@ export const datagridVariants = tv({
             'min-h-(--dg-row-h) min-w-0 overflow-hidden bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
         pinnedRow:
             'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
-        pinnedRowsTop: 'sticky z-[8] min-w-min shadow-sm',
-        pinnedRowsBottom: 'sticky bottom-0 z-[8] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
+        pinnedRowsTop: 'sticky z-[9] min-w-min shadow-sm',
+        pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
         groupBoundary: 'border-e border-outline-variant',

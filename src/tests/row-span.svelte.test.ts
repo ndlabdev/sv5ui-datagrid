@@ -303,12 +303,10 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // No cell is skipped, none is raised and none grows an edge: the pinned
-        // column keeps the z-index it has always had, and the table keeps the
-        // borders it has always drawn.
+        // No cell is skipped and none grows a spanning edge: the table keeps
+        // the borders it has always drawn.
         expect(cell(1, 0)).not.toBeNull()
         expect(cell(0, 0)!.getAttribute('aria-rowspan')).toBeNull()
-        expect(getComputedStyle(cell(0, 0)!).zIndex).toBe('5')
         expect(getComputedStyle(cell(0, 0)!).borderInlineEndWidth).toBe('0px')
         expect(getComputedStyle(cell(0, 1)!).borderInlineStartWidth).toBe('0px')
     })

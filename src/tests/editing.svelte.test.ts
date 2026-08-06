@@ -181,10 +181,10 @@ describe('cell editing', () => {
         expect(grid.data[0].dept).toBe('Core')
 
         cellAt(screen.container, 0, 2).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-        await page.getByRole('button', { name: /Dept/ }).first().click()
+        // The list opens with the editor, so there is nothing to click first.
         await page.getByRole('option', { name: 'Data' }).click()
 
-        expect(grid.data[0].dept).toBe('Data')
+        await expect.poll(() => grid.data[0].dept).toBe('Data')
     })
 
     it('keeps the number editor open on interaction inside it (no premature commit)', async () => {
@@ -384,5 +384,240 @@ describe('clipboard paste', () => {
         pasteInto(input, 'FromEditor')
         // The grid paste must not fire while an editor owns the event.
         expect(grid.data[0].name).toBe('Alice')
+    })
+})
+
+describe('leaving a widget editor', () => {
+    /** name, age, dept, active, rating, skills, joined. */
+    const DEPT = 2
+
+    const isOpen = (container: Element) =>
+        Boolean(cellAt(container, 0, DEPT).querySelector('[role="combobox"],button[aria-haspopup]'))
+
+    it('closes on Escape, where the cell holds the focus and not the widget', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        await userEvent.dblClick(cellAt(screen.container, 0, DEPT))
+        await expect.poll(() => isOpen(screen.container)).toBe(true)
+
+        // A widget editor leaves focus on the cell, so a handler on the editor
+        // inside it never sees the key — the binding has to be on the grid.
+        await userEvent.keyboard('{Escape}')
+        await expect.poll(() => isOpen(screen.container)).toBe(false)
+        expect(getEditing(grid)!.active).toBeNull()
+    })
+
+    it('closes when the pointer leaves it', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        await userEvent.dblClick(cellAt(screen.container, 0, DEPT))
+        await expect.poll(() => isOpen(screen.container)).toBe(true)
+
+        // It used to sit there with no way out but picking a value: the
+        // outside-click handler only ever ran for text-field editors.
+        await userEvent.click(cellAt(screen.container, 2, 1))
+        await expect.poll(() => isOpen(screen.container)).toBe(false)
+        expect(getEditing(grid)!.active).toBeNull()
+    })
+
+    it('leaves the committed value alone', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const before = grid.data[0].dept
+
+        await userEvent.dblClick(cellAt(screen.container, 0, DEPT))
+        await expect.poll(() => isOpen(screen.container)).toBe(true)
+        await userEvent.keyboard('{Escape}')
+
+        // A widget commits as its value changes, so ending the edit discards
+        // nothing the user had entered.
+        await expect.poll(() => grid.data[0].dept).toBe(before)
+    })
+
+    it('still commits a text editor left by clicking away', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        await userEvent.dblClick(cellAt(screen.container, 0, 0))
+        await userEvent.keyboard('Zoe')
+        await userEvent.click(cellAt(screen.container, 2, 1))
+
+        await expect.poll(() => grid.data[0].name).toBe('Zoe')
+    })
+})
+
+describe('segmented editors in a narrow column', () => {
+    /** name, age, dept, active, rating, skills, joined — `joined` is the date. */
+    const JOINED = 6
+
+    it('grows past the cell rather than running its segments under the icon', async () => {
+        // Narrow enough that the segments cannot fit beside the trigger: the
+        // width a real report column would give a date.
+        const grid = createDataGrid<Person>({
+            columns: columns.map((column) =>
+                column.id === 'joined' ? { ...column, width: 110 } : column
+            ),
+            data: makeData(4),
+            getRowId: (person) => String(person.id),
+            features: [editing(), pagination({})]
+        })
+        const screen = await renderGrid(grid)
+        const cell = cellAt(screen.container, 0, JOINED)
+
+        await userEvent.dblClick(cell)
+        const editor = () => cell.firstElementChild as HTMLElement
+        await expect.poll(() => Boolean(editor()?.querySelector('[role="spinbutton"]'))).toBe(true)
+
+        // A date field lays out fixed segments and reserves room for its
+        // trigger. Held to a narrower column the segments used to overflow and
+        // print under that trigger.
+        const segments = [...cell.querySelectorAll('[role="spinbutton"]')]
+        const last = segments.at(-1)!.getBoundingClientRect()
+        const trigger = cell.querySelector('button')!.getBoundingClientRect()
+        expect(last.right).toBeLessThanOrEqual(trigger.left + 1)
+    })
+
+    it('leaves a text editor at the width of its cell', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = cellAt(screen.container, 0, 0)
+
+        await userEvent.dblClick(cell)
+        await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
+
+        const editor = (cell.firstElementChild as HTMLElement).getBoundingClientRect()
+        expect(Math.round(editor.width)).toBeLessThanOrEqual(
+            Math.round(cell.getBoundingClientRect().width) + 1
+        )
+    })
+})
+
+describe('committing an editor that owns Enter', () => {
+    /** name, age, dept, active, rating, skills, joined. */
+    const SKILLS = 5
+
+    it('commits a tags editor with Ctrl+Enter, without leaving the cell', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = cellAt(screen.container, 0, SKILLS)
+
+        await userEvent.dblClick(cell)
+        await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
+
+        // Enter belongs to the widget: it adds the tag rather than committing.
+        await userEvent.keyboard('svelte{Enter}')
+        expect(getEditing(grid)!.active).not.toBeNull()
+
+        await userEvent.keyboard('{Control>}{Enter}{/Control}')
+        await expect.poll(() => getEditing(grid)!.active).toBeNull()
+        expect(grid.data[0].skills).toContain('svelte')
+        // The grid's own position is what moves, or does not: unlike Tab,
+        // this commits without leaving the cell.
+        expect(grid.focus.active).toMatchObject({ row: 0, col: SKILLS })
+    })
+
+    it('leaves plain Enter to commit and move where the editor does not claim it', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        await userEvent.dblClick(cellAt(screen.container, 0, 0))
+        await page.getByRole('textbox').first().fill('Zoe')
+        await userEvent.keyboard('{Enter}')
+
+        await expect.poll(() => grid.data[0].name).toBe('Zoe')
+        expect(grid.focus.active).toMatchObject({ row: 1, col: 0 })
+    })
+})
+
+describe('focus ring while editing', () => {
+    const hasRing = (element: Element) => /rgb|oklch/.test(getComputedStyle(element).boxShadow)
+
+    /** `:focus-visible` needs the keyboard, so focus arrives by arrow key. */
+    async function focusByKeyboard(container: Element) {
+        await userEvent.click(cellAt(container, 0, 1))
+        await userEvent.keyboard('{ArrowLeft}')
+        return cellAt(container, 0, 0)
+    }
+
+    it('drops the cell ring once an editor draws its own', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = await focusByKeyboard(screen.container)
+        await expect.poll(() => hasRing(cell)).toBe(true)
+
+        await userEvent.keyboard('{Enter}')
+        await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
+
+        // Two rings around one control read as a mistake, so the cell yields
+        // to the editor rather than framing it.
+        expect(hasRing(cell)).toBe(false)
+        expect(hasRing(cell.firstElementChild!)).toBe(true)
+    })
+
+    it('gives it back when the edit ends', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = await focusByKeyboard(screen.container)
+        const ringClass = /focus-visible:ring-2/
+
+        await userEvent.keyboard('{Enter}')
+        await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
+        expect(cell.className).not.toMatch(ringClass)
+
+        // The class comes back, not the painted ring: `:focus-visible` follows
+        // the browser's own idea of how focus arrived, and focus returning to
+        // the cell in code does not count as a keypress.
+        await userEvent.keyboard('{Escape}')
+        await expect.poll(() => ringClass.test(cell.className)).toBe(true)
+    })
+})
+
+describe('opening an editor from the keyboard', () => {
+    /** name, age, dept, active, rating, skills, joined. */
+    const DEPT = 2
+
+    it('drops the list open and hands it the keyboard', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = cellAt(screen.container, 0, DEPT)
+
+        cell.focus()
+        await userEvent.keyboard('{Enter}')
+
+        // Opening the editor is the choice; the list is what the user came
+        // for, so it is already down rather than waiting for a second key.
+        await expect
+            .poll(() => document.querySelectorAll('[data-bits-floating-content-wrapper]').length)
+            .toBe(1)
+        // And the caret is on the control, or the arrows would still be
+        // steering the grid instead of the list.
+        expect(cell.contains(document.activeElement)).toBe(true)
+        expect(document.activeElement).not.toBe(cell)
+    })
+
+    it('starts a text edit on the key that opened it', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 0, 0).focus()
+        await userEvent.keyboard('Z')
+
+        await expect
+            .poll(() => (document.activeElement as HTMLInputElement | null)?.value)
+            .toBe('Z')
+    })
+
+    it('does not seed an editor that cannot hold the character', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 0, DEPT).focus()
+        await userEvent.keyboard('Z')
+
+        // A select would be left holding a value none of its options offer.
+        await expect.poll(() => getEditing(grid)!.active).not.toBeNull()
+        expect(getEditing(grid)!.draft).not.toBe('Z')
     })
 })

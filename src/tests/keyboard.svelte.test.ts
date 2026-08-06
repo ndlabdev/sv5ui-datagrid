@@ -227,3 +227,97 @@ describe('overlays', () => {
         expect(retried).toBe(true)
     })
 })
+
+describe('keyboard navigation past pinned columns', () => {
+    interface Wide {
+        id: number
+        a: string
+        b: string
+        c: string
+        d: string
+        e: string
+        f: string
+    }
+
+    const WideGrid = DataGrid as unknown as Component<DataGridProps<Wide>>
+    const wideRows: Wide[] = Array.from({ length: 5 }, (_, i) => ({
+        id: i + 1,
+        a: `a${i}`,
+        b: `b${i}`,
+        c: `c${i}`,
+        d: `d${i}`,
+        e: `e${i}`,
+        f: `f${i}`
+    }))
+    const wideColumns: ColumnDef<Wide>[] = [
+        { id: 'a', header: 'A', width: 160, pinned: 'left' },
+        { id: 'b', header: 'B', width: 220 },
+        { id: 'c', header: 'C', width: 220 },
+        { id: 'd', header: 'D', width: 220 },
+        { id: 'e', header: 'E', width: 220 },
+        { id: 'f', header: 'F', width: 140, pinned: 'right' }
+    ]
+
+    async function renderWide() {
+        const screen = await render(WideGrid, {
+            data: wideRows,
+            columns: wideColumns,
+            getRowId: (row: Wide) => String(row.id),
+            class: 'w-[560px]'
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        return screen.container.querySelector<HTMLElement>('[role="grid"]')!
+    }
+
+    /** True when a pinned sibling overlaps the focused cell. */
+    function coveredByPinned(cell: HTMLElement): boolean {
+        const box = cell.getBoundingClientRect()
+        for (const sibling of cell.parentElement!.children) {
+            if (sibling === cell) continue
+            const pinned = sibling as HTMLElement
+            if (getComputedStyle(pinned).position !== 'sticky') continue
+            const edge = pinned.getBoundingClientRect()
+            if (box.left < edge.right - 0.5 && box.right > edge.left + 0.5) return true
+        }
+        return false
+    }
+
+    it('scrolls each focused cell clear of the pinned columns', async () => {
+        const viewport = await renderWide()
+        viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
+
+        // The browser's own scroll-into-view stops at the viewport edge, which
+        // is where the pinned columns sit — a cell reached by keyboard used to
+        // park underneath one.
+        for (let step = 0; step < 5; step++) {
+            await userEvent.keyboard('{ArrowRight}')
+            const cell = document.activeElement as HTMLElement
+            const box = cell.getBoundingClientRect()
+            const view = viewport.getBoundingClientRect()
+
+            await expect
+                .poll(() => box.left >= view.left - 1 && box.right <= view.right + 1)
+                .toBe(true)
+            expect(coveredByPinned(cell), cell.dataset.dgCell).toBe(false)
+        }
+    })
+
+    it('keeps a pinned column above a cell that scrolls under it', async () => {
+        const viewport = await renderWide()
+        viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
+        await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}')
+
+        // A focused cell is lifted over the row separator so its ring stays
+        // whole; without lifting the pinned cells further it would also rise
+        // over them and paint across the frozen column.
+        const pinned = viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
+        const focused = document.activeElement as HTMLElement
+        expect(Number(getComputedStyle(pinned).zIndex)).toBeGreaterThan(
+            Number(getComputedStyle(focused).zIndex || 0)
+        )
+
+        // And it draws the separator it has risen above, so the line still
+        // crosses the frozen column.
+        expect(getComputedStyle(pinned, '::after').height).toBe('1px')
+    })
+})

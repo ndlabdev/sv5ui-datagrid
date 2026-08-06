@@ -1,5 +1,6 @@
 import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
 import type { GridState } from '../../core/grid/grid.svelte.js'
+import { popupOpen } from '../../core/utils/popup.js'
 import { getCellValue } from '../../core/utils/value.js'
 import type {
     ColumnDef,
@@ -79,9 +80,16 @@ export class Editing<TRow> {
         this.error = null
     }
 
+    /**
+     * Opens an edit on the key that started it. Only an editor that takes
+     * typed text keeps the character: seeding a select or a rating with it
+     * would put a value in the draft that its own control cannot represent.
+     */
     startEditWith = (rowId: string, columnId: string, initial: string): void => {
         this.startEdit(rowId, columnId)
-        if (this.active) this.draft = initial
+        if (!this.active) return
+        const column = this.#grid.columns.get(columnId)
+        if (column && TYPED_EDITORS.has(editorTypeOf(column))) this.draft = initial
     }
 
     setDraft = (value: unknown): void => {
@@ -397,10 +405,31 @@ function startActive<TRow>(grid: GridState<TRow>): void {
     if (cell) getEditing(grid)!.startEdit(cell.node.id, cell.def.id)
 }
 
+/**
+ * True while an edit is open and nothing it opened is covering it. A popup
+ * belongs to whoever opened it: Escape should shut the listbox first and only
+ * abandon the edit on the way back out.
+ */
+function isEditing<TRow>(grid: GridState<TRow>): boolean {
+    const state = getEditing(grid)
+    return Boolean(state && (state.active || state.rowEditId)) && !popupOpen()
+}
+
+function cancelEdit<TRow>(grid: GridState<TRow>): void {
+    const state = getEditing(grid)!
+    if (state.rowEditId) state.cancelRow()
+    else state.cancel()
+}
+
 function createKeybindings<TRow>(): Keybinding<TRow>[] {
     return [
         { key: 'Enter', when: canStartEdit, handler: startActive },
         { key: 'F2', when: canStartEdit, handler: startActive },
+        // Bound on the grid, not on the editor: a widget editor leaves focus on
+        // the cell, whose keydown never reaches a handler on the editor inside
+        // it. A popup the editor opened is portalled out of the grid, so its
+        // own Escape closes the popup and never arrives here.
+        { key: 'Escape', when: isEditing, handler: cancelEdit },
         {
             key: 'Ctrl+z',
             when: (grid) => getEditing(grid)?.canUndo ?? false,
@@ -444,6 +473,9 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
 export function getEditing<TRow>(grid: GridState<TRow>): Editing<TRow> | undefined {
     return grid.feature<Editing<TRow>>(EDITING)
 }
+
+/** Editors a printable key can sensibly start with. */
+const TYPED_EDITORS = new Set(['text', 'number', 'textarea'])
 
 export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
     const editor = column.def.editor

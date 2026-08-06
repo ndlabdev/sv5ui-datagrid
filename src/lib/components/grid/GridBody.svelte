@@ -81,6 +81,7 @@
         center: slots.cell({ align: 'center', class: theme('cell') }),
         right: slots.cell({ align: 'right', class: theme('cell') })
     } as const)
+    const cellFocusClass = $derived(slots.cellFocus({ class: theme('cellFocus') }))
     const pinnedCellClass = $derived(slots.pinnedCell({ class: theme('pinnedCell') }))
     const pinnedCellRaisedClass = $derived(
         slots.pinnedCellRaised({ class: theme('pinnedCellRaised') })
@@ -138,22 +139,30 @@
         rowSpanning?: boolean
     }
 
-    /** Raised over the spans, so it draws what it now covers. */
+    /** Raised over the separator and the spans, so it draws what it covers. */
     function pinnedClasses(node: RowNode<TRow>): string {
-        if (rowSpans.size === 0) return pinnedCellClass
         const selected = selectionState?.isSelected(node.id)
         return `${pinnedCellClass} ${pinnedCellRaisedClass}${selected ? ` ${pinnedCellSelectedClass}` : ''}`
     }
 
+    /**
+     * What an editor changes about its cell: the cell stops clipping for the
+     * validation message, and gives up its own ring — an open editor draws
+     * one, and the two nested read as a mistake.
+     */
+    function editStateClasses(input: CellClassInput): string {
+        if (input.editing) return cellEditingClass
+        const editable = isEditable(input.node, input.column) ? ` ${editableClass}` : ''
+        return `${cellFocusClass}${editable}`
+    }
+
     function classOfCell(input: CellClassInput): string {
         const { node, column, colIndex, rowIndex, decoration } = input
-        let result = cellClass[column.align]
+        let result = `${cellClass[column.align]} ${editStateClasses(input)}`
         if (column.pinned) result += ` ${pinnedClasses(node)}`
         if (input.rowSpanning) result += ` ${cellRowSpanClass}`
         // A run of one has no overhang to carry the column's edges.
         else result += edgeClasses(colIndex) ? ` ${edgeClasses(colIndex)}` : ''
-        if (input.editing) result += ` ${cellEditingClass}`
-        else if (isEditable(node, column)) result += ` ${editableClass}`
         if (decoration?.class) result += ` ${decoration.class}`
         result = withBoundary(result, colIndex)
 

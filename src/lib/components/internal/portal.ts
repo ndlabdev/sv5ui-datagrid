@@ -1,12 +1,4 @@
-/**
- * bits-ui portals popup content to the body, so a click on an option lands
- * outside the element that opened it. Click-outside handlers skip these.
- */
-const PORTAL_SELECTOR = '[data-bits-floating-content-wrapper]'
-
-export function isInPortal(target: EventTarget | null): boolean {
-    return Boolean((target as Element | null)?.closest?.(PORTAL_SELECTOR))
-}
+export { isInPortal } from '../../core/utils/popup.js'
 
 /**
  * Moves a node to the end of `<body>`. A header cell clips its overflow and
