@@ -1,0 +1,10 @@
+/**
+ * Registers the grid's compiled output as a Tailwind source, so the utility
+ * classes it uses are generated in the consuming app. Import it after the
+ * sv5ui theme:
+ *
+ *     @import 'sv5ui/theme.css';
+ *     @import '@sv5ui/datagrid/theme.css';
+ */
+
+@source '.';

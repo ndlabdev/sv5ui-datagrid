@@ -48,6 +48,10 @@
             "types": "./dist/locales/index.d.ts",
             "svelte": "./dist/locales/index.js",
             "default": "./dist/locales/index.js"
+        },
+        "./theme.css": {
+            "import": "./dist/theme.css",
+            "default": "./dist/theme.css"
         }
     },
     "peerDependencies": {
