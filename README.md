@@ -13,8 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="REPLACE_WITH_DEMO_URL"><strong>Live Demo &amp; Docs</strong></a> &middot;
-  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/CHANGELOG.md"><strong>Changelog</strong></a>
+  <a href="#quick-start"><strong>Quick start</strong></a> &middot;
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/CHANGELOG.md"><strong>Changelog</strong></a> &middot;
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/issues"><strong>Issues</strong></a>
 </p>
 
 ---

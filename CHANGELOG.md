@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-08-07
 
 The first release. Everything below is new, so it is grouped by area rather
 than listed as a diff against a version nobody has.
@@ -208,3 +208,5 @@ full table.
   and reports what each load cost.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
+
+[0.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v0.1.0
