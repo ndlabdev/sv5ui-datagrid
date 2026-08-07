@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   had just turned to, and `toggleSort`, `setColumnFilter` and the column ops
   looped until Svelte stopped them. All seventeen writers now go through
   `mutator`.
+- A `rowSpan` on the first visible column no longer draws a start edge over the
+  viewport's own border, which read as a doubled rule down the grid's left side.
+- A column that declares no `type` now shows the empty text for a blank, like
+  every other column. It used to print the raw value, so a hole rendered as
+  nothing at all and `typeOptions.emptyText` was never consulted.
 
 ### Changed
 

@@ -247,10 +247,15 @@ Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
 
 Number and date types go through `Intl`, with formatters cached per
 configuration because a renderer runs on every visible cell. `percent` expects
-a 0 to 1 ratio unless you set `wholePercent`. Null, undefined and empty string
-render as `DEFAULT_EMPTY_TEXT`, which `emptyText` overrides per column. A `cell`
-snippet always wins over `type`, so a column can graduate to a custom renderer
-without changing anything else.
+a 0 to 1 ratio unless you set `wholePercent`. A `cell` snippet always wins over
+`type`, so a column can graduate to a custom renderer without changing anything
+else.
+
+Null, undefined and empty string all render as `DEFAULT_EMPTY_TEXT`, whatever
+the column's `type` and whether it declares one at all. `typeOptions.emptyText`
+overrides the text per column — not to be confused with the `emptyText` prop on
+`<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
+snippet owns its own output, blanks included.
 
 ### Spanning
 
