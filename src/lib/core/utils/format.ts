@@ -37,9 +37,9 @@ function dateFormatter(locale: string | undefined, options: Intl.DateTimeFormatO
 
 export const DEFAULT_EMPTY_TEXT = '—'
 
-export function isBlank(value: unknown): boolean {
-    return value === null || value === undefined || value === ''
-}
+// Blank lives with the other value predicates so sorting, filtering and the
+// renderers cannot drift apart on what counts as a hole.
+export { isBlank } from './value.js'
 
 /** Numbers arrive as numbers, strings from CSV, or Date/ISO for dates. */
 export function toNumber(value: unknown): number | null {

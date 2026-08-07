@@ -9,7 +9,7 @@ import type {
     PresenceFilterOp,
     RowNode
 } from '../../core/types/index.js'
-import { getCellValue, isNullish } from '../../core/utils/value.js'
+import { getCellValue, isBlank } from '../../core/utils/value.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
@@ -21,10 +21,6 @@ function customPredicateOf<TRow>(
     def: ColumnDef<TRow>
 ): ColumnFilterDef<TRow>['predicate'] | undefined {
     return typeof def.filter === 'object' ? def.filter.predicate : undefined
-}
-
-function isBlank(value: unknown): boolean {
-    return isNullish(value) || value === ''
 }
 
 function textPredicate(
@@ -121,7 +117,9 @@ function datePredicate(
 
 function setPredicate(filter: Extract<ColumnFilter, { kind: 'set' }>): (value: unknown) => boolean {
     const allowed = new Set(filter.values.map((entry) => (entry === null ? null : entry)))
-    return (value) => allowed.has(isNullish(value) ? null : (value as never))
+    // Blanks collapse to the one null entry the value list offers, so picking it
+    // matches the empty strings the grid already draws as empty.
+    return (value) => allowed.has(isBlank(value) ? null : (value as never))
 }
 
 function booleanPredicate(

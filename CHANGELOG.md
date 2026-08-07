@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A setter no longer subscribes its caller to the state it reads on the way
+  out. Called from an `$effect`, `setPageSize` used to reset the page the user
+  had just turned to, and `toggleSort`, `setColumnFilter` and the column ops
+  looped until Svelte stopped them. All seventeen writers now go through
+  `mutator`.
+
+### Changed
+
+- Blank means null, undefined or the empty string everywhere. Sorting used to
+  collate `''` among the values while the renderers and the `blank` filter
+  operator called it empty, so `nulls: 'last'` did nothing for a column whose
+  holes were empty strings. Set filters likewise fold `''` into the single null
+  entry rather than offering a second, identical-looking one.
+
+    A column that means something by `''` and relied on it sorting as a value
+    needs a `sortFn` to keep the old order.
+
 ## [0.1.0] - 2026-08-07
 
 The first release. Everything below is new, so it is grouped by area rather

@@ -17,6 +17,7 @@ const DEFAULT_CYCLE: SortCycle = ['asc', 'desc', null]
 
 export interface SortingOptions {
     initial?: SortState[]
+    /** Where blanks land. Null, undefined and `''` all count. @default 'first' */
     nulls?: SortNulls
     /** Order a header click cycles through. @default ['asc', 'desc', null] */
     cycle?: SortCycle

@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode, SetFilterValue } from '../../core/types/index.js'
-import { getCellValue, isNullish } from '../../core/utils/value.js'
+import { getCellValue, isBlank } from '../../core/utils/value.js'
 
 export const DISTINCT_VALUES_CAP = 200
 
@@ -31,7 +31,9 @@ export function distinctValues<TRow>(
 
     for (const node of nodes) {
         const raw = getCellValue(node.row, def)
-        const value: SetFilterValue = isNullish(raw)
+        // Blanks share the single null entry rather than offering the user both
+        // it and an empty-looking row, which they could not tell apart.
+        const value: SetFilterValue = isBlank(raw)
             ? null
             : typeof raw === 'number' || typeof raw === 'boolean'
               ? raw

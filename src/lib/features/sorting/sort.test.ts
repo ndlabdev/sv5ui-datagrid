@@ -43,6 +43,30 @@ describe('sortNodes', () => {
         expect(desc.map((node) => node.row.age)).toEqual([35, 30, null])
     })
 
+    it('treats the empty string as a hole, like the renderers and filters do', () => {
+        interface Entry {
+            id: string
+            note: string | null
+        }
+        const holes: Entry[] = [
+            { id: 'a', note: 'beta' },
+            { id: 'b', note: '' },
+            { id: 'c', note: 'alpha' },
+            { id: 'd', note: null }
+        ]
+        const entryColumns: ColumnDef<Entry>[] = [{ id: 'note', sortable: true }]
+        const entryNodes = buildRowNodes(holes, (entry) => entry.id)
+        const sort = [{ columnId: 'note', direction: 'asc' as const }]
+
+        // Collated as a value, '' would sort before every letter and so be
+        // indistinguishable from nulls: 'first' whatever the option said.
+        const last = sortNodes(entryNodes, entryColumns, sort, 'last')
+        expect(last.map((node) => node.row.id)).toEqual(['c', 'a', 'b', 'd'])
+
+        const first = sortNodes(entryNodes, entryColumns, sort, 'first')
+        expect(first.map((node) => node.row.id)).toEqual(['b', 'd', 'c', 'a'])
+    })
+
     it('does not mutate the input array', () => {
         const input = [...nodes]
         sortNodes(input, columns, [{ columnId: 'name', direction: 'asc' }])
