@@ -1,20 +1,58 @@
-# @sv5ui/datagrid
+<h1 align="center">@sv5ui/datagrid</h1>
 
-A data grid for Svelte 5, built on [sv5ui](https://github.com/ndlabdev/sv5ui).
+<p align="center">
+  <strong>A high-performance data grid for Svelte 5.</strong><br/>
+  Virtualized past a million rows, keyboard-navigable, and assembled from
+  feature modules you can write yourself.
+</p>
 
-Virtualized past a million rows, keyboard-navigable, translated into twelve
-languages, and assembled from feature modules you can write yourself.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@sv5ui/datagrid"><img src="https://img.shields.io/npm/v/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@sv5ui/datagrid"><img src="https://img.shields.io/npm/dm/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="npm downloads" /></a>
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="license" /></a>
+</p>
 
-> **Status: pre-release.** Not on npm yet. The API is frozen in intent but not
-> in practice — breaking changes may land between `0.x` minors and are always
-> changelogged.
+<p align="center">
+  <a href="REPLACE_WITH_DEMO_URL"><strong>Live Demo &amp; Docs</strong></a> &middot;
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/CHANGELOG.md"><strong>Changelog</strong></a>
+</p>
+
+---
+
+Built on [sv5ui](https://github.com/ndlabdev/sv5ui). Register only the features
+you use, and nothing else reaches your bundle.
+
+```svelte
+<script lang="ts">
+    import { DataGrid, type ColumnDef } from '@sv5ui/datagrid'
+
+    const columns: ColumnDef<Person>[] = [
+        { id: 'name', header: 'Name', sortable: true, filter: 'text', flex: 1 },
+        { id: 'age', header: 'Age', sortable: true, align: 'right', width: 100 }
+    ]
+</script>
+
+<DataGrid data={people} {columns} getRowId={(p) => String(p.id)} toolbar />
+```
 
 ## Contents
 
-- [Features](#features) · [Installation](#installation) · [Quick start](#quick-start)
-- [Architecture](#architecture) · [Feature modules](#feature-modules) · [Extension points](#extension-points)
-- [Columns](#columns) · [Localization](#localization) · [State persistence](#state-persistence) · [Server row model](#server-row-model)
-- [Theming](#theming) · [Accessibility](#accessibility) · [Performance](#performance) · [DOM contract](#dom-contract) · [API stability](#api-stability)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Architecture](#architecture)
+- [Feature modules](#feature-modules)
+- [Extension points](#extension-points)
+- [Columns](#columns)
+- [Localization](#localization)
+- [State persistence](#state-persistence)
+- [Server row model](#server-row-model)
+- [Theming](#theming)
+- [Accessibility](#accessibility)
+- [Performance](#performance)
+- [DOM contract](#dom-contract)
+- [API stability](#api-stability)
+- [Contributing](#contributing)
 
 ## Features
 
@@ -23,17 +61,17 @@ languages, and assembled from feature modules you can write yourself.
 | **Rows**          | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows |
 | **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                                    |
 | **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                       |
-| **Filtering**     | Quick filter plus text / number / date / set / boolean column filters, two conditions per column, chips                           |
+| **Filtering**     | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, chips                            |
 | **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                   |
 | **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                          |
 | **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                              |
 | **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                |
 | **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                                                   |
-| **Accessibility** | ARIA `grid`/`treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Accessibility** | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                     |
 | **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                                     |
 
-Every feature is opt-in: what you do not register is never imported, and never
-reaches your bundle.
+Features are opt-in. A feature you do not register is never imported, so its
+code stays out of your bundle.
 
 ## Installation
 
@@ -41,16 +79,31 @@ reaches your bundle.
 pnpm add @sv5ui/datagrid sv5ui
 ```
 
-Import the sv5ui theme and register both packages as Tailwind sources:
+Import both themes in your Tailwind entry stylesheet:
 
 ```css
 @import 'sv5ui/theme.css';
-
-@source '../node_modules/sv5ui/dist';
-@source '../node_modules/@sv5ui/datagrid/dist';
+@import '@sv5ui/datagrid/theme.css';
 ```
 
-**Requirements** — Svelte 5, Tailwind CSS 4, sv5ui 2.5+.
+Tailwind 4 skips `node_modules` when it scans for class names, so a package has
+to register its own compiled output. Each theme file does that for itself, which
+is why no `@source` path of your own is needed.
+
+### Requirements
+
+| Package      | Version        |
+| ------------ | -------------- |
+| SvelteKit    | 2.x            |
+| Svelte       | 5.x            |
+| Tailwind CSS | 4.x            |
+| sv5ui        | 2.5.0 or later |
+
+SvelteKit is required rather than optional: sv5ui resolves `$app/state`, which
+only a SvelteKit app provides. `@iconify/svelte` and `tailwindcss` are declared
+as peer dependencies so that the grid and sv5ui share a single instance of
+each; package managers that install peers automatically (pnpm 8+, npm 7+)
+resolve them for you.
 
 ## Quick start
 
@@ -64,7 +117,7 @@ Import the sv5ui theme and register both packages as Tailwind sources:
         age: number
     }
 
-    const people: Person[] = [/* … */]
+    const people: Person[] = [/* ... */]
 
     const columns: ColumnDef<Person>[] = [
         { id: 'name', header: 'Name', sortable: true, filter: 'text', flex: 1 },
@@ -75,9 +128,10 @@ Import the sv5ui theme and register both packages as Tailwind sources:
 <DataGrid data={people} {columns} getRowId={(p) => String(p.id)} pageSize={10} toolbar />
 ```
 
-That gives you sorting, filtering, column operations and pagination. Reach for
-`createDataGrid` when you want to choose the features, hold the state, or drive
-the grid from outside:
+That gives you sorting, filtering, column operations and pagination.
+
+Use `createDataGrid` when you want to choose the features, hold the state, or
+drive the grid from outside:
 
 ```svelte
 <script lang="ts">
@@ -104,13 +158,14 @@ the grid from outside:
 
 ## Architecture
 
-Two layers, either usable on its own:
+The package is two layers, either usable on its own.
 
-- **Headless core** — `createDataGrid` returns a `GridState`: Svelte 5 runes and
-  a derived row pipeline (`filter → sort → window`). No DOM, no styling.
-- **Components** — `DataGrid` for the whole thing, or the `Grid.*` parts
-  (`Root`, `Viewport`, `Header`, `Body`, `Toolbar`, `Pagination`, `StatusBar`, …)
-  when you want to compose the chrome yourself.
+**Headless core.** `createDataGrid` returns a `GridState`: Svelte 5 runes and a
+derived row pipeline of `filter`, `sort` and `window`. No DOM, no styling.
+
+**Components.** `DataGrid` renders the whole thing. The `Grid.*` parts
+(`Root`, `Viewport`, `Header`, `Body`, `Toolbar`, `Pagination`, `StatusBar` and
+others) let you compose the chrome yourself.
 
 The pipeline is a chain of pure transforms over a `RowNode[]`. Features insert
 stages at a declared order, so a stage never has to know what else is
@@ -141,7 +196,8 @@ getSorting(grid)?.setSort([{ columnId: 'name', direction: 'asc' }])
 
 ## Extension points
 
-A feature is a plain object. The built-in ones use nothing you cannot use:
+A feature is a plain object. The built-in features use nothing that is not
+available to yours.
 
 | Hook             | What it does                                                     |
 | ---------------- | ---------------------------------------------------------------- |
@@ -149,7 +205,7 @@ A feature is a plain object. The built-in ones use nothing you cannot use:
 | `createState`    | reactive state exposed on `grid.state[id]`                       |
 | `createApi`      | imperative methods merged into `grid.api`                        |
 | `keybindings`    | keyboard bindings, with a `when` guard                           |
-| `menuItems`      | column- and context-menu entries                                 |
+| `menuItems`      | column and context menu entries                                  |
 | `cellDecoration` | per-cell classes and `aria-selected`                             |
 | `serialize`      | the feature's slice of a state snapshot                          |
 | `hydrate`        | restores what `serialize` produced                               |
@@ -169,7 +225,8 @@ features do not define it skips the work entirely.
 
 ### Built-in renderers
 
-Set `type` and the matching sv5ui component renders the cell — no snippet:
+Set `type` and the matching sv5ui component renders the cell, with no snippet
+of your own:
 
 ```ts
 const columns: ColumnDef<Member>[] = [
@@ -184,28 +241,29 @@ const columns: ColumnDef<Member>[] = [
 ]
 ```
 
-`text`, `number`, `currency`, `percent`, `date`, `datetime`, `boolean`, `badge`,
-`user`, `progress`, `rating`, `link`, `actions`.
+Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
+`boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions`.
 
 Number and date types go through `Intl`, with formatters cached per
-configuration because a renderer runs on every visible cell. `percent` expects a
-0–1 ratio unless you set `wholePercent`. Null, undefined and empty string render
-as `—`, overridable with `emptyText`. A `cell` snippet always wins over `type`,
-so a column can graduate to a custom renderer without changing anything else.
+configuration because a renderer runs on every visible cell. `percent` expects
+a 0 to 1 ratio unless you set `wholePercent`. Null, undefined and empty string
+render as `DEFAULT_EMPTY_TEXT`, which `emptyText` overrides per column. A `cell`
+snippet always wins over `type`, so a column can graduate to a custom renderer
+without changing anything else.
 
 ### Spanning
 
-`colSpan(ctx)` and `rowSpan(ctx)` return how many cells to merge from here. The
-covered cells are not rendered, the merged cell carries `aria-colspan` /
-`aria-rowspan`, and it is the single tab stop for the whole block.
+`colSpan(ctx)` and `rowSpan(ctx)` return how many cells to merge from the
+current one. Covered cells are not rendered, the merged cell carries
+`aria-colspan` and `aria-rowspan`, and it is the single tab stop for the block.
 
 ```ts
 { id: 'region', rowSpan: (ctx) => runLengthAt(ctx.rowIndex) }
 ```
 
-Row spans are resolved against the whole row list, not the rendered window, so
-scrolling into the middle of one still draws it. They are sized from the rows
-they cover, so use them with uniform row heights rather than `'auto'`.
+Row spans are resolved against the whole row list rather than the rendered
+window, so scrolling into the middle of one still draws it. They are sized from
+the rows they cover, so use them with uniform row heights rather than `'auto'`.
 
 ## Localization
 
@@ -218,14 +276,15 @@ import { enUS, jaJP, viVN } from '@sv5ui/datagrid/locales'
 createDataGrid({ columns, data, getRowId, locales: [enUS, viVN, jaJP] })
 ```
 
-Twelve ship: `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`, `de-DE`,
-`es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only what you import is bundled.
+Twelve packs ship: `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`,
+`de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only what you import is
+bundled.
 
-- `locale` forces a tag; assigning `grid.locale` switches in place, keeping the
+- `locale` forces a tag. Assigning `grid.locale` switches in place, keeping the
   sort, filter and selection on screen.
 - The same tag drives `Intl`, so number, currency and date columns that name no
   locale of their own follow the grid and reformat with it.
-- A tag nobody answers for falls back to English; `vi` is answered by `vi-VN`.
+- A tag nobody answers for falls back to English. `vi` is answered by `vi-VN`.
 - `labels` and `announcer` override single strings on top of the chosen pack.
 
 A pack is `{ tag, labels, announcer }` and every key is typed, so writing your
@@ -239,13 +298,14 @@ own language fails the build rather than rendering a blank.
 
 Column layout, sort, filter, page size and density are mirrored into
 `localStorage` and restored before the first paint. `grid.api.getState()` and
-`grid.api.setState(snapshot)` do the same by hand — the snapshot is versioned
-and JSON-serializable, so it travels to a server or a URL just as well.
+`grid.api.setState(snapshot)` do the same by hand. The snapshot is versioned and
+JSON-serializable, so it travels to a server or a URL just as well.
 
 Columns are keyed by id: ids that disappeared are dropped, ids added since keep
 their defaults. Pass `migrate` to upgrade snapshots written by an older version
-of your app; anything it declines falls back to the column defaults rather than
-half-applying. Features persist their own slice through `serialize`/`hydrate`.
+of your app. Anything it declines falls back to the column defaults rather than
+half-applying. Features persist their own slice through `serialize` and
+`hydrate`.
 
 > Restoring reads `localStorage`, which the server cannot. Render a persisted
 > grid client-side (`export const ssr = false`) to avoid a flash of the default
@@ -305,31 +365,30 @@ defineDataGridConfig({
 <DataGrid {grid} ui={{ row: 'even:bg-surface-container-lowest' }} />
 ```
 
-`cellClass` and `rowClass` cover data-driven styling; density (`compact`,
+`cellClass` and `rowClass` cover data-driven styling. Density (`compact`,
 `standard`, `comfortable`) drives row height and padding through CSS variables.
 
 ## Accessibility
 
 - A div-based ARIA `grid`, or `treegrid` once rows nest.
-- **One tab stop.** Cells carry a roving tabindex; every control inside answers
-  through it, so leaving a thousand-row grid takes one press, not a thousand.
+- **One tab stop.** Cells carry a roving tabindex and every control inside
+  answers through it, so leaving a thousand-row grid takes one press.
 - Arrows, `Home`/`End`, `PageUp`/`PageDown`, `Ctrl+Home`/`Ctrl+End`, `Space`,
   `Enter`, `Escape`, `Ctrl+A`, `Ctrl+C`, `Ctrl+V`, and `Alt+Arrow` for moving
   columns and rows. In an editor, `Ctrl`/`Cmd`+`Enter` commits without leaving
-  the cell — the way out of a textarea or tags field, which own `Enter`.
+  the cell, which is the way out of a textarea or tags field that owns `Enter`.
 - A polite live region announces sorting, filtering, paging, selection, column
-  changes and row moves — in the grid's language.
+  changes and row moves, in the grid's language.
 - Layout uses logical properties, so `dir="rtl"` mirrors the grid, pinned
-  columns included. Horizontal scroll is normalized through
-  `scrollStart`/`setScrollStart`, since browsers report `scrollLeft` as negative
-  under RTL.
+  columns included. Horizontal scroll is normalized through `scrollStart` and
+  `setScrollStart`, since browsers report `scrollLeft` as negative under RTL.
 - Every demo route is asserted axe-clean in CI.
 
 ## Performance
 
-Measured on Chromium, a 1500x950 viewport, 39 columns of mixed renderers
+Measured on Chromium at a 1500x950 viewport, 39 columns of mixed renderers
 (currency, percent, date, badge, progress, rating, boolean). The playground
-route `/stress` is what these come from, so they can be re-run rather than
+route `/stress` is where these come from, so they can be re-run rather than
 taken on trust.
 
 |                      | 100k rows | 500k rows | 1M rows |
@@ -342,31 +401,33 @@ taken on trust.
 | Quick filter         | 0.5s      | 1.1s      | 2.1s    |
 
 The DOM node count is the number worth reading: it is the same at a million
-rows as at a hundred thousand, because only the visible window is rendered.
-The heap is your data, not the grid's overhead.
+rows as at a hundred thousand, because only the visible window is rendered. The
+heap is your data, not the grid's overhead.
 
-### What it costs, and where it stops
+### Known limits
 
 - **Scrolling holds 60fps to roughly half a million rows** and falls to about
   28fps at a million with this many columns. Fewer columns move that line out.
-- **Quick filter is O(rows x visible columns) on the main thread.** At a
-  million rows and 39 columns that is 39 million string comparisons and about
-  two seconds of blocked UI. Filter on fewer columns, or reach for
-  `rowModel: 'server'`, until this is made incremental.
+- **Quick filter is O(rows x visible columns) on the main thread.** At a million
+  rows and 39 columns that is 39 million string comparisons and about two
+  seconds of blocked UI. Filter on fewer columns, or use `rowModel: 'server'`,
+  until this is made incremental.
 - **Beyond the browser's maximum element height** the scroll range is scaled
   rather than clamped, so the last row stays reachable; a pixel of scrolling
   simply covers more than a pixel of content. Engines differ on where that
-  starts — Chromium at 2^25px, others lower — so the grid caps below the
-  lowest in wide use.
+  starts (Chromium at 2^25px, others lower), so the grid caps below the lowest
+  in wide use.
 - **`getRowHeight: 'auto'`** switches the virtualizer to a Fenwick-tree offset
   cache, which is O(log n) per lookup rather than the fixed path's arithmetic.
   Prefer a fixed height when the rows allow it.
+- **Row reorder rewrites `data`**, so an active sort re-sorts it immediately.
+  Clear the sort before offering the grip.
 
 ## DOM contract
 
-Body cells carry `data-dg-cell="rowIndex:colIndex"` — absolute indices within
-the filtered and sorted set — and rows carry `data-dg-row-id`. Both are public:
-delegate pointer events from a wrapper and read them with
+Body cells carry `data-dg-cell="rowIndex:colIndex"`, holding absolute indices
+within the filtered and sorted set, and rows carry `data-dg-row-id`. Both are
+public: delegate pointer events from a wrapper and read them with
 `event.target.closest('[data-dg-cell]')` rather than attaching a handler per
 cell.
 
@@ -374,34 +435,38 @@ cell.
 
 Everything exported from the package root is public and covered by semver from
 1.0 on. The surface is deliberately small: enough to render a grid, enough to
-write a feature module, nothing else. Internal helpers — pipeline transforms,
-filter compilation, undo plumbing, column sizing maths, scroll normalization —
-stay unexported and change freely between releases.
+write a feature module, and nothing else. Internal helpers such as pipeline
+transforms, filter compilation, undo plumbing, column sizing maths and scroll
+normalization stay unexported and change freely between releases.
 
-Classes the grid constructs for you are exported as types only: you reach an
+Classes the grid constructs for you are exported as types only. You reach an
 instance through the grid or a `getX(grid)` accessor.
 
-If you need something unexported to build a feature, that is a gap in the
-extension points. Open an issue rather than reaching into `dist`, and the
+If you need something unexported in order to build a feature, that is a gap in
+the extension points. Open an issue rather than reaching into `dist`, and the
 extension point gets fixed.
 
-## Development
+## Contributing
+
+Issues and pull requests are welcome. To run the project locally:
 
 ```bash
+git clone https://github.com/ndlabdev/sv5ui-datagrid.git
+cd sv5ui-datagrid
 pnpm install
-pnpm dev      # playground at localhost:5173
-pnpm test     # unit + browser tests
-pnpm check    # svelte-check
-pnpm lint     # prettier + eslint
-pnpm build    # package + publint
+pnpm dev        # playground at localhost:5173
+pnpm test       # vitest (unit + browser)
+pnpm check      # svelte-check
+pnpm lint       # prettier + eslint
+pnpm build      # package + publint
 ```
 
-The playground under `src/routes` has one page per feature, plus review
-routes: `qa` runs everything in one grid, `i18n` switches language in place,
-`export` shows the bytes a CSV export produces, `spans` exercises cell
-spanning against a pinned column, `editors` puts every editor beside its
-validation rule, and `stress` loads up to a million rows across 39 columns.
+The playground under `src/routes` has one page per feature, plus review routes:
+`qa` runs everything in one grid, `i18n` switches language in place, `export`
+shows the bytes a CSV export produces, `spans` exercises cell spanning against a
+pinned column, `editors` puts every editor beside its validation rule, and
+`stress` loads up to a million rows across 39 columns.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) &copy; [ndlabdev](https://github.com/ndlabdev)
