@@ -28,6 +28,9 @@
         "perf:scroll": "node scripts/measure-scroll.mjs",
         "generate:icons": "node scripts/generate-icons.mjs"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "files": [
         "dist",
         "!dist/**/*.test.*",
