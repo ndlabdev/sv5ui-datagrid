@@ -343,3 +343,14 @@ export function columnOps<TRow>(options: ColumnOpsOptions = {}): GridFeature<TRo
 export function getColumnOps<TRow>(grid: GridState<TRow>): ColumnOps<TRow> | undefined {
     return grid.feature<ColumnOps<TRow>>(COLUMN_OPS)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        setColumnWidth?: (id: string, width: number) => void
+        autoSizeColumn?: (id: string) => void
+        autoSizeColumns?: () => void
+        moveColumn?: (id: string, toVisibleIndex: number) => number
+        pinColumn?: (id: string, side: PinnedSide | null) => void
+        setColumnHidden?: (id: string, hidden: boolean) => void
+    }
+}

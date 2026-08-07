@@ -113,3 +113,10 @@ export function rowPinning<TRow>(options: RowPinningOptions<TRow> = {}): GridFea
 export function getRowPinning<TRow>(grid: GridState<TRow>): RowPinning<TRow> | undefined {
     return grid.feature<RowPinning<TRow>>(ROW_PINNING)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        pinRow?: (id: string, side: RowPinSide | null) => void
+        getPinnedRows?: () => { top: unknown[]; bottom: unknown[] }
+    }
+}

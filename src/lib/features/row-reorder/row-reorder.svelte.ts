@@ -148,3 +148,9 @@ export function rowReorder<TRow>(options: RowReorderOptions<TRow> = {}): GridFea
 export function getRowReorder<TRow>(grid: GridState<TRow>): RowReorder<TRow> | undefined {
     return grid.feature<RowReorder<TRow>>(ROW_REORDER)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        moveRow?: (id: string, toRenderedIndex: number) => void
+    }
+}

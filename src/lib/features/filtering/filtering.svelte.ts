@@ -122,3 +122,13 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
 export function getFiltering<TRow>(grid: GridState<TRow>): Filtering<TRow> | undefined {
     return grid.feature<Filtering<TRow>>(FILTERING)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        setQuickFilter?: (query: string) => void
+        setColumnFilter?: (columnId: string, filter: ColumnFilterEntry | null) => void
+        clearColumnFilters?: () => void
+        getFilterModel?: () => FilterModel
+        applyFilterModel?: (model: FilterModel) => void
+    }
+}

@@ -482,3 +482,18 @@ export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
     if (editor === undefined) return 'text'
     return typeof editor === 'string' ? editor : editor.type
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        startEditing?: (rowId: string, columnId: string) => void
+        stopEditing?: () => void
+        getEditingCell?: () => EditingCell | null
+        startRowEdit?: (rowId: string) => void
+        /** Async when a validator is, so callers await the result. */
+        commitRow?: () => boolean | Promise<boolean>
+        applyEdits?: (edits: EditTransaction[]) => boolean | Promise<boolean>
+        pasteText?: (text: string) => boolean | Promise<boolean>
+        undo?: () => void
+        redo?: () => void
+    }
+}

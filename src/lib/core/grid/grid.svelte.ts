@@ -18,6 +18,7 @@ import {
     type DataGridLocalePack,
     type DataGridOptions,
     type Density,
+    type GridApi,
     type GridEventMap,
     type GridFeature,
     type GridSnapshot,
@@ -34,7 +35,9 @@ export class GridState<TRow> {
     readonly events = new EventBus<GridEventMap>()
     readonly features: readonly GridFeature<TRow>[]
     readonly state: Record<string, unknown> = {}
-    readonly api: Record<string, unknown> = {}
+    /** Cast because the kernel's own members are filled in the constructor,
+     * after the features have had their turn. */
+    readonly api: GridApi = {} as GridApi
     readonly getRowId: (row: TRow) => string
     readonly rowClass?: (node: RowNode<TRow>) => ClassNameValue
     /** Undefined until the presentation layer fills it from the theme config. */

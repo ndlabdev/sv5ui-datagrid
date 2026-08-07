@@ -59,7 +59,7 @@ describe('Filtering — a setter does not subscribe its caller', () => {
             const grid = createGrid()
             const state = getFiltering(grid)!
 
-            let query = $state('car')
+            const query = $state('car')
             let runs = 0
             $effect(() => {
                 runs += 1

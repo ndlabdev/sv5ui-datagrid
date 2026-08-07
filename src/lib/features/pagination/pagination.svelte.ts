@@ -115,3 +115,12 @@ export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<T
 export function getPagination<TRow>(grid: GridState<TRow>): Pagination<TRow> | undefined {
     return grid.feature<Pagination<TRow>>(PAGINATION)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        setPage?: (page: number) => void
+        setPageSize?: (pageSize: number | null) => void
+        /** The server's total under `rowModel: 'server'`. */
+        setRowCount?: (rowCount: number | null) => void
+    }
+}

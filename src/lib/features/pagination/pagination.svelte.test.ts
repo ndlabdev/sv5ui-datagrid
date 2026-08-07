@@ -75,7 +75,7 @@ describe('Pagination — a setter does not subscribe its caller', () => {
             })
             const state = getPagination(grid)!
 
-            let total = $state(100)
+            const total = $state(100)
             let runs = 0
             $effect(() => {
                 runs += 1

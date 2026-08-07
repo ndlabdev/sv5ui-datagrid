@@ -186,6 +186,11 @@ registered.
 | `rowPinning()`     | Rows pinned to the top or bottom               |
 | `rowReorder()`     | Drag grip and keyboard reorder                 |
 
+Call a factory inside the `features` array, as above, and `TRow` is inferred
+from the array's own type. A factory held in a variable first has nothing to
+infer from and resolves to `GridFeature<unknown>`, so spell the argument out
+there: `const sort = sorting<Person>()`.
+
 Read a feature's state back with the matching accessor:
 
 ```ts
@@ -193,6 +198,27 @@ import { getSelection, getSorting } from '@sv5ui/datagrid'
 
 getSelection(grid)?.selectedIds
 getSorting(grid)?.setSort([{ columnId: 'name', direction: 'asc' }])
+```
+
+The accessor is the typed path: it narrows to the feature's own class, generic
+in `TRow`, with nothing optional about what it returns. `grid.api` is the flat
+alternative — every feature's methods in one bag, each one optional, because
+the grid that has `setPage` is the one that registered `pagination()`:
+
+```ts
+grid.api.setPage?.(2) // present only with pagination()
+grid.api.getState() // the kernel's own, always there
+```
+
+A feature declares its methods by augmenting `GridApi` from
+`@sv5ui/datagrid`, which is what the built-in features do:
+
+```ts
+declare module '@sv5ui/datagrid' {
+    interface GridApi {
+        highlightNegative?: (columnId: string) => void
+    }
+}
 ```
 
 ## Extension points
@@ -204,7 +230,7 @@ available to yours.
 | ---------------- | ---------------------------------------------------------------- |
 | `pipelineStage`  | an ordered, pure transform of the row list (filter, sort, group) |
 | `createState`    | reactive state exposed on `grid.state[id]`                       |
-| `createApi`      | imperative methods merged into `grid.api`                        |
+| `createApi`      | imperative methods merged into `grid.api` (see below)            |
 | `keybindings`    | keyboard bindings, with a `when` guard                           |
 | `menuItems`      | column and context menu entries                                  |
 | `cellDecoration` | per-cell classes and `aria-selected`                             |
@@ -325,7 +351,13 @@ untouched. The features stay registered, because their state, UI and events are
 what a server row model listens to.
 
 ```ts
-import { toFilterRequest, toSortRequest } from '@sv5ui/datagrid'
+import {
+    getFiltering,
+    getPagination,
+    getSorting,
+    toFilterRequest,
+    toSortRequest
+} from '@sv5ui/datagrid'
 
 const grid = createDataGrid({
     columns,
@@ -341,11 +373,11 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
 
 async function fetchPage() {
     const { rows, total } = await api.load({
-        filter: toFilterRequest(grid.api.getFilterModel()),
+        filter: toFilterRequest(getFiltering(grid)!.model),
         sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs)
     })
     grid.data = rows
-    grid.api.setRowCount(total)
+    getPagination(grid)!.setRowCount(total)
 }
 ```
 

@@ -160,3 +160,11 @@ export function virtualization<TRow>(options: VirtualizationOptions<TRow> = {}):
 export function getVirtualization<TRow>(grid: GridState<TRow>): Virtualization<TRow> | undefined {
     return grid.feature<Virtualization<TRow>>(VIRTUALIZATION)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        /** Row index, or a row id. */
+        scrollToRow?: (target: number | string) => void
+        ensureVisible?: (target: number | string) => void
+    }
+}

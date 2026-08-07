@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `grid.api` has a type. It was `Record<string, unknown>`, so every member read
+  back as `unknown` and calling one was an error — including the README's own
+  server row model example. It is now `GridApi`: the kernel's `getState` and
+  `setState` are always there, and each feature declares its own methods by
+  augmenting the interface from its module, which is what a feature you write
+  now does too. Contributed methods are optional, so calls through the flat bag
+  need `?.`; `getPagination(grid)` and friends stay the typed path.
 - Blank means null, undefined or the empty string everywhere. Sorting used to
   collate `''` among the values while the renderers and the `blank` filter
   operator called it empty, so `nulls: 'last'` did nothing for a column whose

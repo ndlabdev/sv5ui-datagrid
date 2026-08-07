@@ -269,3 +269,19 @@ export function selection<TRow>(options: SelectionOptions<TRow> = {}): GridFeatu
 export function getSelection<TRow>(grid: GridState<TRow>): Selection<TRow> | undefined {
     return grid.feature<Selection<TRow>>(SELECTION)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        selectRow?: (id: string) => void
+        deselectRow?: (id: string) => void
+        toggleRow?: (id: string) => void
+        selectAll?: () => void
+        clearSelection?: () => void
+        isRowSelected?: (id: string) => boolean
+        /** Untyped rows: `getSelection(grid)` is the path that knows `TRow`. */
+        getSelectedRows?: () => unknown[]
+        copySelection?: (options?: CopyOptions) => Promise<void>
+        /** `formatValue` is row-typed, so it belongs on the accessor path. */
+        exportCsv?: (options?: Omit<ExportCsvOptions, 'formatValue'>) => void
+    }
+}

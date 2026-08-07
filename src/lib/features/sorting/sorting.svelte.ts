@@ -142,3 +142,10 @@ export function sorting<TRow>(options: SortingOptions = {}): GridFeature<TRow> {
 export function getSorting<TRow>(grid: GridState<TRow>): Sorting<TRow> | undefined {
     return grid.feature<Sorting<TRow>>(SORTING)
 }
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        toggleSort?: (columnId: string, options?: ToggleSortOptions) => void
+        setSort?: (sort: SortState[]) => void
+    }
+}
