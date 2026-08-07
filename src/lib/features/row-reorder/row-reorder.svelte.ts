@@ -1,5 +1,6 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import type { GridFeature, Keybinding, RowNode } from '../../core/types/index.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import type { RowDragState, RowReorderOptions } from './row-reorder.types.js'
 
 export const ROW_REORDER = 'rowReorder'
@@ -63,8 +64,11 @@ export class RowReorder<TRow> {
      * Moves a row in the rendered order, rewriting `data` so it survives a
      * re-render — hence translating the target back through the node dropped
      * onto, since a sort makes rendered and data positions differ.
+     *
+     * `mutator`: it reads the rendered nodes and rewrites `grid.data`, the very
+     * top of the pipeline that produced them. See its doc.
      */
-    moveRow = (id: string, toRenderedIndex: number): void => {
+    moveRow = mutator((id: string, toRenderedIndex: number): void => {
         const nodes = this.#grid.preWindowNodes
         const from = this.#renderedIndexOf(id)
         if (from < 0) return
@@ -90,14 +94,14 @@ export class RowReorder<TRow> {
         this.#grid.data = next
         this.#grid.events.emit('rowMoved', { id, from: dataFrom, to: dataTo })
         this.#onReorder?.({ node, from: dataFrom, to: dataTo, data: next })
-    }
+    })
 
     /** Moves the row by one position, for the keyboard bindings. */
-    nudge = (id: string, delta: number): void => {
+    nudge = mutator((id: string, delta: number): void => {
         const from = this.#renderedIndexOf(id)
         if (from < 0) return
         this.moveRow(id, from + delta)
-    }
+    })
 }
 
 function activeNode<TRow>(grid: GridState<TRow>): RowNode<TRow> | undefined {

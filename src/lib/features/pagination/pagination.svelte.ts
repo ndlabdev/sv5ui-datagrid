@@ -1,6 +1,7 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
 import type { GridFeature } from '../../core/types/index.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import { paginateNodes } from './paginate.js'
 
 export const PAGINATION = 'pagination'
@@ -58,22 +59,28 @@ export class Pagination<TRow> {
         return Math.max(1, Math.ceil(this.total / this.pageSize))
     }
 
-    setPage = (page: number): void => {
-        this.page = Math.min(Math.max(1, page), this.pageCount)
-        this.#grid.events.emit('pageChanged', { page: this.page, pageSize: this.pageSize })
+    #emit(page: number): void {
+        this.#grid.events.emit('pageChanged', { page, pageSize: this.pageSize })
     }
 
-    setPageSize = (pageSize: number | null): void => {
+    // `mutator` throughout: `pageCount` reaches `grid.totalRows` and so the
+    // whole pipeline, and a caller must not be subscribed to it. See its doc.
+    setPage = mutator((page: number): void => {
+        this.#page = Math.min(Math.max(1, page), this.pageCount)
+        this.#emit(this.#page)
+    })
+
+    setPageSize = mutator((pageSize: number | null): void => {
         this.pageSize = pageSize
-        this.page = 1
-        this.#grid.events.emit('pageChanged', { page: this.page, pageSize })
-    }
+        this.#page = 1
+        this.#emit(1)
+    })
 
     /** The page clamps on read, so this only stores and announces. */
-    setRowCount = (rowCount: number | null): void => {
+    setRowCount = mutator((rowCount: number | null): void => {
         this.rowCount = rowCount
         if (this.#page > this.pageCount) this.setPage(this.pageCount)
-    }
+    })
 }
 
 export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<TRow> {

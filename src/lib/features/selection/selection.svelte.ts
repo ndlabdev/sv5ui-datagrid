@@ -8,6 +8,7 @@ import {
     type RowNode,
     type SelectionMode
 } from '../../core/types/index.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import { downloadCsv, pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {
     allSelection,
@@ -85,34 +86,38 @@ export class Selection<TRow> {
         this.#grid.events.emit('selectionChanged', { selectedIds: [...next] })
     }
 
-    select = (id: string): void => {
+    // `mutator` throughout: these read the selected set to amend it and read
+    // `selectableNodes`, which reaches the row pipeline. Neither belongs in a
+    // caller's dependencies — an effect that selects a row would re-run on its
+    // own write. See its doc.
+    select = mutator((id: string): void => {
         if (!this.#selectable(id) || this.selectedIds.has(id)) return
         this.#anchorId = id
         this.#commit(this.mode === 'single' ? singleSelection(id) : withId(this.selectedIds, id))
-    }
+    })
 
-    deselect = (id: string): void => {
+    deselect = mutator((id: string): void => {
         if (!this.selectedIds.has(id)) return
         this.#commit(withoutId(this.selectedIds, id))
-    }
+    })
 
-    toggle = (id: string): void => {
+    toggle = mutator((id: string): void => {
         if (this.selectedIds.has(id)) {
             this.deselect(id)
         } else {
             this.select(id)
         }
-    }
+    })
 
-    toggleWithModifiers = (id: string, modifiers: ToggleModifiers = {}): void => {
+    toggleWithModifiers = mutator((id: string, modifiers: ToggleModifiers = {}): void => {
         if (modifiers.shift && this.mode === 'multiple' && this.#anchorId) {
             this.selectRangeTo(id)
             return
         }
         this.toggle(id)
-    }
+    })
 
-    selectRangeTo = (id: string): void => {
+    selectRangeTo = mutator((id: string): void => {
         if (this.mode === 'single' || !this.#anchorId) {
             this.select(id)
             return
@@ -120,26 +125,26 @@ export class Selection<TRow> {
         if (!this.#selectable(id)) return
         const orderedIds = this.selectableNodes.map((node) => node.id)
         this.#commit(withRange(this.selectedIds, orderedIds, this.#anchorId, id))
-    }
+    })
 
-    selectAll = (): void => {
+    selectAll = mutator((): void => {
         if (this.mode === 'single') return
         this.#commit(allSelection(this.selectableNodes.map((node) => node.id)))
-    }
+    })
 
-    toggleAll = (): void => {
+    toggleAll = mutator((): void => {
         if (this.allState === 'all') {
             this.clear()
         } else {
             this.selectAll()
         }
-    }
+    })
 
-    clear = (): void => {
+    clear = mutator((): void => {
         this.#anchorId = null
         if (this.selectedIds.size === 0) return
         this.#commit(emptySelection())
-    }
+    })
 
     selectedNodes = $derived.by(() =>
         this.#grid.preWindowNodes.filter((node) => this.selectedIds.has(node.id))

@@ -2,6 +2,7 @@ import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
 import type { GridFeature, Keybinding, SortDirection, SortState } from '../../core/types/index.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import { sortNodes, type SortNulls } from './sort.js'
 
 export const SORTING = 'sorting'
@@ -48,7 +49,9 @@ export class Sorting<TRow> {
         return this.cycle[(index + 1) % this.cycle.length]
     }
 
-    toggleSort = (columnId: string, options: ToggleSortOptions = {}): void => {
+    // `mutator`: this reads the current sort to amend it and replaces the array,
+    // so a caller must not be subscribed to what it reads. See its doc.
+    toggleSort = mutator((columnId: string, options: ToggleSortOptions = {}): void => {
         const column = this.#grid.columns.get(columnId)
         if (!column?.def.sortable) return
 
@@ -70,12 +73,12 @@ export class Sorting<TRow> {
 
         this.sort = next
         this.#grid.events.emit('sortChanged', { sort: next })
-    }
+    })
 
-    setSort = (sort: SortState[]): void => {
+    setSort = mutator((sort: SortState[]): void => {
         this.sort = sort
         this.#grid.events.emit('sortChanged', { sort })
-    }
+    })
 
     directionOf(columnId: string): SortDirection | undefined {
         return this.sort.find((entry) => entry.columnId === columnId)?.direction
