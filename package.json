@@ -26,7 +26,8 @@
         "test": "npm run test:unit -- --run",
         "bench": "vitest bench --run --project unit",
         "perf:scroll": "node scripts/measure-scroll.mjs",
-        "generate:icons": "node scripts/generate-icons.mjs"
+        "generate:icons": "node scripts/generate-icons.mjs",
+        "release:verify": "node scripts/verify-package.mjs"
     },
     "publishConfig": {
         "access": "public"
