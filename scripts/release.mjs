@@ -185,7 +185,7 @@ try {
 } catch {
     fail(
         `publish.yml failed. ${version} was not published.\n` +
-            `Fix the cause, then delete and re-push the tag:\n` +
+            'Fix the cause, then delete and re-push the tag:\n' +
             `  git push --delete origin ${tag} && git tag -d ${tag}`
     )
 }
