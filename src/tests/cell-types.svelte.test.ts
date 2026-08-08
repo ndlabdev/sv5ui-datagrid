@@ -164,6 +164,24 @@ describe('formatting renderers', () => {
 
         expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('n/a')
     })
+
+    it('marks a blank the same way on a column that declares no type', async () => {
+        // Untyped columns take the plain-text path, which used to print the raw
+        // value and so drew nothing at all where a hole was.
+        const blank = [{ ...rows[0], name: null as unknown as string, role: '' }]
+        const screen = await renderGrid(
+            makeGrid(
+                [
+                    { id: 'name', header: 'Name' },
+                    { id: 'role', header: 'Role', typeOptions: { emptyText: 'n/a' } }
+                ],
+                blank
+            )
+        )
+
+        expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('—')
+        expect(cellAt(screen.container, 0, 1).textContent?.trim()).toBe('n/a')
+    })
 })
 
 describe('component renderers', () => {

@@ -3,6 +3,7 @@ import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { parentGroupIdOf } from '../../core/columns/header-groups.js'
 import { clamp } from '../../core/utils/math.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import {
     isSyntheticColumn,
     type GridFeature,
@@ -68,22 +69,24 @@ export class ColumnOps<TRow> {
         return this.canResize && this.#grid.columns.get(id)?.resizable !== false
     }
 
-    setColumnWidth = (id: string, width: number): void => {
+    // `mutator` throughout: every one of these reads the column model to decide
+    // what to write and then writes it back. See its doc.
+    setColumnWidth = mutator((id: string, width: number): void => {
         if (!this.canResizeColumn(id)) return
         const applied = this.#grid.columns.setWidth(id, width)
         this.#grid.events.emit('columnResized', { columnId: id, width: applied })
-    }
+    })
 
-    resizeBy = (id: string, delta: number): void => {
+    resizeBy = mutator((id: string, delta: number): void => {
         this.setColumnWidth(id, this.currentWidth(id) + delta)
-    }
+    })
 
-    autoSizeColumn = (id: string): void => {
+    autoSizeColumn = mutator((id: string): void => {
         const width = this.#measureColumn(id)
         if (width !== null) this.setColumnWidth(id, width)
-    }
+    })
 
-    autoSizeColumns = (): void => {
+    autoSizeColumns = mutator((): void => {
         if (!this.canResize) return
         const widths: Record<string, number> = {}
         for (const column of this.#grid.columns.visible) {
@@ -92,7 +95,7 @@ export class ColumnOps<TRow> {
             if (width !== null) widths[column.id] = width
         }
         this.#grid.columns.setWidths(widths)
-    }
+    })
 
     #measureColumn(id: string): number | null {
         const element = this.element
@@ -125,7 +128,7 @@ export class ColumnOps<TRow> {
         return Math.abs(target - current) <= AUTOSIZE_EPSILON ? null : target
     }
 
-    moveColumn = (id: string, toVisibleIndex: number): number => {
+    moveColumn = mutator((id: string, toVisibleIndex: number): number => {
         if (!this.canReorder || isSyntheticColumn(id)) return -1
         const { columns } = this.#grid
         const from = columns.indexOf(id)
@@ -140,11 +143,11 @@ export class ColumnOps<TRow> {
         columns.moveColumn(id, allTarget)
         this.#grid.events.emit('columnMoved', { columnId: id, toIndex: target })
         return target
-    }
+    })
 
     #dragContext: { offsets: number[]; range: { start: number; end: number } } | null = null
 
-    updateDrag = (sourceId: string, contentX: number): void => {
+    updateDrag = mutator((sourceId: string, contentX: number): void => {
         if (!this.canReorder) return
         const sourceIndex = this.#grid.columns.indexOf(sourceId)
         if (sourceIndex < 0) return
@@ -160,39 +163,39 @@ export class ColumnOps<TRow> {
             this.#dragContext.range
         )
         this.drag = { sourceId, targetIndex: index, indicatorX }
-    }
+    })
 
-    commitDrag = (): void => {
+    commitDrag = mutator((): void => {
         const drag = this.drag
         this.drag = null
         this.#dragContext = null
         if (!drag) return
         this.moveColumn(drag.sourceId, drag.targetIndex)
-    }
+    })
 
     cancelDrag = (): void => {
         this.drag = null
         this.#dragContext = null
     }
 
-    pinColumn = (id: string, side: PinnedSide | null): void => {
+    pinColumn = mutator((id: string, side: PinnedSide | null): void => {
         if (!this.canPin || isSyntheticColumn(id)) return
         this.#grid.columns.setPinned(id, side)
         this.#grid.events.emit('columnPinned', { columnId: id, side })
-    }
+    })
 
-    setColumnHidden = (id: string, hidden: boolean): void => {
+    setColumnHidden = mutator((id: string, hidden: boolean): void => {
         if (!this.canHide || isSyntheticColumn(id)) return
         if (hidden && this.#grid.columns.visible.length <= 1) return
         this.#grid.columns.setHidden(id, hidden)
         this.#grid.focus.focusCell(this.#grid.focus.active)
         this.#grid.events.emit('columnVisibilityChanged', { columnId: id, hidden })
-    }
+    })
 
-    toggleHidden = (id: string): void => {
+    toggleHidden = mutator((id: string): void => {
         const column = this.#grid.columns.get(id)
         if (column) this.setColumnHidden(id, !column.hidden)
-    }
+    })
 }
 
 function activeColumnId<TRow>(grid: GridState<TRow>): string | null {
@@ -339,4 +342,15 @@ export function columnOps<TRow>(options: ColumnOpsOptions = {}): GridFeature<TRo
 
 export function getColumnOps<TRow>(grid: GridState<TRow>): ColumnOps<TRow> | undefined {
     return grid.feature<ColumnOps<TRow>>(COLUMN_OPS)
+}
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        setColumnWidth?: (id: string, width: number) => void
+        autoSizeColumn?: (id: string) => void
+        autoSizeColumns?: () => void
+        moveColumn?: (id: string, toVisibleIndex: number) => number
+        pinColumn?: (id: string, side: PinnedSide | null) => void
+        setColumnHidden?: (id: string, hidden: boolean) => void
+    }
 }

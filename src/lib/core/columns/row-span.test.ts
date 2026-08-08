@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDataGrid, type GridState } from '../grid/grid.svelte.js'
 import type { ColumnDef, RowNode } from '../types/index.js'
-import { rowSpansOf } from './row-span.js'
+import { opensRowSpanGroup, rowSpansOf } from './row-span.js'
 
 interface Entry {
     id: number
@@ -84,5 +84,35 @@ describe('rowSpansOf', () => {
         // span into it: the run of three breaks after the first row.
         expect(spans.span[0]).toBe(1)
         expect(spans.owner[1]).toBe(1)
+    })
+})
+
+describe('opensRowSpanGroup', () => {
+    const columns = [{ id: 'region' }, { id: 'city' }, { id: 'sales' }, { id: 'note' }]
+
+    it('does not open a group at the first visible column', () => {
+        // The viewport's own border draws that line; a second one beside it has
+        // no gap to read as two and the left edge looks twice as heavy.
+        const spanning = new Map([['region', {}]])
+        expect(opensRowSpanGroup(columns, 0, spanning)).toBe(false)
+    })
+
+    it('opens a group where a spanning column follows a plain one', () => {
+        const spanning = new Map([['sales', {}]])
+        expect(opensRowSpanGroup(columns, 2, spanning)).toBe(true)
+    })
+
+    it('does not reopen inside a run of spanning columns', () => {
+        const spanning = new Map([
+            ['city', {}],
+            ['sales', {}]
+        ])
+        expect(opensRowSpanGroup(columns, 1, spanning)).toBe(true)
+        expect(opensRowSpanGroup(columns, 2, spanning)).toBe(false)
+    })
+
+    it('is false for a column that does not span at all', () => {
+        expect(opensRowSpanGroup(columns, 3, new Map([['sales', {}]]))).toBe(false)
+        expect(opensRowSpanGroup(columns, 9, new Map([['sales', {}]]))).toBe(false)
     })
 })

@@ -9,8 +9,8 @@
         type RowNode
     } from '../../core/types/index.js'
     import { rowColSpans } from '../../core/columns/col-span.js'
-    import { rowSpansOf } from '../../core/columns/row-span.js'
-    import { isBlank } from '../../core/utils/format.js'
+    import { opensRowSpanGroup, rowSpansOf } from '../../core/columns/row-span.js'
+    import { DEFAULT_EMPTY_TEXT, isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -109,9 +109,9 @@
     function edgeClasses(colIndex: number): string {
         const columns = grid.columns.visible
         if (!rowSpans.has(columns[colIndex]?.id)) return ''
-        const previous = columns[colIndex - 1]
-        const opensGroup = !previous || !rowSpans.has(previous.id)
-        return opensGroup ? `${rowSpanEdgeClass} ${rowSpanEdgeStartClass}` : rowSpanEdgeClass
+        return opensRowSpanGroup(columns, colIndex, rowSpans)
+            ? `${rowSpanEdgeClass} ${rowSpanEdgeStartClass}`
+            : rowSpanEdgeClass
     }
 
     /** No foot where the run ends with the data: the grid's edge is the line. */
@@ -390,7 +390,17 @@
         {:else if column.def.type}
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
         {:else}
-            <span class="truncate" data-dg-truncate>{grid.getValue(node, column)}</span>
+            {@const value = grid.getValue(node, column)}
+            <!-- Blank reads the same with or without a `type`. Inline rather
+                 than through GridCellValue, which pulls in every renderer it
+                 knows and would cost a component per cell on an untyped grid. -->
+            {#if isBlank(value)}
+                <span class="text-on-surface-variant"
+                    >{column.def.typeOptions?.emptyText ?? DEFAULT_EMPTY_TEXT}</span
+                >
+            {:else}
+                <span class="truncate" data-dg-truncate>{value}</span>
+            {/if}
         {/if}
     {/if}
 {/snippet}

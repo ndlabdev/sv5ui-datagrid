@@ -105,6 +105,8 @@ describe('set + boolean predicates', () => {
         expect(passes(filter, null)).toBe(true)
         expect(passes(filter, undefined)).toBe(true)
         expect(passes(filter, 'Data')).toBe(false)
+        // The value list offers one null entry for every kind of hole.
+        expect(passes(filter, '')).toBe(true)
 
         expect(passes({ kind: 'boolean', value: true }, true)).toBe(true)
         expect(passes({ kind: 'boolean', value: false }, false)).toBe(true)
@@ -281,6 +283,16 @@ describe('distinctValues', () => {
             () => Math.random().toString()
         )
         expect(distinctValues(nodes, { id: 'dept' })).toEqual(['Core', 'Data', null])
+    })
+
+    it('folds the empty string into the one null entry', () => {
+        interface Row {
+            dept: string | null
+        }
+        const nodes = buildRowNodes<Row>([{ dept: 'Core' }, { dept: '' }, { dept: null }], () =>
+            Math.random().toString()
+        )
+        expect(distinctValues(nodes, { id: 'dept' })).toEqual(['Core', null])
     })
 
     it('caps the number of collected values', () => {

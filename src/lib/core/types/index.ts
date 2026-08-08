@@ -3,6 +3,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec'
 
 export type { StandardSchemaV1 }
 
+export type * from './api.js'
 export type * from './sorting.js'
 export type * from './filtering.js'
 export type * from './rows.js'

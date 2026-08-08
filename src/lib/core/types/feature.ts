@@ -1,4 +1,5 @@
 import type { GridState } from '../grid/grid.svelte.js'
+import type { GridApi } from './api.js'
 import type { ColumnState } from './columns.js'
 import type { RowNode } from './rows.js'
 
@@ -68,8 +69,11 @@ export interface GridFeature<TRow> {
     pipelineStage?: PipelineStage<TRow>
     /** Reactive state the feature owns, exposed on `grid.state[id]`. */
     createState?: (grid: GridState<TRow>) => unknown
-    /** Imperative methods merged into `grid.api`. */
-    createApi?: (grid: GridState<TRow>) => Record<string, unknown>
+    /**
+     * Imperative methods merged into `grid.api`. Declare their types by
+     * augmenting `GridApi` from this module, the way the built-in features do.
+     */
+    createApi?: (grid: GridState<TRow>) => Partial<GridApi>
     /** Keyboard bindings contributed to the focus model. */
     keybindings?: Keybinding<TRow>[]
     /** Column menu / context menu items contributed by the feature. */

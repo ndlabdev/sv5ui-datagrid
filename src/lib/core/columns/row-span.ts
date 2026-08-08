@@ -30,6 +30,26 @@ export function rowSpansOf<TRow>(
     return result
 }
 
+/**
+ * True when the column at `colIndex` opens a horizontal run of spanning
+ * columns, and so is the one to draw the run's inline-start edge.
+ *
+ * The first visible column never opens one. The viewport already draws a border
+ * down that side, and a second line hard against it has no gap to read as two:
+ * it just makes the grid's left edge look twice as heavy. Same reasoning as the
+ * foot of a run that ends with the data.
+ */
+export function opensRowSpanGroup(
+    columns: readonly { id: string }[],
+    colIndex: number,
+    spanning: ReadonlyMap<string, unknown>
+): boolean {
+    const column = columns[colIndex]
+    if (!column || !spanning.has(column.id)) return false
+    const previous = columns[colIndex - 1]
+    return previous !== undefined && !spanning.has(previous.id)
+}
+
 /** A full-width row draws one cell, so nothing can span out of it. */
 function requestedSpan<TRow>(
     grid: GridState<TRow>,

@@ -1,6 +1,10 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
-import { isNullish, sortValueGetter } from '../../core/utils/value.js'
+import { isBlank, sortValueGetter } from '../../core/utils/value.js'
 
+/**
+ * Where the holes land. Blank is null, undefined or the empty string — the same
+ * set the `blank` filter operator matches and the renderers show as empty.
+ */
 export type SortNulls = 'first' | 'last'
 
 export function sortNodes<TRow>(
@@ -39,8 +43,8 @@ export function sortNodes<TRow>(
 const collator = new Intl.Collator(undefined, { numeric: true })
 
 function compareValues(a: unknown, b: unknown, nullSign: number): number {
-    if (isNullish(a)) return isNullish(b) ? 0 : nullSign
-    if (isNullish(b)) return -nullSign
+    if (isBlank(a)) return isBlank(b) ? 0 : nullSign
+    if (isBlank(b)) return -nullSign
     if (typeof a === 'number' && typeof b === 'number') return a - b
     if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b)
     if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime()

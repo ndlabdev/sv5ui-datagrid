@@ -1,6 +1,7 @@
 import type { GridState } from '../../core/grid/grid.svelte.js'
 import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
 import type { ColumnFilterEntry, FilterModel, GridFeature } from '../../core/types/index.js'
+import { mutator } from '../../core/utils/reactivity.js'
 import { distinctValuesCached } from './distinct-values.js'
 import { compileColumnFilters } from './filter-predicates.js'
 import { quickFilterNodes } from './quick-filter.js'
@@ -38,31 +39,34 @@ export class Filtering<TRow> {
         this.#grid.events.emit('filterChanged', { filter: this.model })
     }
 
-    setQuickFilter = (query: string): void => {
+    // `mutator` throughout: `columnFilters` is replaced rather than patched, so
+    // a setter reading it — directly or through `model` — would subscribe its
+    // caller to a value that never compares equal. See its doc.
+    setQuickFilter = mutator((query: string): void => {
         this.quick = query
         this.#emit()
-    }
+    })
 
-    setColumnFilter = (columnId: string, filter: ColumnFilterEntry | null): void => {
+    setColumnFilter = mutator((columnId: string, filter: ColumnFilterEntry | null): void => {
         const next = { ...this.columnFilters }
         if (filter === null) delete next[columnId]
         else next[columnId] = filter
         this.columnFilters = next
         this.#emit()
-    }
+    })
 
-    clearColumnFilters = (): void => {
+    clearColumnFilters = mutator((): void => {
         this.columnFilters = {}
         this.#emit()
-    }
+    })
 
     getFilterModel = (): FilterModel => this.model
 
-    applyFilterModel = (model: FilterModel): void => {
+    applyFilterModel = mutator((model: FilterModel): void => {
         this.quick = model.quick ?? ''
         this.columnFilters = { ...(model.columns ?? {}) }
         this.#emit()
-    }
+    })
 
     distinctFor(columnId: string) {
         const def = this.#grid.columns.leafDefs.find((candidate) => candidate.id === columnId)
@@ -117,4 +121,14 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
 
 export function getFiltering<TRow>(grid: GridState<TRow>): Filtering<TRow> | undefined {
     return grid.feature<Filtering<TRow>>(FILTERING)
+}
+
+declare module '../../core/types/api.js' {
+    interface GridApi {
+        setQuickFilter?: (query: string) => void
+        setColumnFilter?: (columnId: string, filter: ColumnFilterEntry | null) => void
+        clearColumnFilters?: () => void
+        getFilterModel?: () => FilterModel
+        applyFilterModel?: (model: FilterModel) => void
+    }
 }

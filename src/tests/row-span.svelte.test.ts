@@ -168,6 +168,32 @@ describe('rowSpan', () => {
         expect(getComputedStyle(cell(0, 2)!).borderInlineEndWidth).toBe('0px')
     })
 
+    it('draws no start edge on the first visible column', async () => {
+        // Nothing precedes it but the viewport's own border, and a second line
+        // hard against that one just makes the grid's left edge look doubled.
+        const grid = createDataGrid<Entry>({
+            columns: [
+                {
+                    id: 'region',
+                    header: 'Region',
+                    width: 140,
+                    rowSpan: (ctx) => regionRun(ctx.rowIndex)
+                },
+                { id: 'city', header: 'City', width: 300 }
+            ],
+            data: entries.slice(0, 6),
+            getRowId: (entry) => String(entry.id)
+        })
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const fill = cell(0, 0)!.firstElementChild as HTMLElement
+        const spanning = getComputedStyle(fill)
+        expect(spanning.borderInlineStartWidth).toBe('0px')
+        // The far edge still closes the block against the column beside it.
+        expect(spanning.borderInlineEndWidth).toBe('1px')
+    })
+
     it('draws no foot on a run that ends with the data', async () => {
         // A single row of its own, spanned to the end of a short list.
         const grid = createDataGrid<Entry>({
