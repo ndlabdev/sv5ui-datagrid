@@ -356,3 +356,61 @@ describe('Editing keybindings', () => {
         expect(grid.data[0].name).toBe('Alicia')
     })
 })
+
+describe('mode decides what a gesture opens', () => {
+    it('opens a cell edit under the default mode', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+
+        state.beginEdit('1', 'name')
+
+        expect(state.active).toEqual({ rowId: '1', columnId: 'name' })
+        expect(state.rowEditId).toBeNull()
+    })
+
+    it('opens the whole row under mode row', () => {
+        const grid = createGrid({ mode: 'row' })
+        const state = getEditing(grid)!
+
+        // The same call a double-click, Enter and F2 all make.
+        state.beginEdit('1', 'name')
+
+        expect(state.rowEditId).toBe('1')
+        expect(state.active).toBeNull()
+        // Every editable column of the row is drafted, not just the one aimed at.
+        expect(Object.keys(state.drafts).sort()).toEqual(['age', 'dept', 'name'])
+    })
+
+    it('still opens a single cell when the app asks for one by name', () => {
+        const grid = createGrid({ mode: 'row' })
+        const state = getEditing(grid)!
+
+        // `startEdit` is the explicit request; the mode does not override it.
+        state.startEdit('1', 'name')
+
+        expect(state.active).toEqual({ rowId: '1', columnId: 'name' })
+        expect(state.rowEditId).toBeNull()
+    })
+
+    it('seeds the typed character into the row draft under mode row', () => {
+        const grid = createGrid({ mode: 'row' })
+        const state = getEditing(grid)!
+
+        state.startEditWith('1', 'name', 'Z')
+
+        expect(state.rowEditId).toBe('1')
+        expect(state.drafts.name).toBe('Z')
+        // The other columns keep the row's own values.
+        expect(state.drafts.age).toBe(30)
+    })
+
+    it('seeds the typed character into the cell draft under mode cell', () => {
+        const grid = createGrid()
+        const state = getEditing(grid)!
+
+        state.startEditWith('1', 'name', 'Z')
+
+        expect(state.active).toEqual({ rowId: '1', columnId: 'name' })
+        expect(state.draft).toBe('Z')
+    })
+})

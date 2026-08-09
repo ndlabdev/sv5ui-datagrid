@@ -1,21 +1,11 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
+import { plural } from '../core/interaction/plural.js'
 
 /**
- * Russian. Row counts run through `Intl.PluralRules` — the language has three
- * forms (1 строка, 2 строки, 5 строк) and picking the wrong one reads as broken.
+ * Russian. Three forms (1 строка, 2 строки, 5 строк) and picking the wrong one
+ * reads as broken.
  */
-const plural = new Intl.PluralRules('ru-RU')
-
-function rows(count: number): string {
-    switch (plural.select(count)) {
-        case 'one':
-            return 'строка'
-        case 'few':
-            return 'строки'
-        default:
-            return 'строк'
-    }
-}
+const rows = plural('ru-RU', { one: 'строка', few: 'строки', other: 'строк' })
 
 export const ruRU: DataGridLocalePack = {
     tag: 'ru-RU',

@@ -77,6 +77,14 @@ export const datagridVariants = tv({
             'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
         cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
+        // A row edit rings the row, not each field. Left per cell, two inset
+        // rings meet at every seam and read as one heavy doubled rule, while
+        // the cells whose editor is a widget draw no box at all — a row of
+        // loose boxes rather than one surface.
+        cellEditorInRow:
+            'bg-surface focus-within:z-[7] focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary',
+        /** Divides the fields the row's own ring no longer separates. */
+        cellEditorInRowDivider: 'border-s border-outline-variant',
         cellEditorPad: 'px-2',
         // A date or time editor has an intrinsic width: fixed segments plus the
         // icon its field reserves room for. Squeezed into a narrower column the
@@ -96,6 +104,9 @@ export const datagridVariants = tv({
         pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
             'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
+        /** One ring around the whole row being edited, drawn over the cells. */
+        rowEditing:
+            'after:pointer-events-none after:absolute after:inset-0 after:z-[8] after:ring-2 after:ring-inset after:ring-primary',
         groupBoundary: 'border-e border-outline-variant',
         // The resize handle sits on this edge but only shows on hover.
         headerDivider: 'border-e border-outline-variant',

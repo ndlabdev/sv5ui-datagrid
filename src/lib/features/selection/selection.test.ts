@@ -162,10 +162,16 @@ describe('Selection', () => {
     it('announces selection and copy counts', () => {
         const grid = createGrid()
         getSelection(grid)!.select('1')
-        expect(grid.announcer.message).toBe('1 rows selected')
+        expect(grid.announcer.message).toBe('1 row selected')
+
+        getSelection(grid)!.select('3')
+        expect(grid.announcer.message).toBe('2 rows selected')
 
         grid.events.emit('rowsCopied', { count: 3 })
         expect(grid.announcer.message).toBe('3 rows copied')
+
+        grid.events.emit('rowsCopied', { count: 1 })
+        expect(grid.announcer.message).toBe('1 row copied')
     })
 })
 

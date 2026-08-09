@@ -1,19 +1,23 @@
 import type { GridState } from '../grid/grid.svelte.js'
 import type { DataGridAnnouncerStrings } from '../types/index.js'
+import { plural } from './plural.js'
+
+/** English is what every app hears until it overrides these. */
+const rows = plural('en-US', { one: 'row', other: 'rows' })
 
 export const defaultAnnouncerStrings: DataGridAnnouncerStrings = {
     sorted: (column, direction) =>
         `sorted by ${column} ${direction === 'asc' ? 'ascending' : 'descending'}`,
     sortCleared: () => 'sort cleared',
-    filtered: (count) => `${count} rows`,
+    filtered: (count) => `${count} ${rows(count)}`,
     page: (page) => `page ${page}`,
     columnResized: (column, width) => `${column} column resized to ${width} pixels`,
     columnMoved: (column, position) => `${column} column moved to position ${position}`,
     columnPinned: (column, side) =>
         side ? `${column} column pinned ${side}` : `${column} column unpinned`,
     columnVisibility: (column, hidden) => `${column} column ${hidden ? 'hidden' : 'shown'}`,
-    selected: (count) => `${count} rows selected`,
-    copied: (count) => `${count} rows copied`,
+    selected: (count) => `${count} ${rows(count)} selected`,
+    copied: (count) => `${count} ${rows(count)} copied`,
     rowExpanded: (expanded) => (expanded ? 'row expanded' : 'row collapsed'),
     rowPinned: (side) => (side ? `row pinned ${side}` : 'row unpinned'),
     rowMoved: (position) => `row moved to position ${position}`,

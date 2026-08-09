@@ -81,15 +81,30 @@ export class Editing<TRow> {
     }
 
     /**
+     * What a user gesture opens. Double-click, `Enter`, `F2` and typing all
+     * come through here so `mode` decides once, rather than every call site
+     * hard-coding a cell edit and leaving the option inert.
+     *
+     * `startEdit` and `startRowEdit` stay as they were: an app that wants one
+     * specific shape asks for it by name, whatever the mode says.
+     */
+    beginEdit = (rowId: string, columnId: string): void => {
+        if (this.mode === 'row') this.startRowEdit(rowId)
+        else this.startEdit(rowId, columnId)
+    }
+
+    /**
      * Opens an edit on the key that started it. Only an editor that takes
      * typed text keeps the character: seeding a select or a rating with it
      * would put a value in the draft that its own control cannot represent.
      */
     startEditWith = (rowId: string, columnId: string, initial: string): void => {
-        this.startEdit(rowId, columnId)
-        if (!this.active) return
+        this.beginEdit(rowId, columnId)
         const column = this.#grid.columns.get(columnId)
-        if (column && TYPED_EDITORS.has(editorTypeOf(column))) this.draft = initial
+        const typed = column && TYPED_EDITORS.has(editorTypeOf(column))
+        if (!typed) return
+        if (this.rowEditId === rowId) this.setRowDraft(columnId, initial)
+        else if (this.active) this.draft = initial
     }
 
     setDraft = (value: unknown): void => {
@@ -402,7 +417,7 @@ function canStartEdit<TRow>(grid: GridState<TRow>): boolean {
 
 function startActive<TRow>(grid: GridState<TRow>): void {
     const cell = activeCell(grid)
-    if (cell) getEditing(grid)!.startEdit(cell.node.id, cell.def.id)
+    if (cell) getEditing(grid)!.beginEdit(cell.node.id, cell.def.id)
 }
 
 /**
@@ -455,6 +470,7 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
         createApi: (grid) => {
             const state = getEditing(grid)!
             return {
+                beginEdit: state.beginEdit,
                 startEditing: state.startEdit,
                 stopEditing: state.cancel,
                 getEditingCell: () => state.active,
@@ -485,6 +501,9 @@ export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
 
 declare module '../../core/types/api.js' {
     interface GridApi {
+        /** Opens whatever `mode` says: a cell, or the row it belongs to. */
+        beginEdit?: (rowId: string, columnId: string) => void
+        /** Always a single cell, whatever `mode` says. */
         startEditing?: (rowId: string, columnId: string) => void
         stopEditing?: () => void
         getEditingCell?: () => EditingCell | null

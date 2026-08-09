@@ -9,12 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `editing({ mode: 'row' })` now decides what a gesture opens. The option was
+  stored and never read, so a double-click, `Enter` and `F2` opened a single
+  cell whatever it said, and a row edit could only be reached from app code
+  through `startRowEdit`. They all route through the new `beginEdit`, which
+  honours the mode; `startEdit` and `startRowEdit` still ask for one shape by
+  name and ignore it.
+- A click on a field inside a row edit reaches that field. The cell carries a
+  roving tabindex and the focus model pulled focus back onto it, so the
+  keystrokes went nowhere and only `Tab` could get into a field.
+- Opening a row edit puts the caret in its first editable field. Every editor
+  mounts at once, and the last one to run used to keep the focus — the eye
+  started at the first field while the caret sat in the last.
+- A row edit no longer drops every select list open at once, which buried the
+  rows beneath it. A cell edit still opens its list, which is what it is for.
+- The announcer counts in the singular where the language has one. It said
+  "1 rows selected", "1 rows copied" and "1 rows" after a filter. The same
+  fault was in German, Spanish, French and Brazilian Portuguese, and the last
+  three inflect the participle too, so "1 filas seleccionadas" needed the whole
+  phrase rather than the noun alone. Forms come from `Intl.PluralRules`, not a
+  `count === 1` branch: French and Portuguese read zero as singular, and
+  Russian — already correct — needs three forms. The languages with no
+  grammatical number are unchanged.
 - The bundled icon set no longer guesses which fallbacks sv5ui needs from it.
   A hand-written list had named `loader-2`, which nothing renders, while sv5ui
   asks for `loader-circle`; it also restated three pagination chevrons sv5ui
   already ships. sv5ui registers its own defaults before the grid renders, so
   the generator now takes only what sv5ui leaves uncovered — today nothing.
   35 icons ship instead of 39, and none of them is dead.
+
+### Changed
+
+- A row edit draws one ring around the row rather than one per field. Each
+  editor used to draw its own inset ring, so every seam between two fields read
+  as a single doubled rule and the cells holding a widget editor drew no box at
+  all — a row of loose boxes rather than one surface. Fields are now separated
+  by a hairline, and a field shows a ring of its own only while it has focus.
+  The `rowEditing`, `cellEditorInRow` and `cellEditorInRowDivider` slots are new
+  and themeable.
 
 ## [0.2.0] - 2026-08-08
 
