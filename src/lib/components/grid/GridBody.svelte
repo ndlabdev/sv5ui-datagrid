@@ -59,8 +59,17 @@
         return editing?.editableAt(node, column.def) ?? false
     }
 
+    /** The first editable column of a row edit: the one that takes the caret. */
+    function opensRowEdit(node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
+        return (
+            grid.columns.visible.find((candidate) => isEditable(node, candidate))?.id === column.id
+        )
+    }
+
     function startEdit(node: RowNode<TRow>, column: ColumnState<TRow>): void {
-        if (editing && isEditable(node, column)) editing.startEdit(node.id, column.id)
+        // `beginEdit`, not `startEdit`: the feature's `mode` decides whether a
+        // double-click opens the cell or the whole row.
+        if (editing && isEditable(node, column)) editing.beginEdit(node.id, column.id)
     }
 
     const rowClass = $derived(slots.row({ class: theme('row') }))
@@ -68,11 +77,14 @@
         `${rowClass} ${slots.rowSelected({ class: theme('rowSelected') })}`
     )
     const rowDraggingClass = $derived(slots.rowDragging({ class: theme('rowDragging') }))
+    const rowEditingClass = $derived(slots.rowEditing({ class: theme('rowEditing') }))
 
     /** Only pays for `twMerge` when the app actually returns classes. */
     function classOfRow(node: RowNode<TRow>): string {
         let base = selectionState?.isSelected(node.id) ? rowSelectedClass : rowClass
         if (reorder?.drag?.sourceId === node.id) base += ` ${rowDraggingClass}`
+        // The row rings itself so the fields inside do not each draw a box.
+        if (editing?.rowEditId === node.id) base += ` ${rowEditingClass}`
         const custom = grid.rowClass?.(node)
         return custom ? twMerge(base, custom) : base
     }
@@ -502,10 +514,12 @@
                                     {@render cellContent(spanNode, column, colIndex, spanRow)}
                                 </div>
                             {:else if editingCell}
+                                {@const inRowEdit = editing?.active === null}
                                 <GridCellEditor
                                     node={spanNode}
                                     {column}
-                                    rowMode={editing?.active === null}
+                                    rowMode={inRowEdit}
+                                    first={!inRowEdit || opensRowEdit(spanNode, column)}
                                 />
                             {:else}
                                 {@render cellContent(spanNode, column, colIndex, spanRow)}
