@@ -77,10 +77,8 @@ export const datagridVariants = tv({
             'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
         cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
-        // A row edit rings the row, not each field. Left per cell, two inset
-        // rings meet at every seam and read as one heavy doubled rule, while
-        // the cells whose editor is a widget draw no box at all — a row of
-        // loose boxes rather than one surface.
+        // A row edit rings the row, not each field: two inset rings meeting at
+        // a seam read as one doubled rule.
         cellEditorInRow:
             'bg-surface focus-within:z-[7] focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary',
         /** Divides the fields the row's own ring no longer separates. */

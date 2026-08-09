@@ -63,8 +63,6 @@ export class Pagination<TRow> {
         this.#grid.events.emit('pageChanged', { page, pageSize: this.pageSize })
     }
 
-    // `mutator` throughout: `pageCount` reaches `grid.totalRows` and so the
-    // whole pipeline, and a caller must not be subscribed to it. See its doc.
     setPage = mutator((page: number): void => {
         this.#page = Math.min(Math.max(1, page), this.pageCount)
         this.#emit(this.#page)

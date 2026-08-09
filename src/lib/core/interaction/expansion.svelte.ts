@@ -17,8 +17,6 @@ export class ExpansionModel {
         return this.expandedIds.has(id)
     }
 
-    // `mutator`: the set is replaced rather than patched, so reading it here
-    // would subscribe a caller to a value that never compares equal. See its doc.
     expand = mutator((id: string): void => {
         if (this.expandedIds.has(id)) return
         this.expandedIds = idSetWith(this.expandedIds, id)

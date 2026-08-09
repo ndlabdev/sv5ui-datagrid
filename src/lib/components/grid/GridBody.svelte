@@ -403,9 +403,8 @@
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
         {:else}
             {@const value = grid.getValue(node, column)}
-            <!-- Blank reads the same with or without a `type`. Inline rather
-                 than through GridCellValue, which pulls in every renderer it
-                 knows and would cost a component per cell on an untyped grid. -->
+            <!-- Inline rather than through GridCellValue, which would cost a
+                 component instance per cell on an untyped grid. -->
             {#if isBlank(value)}
                 <span class="text-on-surface-variant"
                     >{column.def.typeOptions?.emptyText ?? DEFAULT_EMPTY_TEXT}</span

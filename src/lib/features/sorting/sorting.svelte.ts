@@ -50,8 +50,6 @@ export class Sorting<TRow> {
         return this.cycle[(index + 1) % this.cycle.length]
     }
 
-    // `mutator`: this reads the current sort to amend it and replaces the array,
-    // so a caller must not be subscribed to what it reads. See its doc.
     toggleSort = mutator((columnId: string, options: ToggleSortOptions = {}): void => {
         const column = this.#grid.columns.get(columnId)
         if (!column?.def.sortable) return

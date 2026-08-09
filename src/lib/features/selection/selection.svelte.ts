@@ -86,10 +86,6 @@ export class Selection<TRow> {
         this.#grid.events.emit('selectionChanged', { selectedIds: [...next] })
     }
 
-    // `mutator` throughout: these read the selected set to amend it and read
-    // `selectableNodes`, which reaches the row pipeline. Neither belongs in a
-    // caller's dependencies — an effect that selects a row would re-run on its
-    // own write. See its doc.
     select = mutator((id: string): void => {
         if (!this.#selectable(id) || this.selectedIds.has(id)) return
         this.#anchorId = id
