@@ -1,4 +1,10 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
+import { plural } from '../core/interaction/plural.js'
+
+const rows = plural('fr-FR', { one: 'ligne', other: 'lignes' })
+// Le participe s'accorde en nombre, pas seulement le nom.
+const selectedRows = plural('fr-FR', { one: 'ligne sélectionnée', other: 'lignes sélectionnées' })
+const copiedRows = plural('fr-FR', { one: 'ligne copiée', other: 'lignes copiées' })
 
 /** French. */
 export const frFR: DataGridLocalePack = {
@@ -108,7 +114,7 @@ export const frFR: DataGridLocalePack = {
         sorted: (column, direction) =>
             `trié par ${column} par ordre ${direction === 'asc' ? 'croissant' : 'décroissant'}`,
         sortCleared: () => 'tri annulé',
-        filtered: (count) => `${count} lignes après filtrage`,
+        filtered: (count) => `${count} ${rows(count)} après filtrage`,
         page: (page) => `page ${page}`,
         columnResized: (column, width) => `colonne ${column} redimensionnée à ${width} pixels`,
         columnMoved: (column, position) => `colonne ${column} déplacée en position ${position}`,
@@ -116,8 +122,8 @@ export const frFR: DataGridLocalePack = {
             side ? `colonne ${column} épinglée` : `colonne ${column} détachée`,
         columnVisibility: (column, hidden) =>
             hidden ? `colonne ${column} masquée` : `colonne ${column} affichée`,
-        selected: (count) => `${count} lignes sélectionnées`,
-        copied: (count) => `${count} lignes copiées`,
+        selected: (count) => `${count} ${selectedRows(count)}`,
+        copied: (count) => `${count} ${copiedRows(count)}`,
         rowExpanded: (expanded) => (expanded ? 'ligne développée' : 'ligne réduite'),
         rowPinned: (side) => (side ? 'ligne épinglée' : 'ligne détachée'),
         rowMoved: (position) => `ligne déplacée en position ${position}`,

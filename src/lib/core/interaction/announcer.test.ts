@@ -42,7 +42,10 @@ describe('Announcer', () => {
     it('announces the post-filter row count', () => {
         const grid = createGrid()
         getFiltering(grid)!.setQuickFilter('ali')
-        expect(grid.announcer.message).toBe('1 rows')
+        expect(grid.announcer.message).toBe('1 row')
+
+        getFiltering(grid)!.setQuickFilter('a')
+        expect(grid.announcer.message).toBe('2 rows')
     })
 
     it('announces page changes', () => {

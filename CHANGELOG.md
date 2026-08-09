@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   started at the first field while the caret sat in the last.
 - A row edit no longer drops every select list open at once, which buried the
   rows beneath it. A cell edit still opens its list, which is what it is for.
+- The announcer counts in the singular where the language has one. It said
+  "1 rows selected", "1 rows copied" and "1 rows" after a filter. The same
+  fault was in German, Spanish, French and Brazilian Portuguese, and the last
+  three inflect the participle too, so "1 filas seleccionadas" needed the whole
+  phrase rather than the noun alone. Forms come from `Intl.PluralRules`, not a
+  `count === 1` branch: French and Portuguese read zero as singular, and
+  Russian — already correct — needs three forms. The languages with no
+  grammatical number are unchanged.
 
 ### Changed
 

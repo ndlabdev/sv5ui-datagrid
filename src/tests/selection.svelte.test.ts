@@ -290,6 +290,27 @@ describe('status bar + a11y', () => {
         })
         expect(results.violations.map((violation) => violation.id)).toEqual([])
     })
+
+    it('announces one selected row in the singular', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const state = getSelection(grid)!
+
+        // What a screen reader actually says, read off the live region rather
+        // than off the string function.
+        state.select('1')
+        await expect
+            .element(screen.getByText('1 row selected', { exact: true }))
+            .toBeInTheDocument()
+        expect(screen.container.querySelector('[aria-live="polite"]')?.textContent).toBe(
+            '1 row selected'
+        )
+
+        state.select('2')
+        await expect
+            .element(screen.getByText('2 rows selected', { exact: true }))
+            .toBeInTheDocument()
+    })
 })
 
 describe('selection column layout', () => {
