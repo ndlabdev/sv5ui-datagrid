@@ -93,6 +93,25 @@ describe('grid icons render offline', () => {
     })
 })
 
+describe('an app can register the icons before any grid mounts', () => {
+    it('exports the registrar and the collection', async () => {
+        const lib = await import('$lib/index.js')
+        // Without these, an app drawing one of the grid's own icons elsewhere
+        // on the page has no way to fill the store before `Grid.Root` mounts,
+        // and that icon fetches and flickers in.
+        expect(typeof lib.registerDataGridIcons).toBe('function')
+        expect(Object.keys(lib.datagridIcons.icons).length).toBeGreaterThan(0)
+    })
+
+    it('is idempotent, so calling it at startup and per grid is safe', async () => {
+        const { registerDataGridIcons } = await import('$lib/index.js')
+        expect(() => {
+            registerDataGridIcons()
+            registerDataGridIcons()
+        }).not.toThrow()
+    })
+})
+
 describe('the icon store is what answers', () => {
     it('has a body for every icon it ships', () => {
         for (const [name, icon] of Object.entries(datagridIcons.icons)) {

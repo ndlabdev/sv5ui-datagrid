@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `registerDataGridIcons` and `datagridIcons` are exported. `Grid.Root` calls
+  the registrar as it initialises, which covers the grid — but an app drawing
+  one of the same icons elsewhere renders before any grid mounts, finds an
+  empty store and fetches it, so the icon flickers in when the response lands.
+  Calling it once in a root layout covers the whole page. It is idempotent.
+
+    Reproduced against a fresh SvelteKit app with the published tarball: a
+    toolbar button of the app's own using `lucide:copy` fetched
+    `?icons=copy,rocket`; registering at startup left only `rocket`, which the
+    grid never bundles and never claimed to.
+
 ## [0.3.0] - 2026-08-09
 
 ### Fixed
