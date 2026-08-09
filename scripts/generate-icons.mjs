@@ -3,12 +3,14 @@
  * collection, so `@iconify/svelte` resolves them from memory instead of
  * fetching them from the Iconify API at runtime.
  *
- * The set is the union of two sources:
- *   1. Every `lucide:*` name the grid's own source passes to an icon.
- *   2. The default icons the sv5ui parts the grid renders pull themselves —
- *      the Select's chevron, the Pagination arrows, and so on. These are not
- *      in the grid's source, but they appear in its UI, so leaving them out
- *      would mean the footer and menus still hit the network.
+ * The set is every `lucide:*` name the grid's own source passes to an icon,
+ * plus any sv5ui default sv5ui does not bundle for itself — normally none.
+ *
+ * The icons sv5ui components reach for on their own (the pagination chevrons,
+ * the rating star, the external-link arrow) are already registered by sv5ui's
+ * `Icon.svelte` module script, which runs before the grid renders. Restating
+ * them here bought nothing; the version that did also shipped `loader-2`,
+ * which sv5ui never asks for.
  *
  * Run with `npm run generate:icons`. The output is committed, so a normal
  * install and build never need `@iconify-json/lucide`.
@@ -16,6 +18,7 @@
 import { createRequire } from 'node:module'
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
@@ -23,17 +26,52 @@ const LIB = path.join(ROOT, 'src/lib')
 const OUT = path.join(LIB, 'components/internal/icons.data.ts')
 
 /**
- * Icons the sv5ui components the grid renders pull from their own defaults,
- * resolved from sv5ui's `iconsDefaults`. Kept explicit so a reader can see why
- * each one ships even though the grid never names it.
+ * Icons sv5ui components fall back to that sv5ui does not already ship.
+ *
+ * `Icon.svelte` registers sv5ui's own bundle from its module script, so every
+ * default it covers is resolved before the grid renders anything — the
+ * pagination chevrons, the rating star, the external-link arrow. Restating
+ * them here would only duplicate bytes.
+ *
+ * The gap this closes is drift: if sv5ui ever names a default it stops
+ * bundling, that icon would start fetching with nothing to notice. Normally
+ * this returns nothing.
+ *
+ * It replaces a hand-written list of five names, which had guessed `loader-2`
+ * where sv5ui uses `loader-circle` — shipping an icon nothing renders.
  */
-const SV5UI_CHROME_ICONS = [
-    'chevron-left', // Pagination prev
-    'chevron-right', // Pagination next, submenu markers
-    'chevrons-left', // Pagination first
-    'chevrons-right', // Pagination last
-    'loader-2' // Select / Input busy state
-]
+async function sv5uiUnbundledDefaults() {
+    // Resolved, not imported: `sv5ui/config` is not an export subpath, and the
+    // root entry pulls `.svelte` files node cannot load. Both files sit beside
+    // that entry and are plain JS.
+    const dist = path.dirname(fileURLToPath(import.meta.resolve('sv5ui')))
+    const { iconsDefaults } = await import(pathToFileURL(path.join(dist, 'config.js')).href)
+    const { bundledIcons } = await import(
+        pathToFileURL(path.join(dist, 'components/Icon/bundled.js')).href
+    )
+
+    const shipped = new Set()
+    for (const collection of bundledIcons) {
+        for (const name of Object.keys(collection.icons ?? {})) {
+            shipped.add(`${collection.prefix}:${name}`)
+        }
+    }
+
+    const names = new Set()
+    for (const value of Object.values(iconsDefaults)) {
+        if (shipped.has(String(value))) continue
+        const [prefix, name] = String(value).split(':')
+        if (prefix !== 'lucide') {
+            console.error(
+                `sv5ui default ${value} is neither bundled by sv5ui nor in the lucide ` +
+                    'collection. Bundle it from its own @iconify-json package.'
+            )
+            process.exit(1)
+        }
+        names.add(name)
+    }
+    return names
+}
 
 function walk(dir, out = []) {
     for (const entry of readdirSync(dir)) {
@@ -65,7 +103,7 @@ function resolveBody(collection, name, seen = new Set()) {
 const lucide = require('@iconify-json/lucide/icons.json')
 
 const used = scanUsedIcons()
-for (const name of SV5UI_CHROME_ICONS) used.add(name)
+for (const name of await sv5uiUnbundledDefaults()) used.add(name)
 
 const icons = {}
 const missing = []
