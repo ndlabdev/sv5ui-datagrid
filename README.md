@@ -108,14 +108,15 @@ resolve them for you.
 
 ### Icons
 
-Every icon the grid draws is bundled and registered into Iconify's store, so a
-running grid never fetches one. That registration happens as `Grid.Root`
-initialises, which covers the grid and nothing else.
+Every icon the grid draws is bundled and registered into Iconify's store, so
+neither the grid nor the network is involved at render time. Nothing to
+configure: importing the grid registers them, before anything on the page
+draws. If your own UI happens to use one of the same icons, it resolves
+locally too.
 
-If your own UI draws any of the same icons — a `lucide:copy` on a toolbar
-button of yours, say — those render before any grid mounts, find an empty
-store, and fetch. The icon flickers in when the response lands. Register once
-at startup to cover the whole page:
+`registerDataGridIcons` is exported for the one case the import does not
+cover — a grid behind a dynamic `import()`, where your own icons may render
+before the grid's module is even fetched:
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
@@ -125,7 +126,7 @@ at startup to cover the whole page:
 </script>
 ```
 
-It is idempotent, so `Grid.Root` calling it again costs nothing.
+It is idempotent.
 
 The set covers what the grid itself draws. Icons you hand it — `RowAction.icon`,
 a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet —

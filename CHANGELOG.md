@@ -7,18 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The bundled icons register when the grid is imported rather than when a grid
+  mounts. `Grid.Root` registered them from its instance script, so anything the
+  app drew first — its own button carrying `lucide:copy`, an icon the grid
+  already ships — found an empty store and fetched it, and the icon flickered
+  in when the response landed. The call moves to the component's module script,
+  which runs at import, before any render. This is where sv5ui registers its
+  own bundle, for the same reason.
+
+    Reproduced against a fresh SvelteKit app with the published tarball, built
+    and served: the page asked for `?icons=copy,rocket` before, and only
+    `rocket` after — an icon of the app's own that the grid never bundles.
+
 ### Added
 
-- `registerDataGridIcons` and `datagridIcons` are exported. `Grid.Root` calls
-  the registrar as it initialises, which covers the grid — but an app drawing
-  one of the same icons elsewhere renders before any grid mounts, finds an
-  empty store and fetches it, so the icon flickers in when the response lands.
-  Calling it once in a root layout covers the whole page. It is idempotent.
-
-    Reproduced against a fresh SvelteKit app with the published tarball: a
-    toolbar button of the app's own using `lucide:copy` fetched
-    `?icons=copy,rocket`; registering at startup left only `rocket`, which the
-    grid never bundles and never claimed to.
+- `registerDataGridIcons` and `datagridIcons` are exported. Nothing needs to
+  call the registrar now that the import covers it, except a grid behind a
+  dynamic `import()` whose module may load after the app's own icons render.
+  It is idempotent.
 
 ## [0.3.0] - 2026-08-09
 

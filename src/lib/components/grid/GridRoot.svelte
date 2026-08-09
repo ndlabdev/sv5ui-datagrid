@@ -1,16 +1,24 @@
+<script lang="ts" module>
+    import { registerDataGridIcons } from '../internal/icons.js'
+
+    // At import, not at init: an instance script runs only once this component
+    // mounts, and anything the app drew before that — its own button carrying
+    // one of the grid's icons — would have found an empty store and fetched.
+    // The module runs as soon as the app imports the grid, before any render.
+    // Same place sv5ui registers its own bundle, for the same reason.
+    registerDataGridIcons()
+</script>
+
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
     import { setGridContext } from '../internal/context.js'
     import { setGridTheme } from '../internal/theme.js'
-    import { registerDataGridIcons } from '../internal/icons.js'
     import { getDataGridConfig } from '../datagrid.config.js'
     import type { GridRootProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import GridStatePersistence from './GridStatePersistence.svelte'
 
     let { grid, persistState, ui, class: className, children }: GridRootProps<TRow> = $props()
-
-    registerDataGridIcons()
 
     setGridContext(untrack(() => grid))
     setGridTheme(() => ui)
