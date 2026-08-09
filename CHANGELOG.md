@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `count === 1` branch: French and Portuguese read zero as singular, and
   Russian — already correct — needs three forms. The languages with no
   grammatical number are unchanged.
+- The bundled icon set no longer guesses which fallbacks sv5ui needs from it.
+  A hand-written list had named `loader-2`, which nothing renders, while sv5ui
+  asks for `loader-circle`; it also restated three pagination chevrons sv5ui
+  already ships. sv5ui registers its own defaults before the grid renders, so
+  the generator now takes only what sv5ui leaves uncovered — today nothing.
+  35 icons ship instead of 39, and none of them is dead.
 
 ### Changed
 
