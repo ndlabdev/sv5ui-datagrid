@@ -1,4 +1,7 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
+import { plural } from '../core/interaction/plural.js'
+
+const rows = plural('de-DE', { one: 'Zeile', other: 'Zeilen' })
 
 /** German. */
 export const deDE: DataGridLocalePack = {
@@ -105,7 +108,7 @@ export const deDE: DataGridLocalePack = {
         sorted: (column, direction) =>
             `nach ${column} ${direction === 'asc' ? 'aufsteigend' : 'absteigend'} sortiert`,
         sortCleared: () => 'Sortierung aufgehoben',
-        filtered: (count) => `${count} Zeilen nach dem Filtern`,
+        filtered: (count) => `${count} ${rows(count)} nach dem Filtern`,
         page: (page) => `Seite ${page}`,
         columnResized: (column, width) => `Spalte ${column} auf ${width} Pixel geändert`,
         columnMoved: (column, position) => `Spalte ${column} an Position ${position} verschoben`,
@@ -113,8 +116,8 @@ export const deDE: DataGridLocalePack = {
             side ? `Spalte ${column} angeheftet` : `Spalte ${column} gelöst`,
         columnVisibility: (column, hidden) =>
             hidden ? `Spalte ${column} ausgeblendet` : `Spalte ${column} eingeblendet`,
-        selected: (count) => `${count} Zeilen ausgewählt`,
-        copied: (count) => `${count} Zeilen kopiert`,
+        selected: (count) => `${count} ${rows(count)} ausgewählt`,
+        copied: (count) => `${count} ${rows(count)} kopiert`,
         rowExpanded: (expanded) => (expanded ? 'Zeile aufgeklappt' : 'Zeile zugeklappt'),
         rowPinned: (side) => (side ? 'Zeile angeheftet' : 'Zeile gelöst'),
         rowMoved: (position) => `Zeile an Position ${position} verschoben`,

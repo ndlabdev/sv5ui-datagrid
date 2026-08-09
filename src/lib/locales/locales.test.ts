@@ -139,3 +139,56 @@ describe('shipped languages', () => {
         )
     })
 })
+
+/**
+ * Languages whose grammar marks number on a counted noun. The rest — CJK,
+ * Thai, Vietnamese, Indonesian — have no such category, and a count of one
+ * reads the same as a count of many.
+ */
+const INFLECTS_FOR_COUNT = ['en-US', 'de-DE', 'es-ES', 'fr-FR', 'pt-BR', 'ru-RU']
+
+describe('counted announcements', () => {
+    const counting = ['filtered', 'selected', 'copied'] as const
+
+    for (const locale of packs) {
+        const inflects = INFLECTS_FOR_COUNT.includes(locale.tag)
+
+        it.runIf(inflects)(`${locale.tag} says one row differently from many`, () => {
+            for (const key of counting) {
+                const speak = locale.announcer[key]
+                // "1 rows selected" is the shape this guards against.
+                expect(speak(1), `${locale.tag} ${key}`).not.toBe(
+                    speak(4).replace(/(?<![\d])4(?![\d])/, '1')
+                )
+            }
+        })
+
+        it.runIf(!inflects)(`${locale.tag} has no number to mark, so it does not`, () => {
+            for (const key of counting) {
+                const speak = locale.announcer[key]
+                expect(speak(1).replace(/(?<![\d])1(?![\d])/, '4'), `${locale.tag} ${key}`).toBe(
+                    speak(4)
+                )
+            }
+        })
+    }
+
+    it('follows the language rather than a count of one', () => {
+        const fr = packs.find((pack) => pack.tag === 'fr-FR')!
+        const en = packs.find((pack) => pack.tag === 'en-US')!
+
+        // French reads zero as singular; English does not. `count === 1` would
+        // get one of these two wrong whichever way it was written.
+        expect(fr.announcer.selected(0)).toContain('ligne sélectionnée')
+        expect(en.announcer.selected(0)).toContain('rows')
+    })
+
+    it('uses the three forms Russian needs, not two', () => {
+        const ru = packs.find((pack) => pack.tag === 'ru-RU')!
+        // Anchored: 'строк' is a prefix of 'строки', so `toContain` would pass
+        // on the wrong form.
+        expect(ru.announcer.selected(1)).toMatch(/строка$/)
+        expect(ru.announcer.selected(3)).toMatch(/строки$/)
+        expect(ru.announcer.selected(9)).toMatch(/строк$/)
+    })
+})

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The announcer counts in the singular where the language has one. It said
+  "1 rows selected", "1 rows copied" and "1 rows" after a filter. The same
+  fault was in German, Spanish, French and Brazilian Portuguese, and the last
+  three inflect the participle too, so "1 filas seleccionadas" needed the whole
+  phrase rather than the noun alone. Forms come from `Intl.PluralRules`, not a
+  `count === 1` branch: French and Portuguese read zero as singular, and
+  Russian — already correct — needs three forms. The languages with no
+  grammatical number are unchanged.
+
 ## [0.2.0] - 2026-08-08
 
 Six issues found while writing the documentation pages against 0.1.0. Two of
