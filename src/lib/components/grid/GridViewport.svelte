@@ -115,6 +115,13 @@
             pendingFocus = null
             const byKeyboard = movedByKeyboard
             movedByKeyboard = false
+
+            // Something inside the cell already holds the caret — an editor the
+            // user clicked into. Pulling focus back to the cell would take the
+            // keystrokes off the field they aimed at, which is what a click on a
+            // field in a row edit used to do.
+            if (document.activeElement !== cell && cell.contains(document.activeElement)) return
+
             cell.focus()
             // Next frame, not now: measuring forces a style flush, and doing
             // that mid-effect mounts a popup the click that opened it is still

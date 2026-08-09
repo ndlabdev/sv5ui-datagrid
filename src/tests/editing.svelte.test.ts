@@ -293,6 +293,75 @@ describe('row edit mode', () => {
 
         expect(grid.data[0]).toMatchObject({ name: 'Alina', age: 99 })
     })
+
+    it('opens on a double-click, which mode cell would have sent to one cell', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        const state = getEditing(grid)!
+
+        await userEvent.dblClick(cellAt(screen.container, 0, 1))
+
+        expect(state.rowEditId).toBe('1')
+        expect(state.active).toBeNull()
+    })
+
+    it('gives the caret to the first field, not the last to mount', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // Every editor mounts at once; without a rule the last one to run keeps
+        // the focus and the eye starts somewhere the caret is not.
+        const first = cellAt(screen.container, 0, 0).querySelector('input')
+        expect(document.activeElement).toBe(first)
+        expect(first?.getAttribute('aria-label')).toBe('Name')
+    })
+
+    it('lets a click reach the field it landed on', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // The cell carries a roving tabindex and used to claim this focus, so
+        // the keystrokes went nowhere.
+        const age = cellAt(screen.container, 0, 1).querySelector('input')!
+        await userEvent.click(age)
+        expect(document.activeElement).toBe(age)
+
+        await userEvent.keyboard('7')
+        expect(age.value).toContain('7')
+    })
+
+    it('leaves the select lists closed', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // A cell edit drops its list open because that is what the user came
+        // for. A row edit opening every list at once buries the rows below.
+        expect(document.querySelectorAll('[role="listbox"]').length).toBe(0)
+    })
+
+    it('rings the row once instead of ringing every field', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // Two inset rings meeting at a seam read as one doubled rule, which is
+        // what a ring per editor produced across the row.
+        const name = cellAt(screen.container, 0, 0).firstElementChild as HTMLElement
+        const age = cellAt(screen.container, 0, 1).firstElementChild as HTMLElement
+        const seam = age.getBoundingClientRect().left - name.getBoundingClientRect().right
+        expect(Math.abs(seam)).toBeLessThanOrEqual(1)
+
+        // The row carries the ring; a field only shows one while it has focus.
+        const row = cellAt(screen.container, 0, 0).parentElement!
+        expect(getComputedStyle(row, '::after').boxShadow).not.toBe('none')
+    })
 })
 
 describe('editing a11y + virtualization', () => {

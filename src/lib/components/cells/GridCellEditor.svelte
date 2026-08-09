@@ -28,8 +28,18 @@
     let {
         node,
         column,
-        rowMode = false
-    }: { node: RowNode<TRow>; column: ColumnState<TRow>; rowMode?: boolean } = $props()
+        rowMode = false,
+        first = true
+    }: {
+        node: RowNode<TRow>
+        column: ColumnState<TRow>
+        rowMode?: boolean
+        /** True for the first editable column of a row edit. It takes the caret
+         * — every editor mounts at once, and without this the last to run ends
+         * up with it — and it is the one field the row's ring already fences,
+         * so it draws no divider of its own. */
+        first?: boolean
+    } = $props()
 
     const grid = getGridContext<TRow>()
     const editing = getEditing(grid)!
@@ -69,11 +79,15 @@
     /**
      * Opening the editor is the choice; the list is what the user came for, so
      * it is already down rather than waiting for a second key.
+     *
+     * Only the editor taking the caret opens, which in a cell edit is always
+     * this one. In a row edit the user came for the row, and every list
+     * dropping open at once buries the rows below.
      */
     const listEditor = $derived(type === 'select' || type === 'selectMenu')
     let listOpen = $state(false)
     $effect(() => {
-        if (listEditor) listOpen = true
+        if (listEditor && first) listOpen = true
     })
 
     const flatText = $derived(
@@ -82,9 +96,18 @@
     const containerClass = $derived(
         [
             slots.cellEditor({ class: theme('cellEditor') }),
-            flatText
-                ? slots.cellEditorFlat({ class: theme('cellEditorFlat') })
-                : slots.cellEditorPad({ class: theme('cellEditorPad') }),
+            // In a row edit the row carries the ring, so a field only shows one
+            // while it holds the caret. Widget editors take the same surface as
+            // the text ones here, or they read as gaps in the row.
+            rowMode
+                ? slots.cellEditorInRow({ class: theme('cellEditorInRow') })
+                : flatText
+                  ? slots.cellEditorFlat({ class: theme('cellEditorFlat') })
+                  : slots.cellEditorPad({ class: theme('cellEditorPad') }),
+            rowMode && !first
+                ? slots.cellEditorInRowDivider({ class: theme('cellEditorInRowDivider') })
+                : '',
+            rowMode && !flatText ? slots.cellEditorPad({ class: theme('cellEditorPad') }) : '',
             segmented ? slots.cellEditorWide({ class: theme('cellEditorWide') }) : ''
         ]
             .filter(Boolean)
@@ -188,6 +211,7 @@
     }
 
     $effect(() => {
+        if (!first) return
         if (segmented) {
             focusSegment()
             return
