@@ -96,7 +96,10 @@
 
     const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
-    let loading = $state(false)
+    // True from the first frame: the page renders on the server with no rows
+    // and a request already owed, so an empty grid would tell the user there
+    // is no data for as long as that request takes.
+    let loading = $state(true)
     let fetches = $state(0)
     let inFlight = 0
 
