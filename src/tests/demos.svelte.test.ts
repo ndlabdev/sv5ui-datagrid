@@ -95,6 +95,26 @@ describe('server row model demo', () => {
         // Selection is keyed by row id, so a row off the current page keeps it.
         expect(state()).toContain('1 selected')
     })
+
+    it('adds a page to the selection when select-all is pressed on it', async () => {
+        render(Server as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+        await expect.poll(state).toContain('page 1/14')
+
+        await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).click()
+        await page.getByRole('checkbox', { name: 'Select row 2', exact: true }).click()
+        expect(state()).toContain('2 selected')
+
+        await page.getByRole('button', { name: 'Go to page 2' }).click()
+        await expect.element(page.getByRole('gridcell', { name: 'Charlie #11' })).toBeVisible()
+        // The header checkbox speaks for the rows the grid holds — one page
+        // here — so it must not throw away the pages it cannot see.
+        await page.getByRole('checkbox', { name: 'Select all rows' }).click()
+        await expect.poll(state).toContain('12 selected')
+
+        await page.getByRole('checkbox', { name: 'Select all rows' }).click()
+        await expect.poll(state).toContain('2 selected')
+    })
 })
 
 describe('persistence demo', () => {

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Select-all adds the rows in view to the selection instead of replacing the
+  selection with them, and clearing it takes those rows back out rather than
+  emptying the lot. The header checkbox already reported on the rows the grid
+  holds, so under `rowModel: 'server'` pressing it on page 2 dropped everything
+  chosen on page 1, and under a filter it dropped the rows the filter hid.
+  `clear()` still empties the selection, and `selectAll()` on an unfiltered
+  client grid still selects every row.
+
 ### Fixed
 
 - A grid on `rowModel: 'server'` stays on the page it is showing. Focusing a
