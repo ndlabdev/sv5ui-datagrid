@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createColumnState } from '../lib/core/columns/column-sizing.js'
+import { createDataGrid, type GridState } from '../lib/core/grid/grid.svelte.js'
+import { pagination } from '../lib/features/pagination/index.js'
 import { variableRowLayout } from '../lib/core/virtual/row-layout.js'
 import {
     compileColumnFilters,
@@ -8,12 +10,33 @@ import {
 } from '../lib/features/filtering/index.js'
 import { rowsToMatrix, toCsv, toTsv } from '../lib/features/selection/index.js'
 import { sortNodes } from '../lib/features/sorting/index.js'
-import { benchColumns, makeBenchNodes, makeBenchRows } from './data.js'
+import { benchColumns, makeBenchNodes, makeBenchRows, serverPageOf, type BenchRow } from './data.js'
 
 const nodes100k = makeBenchNodes(100_000)
 const benchColumnStates = benchColumns.map((def) => createColumnState(def))
 
 const SAMPLES = 3
+
+/** A grid on one page of a backend it never sees the rest of. */
+function serverGrid(pageSize: number, rowCount: number): GridState<BenchRow> {
+    const grid = createDataGrid<BenchRow>({
+        columns: benchColumns,
+        data: serverPageOf(1, pageSize),
+        getRowId: (row) => String(row.id),
+        rowModel: 'server',
+        features: [pagination({ pageSize, rowCount })]
+    })
+    void grid.nodes
+    return grid
+}
+
+/** Swapping `data` and reading the output is the whole of a page turn. */
+function turnPages(grid: GridState<BenchRow>, count: number, pageSize: number): void {
+    for (let page = 1; page <= count; page++) {
+        grid.data = serverPageOf(page, pageSize)
+        void grid.nodes
+    }
+}
 
 /**
  * `measure` runs an operation SAMPLES + 1 times, so a test here costs several
@@ -139,6 +162,26 @@ describe(
                 })
             )
             expect(elapsed).toBeLessThan(150)
+        })
+
+        /**
+         * A server model holds one page, so a page turn should cost what the
+         * page costs and nothing for the set behind it. The two backends here
+         * differ by a factor of a hundred and are measured against the same
+         * ceiling on purpose: if the set ever starts to count, only the second
+         * one breaks.
+         */
+        it('turns 200 pages of 50 rows within budget, whatever the backend holds', () => {
+            const small = serverGrid(50, 100_000)
+            const huge = serverGrid(50, 10_000_000)
+
+            expect(measure(() => turnPages(small, 200, 50))).toBeLessThan(150)
+            expect(measure(() => turnPages(huge, 200, 50))).toBeLessThan(150)
+        })
+
+        it('turns 20 pages of 1000 rows within budget', () => {
+            const grid = serverGrid(1000, 10_000_000)
+            expect(measure(() => turnPages(grid, 20, 1000))).toBeLessThan(250)
         })
 
         it('serializes 10k selected rows to TSV and CSV within budget', () => {
