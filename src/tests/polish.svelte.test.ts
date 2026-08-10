@@ -245,6 +245,35 @@ describe('server-side pagination', () => {
         await expect.element(page.getByText('1–5 of 137')).toBeVisible()
     })
 
+    it('stays on the page whose cell was clicked', async () => {
+        const grid = serverGrid()
+        const state = getPagination(grid)!
+        await renderGrid(grid)
+        const pages: number[] = []
+        grid.events.on('pageChanged', (event) => pages.push(event.page))
+
+        state.setPage(2)
+        // The server sends one page at a time, so its rows are indexed 0..4
+        // whichever page they belong to; deriving the page from a row index
+        // would send every click back to page 1.
+        await page.getByRole('gridcell', { name: 'Person 3' }).click()
+
+        expect(state.page).toBe(2)
+        expect(pages).toEqual([2])
+    })
+
+    it('keeps arrow keys from paging a server model', async () => {
+        const grid = serverGrid()
+        const state = getPagination(grid)!
+        await renderGrid(grid)
+
+        state.setPage(4)
+        await page.getByRole('gridcell', { name: 'Person 1' }).click()
+        await userEvent.keyboard('{ArrowDown}{ArrowDown}')
+
+        expect(state.page).toBe(4)
+    })
+
     it('clamps the page when the total shrinks under it', () => {
         const state = getPagination(serverGrid())!
         state.setPage(28)
