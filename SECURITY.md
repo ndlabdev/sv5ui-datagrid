@@ -37,10 +37,13 @@ Please include:
 The grid renders markup and transforms rows in the browser. It handles no authentication, no
 secrets and no server logic. The classes of issue that do apply here:
 
-- **CSV and TSV injection.** Export neutralizes a cell that begins with `=`, `+`, `-` or `@`,
-  which a spreadsheet would otherwise evaluate as a formula on open. A path that reaches the
-  clipboard or a file without that guard is a vulnerability, and `neutralizeFormula` is where
-  to look.
+- **CSV injection.** CSV export prefixes an apostrophe onto a cell that begins with `=`,
+  `+`, `-`, `@` or a control character, which a spreadsheet would otherwise evaluate as a
+  formula on open — `neutralizeFormula` in `clipboard.ts`. A new export path that writes a
+  file without going through it is a vulnerability. Copying to the **clipboard deliberately
+  does not** neutralize, because the apostrophe would corrupt a paste back into the grid;
+  what protects a spreadsheet there is that the user chose to paste into it. A report that
+  the clipboard is unescaped is not a vulnerability report.
 - **Unsafe rendering.** The built-in renderers escape what they print. A component that
   forwarded untrusted data into a dangerous sink, such as a `javascript:` URL in a link
   renderer, would be in scope.

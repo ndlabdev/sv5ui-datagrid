@@ -8,9 +8,12 @@ body:
           value: |
               Thanks for the suggestion. Please search existing issues first.
 
-              Row grouping, tree data, master and detail rows, range selection and infinite
-              scroll are deliberately not in this package; they are planned for a separate pro
-              package.
+              Row grouping, a tree data model, master and detail rows, range selection,
+              aggregation and xlsx export are deliberately not in this package; they are
+              planned for a separate pro package. The kernel already renders nested rows as a
+              `treegrid`, and infinite scroll is a shape this package supports today —
+              `rowModel: 'server'` with `virtualization()`, appending as the window nears the
+              end of what is loaded. See `/server/infinite` in the playground.
 
     - type: textarea
       id: problem

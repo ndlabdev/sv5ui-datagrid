@@ -9,7 +9,9 @@ The grid is built on [sv5ui](https://github.com/ndlabdev/sv5ui) and documented a
 ## Prerequisites
 
 - **Node.js** 22+
-- **pnpm** 10+ (the repo is pinned to pnpm; do not use npm or yarn for installs)
+- **pnpm** 10+ — install with it, not with npm or yarn. The lockfile is pnpm's and CI
+  installs `--frozen-lockfile`, so another package manager produces a tree CI will reject.
+  The scripts themselves shell out to `npm run` for their own sub-steps, which is fine.
 
 ## Setup
 
@@ -46,7 +48,9 @@ Two more commands exist for work that touches the hot paths:
 
 ```bash
 pnpm bench          # vitest bench, the pipeline and server-model suites
-pnpm perf:scroll    # measures scroll frames in a real browser
+pnpm perf:scroll    # measures scroll frames in a real browser, against a running
+                    # `pnpm dev`. Takes a URL and a duration; it defaults to
+                    # http://localhost:5173/virtual for 2 seconds.
 ```
 
 `src/benchmarks/budgets.test.ts` fails when a budget is exceeded, so a change that costs
@@ -61,7 +65,9 @@ Issue-driven. `dev` is the integration branch and `main` is the released one.
 2. **Branch from `dev`**, named as below.
 3. **Implement**, with tests and a `CHANGELOG.md` entry under `[Unreleased]`.
 4. **Open a PR targeting `dev`** with `Closes #<issue>` in the body.
-5. Releases merge `dev` into `main`.
+5. Releases go the other way round, and only from `npm run release`: the version commit
+   is pushed as `release/vX.Y.Z` and opens its own PR into `main`. It is the one branch
+   that targets `main` directly.
 
 ### Branch naming
 
@@ -138,8 +144,9 @@ Conventions the built-ins follow, and a new one should too:
 
 ## Accessibility
 
-The grid is a div-based ARIA `grid`, or a `treegrid` once rows nest, and every playground
-route is asserted axe-clean in CI. A change that adds a control has to answer three
+The grid is a div-based ARIA `grid`, or a `treegrid` once rows nest. `axe` runs in CI over
+the grids the tests build for each feature, and over the `/qa` route, which is the one that
+gathers every feature on a page — so a feature that renders belongs in one of those runs. A change that adds a control has to answer three
 questions: what does a screen reader call it, what does the announcer say when it acts, and
 can the keyboard reach it without adding a tab stop. The whole grid is one tab stop, so a
 control inside a cell answers through the cell rather than taking a stop of its own.
@@ -155,12 +162,26 @@ bug searched for.
 
 ## Release process (maintainers)
 
-1. Bump the version in `package.json`.
-2. Move `[Unreleased]` into a versioned section in `CHANGELOG.md`.
-3. `pnpm release:verify` to check the packed tarball.
-4. PR `dev` into `main`.
-5. Tag and `gh release create`, so the release shows in the sidebar and the changelog links
-   resolve.
+One command, run from `main` with a clean tree:
+
+```bash
+npm run release -- minor        # patch / major / an explicit 1.2.3 also work
+npm run release -- minor --dry  # walk it without writing or pushing
+```
+
+It bumps the version, closes `[Unreleased]` into a dated section, runs the gates, verifies
+the **packed tarball** rather than the working tree, commits, and then — because `main` is
+protected — pushes that commit as `release/vX.Y.Z`, opens a PR, waits for `ci`, merges it,
+tags the merge commit, and pushes the tag. The tag is what publishes: `publish.yml` fires on
+`v*.*.*`. The script then waits for that workflow, confirms npm actually moved, and cuts the
+GitHub release.
+
+`pnpm release:verify` runs standalone when you only want the tarball check.
+
+Pre-1.0 a breaking change was a minor; from 1.0.0 semver applies as written.
+
+`main` is protected — pull request required, `ci` required green, no force push or deletion,
+and admins are not exempt. Nothing lands on it by direct push, releases included.
 
 ## Reporting security issues
 
