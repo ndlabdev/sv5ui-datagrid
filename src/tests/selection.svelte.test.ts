@@ -322,6 +322,70 @@ describe('selection column layout', () => {
         return inner.x + inner.width / 2 - (box.x + box.width / 2)
     }
 
+    /** What the browser would hand a click at a point, offset from a corner. */
+    function hitAt(cell: HTMLElement, dx: number, dy: number): Element {
+        const box = cell.getBoundingClientRect()
+        const x = dx < 0 ? box.right + dx : box.left + dx
+        const y = dy < 0 ? box.bottom + dy : box.top + dy
+        const element = document.elementFromPoint(x, y)
+        if (!element) throw new Error(`nothing at ${x},${y}`)
+        return element
+    }
+
+    function clickAt(cell: HTMLElement, dx: number, dy: number, shiftKey = false): void {
+        hitAt(cell, dx, dy).dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey }))
+    }
+
+    function cellAt(container: HTMLElement, descriptor: string): HTMLElement {
+        const cell = container.querySelector<HTMLElement>(`[data-dg-cell="${descriptor}"]`)
+        if (!cell) throw new Error(`no cell ${descriptor}`)
+        return cell
+    }
+
+    it('toggles the row from the dead space around the checkbox', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const cell = cellAt(screen.container, '1:0')
+
+        // The checkbox is 18px inside a 44px cell, so a click aimed a few
+        // pixels off it used to land on nothing at all.
+        clickAt(cell, 2, 2)
+        expect(selectedNames(grid)).toEqual(['Bob'])
+
+        clickAt(cell, -2, -2)
+        expect(selectedNames(grid)).toEqual([])
+    })
+
+    it('carries shift from the cell as it does from the checkbox', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        clickAt(cellAt(screen.container, '1:0'), 2, 2)
+        clickAt(cellAt(screen.container, '3:0'), 2, 2, true)
+
+        expect(selectedNames(grid)).toEqual(['Bob', 'Carol', 'Dave'])
+    })
+
+    it('leaves an unselectable row alone wherever the cell is clicked', async () => {
+        const grid = makeGrid({ isRowSelectable: (person) => person.active })
+        const screen = await renderGrid(grid)
+
+        clickAt(cellAt(screen.container, '1:0'), 2, 2)
+        expect(selectedNames(grid)).toEqual([])
+    })
+
+    it('toggles every row from the dead space in the header cell', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+        const header = cellAt(screen.container, '-1:0')
+
+        clickAt(header, 2, 2)
+        expect(getSelection(grid)!.count).toBe(5)
+
+        clickAt(header, -2, -2)
+        expect(getSelection(grid)!.count).toBe(0)
+    })
+
     it('centres the checkbox in its column, header and rows alike', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
