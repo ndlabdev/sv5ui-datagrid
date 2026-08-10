@@ -16,7 +16,12 @@ export function windowStartOf<TRow>(grid: GridState<TRow>): number {
     if (virtualization) return virtualization.virtualizer.range.start
 
     const pagination = getPagination(grid)
-    if (pagination?.pageSize) return (pagination.page - 1) * pagination.pageSize
+    // Row indexes address the nodes the grid holds. A client model holds the
+    // whole set, so the page offsets into it; a server model holds one page,
+    // and offsetting there points every lookup past the end of the array.
+    if (pagination?.pageSize && !pagination.server) {
+        return (pagination.page - 1) * pagination.pageSize
+    }
 
     return 0
 }

@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   opening a cell menu and arrowing down off the page were all caught by it.
   Filtering and sorting already stood aside for a server model; paging now does
   too.
+- A server model numbers its rows from the page it holds. The row index in a
+  cell descriptor was offset by the page, so past page 1 every lookup into
+  `preWindowNodes` pointed past the end of an array holding one page: `Space`
+  selected the last row of the page rather than the focused one, `Ctrl+C` and
+  type-to-edit reached nothing, and `aria-rowindex` ran past the
+  `aria-rowcount` the grid reports. A client model, which holds the whole set,
+  still offsets by the page.
 - A click anywhere in the selection column toggles its row. The checkbox is
   18x18 inside a 44x40 cell, so 18% of the column was live and the rest looked
   identical and did nothing; the whole cell is now the target, in the header
