@@ -6,10 +6,12 @@
  *   npm run release -- minor --dry  # do everything except write, commit, push
  *
  * Bumps the version, closes the CHANGELOG's Unreleased section, runs the
- * gates, verifies the packed tarball, commits, tags, and pushes. Pushing the
- * tag is what publishes: `publish.yml` fires on `v*.*.*` and runs
- * `npm publish --provenance`. The script then waits for that workflow and
- * confirms the registry actually moved before reporting success.
+ * gates, verifies the packed tarball, and commits. `main` is protected and
+ * takes no direct push, so the commit goes up as a `release/vX.Y.Z` branch and
+ * through a pull request the script waits on and merges. Only then is the tag
+ * cut, and pushing the tag is what publishes: `publish.yml` fires on `v*.*.*`
+ * and runs `npm publish --provenance`. The script then waits for that workflow
+ * and confirms the registry actually moved before reporting success.
  *
  * Resumable: if the version is already bumped and the CHANGELOG already has
  * its dated section — a previous run that stopped before tagging — it picks up
@@ -140,20 +142,90 @@ if (dry && !resuming) {
 
 // -------------------------------------------------------------------- ship
 
-step('Commit, tag, push')
+/**
+ * `main` is protected: it takes no direct push, from an admin either, and the
+ * `ci` check has to be green. So the release commit goes up as a branch, opens
+ * a pull request, waits for that check and merges — and only then is the tag
+ * cut, from the merge commit `main` ends on. Tags are outside branch
+ * protection, and pushing one is still what publishes.
+ */
+step('Commit, open the release PR, merge it')
+const releaseBranch = `release/${tag}`
+
 if (!resuming) {
     git('add', 'package.json', changelogPath)
     git('commit', '-m', `chore(release): ${version}`)
 }
-git('tag', tag)
-git('push', 'origin', 'main')
-git('push', 'origin', 'main:dev')
-git('push', 'origin', tag)
 
 if (dry) {
+    console.log(`  [dry] git push origin HEAD:refs/heads/${releaseBranch}`)
+    console.log(`  [dry] gh pr create --base main --head ${releaseBranch}`)
+    console.log('  [dry] wait for the ci check, then gh pr merge --merge')
+    console.log('  [dry] git checkout main && git pull, then tag the merge commit')
+    console.log(`  [dry] git tag ${tag} && git push origin ${tag}`)
+    console.log('  [dry] git push origin main:dev')
     console.log('\n[dry] stopping before the publish watch.\n')
     process.exit(0)
 }
+
+git('push', 'origin', `HEAD:refs/heads/${releaseBranch}`)
+
+const existingPr = run('gh', [
+    'pr',
+    'list',
+    '--head',
+    releaseBranch,
+    '--json',
+    'number',
+    '--jq',
+    '.[0].number // ""'
+])
+const prNumber =
+    existingPr ||
+    run('gh', [
+        'pr',
+        'create',
+        '--base',
+        'main',
+        '--head',
+        releaseBranch,
+        '--title',
+        `chore(release): ${version}`,
+        '--body',
+        `Cut by \`npm run release\`. The tag is pushed from \`main\` once this merges, and that is what publishes ${version}.`,
+        '--assignee',
+        '@me'
+    ])?.match(/\/pull\/(\d+)/)?.[1]
+
+if (!prNumber) fail('Could not open or find the release pull request.')
+console.log(`  release PR #${prNumber} on ${releaseBranch}`)
+
+step(`Waiting for the ci check on #${prNumber}`)
+try {
+    run('gh', ['pr', 'checks', prNumber, '--watch', '--interval', '20'], { stdio: 'inherit' })
+} catch {
+    fail(
+        'CI failed on the release PR. Nothing is tagged or published.\n' +
+            `Fix it on ${releaseBranch}, then run the same command again.`
+    )
+}
+
+step('Merging the release PR')
+run('gh', ['pr', 'merge', prNumber, '--merge', '--delete-branch'], { stdio: 'inherit' })
+
+git('checkout', 'main')
+git('pull', '--ff-only', 'origin', 'main')
+
+const merged = run('git', ['show', 'HEAD:package.json'])
+if (!merged?.includes(`"version": "${version}"`)) {
+    fail(`main is not carrying ${version} after the merge. Check the pull request.`)
+}
+
+step('Tag and push')
+git('tag', tag)
+git('push', 'origin', tag)
+// The mirror is unprotected, so it takes the merge commit directly.
+git('push', 'origin', 'main:dev')
 
 // ------------------------------------------------------------------ publish
 
