@@ -1,0 +1,110 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behaviour in the grid
+title: '[Bug]: '
+labels: ['bug', 'status: needs-triage']
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for reporting a bug. Please search existing issues first.
+
+              The most useful reports name what you did, what happened, and what you expected
+              instead — measured rather than remembered where you can.
+
+    - type: textarea
+      id: description
+      attributes:
+          label: What happened
+          description: What you did, what the grid did, and what you expected instead.
+          placeholder: |
+              On page 2 of a server-model grid, clicking a row checkbox selected nothing and
+              sent the grid back to page 1. I expected the row to be selected and the page to
+              stay where it was.
+      validations:
+          required: true
+
+    - type: textarea
+      id: reproduction
+      attributes:
+          label: Reproduction
+          description: >
+              A minimal repro: a link (StackBlitz, a repo) or the `createDataGrid` call plus
+              the markup that shows it. Reports without one may be closed.
+          render: ts
+      validations:
+          required: true
+
+    - type: input
+      id: version
+      attributes:
+          label: '@sv5ui/datagrid version'
+          placeholder: 1.0.0
+      validations:
+          required: true
+
+    - type: dropdown
+      id: row-model
+      attributes:
+          label: Row model
+          description: The grid holds every row, or one page at a time?
+          options:
+              - 'client (the default)'
+              - 'server'
+      validations:
+          required: true
+
+    - type: checkboxes
+      id: features
+      attributes:
+          label: Features registered
+          description: Which ones are in the `features` array? Several bugs only appear in a particular combination.
+          options:
+              - label: sorting
+              - label: filtering
+              - label: columnOps
+              - label: selection
+              - label: editing
+              - label: pagination
+              - label: virtualization
+              - label: rowPinning
+              - label: rowReorder
+              - label: a feature of my own
+
+    - type: dropdown
+      id: area
+      attributes:
+          label: Area
+          description: Optional, if you already know where it lives.
+          options:
+              - 'Not sure'
+              - rendering
+              - keyboard / focus
+              - accessibility
+              - types
+              - performance
+              - localization
+              - state persistence
+              - build / packaging
+      validations:
+          required: false
+
+    - type: input
+      id: environment
+      attributes:
+          label: Environment
+          description: Browser and version, plus Svelte and sv5ui versions.
+          placeholder: Chrome 141, Svelte 5.56.5, sv5ui 2.5.0
+      validations:
+          required: false
+
+    - type: checkboxes
+      id: checks
+      attributes:
+          label: Checklist
+          options:
+              - label: I searched existing issues and this is not a duplicate.
+                required: true
+              - label: I reproduced this on the latest version.
+                required: false
+              - label: This is not a security vulnerability. (Those go through the Security tab, privately.)
+                required: true

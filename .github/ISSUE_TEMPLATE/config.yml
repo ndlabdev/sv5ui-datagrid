@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+    - name: 📖 Documentation
+      url: https://sv5ui.vercel.app/docs/datagrid
+      about: Every feature, with live demos and the API reference.
+    - name: 🔒 Report a vulnerability
+      url: https://github.com/ndlabdev/sv5ui-datagrid/security/advisories/new
+      about: Security issues go here, privately, not into a public issue.
+    - name: 🧩 sv5ui, the component library underneath
+      url: https://github.com/ndlabdev/sv5ui/issues
+      about: For a bug in Button, Select, Checkbox or another sv5ui component.
