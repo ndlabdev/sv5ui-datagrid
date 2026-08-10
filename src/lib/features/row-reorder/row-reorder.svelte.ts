@@ -64,9 +64,6 @@ export class RowReorder<TRow> {
      * Moves a row in the rendered order, rewriting `data` so it survives a
      * re-render — hence translating the target back through the node dropped
      * onto, since a sort makes rendered and data positions differ.
-     *
-     * `mutator`: it reads the rendered nodes and rewrites `grid.data`, the very
-     * top of the pipeline that produced them. See its doc.
      */
     moveRow = mutator((id: string, toRenderedIndex: number): void => {
         const nodes = this.#grid.preWindowNodes

@@ -78,11 +78,9 @@
     const segmented = $derived(type === 'date' || type === 'time')
     /**
      * Opening the editor is the choice; the list is what the user came for, so
-     * it is already down rather than waiting for a second key.
-     *
-     * Only the editor taking the caret opens, which in a cell edit is always
-     * this one. In a row edit the user came for the row, and every list
-     * dropping open at once buries the rows below.
+     * it is already down rather than waiting for a second key. Only the editor
+     * taking the caret opens: in a row edit, every list at once buries the rows
+     * below.
      */
     const listEditor = $derived(type === 'select' || type === 'selectMenu')
     let listOpen = $state(false)
@@ -96,9 +94,8 @@
     const containerClass = $derived(
         [
             slots.cellEditor({ class: theme('cellEditor') }),
-            // In a row edit the row carries the ring, so a field only shows one
-            // while it holds the caret. Widget editors take the same surface as
-            // the text ones here, or they read as gaps in the row.
+            // Widget editors take the same surface as the text ones in a row
+            // edit, or they read as gaps in it.
             rowMode
                 ? slots.cellEditorInRow({ class: theme('cellEditorInRow') })
                 : flatText

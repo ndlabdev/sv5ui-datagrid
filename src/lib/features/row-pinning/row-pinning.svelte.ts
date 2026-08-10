@@ -45,8 +45,6 @@ export class RowPinning<TRow> {
     )
     pinnedCount = $derived(this.topNodes.length + this.bottomNodes.length)
 
-    // `mutator`: the overrides object is replaced rather than patched, so
-    // reading it here would keep a caller re-running. See its doc.
     pinRow = mutator((id: string, side: RowPinSide | null): void => {
         this.pinnedOverrides = { ...this.pinnedOverrides, [id]: side }
         this.#grid.events.emit('rowPinnedChanged', { id, side })

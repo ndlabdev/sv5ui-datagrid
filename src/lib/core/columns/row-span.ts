@@ -34,10 +34,8 @@ export function rowSpansOf<TRow>(
  * True when the column at `colIndex` opens a horizontal run of spanning
  * columns, and so is the one to draw the run's inline-start edge.
  *
- * The first visible column never opens one. The viewport already draws a border
- * down that side, and a second line hard against it has no gap to read as two:
- * it just makes the grid's left edge look twice as heavy. Same reasoning as the
- * foot of a run that ends with the data.
+ * The first visible column never opens one: the viewport's own border is
+ * already that line, and a second against it reads as a doubled rule.
  */
 export function opensRowSpanGroup(
     columns: readonly { id: string }[],

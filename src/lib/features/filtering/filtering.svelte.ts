@@ -39,9 +39,6 @@ export class Filtering<TRow> {
         this.#grid.events.emit('filterChanged', { filter: this.model })
     }
 
-    // `mutator` throughout: `columnFilters` is replaced rather than patched, so
-    // a setter reading it — directly or through `model` — would subscribe its
-    // caller to a value that never compares equal. See its doc.
     setQuickFilter = mutator((query: string): void => {
         this.quick = query
         this.#emit()

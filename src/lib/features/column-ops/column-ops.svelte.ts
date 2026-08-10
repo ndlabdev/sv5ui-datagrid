@@ -69,8 +69,6 @@ export class ColumnOps<TRow> {
         return this.canResize && this.#grid.columns.get(id)?.resizable !== false
     }
 
-    // `mutator` throughout: every one of these reads the column model to decide
-    // what to write and then writes it back. See its doc.
     setColumnWidth = mutator((id: string, width: number): void => {
         if (!this.canResizeColumn(id)) return
         const applied = this.#grid.columns.setWidth(id, width)
