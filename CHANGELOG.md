@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `rowCountChanged` on the event bus, emitted by `setRowCount` under
+  `rowModel: 'server'` when the total it is given differs from the one before.
+  It is the moment a server model learns how many rows it has, and the
+  announcer now says the count there rather than counting the page.
+
 ### Changed
 
 - Select-all adds the rows in view to the selection instead of replacing the
@@ -34,6 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   type-to-edit reached nothing, and `aria-rowindex` ran past the
   `aria-rowcount` the grid reports. A client model, which holds the whole set,
   still offsets by the page.
+- A server model tells a screen reader where in the whole set the page sits.
+  `aria-rowcount` counted the rows the grid held — one page — and
+  `aria-rowindex` counted from 1 within it, so every page read as "row 1 of
+  10". The count is now the server's total and the index is offset by the
+  page, which is what a client grid with pagination already reported.
+- The announcer no longer counts the page after a filter under a server model.
+  It said "10 rows" for a filter the server answered with 46, and said it
+  before the request had even gone out; it now speaks on `rowCountChanged`.
 - A click anywhere in the selection column toggles its row. The checkbox is
   18x18 inside a 44x40 cell, so 18% of the column was live and the rest looked
   identical and did nothing; the whole cell is now the target, in the header

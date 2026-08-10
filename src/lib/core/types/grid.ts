@@ -81,6 +81,8 @@ export interface GridEventMap {
     sortChanged: { sort: SortState[] }
     filterChanged: { filter: FilterModel }
     pageChanged: { page: number; pageSize: number | null }
+    /** The server's total changed under `rowModel: 'server'`. */
+    rowCountChanged: { total: number }
     columnResized: { columnId: string; width: number }
     columnMoved: { columnId: string; toIndex: number }
     columnPinned: { columnId: string; side: PinnedSide | null }

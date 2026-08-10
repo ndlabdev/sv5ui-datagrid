@@ -44,7 +44,14 @@ export class Announcer<TRow> {
             this.message = locale().sorted(header, first.direction)
         })
         grid.events.on('filterChanged', () => {
+            // A server model counts nothing itself: the rows it holds are one
+            // page, and the new total only arrives with the next response.
+            // `rowCountChanged` is that moment, and it announces there instead.
+            if (grid.rowModel === 'server') return
             this.message = locale().filtered(grid.totalRows)
+        })
+        grid.events.on('rowCountChanged', ({ total }) => {
+            this.message = locale().filtered(total)
         })
         grid.events.on('pageChanged', ({ page }) => {
             this.message = locale().page(page)
