@@ -4,10 +4,6 @@
     "description": "A high-performance data grid for Svelte 5, built on sv5ui",
     "author": "ndlabdev",
     "license": "MIT",
-    "engines": {
-        "node": ">=22",
-        "pnpm": ">=10"
-    },
     "homepage": "https://github.com/ndlabdev/sv5ui-datagrid#readme",
     "repository": {
         "type": "git",
