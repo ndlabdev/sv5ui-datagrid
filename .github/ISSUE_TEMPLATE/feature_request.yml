@@ -1,0 +1,56 @@
+name: ✨ Feature Request
+description: Suggest a capability, an option or an extension point
+title: '[Feature]: '
+labels: ['enhancement', 'status: needs-triage']
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for the suggestion. Please search existing issues first.
+
+              Row grouping, tree data, master and detail rows, range selection and infinite
+              scroll are deliberately not in this package; they are planned for a separate pro
+              package.
+
+    - type: textarea
+      id: problem
+      attributes:
+          label: The problem
+          description: What are you trying to build, and where does the grid get in the way today?
+      validations:
+          required: true
+
+    - type: textarea
+      id: proposal
+      attributes:
+          label: What you have in mind
+          description: The API you would want, if you have one in mind.
+          render: ts
+      validations:
+          required: false
+
+    - type: dropdown
+      id: shape
+      attributes:
+          label: What shape would this take?
+          options:
+              - 'Not sure'
+              - 'An option on an existing feature'
+              - 'A new feature module'
+              - 'A new extension point on GridFeature'
+              - 'A component or a Grid.* part'
+              - 'A locale pack'
+      validations:
+          required: true
+
+    - type: textarea
+      id: workaround
+      attributes:
+          label: What you tried
+          description: >
+              A feature module is a plain object with the same hooks the built-ins use, so a
+              lot is reachable from outside already. If you tried to write it yourself, what
+              stopped you? An extension point that was missing is the most useful answer we
+              can get.
+      validations:
+          required: false
