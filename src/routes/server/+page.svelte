@@ -167,7 +167,7 @@
 {/snippet}
 
 <Container class="space-y-6 py-10">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">Server row model + selection</h1>
             <p class="text-sm text-on-surface-variant">
@@ -176,7 +176,9 @@
                 vẫn còn.
             </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex shrink-0 items-center gap-2">
+            <Link href="/server/big">Big data →</Link>
+            <Link href="/server/infinite">Infinite scroll →</Link>
             <Link href="/">← Home</Link>
             <ThemeModeButton />
         </div>
