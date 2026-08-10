@@ -106,6 +106,39 @@ as peer dependencies so that the grid and sv5ui share a single instance of
 each; package managers that install peers automatically (pnpm 8+, npm 7+)
 resolve them for you.
 
+### Icons
+
+Every icon the grid draws is bundled and registered into Iconify's store, so
+neither the grid nor the network is involved at render time. Nothing to
+configure: importing the grid registers them, before anything on the page
+draws. If your own UI happens to use one of the same icons, it resolves
+locally too.
+
+`registerDataGridIcons` is exported for the one case the import does not
+cover — a grid behind a dynamic `import()`, where your own icons may render
+before the grid's module is even fetched:
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script>
+    import { registerDataGridIcons } from '@sv5ui/datagrid'
+    registerDataGridIcons()
+</script>
+```
+
+It is idempotent.
+
+The set covers what the grid itself draws. Icons you hand it — `RowAction.icon`,
+a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet —
+are yours to bundle, as is any icon of your own the grid never uses:
+
+```ts
+import { addCollection } from '@iconify/svelte'
+addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path …/>' } } })
+```
+
+`datagridIcons` is exported too, if you want to read the shape or merge it.
+
 ## Quick start
 
 ```svelte

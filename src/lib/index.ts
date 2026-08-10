@@ -21,6 +21,8 @@ export type * from './core/types/index.js'
 
 // Models reachable from a grid instance
 export { defaultAnnouncerStrings } from './core/interaction/announcer.svelte.js'
+export { registerDataGridIcons } from './components/internal/icons.js'
+export { datagridIcons } from './components/internal/icons.data.js'
 export { documentLocale, resolveLocale } from './core/interaction/locale.js'
 export {
     DATE_OPS,

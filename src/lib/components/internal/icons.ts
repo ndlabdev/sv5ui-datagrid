@@ -4,8 +4,9 @@ import { datagridIcons } from './icons.data.js'
 let registered = false
 
 /**
- * Registers the bundled icons into the Iconify store sv5ui's `Icon` reads, so
- * a running grid never fetches them. Idempotent; called from `Grid.Root`.
+ * Fills the Iconify store sv5ui's `Icon` reads. Idempotent. `GridRoot` calls it
+ * from its module script, so importing the grid is enough; exported for a grid
+ * behind a dynamic `import()`, which may load after the app's own icons render.
  */
 export function registerDataGridIcons(): void {
     if (registered) return
