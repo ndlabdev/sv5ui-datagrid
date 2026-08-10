@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A grid on `rowModel: 'server'` stays on the page it is showing. Focusing a
+  body cell turned to the page the focused row sits on, arithmetic that only
+  holds when the grid holds the whole dataset — a server model holds one page,
+  so its rows are indexed 0..n whichever page they came from and every click
+  past page 1 snapped back to page 1 and fetched it. Selecting, editing,
+  opening a cell menu and arrowing down off the page were all caught by it.
+  Filtering and sorting already stood aside for a server model; paging now does
+  too.
+- A click anywhere in the selection column toggles its row. The checkbox is
+  18x18 inside a 44x40 cell, so 18% of the column was live and the rest looked
+  identical and did nothing; the whole cell is now the target, in the header
+  select-all as well as the rows. Shift still extends a range from the cell,
+  and a row `isRowSelectable` rules out stays inert wherever it is clicked.
+
 ## [0.3.0] - 2026-08-09
 
 ### Fixed
