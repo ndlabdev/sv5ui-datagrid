@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `setQuickFilter` from app code survives the toolbar. The quick filter box
+  owned both directions of the sync in one effect: a call from outside woke it
+  on `filtering.quick`, and it wrote the box's own value back over the call in
+  the same flush, so a saved view, a deep link or a "clear all" button was a
+  silent no-op wherever `<DataGrid toolbar />` was used. The box now pushes
+  only what it produced, and mirrors a filter set from code instead of fighting
+  it — so the text in it matches the filter in force, which it did not before.
 - A grid on `rowModel: 'server'` stays on the page it is showing. Focusing a
   body cell turned to the page the focused row sits on, arithmetic that only
   holds when the grid holds the whole dataset — a server model holds one page,

@@ -192,6 +192,49 @@ describe('column filters', () => {
     })
 })
 
+describe('quick filter, driven from code', () => {
+    /** The toolbar is the default shape of a grid, so it renders here. */
+    async function renderWithToolbar(grid: GridState<Person>) {
+        const screen = await render(TypedDataGrid, { grid, toolbar: true })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        return screen
+    }
+
+    const box = () => document.querySelector<HTMLInputElement>('input[placeholder="Search..."]')
+
+    it('applies a filter set from app code and shows it in the box', async () => {
+        const grid = makeGrid()
+        await renderWithToolbar(grid)
+
+        // The box used to own both directions of the sync, so it wrote its own
+        // empty value back over this call before anything rendered.
+        getFiltering(grid)!.setQuickFilter('Core')
+        await expect.poll(() => grid.nodes.length).toBe(2)
+        await expect.poll(() => box()?.value).toBe('Core')
+    })
+
+    it('clears from app code after the user has typed', async () => {
+        const grid = makeGrid()
+        await renderWithToolbar(grid)
+
+        await userEvent.fill(page.getByPlaceholder('Search...'), 'Core')
+        await expect.poll(() => grid.nodes.length).toBe(2)
+
+        getFiltering(grid)!.setQuickFilter('')
+        await expect.poll(() => grid.nodes.length).toBe(5)
+        await expect.poll(() => box()?.value).toBe('')
+    })
+
+    it('still filters from the box itself', async () => {
+        const grid = makeGrid()
+        await renderWithToolbar(grid)
+
+        await userEvent.fill(page.getByPlaceholder('Search...'), 'Data')
+        await expect.poll(() => grid.nodes.length).toBe(2)
+        expect(getFiltering(grid)!.quick).toBe('Data')
+    })
+})
+
 describe('multi-sort', () => {
     it('appends a second sort with Shift+click and orders by both', async () => {
         const grid = makeGrid()
