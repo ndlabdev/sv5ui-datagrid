@@ -16,9 +16,31 @@ export function windowStartOf<TRow>(grid: GridState<TRow>): number {
     if (virtualization) return virtualization.virtualizer.range.start
 
     const pagination = getPagination(grid)
-    if (pagination?.pageSize) return (pagination.page - 1) * pagination.pageSize
+    // Row indexes address the nodes the grid holds. A client model holds the
+    // whole set, so the page offsets into it; a server model holds one page,
+    // and offsetting there points every lookup past the end of the array.
+    if (pagination?.pageSize && !pagination.server) {
+        return (pagination.page - 1) * pagination.pageSize
+    }
 
     return 0
+}
+
+/**
+ * What the rows the grid holds are numbered from for assistive technology.
+ * A server model holds one page and indexes it from 0, but a screen reader is
+ * told where in the whole set it stands, which only the server knows.
+ */
+export function rowIndexOffsetOf<TRow>(grid: GridState<TRow>): number {
+    const pagination = getPagination(grid)
+    if (!pagination?.server || !pagination.pageSize) return 0
+    return (pagination.page - 1) * pagination.pageSize
+}
+
+/** The rows `aria-rowindex` counts against — the server's total, if it said. */
+export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {
+    const pagination = getPagination(grid)
+    return pagination?.server ? pagination.total : grid.totalRows
 }
 
 export interface ColumnEntry<TRow> {

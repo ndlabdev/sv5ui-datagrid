@@ -40,8 +40,16 @@ export function withRange(
     return next
 }
 
-export function allSelection(ids: string[]): ReadonlySet<string> {
-    return new Set(ids)
+export function withIds(set: ReadonlySet<string>, ids: Iterable<string>): ReadonlySet<string> {
+    const next = new Set(set)
+    for (const id of ids) next.add(id)
+    return next
+}
+
+export function withoutIds(set: ReadonlySet<string>, ids: Iterable<string>): ReadonlySet<string> {
+    const next = new Set(set)
+    for (const id of ids) next.delete(id)
+    return next
 }
 
 /** A set for membership tests, rebuilt whole by the derived that owns it. */

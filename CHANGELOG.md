@@ -7,8 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `rowCountChanged` on the event bus, emitted by `setRowCount` under
+  `rowModel: 'server'` when the total it is given differs from the one before.
+  It is the moment a server model learns how many rows it has, and the
+  announcer now says the count there rather than counting the page.
+- `registerDataGridIcons` and `datagridIcons` are exported. Nothing needs to
+  call the registrar now that the import covers it, except a grid behind a
+  dynamic `import()` whose module may load after the app's own icons render.
+  It is idempotent.
+
+### Changed
+
+- Select-all adds the rows in view to the selection instead of replacing the
+  selection with them, and clearing it takes those rows back out rather than
+  emptying the lot. The header checkbox already reported on the rows the grid
+  holds, so under `rowModel: 'server'` pressing it on page 2 dropped everything
+  chosen on page 1, and under a filter it dropped the rows the filter hid.
+  `clear()` still empties the selection, and `selectAll()` on an unfiltered
+  client grid still selects every row.
+
 ### Fixed
 
+- A grid on `rowModel: 'server'` stays on the page it is showing. Focusing a
+  body cell turned to the page the focused row sits on, arithmetic that only
+  holds when the grid holds the whole dataset — a server model holds one page,
+  so its rows are indexed 0..n whichever page they came from and every click
+  past page 1 snapped back to page 1 and fetched it. Selecting, editing,
+  opening a cell menu and arrowing down off the page were all caught by it.
+  Filtering and sorting already stood aside for a server model; paging now does
+  too.
+- A server model numbers its rows from the page it holds. The row index in a
+  cell descriptor was offset by the page, so past page 1 every lookup into
+  `preWindowNodes` pointed past the end of an array holding one page: `Space`
+  selected the last row of the page rather than the focused one, `Ctrl+C` and
+  type-to-edit reached nothing, and `aria-rowindex` ran past the
+  `aria-rowcount` the grid reports. A client model, which holds the whole set,
+  still offsets by the page.
+- A server model tells a screen reader where in the whole set the page sits.
+  `aria-rowcount` counted the rows the grid held — one page — and
+  `aria-rowindex` counted from 1 within it, so every page read as "row 1 of
+  10". The count is now the server's total and the index is offset by the
+  page, which is what a client grid with pagination already reported.
+- The announcer no longer counts the page after a filter under a server model.
+  It said "10 rows" for a filter the server answered with 46, and said it
+  before the request had even gone out; it now speaks on `rowCountChanged`.
+- A click anywhere in the selection column toggles its row. The checkbox is
+  18x18 inside a 44x40 cell, so 18% of the column was live and the rest looked
+  identical and did nothing; the whole cell is now the target, in the header
+  select-all as well as the rows. Shift still extends a range from the cell,
+  and a row `isRowSelectable` rules out stays inert wherever it is clicked.
 - The bundled icons register when the grid is imported rather than when a grid
   mounts. `Grid.Root` registered them from its instance script, so anything the
   app drew first — its own button carrying `lucide:copy`, an icon the grid
@@ -20,13 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Reproduced against a fresh SvelteKit app with the published tarball, built
     and served: the page asked for `?icons=copy,rocket` before, and only
     `rocket` after — an icon of the app's own that the grid never bundles.
-
-### Added
-
-- `registerDataGridIcons` and `datagridIcons` are exported. Nothing needs to
-  call the registrar now that the import covers it, except a grid behind a
-  dynamic `import()` whose module may load after the app's own icons render.
-  It is idempotent.
 
 ## [0.3.0] - 2026-08-09
 

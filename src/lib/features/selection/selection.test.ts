@@ -133,6 +133,36 @@ describe('Selection', () => {
         expect(state.count).toBe(0)
     })
 
+    it('toggleAll leaves the rows it does not speak for alone', () => {
+        const grid = createGrid()
+        const state = getSelection(grid)!
+
+        // The header checkbox reports on the rows in view, so toggling it must
+        // add and remove those rows rather than replace the whole selection —
+        // under a filter here, and one page of a server model in a real app.
+        state.select('2')
+        getFiltering(grid)!.setColumnFilter('dept', { kind: 'set', values: ['Core'] })
+
+        state.toggleAll()
+        expect([...state.selectedIds].toSorted()).toEqual(['1', '2', '3', '5'])
+        expect(state.allState).toBe('all')
+
+        state.toggleAll()
+        expect([...state.selectedIds]).toEqual(['2'])
+    })
+
+    it('clear drops the whole selection, view or no view', () => {
+        const grid = createGrid()
+        const state = getSelection(grid)!
+
+        state.select('2')
+        getFiltering(grid)!.setColumnFilter('dept', { kind: 'set', values: ['Core'] })
+        state.select('1')
+        state.clear()
+
+        expect(state.count).toBe(0)
+    })
+
     it('emits selectionChanged with the id payload', () => {
         const grid = createGrid()
         const handler = vi.fn()

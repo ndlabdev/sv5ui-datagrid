@@ -11,13 +11,14 @@ import {
 import { mutator } from '../../core/utils/reactivity.js'
 import { downloadCsv, pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {
-    allSelection,
     emptySelection,
     selectAllStateOf,
     selectableIdsOf,
     singleSelection,
     withId,
+    withIds,
     withoutId,
+    withoutIds,
     withRange
 } from './selection-set.js'
 import type {
@@ -123,14 +124,25 @@ export class Selection<TRow> {
         this.#commit(withRange(this.selectedIds, orderedIds, this.#anchorId, id))
     })
 
+    /**
+     * Adds the rows in view rather than replacing the selection with them. The
+     * header checkbox reports on what the grid holds — one page of a server
+     * model, or whatever a filter left — and must not throw away the rows it
+     * cannot see. `clear()` is what drops the lot.
+     */
     selectAll = mutator((): void => {
         if (this.mode === 'single') return
-        this.#commit(allSelection(this.selectableNodes.map((node) => node.id)))
+        this.#commit(withIds(this.selectedIds, this.#selectableIds))
+    })
+
+    #deselectAll = mutator((): void => {
+        this.#anchorId = null
+        this.#commit(withoutIds(this.selectedIds, this.#selectableIds))
     })
 
     toggleAll = mutator((): void => {
         if (this.allState === 'all') {
-            this.clear()
+            this.#deselectAll()
         } else {
             this.selectAll()
         }

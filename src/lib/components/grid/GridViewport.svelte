@@ -12,7 +12,7 @@
     import type { GridViewportProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridTheme } from '../internal/theme.js'
-    import { windowStartOf } from '../internal/window.js'
+    import { ariaRowCountOf, windowStartOf } from '../internal/window.js'
 
     let { class: className, children }: GridViewportProps = $props()
 
@@ -97,12 +97,20 @@
             virtualization.ensureVisible(active.row)
             return
         }
-        const pagination = getPagination(grid)
-        if (pagination?.pageSize) {
-            const targetPage = Math.floor(active.row / pagination.pageSize) + 1
-            if (targetPage !== pagination.page) pagination.setPage(targetPage)
-        }
+        followPage(active.row)
     })
+
+    /**
+     * Turns to the page the focused row sits on. Only under a client model: a
+     * server model holds one page, so its rows are indexed 0..n whichever page
+     * they came from and the arithmetic would send every focus back to page 1.
+     */
+    function followPage(row: number): void {
+        const pagination = getPagination(grid)
+        if (!pagination?.pageSize || pagination.server) return
+        const targetPage = Math.floor(row / pagination.pageSize) + 1
+        if (targetPage !== pagination.page) pagination.setPage(targetPage)
+    }
 
     $effect(() => {
         void grid.focus.active
@@ -303,7 +311,7 @@
 <div
     bind:this={element}
     role={grid.expansion.enabled ? 'treegrid' : 'grid'}
-    aria-rowcount={grid.totalRows + grid.columns.headerRowCount + pinnedRowCount}
+    aria-rowcount={ariaRowCountOf(grid) + grid.columns.headerRowCount + pinnedRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: [theme('viewport'), className] })}

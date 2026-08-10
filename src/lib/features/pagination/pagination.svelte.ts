@@ -76,7 +76,13 @@ export class Pagination<TRow> {
 
     /** The page clamps on read, so this only stores and announces. */
     setRowCount = mutator((rowCount: number | null): void => {
+        const before = this.total
         this.rowCount = rowCount
+        // Every fetch sets the count again; only a different total is news,
+        // and it is the one moment a server model knows how many rows it has.
+        if (this.server && this.total !== before) {
+            this.#grid.events.emit('rowCountChanged', { total: this.total })
+        }
         if (this.#page > this.pageCount) this.setPage(this.pageCount)
     })
 }
