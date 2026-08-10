@@ -151,6 +151,7 @@
                 <Link href="/columns">Columns UX demo →</Link> ·
                 <Link href="/filters">Data ops demo →</Link> ·
                 <Link href="/selection">Selection demo →</Link> ·
+                <Link href="/server">Server row model demo →</Link> ·
                 <Link href="/rows">Row structures demo →</Link> ·
                 <Link href="/reorder">Row reorder demo →</Link> ·
                 <Link href="/editing">Editing demo →</Link> ·
