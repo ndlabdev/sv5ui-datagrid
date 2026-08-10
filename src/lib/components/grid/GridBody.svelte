@@ -26,7 +26,14 @@
     import { datagridVariants } from '../datagrid.variants.js'
     import GridRowHandleCell from '../cells/GridRowHandleCell.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
-    import { columnWindowOf, pinLeftVar, pinRightVar, windowStartOf } from '../internal/window.js'
+    import {
+        ariaRowCountOf,
+        columnWindowOf,
+        pinLeftVar,
+        pinRightVar,
+        rowIndexOffsetOf,
+        windowStartOf
+    } from '../internal/window.js'
 
     let {
         emptyText,
@@ -237,6 +244,10 @@
     )
 
     const windowStart = $derived(windowStartOf(grid))
+    // Where the rows the grid holds sit in the whole set, which differs from
+    // `windowStart` only under a server model: it holds one page and indexes
+    // it from 0, while a screen reader is told the position in the set.
+    const rowIndexOffset = $derived(rowIndexOffsetOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(grid.columns.headerRowCount)
     const topRows = $derived(pinning?.topNodes.length ?? 0)
@@ -423,7 +434,7 @@
         {@const dropEdge = dropEdgeOf(rowIndex)}
         <div
             role="row"
-            aria-rowindex={rowIndex + 1 + headerRows + topRows}
+            aria-rowindex={rowIndex + rowIndexOffset + 1 + headerRows + topRows}
             aria-selected={selectionState ? selectionState.isSelected(node.id) : undefined}
             aria-level={node.meta?.level !== undefined ? node.meta.level + 1 : undefined}
             aria-expanded={ariaExpanded(node)}
@@ -651,7 +662,7 @@
     <div role="rowgroup" class={slots.pinnedRowsBottom({ class: theme('pinnedRowsBottom') })}>
         {@render pinnedRows(
             pinning.bottomNodes,
-            headerRows + topRows + grid.totalRows + 1,
+            headerRows + topRows + ariaRowCountOf(grid) + 1,
             'bottom'
         )}
     </div>
