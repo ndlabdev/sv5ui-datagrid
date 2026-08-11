@@ -27,14 +27,6 @@ const PUBLIC_API = [
     'mergeLabels',
     // Writing a feature
     'PIPELINE_ORDER',
-    // Formatting inside a custom cell snippet
-    'formatCurrency',
-    'formatDate',
-    'formatNumber',
-    'formatPercent',
-    'isBlank',
-    'toDate',
-    'toNumber',
     // Feature modules
     'columnOps',
     'editing',
@@ -78,6 +70,14 @@ describe('public API', () => {
         // reached for it: internal defaults, context plumbing, the variants
         // factory that would have made every class name an API.
         for (const name of [
+            'formatCurrency',
+            'formatDate',
+            'formatNumber',
+            'formatPercent',
+            'isBlank',
+            'toDate',
+            'toNumber',
+            'formatCellText',
             'datagridVariants',
             'getGridContext',
             'setGridContext',

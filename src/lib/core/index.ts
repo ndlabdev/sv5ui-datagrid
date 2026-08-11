@@ -11,21 +11,6 @@ export { PIPELINE_ORDER } from './grid/pipeline.svelte.js'
 export { SELECTION_COLUMN_ID, SNAPSHOT_VERSION } from './types/index.js'
 export { defaultLabels, mergeLabels } from './interaction/labels.js'
 
-// A `cell` snippet is handed the raw value, so without these it cannot format
-// the way its own column would: same locale resolution, the same cached `Intl`
-// instances a per-cell renderer needs, and the one definition of blank that
-// sorting and filtering already share.
-export {
-    formatCurrency,
-    formatDate,
-    formatNumber,
-    formatPercent,
-    isBlank,
-    toDate,
-    toNumber,
-    type FormatOptions
-} from './utils/format.js'
-
 // Models an app reaches through the grid instance, never constructs itself.
 export type { Announcer } from './interaction/announcer.svelte.js'
 export type { ColumnModel } from './columns/column-model.svelte.js'

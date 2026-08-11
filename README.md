@@ -310,11 +310,39 @@ a 0 to 1 ratio unless you set `wholePercent`. A `cell` snippet always wins over
 `type`, so a column can graduate to a custom renderer without changing anything
 else.
 
-Null, undefined and empty string all render as `DEFAULT_EMPTY_TEXT`, whatever
-the column's `type` and whether it declares one at all. `typeOptions.emptyText`
+Declaring both is the way to decorate without losing the formatting. The
+snippet is handed `formatted`, the text the built-in renderer would have
+printed, so it never restates the column's own `typeOptions`:
+
+```svelte
+{
+    id: 'budget',
+    type: 'currency',
+    typeOptions: { currency: 'USD' },
+    cell: budgetCell
+}
+
+{#snippet budgetCell({ value, formatted }: DataGridCellContext<Row>)}
+    {formatted}
+    {#if Number(value) > 300_000}
+        <Badge label="high" color="warning" size="xs" />
+    {/if}
+{/snippet}
+```
+
+`formatted` is `undefined` where the built-in rendering is a widget rather than
+text — `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` —
+because there is no string standing for one. It is computed only if the snippet
+reads it. The snippet also receives `column`, so a renderer can reach its own
+`def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
+it too.
+
+Null, undefined and empty string all render as an em dash, whatever the
+column's `type` and whether it declares one at all. `typeOptions.emptyText`
 overrides the text per column — not to be confused with the `emptyText` prop on
 `<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
-snippet owns its own output, blanks included.
+snippet owns its own output, `formatted` included: blanks arrive there already
+turned into that text.
 
 ### Spanning
 

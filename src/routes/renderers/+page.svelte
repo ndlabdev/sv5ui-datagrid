@@ -5,7 +5,6 @@
         createDataGrid,
         DataGrid,
         filtering,
-        formatCurrency,
         pagination,
         sorting,
         type ColumnDef,
@@ -96,9 +95,10 @@
             sortable: true,
             align: 'right',
             width: 150,
-            // A snippet is handed the raw value, so it formats with the same
-            // helper the built-in `currency` type uses — same locale, same
-            // cached Intl instance — and adds what the type cannot.
+            // `type` says what the value is and the snippet decorates it: the
+            // snippet reads `formatted` rather than restating typeOptions.
+            type: 'currency',
+            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
             cell: budgetCell
         },
         {
@@ -186,9 +186,9 @@
     })
 </script>
 
-{#snippet budgetCell({ value }: DataGridCellContext<Member>)}
+{#snippet budgetCell({ value, formatted }: DataGridCellContext<Member>)}
     <span class="inline-flex items-center gap-1.5" data-testid="budget-cell">
-        {formatCurrency(value, { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } })}
+        {formatted}
         {#if Number(value) > 300000}
             <Badge label="high" color="warning" size="xs" />
         {/if}

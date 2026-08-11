@@ -29,16 +29,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     that `getGridContext` read; theming goes through the `ui` prop and
     `defineDataGridConfig`, which is what `datagridVariants` bypassed.
 
-    The formatters stay: `formatCurrency`, `formatDate`, `formatNumber`,
-    `formatPercent`, `toDate`, `toNumber`, `isBlank` and `FormatOptions`. A
-    `cell` snippet is handed the raw value and no formatter, so without them it
-    cannot format the way its own column would — same locale resolution, the
-    same cached `Intl` instances a per-cell renderer needs, and the single
-    definition of blank that sorting and filtering already share. They had no
-    demo and no test, which is what made them look unused; both now exist.
+    The formatters go with them — `formatCurrency`, `formatDate`,
+    `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank` and
+    `FormatOptions` — now that a snippet is handed the formatted text instead
+    of the tools to rebuild it. See `formatted` below.
 
 ### Added
 
+- A `cell` snippet receives `formatted`: the text the built-in renderer would
+  have printed for that value. Declaring `type` and `cell` together is now how
+  a column keeps its formatting and decorates around it, rather than the
+  snippet restating the column's own `typeOptions` — which is the shape AG Grid
+  (`valueFormatted`) and MUI (`formattedValue`) both settled on. It is
+  `undefined` where the built-in rendering is a widget rather than text, since
+  no string stands for one, and it is computed only if the snippet reads it.
+- Every cell callback receives `column`: `cell`, `cellClass`, `tooltip`,
+  `colSpan` and `rowSpan`. A renderer that needs its own `def`, alignment or id
+  had no way to reach them.
 - `src/tests/public-api.test.ts` pins the runtime export list, so the surface
   grows or shrinks by decision rather than by accident. The blanket
   `export type *` over `core/types` had been publishing every type added there
