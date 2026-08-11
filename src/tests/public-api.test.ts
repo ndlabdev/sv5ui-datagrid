@@ -27,6 +27,14 @@ const PUBLIC_API = [
     'mergeLabels',
     // Writing a feature
     'PIPELINE_ORDER',
+    // Formatting inside a custom cell snippet
+    'formatCurrency',
+    'formatDate',
+    'formatNumber',
+    'formatPercent',
+    'isBlank',
+    'toDate',
+    'toNumber',
     // Feature modules
     'columnOps',
     'editing',
@@ -82,13 +90,6 @@ describe('public API', () => {
             'dataColumns',
             'downloadCsv',
             'neutralizeFormula',
-            'formatCurrency',
-            'formatDate',
-            'formatNumber',
-            'formatPercent',
-            'toDate',
-            'toNumber',
-            'isBlank',
             'documentLocale',
             'resolveLocale',
             'defaultAnnouncerStrings',

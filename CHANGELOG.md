@@ -18,18 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Gone: `datagridVariants`, `getGridContext`, `setGridContext`,
     `GridCellValue`, `DEFAULT_EMPTY_TEXT`, `DEFAULT_CSV_DELIMITER`,
     `HEADER_ROW`, `ROW_HANDLE_COLUMN_ID`, `isSyntheticColumn`, `dataColumns`,
-    `downloadCsv`, `neutralizeFormula`, `formatCurrency`, `formatDate`,
-    `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank`,
-    `documentLocale`, `resolveLocale`, `defaultAnnouncerStrings`,
-    `filterConditions`, `isFilterGroup`, `normalizeFilterEntry`, `DATE_OPS`,
-    `NUMBER_OPS`, `TEXT_OPS`, and the `DataGridVariantProps` type.
+    `downloadCsv`, `neutralizeFormula`, `documentLocale`, `resolveLocale`,
+    `defaultAnnouncerStrings`, `filterConditions`, `isFilterGroup`,
+    `normalizeFilterEntry`, `DATE_OPS`, `NUMBER_OPS`, `TEXT_OPS`, and the
+    `DataGridVariantProps` type.
 
     What each was for, if you were using one: `typeOptions.emptyText` and the
     `emptyText` prop cover the empty-cell text; `toCsv` takes its delimiter as
-    an argument and neutralizes formulas itself; column `type` formats values
-    without the formatters being callable; `Grid.Root` sets the context that
-    `getGridContext` read; theming goes through the `ui` prop and
+    an argument and neutralizes formulas itself; `Grid.Root` sets the context
+    that `getGridContext` read; theming goes through the `ui` prop and
     `defineDataGridConfig`, which is what `datagridVariants` bypassed.
+
+    The formatters stay: `formatCurrency`, `formatDate`, `formatNumber`,
+    `formatPercent`, `toDate`, `toNumber`, `isBlank` and `FormatOptions`. A
+    `cell` snippet is handed the raw value and no formatter, so without them it
+    cannot format the way its own column would — same locale resolution, the
+    same cached `Intl` instances a per-cell renderer needs, and the single
+    definition of blank that sorting and filtering already share. They had no
+    demo and no test, which is what made them look unused; both now exist.
 
 ### Added
 

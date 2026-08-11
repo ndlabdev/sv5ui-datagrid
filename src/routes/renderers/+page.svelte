@@ -1,13 +1,15 @@
 <script lang="ts">
-    import { Container, Link, ThemeModeButton } from 'sv5ui'
+    import { Badge, Container, Link, ThemeModeButton } from 'sv5ui'
     import {
         columnOps,
         createDataGrid,
         DataGrid,
         filtering,
+        formatCurrency,
         pagination,
         sorting,
-        type ColumnDef
+        type ColumnDef,
+        type DataGridCellContext
     } from '$lib/index.js'
 
     interface Member {
@@ -86,6 +88,18 @@
             align: 'right',
             width: 130,
             typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } }
+        },
+        {
+            id: 'budget',
+            header: 'Budget',
+            accessor: (member) => member.salary * 3,
+            sortable: true,
+            align: 'right',
+            width: 150,
+            // A snippet is handed the raw value, so it formats with the same
+            // helper the built-in `currency` type uses — same locale, same
+            // cached Intl instance — and adds what the type cannot.
+            cell: budgetCell
         },
         {
             id: 'share',
@@ -171,6 +185,15 @@
         getRowId: (member) => String(member.id)
     })
 </script>
+
+{#snippet budgetCell({ value }: DataGridCellContext<Member>)}
+    <span class="inline-flex items-center gap-1.5" data-testid="budget-cell">
+        {formatCurrency(value, { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } })}
+        {#if Number(value) > 300000}
+            <Badge label="high" color="warning" size="xs" />
+        {/if}
+    </span>
+{/snippet}
 
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
