@@ -555,7 +555,7 @@
             role="row"
             aria-rowindex={baseIndex + pinIndex}
             data-dg-row-id={node.id}
-            class={slots.pinnedRow({ class: theme('pinnedRow') })}
+            class={slots.pinnedRow({ pinSide: section, class: theme('pinnedRow') })}
             style:width={columnWindow.rowWidth}
         >
             {#each columnWindow.renderColumns as entry (entry.column.id)}
