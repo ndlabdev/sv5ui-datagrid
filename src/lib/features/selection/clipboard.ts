@@ -1,3 +1,4 @@
+import { formatCellText } from '../../core/utils/format.js'
 import { getCellValue } from '../../core/utils/value.js'
 import { isSyntheticColumn, type ColumnState, type RowNode } from '../../core/types/index.js'
 
@@ -23,13 +24,18 @@ export type ExportFormatter<TRow> = (context: {
 export function rowsToMatrix<TRow>(
     nodes: RowNode<TRow>[],
     columns: ColumnState<TRow>[],
-    format?: ExportFormatter<TRow>
+    format?: ExportFormatter<TRow>,
+    options: { formatted?: boolean; locale?: string } = {}
 ): CellMatrix {
     const targets = dataColumns(columns)
     return nodes.map((node) =>
         targets.map((column) => {
             const value = getCellValue(node.row, column.def)
-            return format ? format({ value, node, column }) : cellText(value)
+            if (format) return format({ value, node, column })
+            if (!options.formatted) return cellText(value)
+            // A widget column has no text of its own; `formatCellText` says so
+            // by returning undefined, and the raw value stands in.
+            return formatCellText(value, column.def, options.locale) ?? cellText(value)
         })
     )
 }

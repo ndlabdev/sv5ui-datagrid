@@ -36,6 +36,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `formatted` on `exportCsv` and `copySelection`: writes what the grid is
+  showing rather than the value behind it. A user looking at `$204,000.00` and
+  `Aug 11, 2026` copied `204000` and `2026-08-11`, and asking for the other one
+  meant passing a `formatValue` callback that rebuilt formatting the grid had
+  already done.
+
+    Off by default, and deliberately so — a spreadsheet wants a number it can
+    sum and a date it can sort. An explicit `formatValue` still wins, and a
+    column whose `type` draws a widget has no text of its own, so the raw value
+    stands in rather than an empty column.
+
 - A `cell` snippet receives `formatted`: the text the built-in renderer would
   have printed for that value. Declaring `type` and `cell` together is now how
   a column keeps its formatting and decorates around it, rather than the
