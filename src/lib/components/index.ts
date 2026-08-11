@@ -13,6 +13,8 @@ import Toolbar from './chrome/GridToolbar.svelte'
 import Viewport from './grid/GridViewport.svelte'
 
 export { default as DataGrid } from './grid/DataGrid.svelte'
+export { registerDataGridIcons } from './internal/icons.js'
+export { datagridIcons } from './internal/icons.data.js'
 
 export interface GridParts {
     Root: typeof Root

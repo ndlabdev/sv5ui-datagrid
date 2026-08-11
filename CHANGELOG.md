@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `export type *` over `core/types` had been publishing every type added there
   without anyone choosing to.
 
+### Changed
+
+- The entry file is three lines. Each area names its own exports —
+  `core/index.ts`, `components/index.ts`, `features/index.ts` — one by one
+  rather than re-exporting modules wholesale, so nothing reaches an app
+  because it happened to be added to a folder. Nothing moved for a consumer:
+  the same names come from `@sv5ui/datagrid` as before.
+
 ## [1.0.0] - 2026-08-10
 
 ### Added
