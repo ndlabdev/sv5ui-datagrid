@@ -2,6 +2,8 @@ import type { Component } from 'svelte'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
+import Qa from '../routes/qa/+page.svelte'
+import Renderers from '../routes/renderers/+page.svelte'
 import {
     columnOps,
     createDataGrid,
@@ -193,5 +195,37 @@ describe('ColumnDef.meta', () => {
         await render(TypedDataGrid, { grid })
 
         expect(grid.columns.get('name')?.def.meta).toBe(meta)
+    })
+})
+
+describe('tooltip on the playground', () => {
+    it('shows the formatted amount on the renderers page', async () => {
+        const screen = await render(Renderers as never)
+        await expect.element(screen.getByRole('grid').first()).toBeVisible()
+
+        // Found by the trigger rather than by a column index the demo may move.
+        const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')!
+        const salary = trigger.closest<HTMLElement>('[data-dg-cell]')!
+        expect(trigger.tabIndex).toBe(-1)
+
+        await userEvent.hover(trigger)
+        await expect
+            .poll(
+                () =>
+                    document
+                        .querySelector('[data-bits-floating-content-wrapper]')
+                        ?.textContent?.trim(),
+                { timeout: 3000 }
+            )
+            .toBe(salary.textContent?.trim())
+    })
+
+    it('leaves a callback tooltip working on the QA page', async () => {
+        const screen = await render(Qa as never)
+        await expect.element(screen.getByRole('grid').first()).toBeVisible()
+
+        const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')
+        expect(trigger).not.toBeNull()
+        expect(trigger!.tabIndex).toBe(-1)
     })
 })
