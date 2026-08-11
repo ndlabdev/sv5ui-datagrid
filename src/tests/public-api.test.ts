@@ -60,10 +60,9 @@ const PUBLIC_API = [
 
 describe('public API', () => {
     it('exports exactly what it means to export', () => {
-        const actual = Object.keys(api)
-            .filter((key) => api[key as keyof typeof api] !== undefined)
-            .sort()
-        expect(actual).toEqual(PUBLIC_API)
+        // The namespace object holds the live bindings, so its keys are the
+        // exports themselves rather than a list somebody kept up to date.
+        expect(Object.keys(api).sort()).toEqual(PUBLIC_API)
     })
 
     it('exports no symbol that is only wiring', () => {
