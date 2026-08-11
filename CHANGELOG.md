@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- Twenty-eight symbols leave the package entry. Nothing in this repository —
+  no demo, no line of the README, no test importing through the package
+  entry — reached for any of them, and a 1.0 surface should carry what an app
+  does with the grid rather than what happens to exist inside it. They are
+  still there internally; only the public door closed.
+
+    Gone: `datagridVariants`, `getGridContext`, `setGridContext`,
+    `GridCellValue`, `DEFAULT_EMPTY_TEXT`, `DEFAULT_CSV_DELIMITER`,
+    `HEADER_ROW`, `ROW_HANDLE_COLUMN_ID`, `isSyntheticColumn`, `dataColumns`,
+    `downloadCsv`, `neutralizeFormula`, `formatCurrency`, `formatDate`,
+    `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank`,
+    `documentLocale`, `resolveLocale`, `defaultAnnouncerStrings`,
+    `filterConditions`, `isFilterGroup`, `normalizeFilterEntry`, `DATE_OPS`,
+    `NUMBER_OPS`, `TEXT_OPS`, and the `DataGridVariantProps` type.
+
+    What each was for, if you were using one: `typeOptions.emptyText` and the
+    `emptyText` prop cover the empty-cell text; `toCsv` takes its delimiter as
+    an argument and neutralizes formulas itself; column `type` formats values
+    without the formatters being callable; `Grid.Root` sets the context that
+    `getGridContext` read; theming goes through the `ui` prop and
+    `defineDataGridConfig`, which is what `datagridVariants` bypassed.
+
+### Added
+
+- `src/tests/public-api.test.ts` pins the runtime export list, so the surface
+  grows or shrinks by decision rather than by accident. The blanket
+  `export type *` over `core/types` had been publishing every type added there
+  without anyone choosing to.
+
 ## [1.0.0] - 2026-08-10
 
 ### Added
