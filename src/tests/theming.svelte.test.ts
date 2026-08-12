@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import {
+    sorting,
     createDataGrid,
     DataGrid,
     defineDataGridConfig,
@@ -58,6 +59,26 @@ describe('theming — per-instance ui', () => {
 
         const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
         expect(header.className).toContain('uppercase')
+    })
+
+    it('reaches the label of a sortable column, not just its cell', async () => {
+        renderGrid({
+            columns: [{ id: 'name', header: 'Name', sortable: true }],
+            features: [sorting()],
+            ui: { headerCell: 'uppercase tracking-wide text-primary' }
+        })
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        // Read off the computed style, not the class list: the class was on the
+        // cell all along, and the <button> a sortable column wraps its label in
+        // refuses `text-transform` from its parent by user-agent rule.
+        const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
+        const label = header.querySelector<HTMLElement>('[data-dg-truncate]')!
+        expect(getComputedStyle(header).textTransform).toBe('uppercase')
+        expect(getComputedStyle(label).textTransform).toBe('uppercase')
+        // The two that always worked, so a regression here is visible too.
+        expect(getComputedStyle(label).letterSpacing).toBe(getComputedStyle(header).letterSpacing)
+        expect(getComputedStyle(label).color).toBe(getComputedStyle(header).color)
     })
 
     it('lets a slot override conflicting variant utilities', async () => {

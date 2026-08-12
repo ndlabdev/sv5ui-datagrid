@@ -15,8 +15,13 @@ export const datagridVariants = tv({
             'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 overflow-hidden px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
         groupCell:
             'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant',
+        // A button refuses `text-transform` and `text-align` from its parent —
+        // the user agent says so, and Tailwind's preflight resets neither, which
+        // is why `color` and `letter-spacing` from a themed `headerCell` reached
+        // the label and `uppercase` did not. It stands between a themeable slot
+        // and its text, so it has to be transparent to typography.
         sortButton:
-            'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
+            'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors [text-align:inherit] [text-transform:inherit] hover:text-on-surface',
         resizeHandle:
             'absolute inset-y-0 end-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
         // No z-index: it would open a stacking context and trap the filter
