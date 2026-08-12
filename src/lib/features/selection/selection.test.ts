@@ -283,3 +283,37 @@ describe('synthetic selection column', () => {
         expect(grid.columns.visible.map((column) => column.id)).toEqual(['name', 'dept', 'active'])
     })
 })
+
+describe('copying what the grid shows', () => {
+    function typedGrid(): GridState<Person> {
+        return createDataGrid<Person>({
+            columns: [
+                {
+                    id: 'name',
+                    header: 'Name'
+                },
+                {
+                    id: 'id',
+                    header: 'Paid',
+                    type: 'currency',
+                    typeOptions: { currency: 'USD', locale: 'en-US' }
+                }
+            ],
+            data: people,
+            getRowId: (person) => String(person.id),
+            features: [selection()]
+        })
+    }
+
+    it('copies the value behind the cell by default', () => {
+        const state = getSelection(typedGrid())!
+        state.select('1')
+        expect(state.copyText()).toBe('Alice\t1')
+    })
+
+    it('copies what the cell shows when asked', () => {
+        const state = getSelection(typedGrid())!
+        state.select('1')
+        expect(state.copyText({ formatted: true })).toBe('Alice\t$1.00')
+    })
+})
