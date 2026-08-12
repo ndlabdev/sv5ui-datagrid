@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `toSortRequest` finds a column that lives under a header group. The lookup was
+  a flat `find` over the defs it was handed, and a grid with header groups keeps
+  groups at the top level and the real columns in their `children`, so every
+  entry matched nothing and was dropped. A server-model grid built the way the
+  README shows — `toSortRequest(getSorting(grid)!.sort, grid.columns.defs)` —
+  sent an empty sort: the header arrow moved, `sortChanged` fired, the request
+  went out, and the rows came back in the order they left, with no error or
+  warning to say why.
+
+    The builder flattens now, so passing `columns.defs` works with or without
+    groups and the caller cannot get it wrong. A sort naming a column the grid
+    genuinely does not have is still dropped, as documented.
+
 - `ui.headerCell` typography reaches a sortable column's label. The classes were
   on the cell — `uppercase` and `text-primary` both in its class list — but a
   sortable column wraps its label in the `<button>` that toggles the sort, and a
