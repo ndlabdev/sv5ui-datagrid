@@ -337,6 +337,25 @@ reads it. The snippet also receives `column`, so a renderer can reach its own
 `def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
 it too.
 
+### Tooltips
+
+`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` —
+the design system's, not the browser's `title`. A function takes its place when
+the text should say more; it receives the cell context, `formatted` included:
+
+```ts
+{ id: 'score', type: 'number', tooltip: ({ row, value }) => `${row.name}: ${value}/100` }
+```
+
+The trigger wraps the cell, so hovering anywhere in it opens the tooltip, and it
+is taken out of the tab order: the grid is one tab stop, and a page of rows must
+not become a page of them. A blank cell gets no tooltip at all.
+
+Text the column never asked to explain is a separate matter: a cell whose
+content is clipped gets a plain `title` on hover, measured only when hovered,
+because wrapping every cell in the grid is not affordable. `tooltip: false`
+turns that off for a column that manages its own.
+
 Null, undefined and empty string all render as an em dash, whatever the
 column's `type` and whether it declares one at all. `typeOptions.emptyText`
 overrides the text per column — not to be confused with the `emptyText` prop on

@@ -15,8 +15,13 @@ export const datagridVariants = tv({
             'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 overflow-hidden px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
         groupCell:
             'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant',
+        // A button refuses `text-transform` and `text-align` from its parent —
+        // the user agent says so, and Tailwind's preflight resets neither, which
+        // is why `color` and `letter-spacing` from a themed `headerCell` reached
+        // the label and `uppercase` did not. It stands between a themeable slot
+        // and its text, so it has to be transparent to typography.
         sortButton:
-            'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors hover:text-on-surface',
+            'inline-flex min-w-0 cursor-pointer items-center gap-1 truncate select-none transition-colors [text-align:inherit] [text-transform:inherit] hover:text-on-surface',
         resizeHandle:
             'absolute inset-y-0 end-0 z-10 w-1.5 cursor-col-resize touch-none select-none hover:bg-primary/40 active:bg-primary',
         // No z-index: it would open a stacking context and trap the filter
@@ -94,10 +99,18 @@ export const datagridVariants = tv({
         cellError:
             'absolute top-full start-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
         cellEditable: 'cursor-text',
+        // The sv5ui tooltip wraps its trigger in a span, so the span has to
+        // take the cell over — padding included, hence the negative margins —
+        // or the tooltip would only answer to a hover on the text itself.
+        tooltipTrigger:
+            '-mx-3 -my-(--dg-cell-py) flex min-w-0 grow items-center overflow-hidden px-3 py-(--dg-cell-py)',
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 overflow-hidden bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        // The edge the hairline sits on is the `pinSide` variant's business: a
+        // pinned section meets the scrolling body on one side only, and that is
+        // the side that needs the line.
         pinnedRow:
-            'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
+            'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:z-[6] after:h-px after:bg-outline-variant',
         pinnedRowsTop: 'sticky z-[9] min-w-min shadow-sm',
         pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
@@ -120,18 +133,29 @@ export const datagridVariants = tv({
             left: {
                 headerCell: 'justify-start text-start',
                 cell: 'justify-start text-start',
-                rowSpanFill: 'justify-start text-start'
+                rowSpanFill: 'justify-start text-start',
+                tooltipTrigger: 'justify-start text-start'
             },
             center: {
                 headerCell: 'justify-center text-center',
                 cell: 'justify-center text-center',
-                rowSpanFill: 'justify-center text-center'
+                rowSpanFill: 'justify-center text-center',
+                tooltipTrigger: 'justify-center text-center'
             },
             right: {
                 headerCell: 'justify-end text-end',
                 cell: 'justify-end text-end',
-                rowSpanFill: 'justify-end text-end'
+                rowSpanFill: 'justify-end text-end',
+                tooltipTrigger: 'justify-end text-end'
             }
+        },
+        pinSide: {
+            // The body is below, so the line goes under each row: the last one
+            // separates the section from the body, the rest from each other.
+            top: { pinnedRow: 'after:bottom-0' },
+            // The body is above, so it goes over each row instead. Nothing is
+            // drawn at the foot, where the grid's own bottom edge already is.
+            bottom: { pinnedRow: 'after:top-0' }
         },
         density: {
             compact: { root: '[--dg-row-h:2rem] [--dg-cell-py:0.25rem]' },

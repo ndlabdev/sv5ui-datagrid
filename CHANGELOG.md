@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ui.headerCell` typography reaches a sortable column's label. The classes were
+  on the cell — `uppercase` and `text-primary` both in its class list — but a
+  sortable column wraps its label in the `<button>` that toggles the sort, and a
+  button refuses `text-transform` and `text-align` from its parent by user-agent
+  rule. Tailwind's preflight resets `color` and `letter-spacing` on form
+  elements and not those two, so a themed header came out the right colour and
+  spacing in the wrong case, which read as `ui` half working.
+
+    The sort button is transparent to both now. The test that covered this
+    asserted the class was in the class list, which it always was; the new one
+    reads the computed style of the label.
+
 ### Removed
 
 - Twenty-eight symbols leave the package entry. Nothing in this repository —
@@ -33,6 +47,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank` and
     `FormatOptions` — now that a snippet is handed the formatted text instead
     of the tools to rebuild it. See `formatted` below.
+
+### Changed
+
+- `tooltip: true` shows what the cell shows, through sv5ui's `Tooltip`. It
+  returned the raw value behind the cell — a currency column reading
+  `$204,000.00` had a tooltip saying `204000`, a date reading `Aug 11, 2026`
+  said `2026-08-11` — and it went out as a native `title`, which the design
+  system cannot style. A `tooltip` function is unchanged apart from receiving
+  `formatted` alongside the raw `value`.
+
+    The trigger wraps the cell so a hover anywhere in it opens the tooltip, and
+    it is taken out of the tab order: bits-ui hands its trigger a `tabindex` of
+    0, and the grid is one tab stop. The `tooltipTrigger` slot is new and
+    themeable. Mounting 50 rows of two tooltip columns measures 30.9ms against
+    11.2ms without, which is the price of a component per cell — `tooltip` is
+    opt-in per column, so only the columns asking for one pay it.
+
+    The automatic tooltip for clipped text is untouched: it stays a `title`,
+    measured on hover, because it can fire on any cell in the grid.
 
 ### Added
 
@@ -69,6 +102,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than re-exporting modules wholesale, so nothing reaches an app
   because it happened to be added to a folder. Nothing moved for a consumer:
   the same names come from `@sv5ui/datagrid` as before.
+
+### Fixed
+
+- A row pinned to the bottom draws its separator on the edge facing the rows,
+  not on the one facing the grid's own border. Both pinned sections shared a
+  rule that put the hairline under every row, which suits the top section —
+  where the body is below — and left the bottom section with nothing between it
+  and the rows above, plus a rule under its last row sitting on the viewport's
+  bottom edge, where it read as a doubled line. The edge is now a `pinSide`
+  variant of the `pinnedRow` slot; a `ui.pinnedRow` override still applies to
+  both sections.
 
 ## [1.0.0] - 2026-08-10
 

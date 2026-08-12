@@ -86,7 +86,10 @@
             sortable: true,
             align: 'right',
             width: 130,
-            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } }
+            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
+            // Says what the cell says — the formatted amount, not the number
+            // behind it — through the sv5ui tooltip.
+            tooltip: true
         },
         {
             id: 'budget',
@@ -205,6 +208,12 @@
                 <code>currency</code>, <code>percent</code>, <code>date</code>,
                 <code>datetime</code>, <code>boolean</code>, <code>progress</code>,
                 <code>rating</code>, <code>link</code>, <code>actions</code>.
+            </p>
+            <p class="text-sm text-on-surface-variant">
+                Cột <strong>Salary</strong> bật <code>tooltip: true</code> — di chuột vào ô để thấy
+                tooltip sv5ui nói đúng chữ ô đang hiện (<code>$204,000</code>), không phải số thô
+                phía sau. Cột <strong>Budget</strong> vừa khai <code>type</code> vừa có
+                <code>cell</code>: snippet đọc <code>formatted</code> rồi gắn thêm badge.
             </p>
         </div>
         <div class="flex items-center gap-2">
