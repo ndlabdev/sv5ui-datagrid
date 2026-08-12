@@ -10,7 +10,7 @@
     } from '../../core/types/index.js'
     import { rowColSpans } from '../../core/columns/col-span.js'
     import { opensRowSpanGroup, rowSpansOf } from '../../core/columns/row-span.js'
-    import { DEFAULT_EMPTY_TEXT, isBlank } from '../../core/utils/format.js'
+    import { DEFAULT_EMPTY_TEXT, formatCellText, isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -195,7 +195,8 @@
             node,
             row: node.row,
             value: grid.getValue(node, column),
-            rowIndex
+            rowIndex,
+            column
         })
         return extra ? twMerge(result, extra) : result
     }
@@ -356,7 +357,7 @@
         if (tooltip === undefined || tooltip === false) return undefined
         const value = grid.getValue(node, column)
         if (tooltip === true) return isBlank(value) ? undefined : String(value)
-        return tooltip({ node, row: node.row, value, rowIndex })
+        return tooltip({ node, row: node.row, value, rowIndex, column })
     }
 
     /** The edge the drop line sits on, so it shows where the row lands. */
@@ -404,11 +405,18 @@
             </button>
         {/if}
         {#if column.def.cell}
+            {@const cellValue = grid.getValue(node, column)}
             {@render column.def.cell({
                 node,
                 row: node.row,
-                value: grid.getValue(node, column),
-                rowIndex
+                value: cellValue,
+                rowIndex,
+                column,
+                // A getter: a snippet that never reads it never pays for it,
+                // and a renderer runs per visible cell.
+                get formatted() {
+                    return formatCellText(cellValue, column.def, grid.locale)
+                }
             })}
         {:else if column.def.type}
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />

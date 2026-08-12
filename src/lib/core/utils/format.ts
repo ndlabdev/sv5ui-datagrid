@@ -1,4 +1,5 @@
-import type { ColumnTypeOptions } from '../types/index.js'
+import type { ColumnDef, ColumnType, ColumnTypeOptions } from '../types/index.js'
+import { isBlank } from './value.js'
 
 /** The slice formatters read, declared apart from the row type. */
 export type FormatOptions = Pick<
@@ -101,4 +102,51 @@ export function formatDate(value: unknown, options: FormatOptions = {}, withTime
 export function clampToMax(value: unknown, max: number): number {
     const parsed = toNumber(value) ?? 0
     return Math.min(Math.max(parsed, 0), max)
+}
+
+/** The types whose built-in rendering is text. The rest draw a widget, and a
+ * widget has no formatted string to hand anyone — `formatCellText` says so by
+ * returning undefined, the way a grid with no formatter on the column does. */
+const TEXT_TYPES = new Set<ColumnType>([
+    'text',
+    'number',
+    'currency',
+    'percent',
+    'date',
+    'datetime'
+])
+
+/**
+ * The text the built-in renderer prints for a value, so a `cell` snippet can
+ * show exactly what its own column would and decorate around it. One
+ * definition: the renderer, the snippet and a formatted export all read it.
+ *
+ * `undefined` where the built-in rendering is a widget — boolean, badge, user,
+ * progress, rating, link, actions — since there is no string to stand for it.
+ */
+export function formatCellText<TRow>(
+    value: unknown,
+    def: ColumnDef<TRow>,
+    locale?: string
+): string | undefined {
+    const type = def.type
+    if (type && !TEXT_TYPES.has(type)) return undefined
+
+    const options = { locale, ...def.typeOptions }
+    if (isBlank(value)) return options.emptyText ?? DEFAULT_EMPTY_TEXT
+
+    switch (type) {
+        case 'number':
+            return formatNumber(value, options)
+        case 'currency':
+            return formatCurrency(value, options)
+        case 'percent':
+            return formatPercent(value, options)
+        case 'date':
+            return formatDate(value, options)
+        case 'datetime':
+            return formatDate(value, options, true)
+        default:
+            return String(value)
+    }
 }

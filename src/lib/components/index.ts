@@ -13,7 +13,8 @@ import Toolbar from './chrome/GridToolbar.svelte'
 import Viewport from './grid/GridViewport.svelte'
 
 export { default as DataGrid } from './grid/DataGrid.svelte'
-export { default as GridCellValue } from './cells/GridCellValue.svelte'
+export { registerDataGridIcons } from './internal/icons.js'
+export { datagridIcons } from './internal/icons.data.js'
 
 export interface GridParts {
     Root: typeof Root
@@ -47,9 +48,7 @@ export const Grid: GridParts = {
     StatusBar
 }
 
-export { getGridContext, setGridContext } from './internal/context.js'
-export { datagridVariants } from './datagrid.variants.js'
-export type { DataGridSlots, DataGridUi, DataGridVariantProps } from './datagrid.variants.js'
+export type { DataGridSlots, DataGridUi } from './datagrid.variants.js'
 export {
     defineDataGridConfig,
     resetDataGridConfig,

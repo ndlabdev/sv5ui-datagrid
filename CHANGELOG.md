@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Twenty-eight symbols leave the package entry. Nothing in this repository —
+  no demo, no line of the README, no test importing through the package
+  entry — reached for any of them, and a 1.0 surface should carry what an app
+  does with the grid rather than what happens to exist inside it. They are
+  still there internally; only the public door closed.
+
+    Gone: `datagridVariants`, `getGridContext`, `setGridContext`,
+    `GridCellValue`, `DEFAULT_EMPTY_TEXT`, `DEFAULT_CSV_DELIMITER`,
+    `HEADER_ROW`, `ROW_HANDLE_COLUMN_ID`, `isSyntheticColumn`, `dataColumns`,
+    `downloadCsv`, `neutralizeFormula`, `documentLocale`, `resolveLocale`,
+    `defaultAnnouncerStrings`, `filterConditions`, `isFilterGroup`,
+    `normalizeFilterEntry`, `DATE_OPS`, `NUMBER_OPS`, `TEXT_OPS`, and the
+    `DataGridVariantProps` type.
+
+    What each was for, if you were using one: `typeOptions.emptyText` and the
+    `emptyText` prop cover the empty-cell text; `toCsv` takes its delimiter as
+    an argument and neutralizes formulas itself; `Grid.Root` sets the context
+    that `getGridContext` read; theming goes through the `ui` prop and
+    `defineDataGridConfig`, which is what `datagridVariants` bypassed.
+
+    The formatters go with them — `formatCurrency`, `formatDate`,
+    `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank` and
+    `FormatOptions` — now that a snippet is handed the formatted text instead
+    of the tools to rebuild it. See `formatted` below.
+
+### Added
+
+- A `cell` snippet receives `formatted`: the text the built-in renderer would
+  have printed for that value. Declaring `type` and `cell` together is now how
+  a column keeps its formatting and decorates around it, rather than the
+  snippet restating the column's own `typeOptions` — which is the shape AG Grid
+  (`valueFormatted`) and MUI (`formattedValue`) both settled on. It is
+  `undefined` where the built-in rendering is a widget rather than text, since
+  no string stands for one, and it is computed only if the snippet reads it.
+- Every cell callback receives `column`: `cell`, `cellClass`, `tooltip`,
+  `colSpan` and `rowSpan`. A renderer that needs its own `def`, alignment or id
+  had no way to reach them.
+- `src/tests/public-api.test.ts` pins the runtime export list, so the surface
+  grows or shrinks by decision rather than by accident. The blanket
+  `export type *` over `core/types` had been publishing every type added there
+  without anyone choosing to.
+
+### Changed
+
+- The entry file is three lines. Each area names its own exports —
+  `core/index.ts`, `components/index.ts`, `features/index.ts` — one by one
+  rather than re-exporting modules wholesale, so nothing reaches an app
+  because it happened to be added to a folder. Nothing moved for a consumer:
+  the same names come from `@sv5ui/datagrid` as before.
+
 ### Fixed
 
 - A row pinned to the bottom draws its separator on the edge facing the rows,

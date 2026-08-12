@@ -141,6 +141,21 @@ export interface DataGridCellContext<TRow> {
     value: unknown
     /** Position within the filtered/sorted set, stable while scrolling. */
     rowIndex: number
+    /** The column this cell belongs to, `def` and resolved state alike. */
+    column: ColumnState<TRow>
+    /**
+     * Set for the `cell` snippet only — `cellClass`, `tooltip`, `colSpan` and
+     * `rowSpan` run before there is anything rendered to speak of.
+     *
+     * The text the built-in renderer would print for `value`, so a snippet can
+     * show what its own `type` says and decorate around it rather than
+     * restating the column's `typeOptions`.
+     *
+     * `undefined` where the built-in rendering is a widget — `boolean`,
+     * `badge`, `user`, `progress`, `rating`, `link`, `actions` — because there
+     * is no string standing for one. Computed only if the snippet reads it.
+     */
+    formatted?: string
 }
 
 export interface ColumnDef<TRow> {
