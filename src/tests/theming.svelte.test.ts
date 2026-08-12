@@ -62,11 +62,21 @@ describe('theming — per-instance ui', () => {
     })
 
     it('reaches the label of a sortable column, not just its cell', async () => {
-        renderGrid({
+        // A grid instance, because `features` belongs to `createDataGrid` and
+        // not to the component's own props.
+        const grid = createDataGrid<Row>({
             columns: [{ id: 'name', header: 'Name', sortable: true }],
-            features: [sorting()],
-            ui: { headerCell: 'uppercase tracking-wide text-primary' }
+            data: rows,
+            getRowId: (row) => String(row.id),
+            features: [sorting()]
         })
+        render(
+            DataGrid as never,
+            {
+                grid,
+                ui: { headerCell: 'uppercase tracking-wide text-primary' }
+            } as never
+        )
         await expect.element(page.getByRole('grid')).toBeVisible()
 
         // Read off the computed style, not the class list: the class was on the
