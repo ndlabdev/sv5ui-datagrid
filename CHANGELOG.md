@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ui.headerCell` typography reaches a sortable column's label. The classes were
+  on the cell — `uppercase` and `text-primary` both in its class list — but a
+  sortable column wraps its label in the `<button>` that toggles the sort, and a
+  button refuses `text-transform` and `text-align` from its parent by user-agent
+  rule. Tailwind's preflight resets `color` and `letter-spacing` on form
+  elements and not those two, so a themed header came out the right colour and
+  spacing in the wrong case, which read as `ui` half working.
+
+    The sort button is transparent to both now. The test that covered this
+    asserted the class was in the class list, which it always was; the new one
+    reads the computed style of the label.
+
 ### Removed
 
 - Twenty-eight symbols leave the package entry. Nothing in this repository —
