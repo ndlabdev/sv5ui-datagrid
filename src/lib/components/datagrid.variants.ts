@@ -94,6 +94,11 @@ export const datagridVariants = tv({
         cellError:
             'absolute top-full start-0 z-30 mt-0.5 rounded bg-error px-1.5 py-0.5 text-xs whitespace-nowrap text-on-error shadow-sm',
         cellEditable: 'cursor-text',
+        // The sv5ui tooltip wraps its trigger in a span, so the span has to
+        // take the cell over — padding included, hence the negative margins —
+        // or the tooltip would only answer to a hover on the text itself.
+        tooltipTrigger:
+            '-mx-3 -my-(--dg-cell-py) flex min-w-0 grow items-center overflow-hidden px-3 py-(--dg-cell-py)',
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 overflow-hidden bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
         // The edge the hairline sits on is the `pinSide` variant's business: a
@@ -123,17 +128,20 @@ export const datagridVariants = tv({
             left: {
                 headerCell: 'justify-start text-start',
                 cell: 'justify-start text-start',
-                rowSpanFill: 'justify-start text-start'
+                rowSpanFill: 'justify-start text-start',
+                tooltipTrigger: 'justify-start text-start'
             },
             center: {
                 headerCell: 'justify-center text-center',
                 cell: 'justify-center text-center',
-                rowSpanFill: 'justify-center text-center'
+                rowSpanFill: 'justify-center text-center',
+                tooltipTrigger: 'justify-center text-center'
             },
             right: {
                 headerCell: 'justify-end text-end',
                 cell: 'justify-end text-end',
-                rowSpanFill: 'justify-end text-end'
+                rowSpanFill: 'justify-end text-end',
+                tooltipTrigger: 'justify-end text-end'
             }
         },
         pinSide: {

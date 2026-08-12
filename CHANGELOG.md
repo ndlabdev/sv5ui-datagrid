@@ -34,6 +34,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `FormatOptions` — now that a snippet is handed the formatted text instead
     of the tools to rebuild it. See `formatted` below.
 
+### Changed
+
+- `tooltip: true` shows what the cell shows, through sv5ui's `Tooltip`. It
+  returned the raw value behind the cell — a currency column reading
+  `$204,000.00` had a tooltip saying `204000`, a date reading `Aug 11, 2026`
+  said `2026-08-11` — and it went out as a native `title`, which the design
+  system cannot style. A `tooltip` function is unchanged apart from receiving
+  `formatted` alongside the raw `value`.
+
+    The trigger wraps the cell so a hover anywhere in it opens the tooltip, and
+    it is taken out of the tab order: bits-ui hands its trigger a `tabindex` of
+    0, and the grid is one tab stop. The `tooltipTrigger` slot is new and
+    themeable. Mounting 50 rows of two tooltip columns measures 30.9ms against
+    11.2ms without, which is the price of a component per cell — `tooltip` is
+    opt-in per column, so only the columns asking for one pay it.
+
+    The automatic tooltip for clipped text is untouched: it stays a `title`,
+    measured on hover, because it can fire on any cell in the grid.
+
 ### Added
 
 - A `cell` snippet receives `formatted`: the text the built-in renderer would
