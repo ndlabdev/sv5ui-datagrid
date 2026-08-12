@@ -101,8 +101,11 @@ export const datagridVariants = tv({
             '-mx-3 -my-(--dg-cell-py) flex min-w-0 grow items-center overflow-hidden px-3 py-(--dg-cell-py)',
         fullWidthCell:
             'min-h-(--dg-row-h) min-w-0 overflow-hidden bg-surface-container-lowest p-3 text-on-surface outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        // The edge the hairline sits on is the `pinSide` variant's business: a
+        // pinned section meets the scrolling body on one side only, and that is
+        // the side that needs the line.
         pinnedRow:
-            'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[6] after:h-px after:bg-outline-variant',
+            'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:z-[6] after:h-px after:bg-outline-variant',
         pinnedRowsTop: 'sticky z-[9] min-w-min shadow-sm',
         pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
         rowSelected:
@@ -140,6 +143,14 @@ export const datagridVariants = tv({
                 rowSpanFill: 'justify-end text-end',
                 tooltipTrigger: 'justify-end text-end'
             }
+        },
+        pinSide: {
+            // The body is below, so the line goes under each row: the last one
+            // separates the section from the body, the rest from each other.
+            top: { pinnedRow: 'after:bottom-0' },
+            // The body is above, so it goes over each row instead. Nothing is
+            // drawn at the foot, where the grid's own bottom edge already is.
+            bottom: { pinnedRow: 'after:top-0' }
         },
         density: {
             compact: { root: '[--dg-row-h:2rem] [--dg-cell-py:0.25rem]' },

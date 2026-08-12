@@ -78,6 +78,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because it happened to be added to a folder. Nothing moved for a consumer:
   the same names come from `@sv5ui/datagrid` as before.
 
+### Fixed
+
+- A row pinned to the bottom draws its separator on the edge facing the rows,
+  not on the one facing the grid's own border. Both pinned sections shared a
+  rule that put the hairline under every row, which suits the top section —
+  where the body is below — and left the bottom section with nothing between it
+  and the rows above, plus a rule under its last row sitting on the viewport's
+  bottom edge, where it read as a doubled line. The edge is now a `pinSide`
+  variant of the `pinnedRow` slot; a `ui.pinnedRow` override still applies to
+  both sections.
+
 ## [1.0.0] - 2026-08-10
 
 ### Added
