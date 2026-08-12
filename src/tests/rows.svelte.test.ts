@@ -222,6 +222,43 @@ describe('row pinning', () => {
         expect(Math.abs(top.getBoundingClientRect().top - before)).toBeLessThanOrEqual(2)
     })
 
+    /** Which edge of the row its hairline is drawn on, read off the ::after box. */
+    function hairlineEdge(row: Element): 'top' | 'bottom' | 'none' {
+        const style = getComputedStyle(row, '::after')
+        if (style.display === 'none' || style.content === 'none') return 'none'
+        if (style.top === '0px') return 'top'
+        return style.bottom === '0px' ? 'bottom' : 'none'
+    }
+
+    it('draws each pinned section its line on the edge facing the body', async () => {
+        const grid = createDataGrid<Order>({
+            columns,
+            data: makeOrders(8),
+            getRowId: (order) => String(order.id),
+            features: [
+                rowPinning({
+                    isRowPinned: (order) =>
+                        order.id === 1 ? 'top' : order.id >= 7 ? 'bottom' : null
+                })
+            ]
+        })
+        const screen = await renderGrid(grid)
+
+        const rowAt = (id: string) => screen.container.querySelector(`[data-dg-row-id="${id}"]`)!
+
+        // The top section meets the body at its foot, the bottom section at its
+        // head. Drawing both at the foot left the boundary above a bottom-pinned
+        // row unmarked, and put a rule under the last one against the grid's own
+        // bottom edge.
+        expect(hairlineEdge(rowAt('1'))).toBe('bottom')
+        expect(hairlineEdge(rowAt('7'))).toBe('top')
+        expect(hairlineEdge(rowAt('8'))).toBe('top')
+
+        const viewport = screen.container.querySelector<HTMLElement>('[role="grid"]')!
+        const last = rowAt('8').getBoundingClientRect()
+        expect(Math.abs(last.bottom - viewport.getBoundingClientRect().bottom)).toBeLessThan(4)
+    })
+
     it('pins and unpins through the context menu', async () => {
         const grid = makePinnedGrid()
         const screen = await renderGrid(grid, { class: 'h-90' })
