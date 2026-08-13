@@ -1,5 +1,57 @@
 import { describe, expect, it, vi } from 'vitest'
-import { nextVersion, waitForChecksToAppear } from './release-helpers.mjs'
+import { nextVersion, rotateChangelog, waitForChecksToAppear } from './release-helpers.mjs'
+
+describe('rotateChangelog', () => {
+    const head = '# Changelog\n\nThe format is based on Keep a Changelog.\n\n'
+    const options = {
+        version: '1.2.0',
+        date: '2026-08-13',
+        url: 'https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0'
+    }
+
+    it('dates the section being shipped', () => {
+        const result = rotateChangelog(
+            `${head}## [Unreleased]\n\n### Fixed\n\n- a thing\n`,
+            options
+        )
+        expect(result).toContain('## [1.2.0] - 2026-08-13')
+        expect(result).toContain('- a thing')
+    })
+
+    it('leaves a fresh empty Unreleased above it', () => {
+        // 1.1.0 shipped without one, so the next entry had nowhere to go and
+        // the next release stopped saying there was nothing to release.
+        const result = rotateChangelog(
+            `${head}## [Unreleased]\n\n### Fixed\n\n- a thing\n`,
+            options
+        )
+        expect(result).toMatch(/## \[Unreleased\]\n\n## \[1\.2\.0\] - 2026-08-13/)
+    })
+
+    it('is idempotent enough to run twice, since the new section is empty', () => {
+        const once = rotateChangelog(`${head}## [Unreleased]\n\n- a thing\n`, options)
+        const twice = rotateChangelog(once, { ...options, version: '1.3.0' })
+        expect(twice).toMatch(/## \[Unreleased\]\n\n## \[1\.3\.0\]/)
+        expect(twice).toContain('## [1.2.0] - 2026-08-13')
+    })
+
+    it('files the link reference newest first', () => {
+        const withLinks = `${head}## [Unreleased]\n\n- a thing\n\n[1.1.0]: https://old/1.1.0\n`
+        const result = rotateChangelog(withLinks, options)
+        expect(result).toMatch(/\[1\.2\.0\]: \S+\n\[1\.1\.0\]:/)
+    })
+
+    it('starts the link block when there is none', () => {
+        const result = rotateChangelog(`${head}## [Unreleased]\n\n- a thing\n`, options)
+        expect(result.trimEnd().endsWith(`[1.2.0]: ${options.url}`)).toBe(true)
+    })
+
+    it('refuses when nothing is waiting to be released', () => {
+        expect(() => rotateChangelog(`${head}## [1.1.0] - 2026-08-13\n`, options)).toThrow(
+            /no \[Unreleased\] section/
+        )
+    })
+})
 
 describe('nextVersion', () => {
     it('passes an explicit version through untouched', () => {
