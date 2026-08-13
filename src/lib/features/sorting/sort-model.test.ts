@@ -78,6 +78,17 @@ describe('toSortRequest', () => {
         ])
     })
 
+    it('finds a column nested under a header group', () => {
+        // What `grid.columns.defs` looks like once the grid has header groups:
+        // the groups sit at the top and the real columns hang off `children`.
+        const grouped: ColumnDef<Person>[] = [
+            { id: 'identity', header: 'Identity', children: columns }
+        ]
+        expect(toSortRequest([{ columnId: 'display', direction: 'asc' }], grouped)).toEqual([
+            { field: 'lastName', direction: 'asc' }
+        ])
+    })
+
     it('drops a sort naming a column the grid does not have', () => {
         // The server can resolve it no better than the grid could.
         expect(toSortRequest([{ columnId: 'ghost', direction: 'asc' }], columns)).toEqual([])
