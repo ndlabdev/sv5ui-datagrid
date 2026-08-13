@@ -41,14 +41,45 @@ const git = (...argv) => {
     return run('git', argv, { stdio: 'inherit' })
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Polls until GitHub has attached at least one check to the pull request.
+ * `gh pr checks` exits non-zero both when a check has failed and when none
+ * exists yet, so the two have to be told apart by asking for the list rather
+ * than by the exit code. Returns false if none ever arrives.
+ */
+async function waitForChecksToAppear(prNumber, attempts = 18, intervalMs = 10_000) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        try {
+            // stderr is swallowed on purpose: while no check exists yet, `gh`
+            // writes "no checks reported on the ... branch" there, and
+            // execFileSync forwards that to our terminal. Letting it through
+            // would print the exact alarming line this loop exists to stop
+            // people believing — once per attempt.
+            const buckets = JSON.parse(
+                run('gh', ['pr', 'checks', prNumber, '--json', 'bucket'], {
+                    stdio: ['ignore', 'pipe', 'ignore']
+                }) || '[]'
+            )
+            if (buckets.length > 0) return true
+        } catch {
+            // No checks reported yet, which is the case this loop exists for.
+        }
+        if (attempt === 0) console.log('  no check attached yet, waiting for one to appear')
+        await sleep(intervalMs)
+    }
+    return false
+}
+
 const pkg = () => JSON.parse(readFileSync('package.json', 'utf8'))
 const current = pkg().version
 
 function nextVersion() {
     if (/^\d+\.\d+\.\d+/.test(bump)) return bump
     const [major, minor, patch] = current.split('.').map(Number)
-    // Pre-1.0: a breaking change is a minor, so `major` still means 1.0.0 only
-    // when the user says so explicitly. `minor` is the usual release here.
+    // Past 1.0 since 2026-08-10, so plain semver applies: a breaking change is
+    // a major. The pre-1.0 rule that folded breaking into a minor is gone.
     if (bump === 'major') return `${major + 1}.0.0`
     if (bump === 'minor') return `${major}.${minor + 1}.0`
     if (bump === 'patch') return `${major}.${minor}.${patch + 1}`
@@ -71,6 +102,33 @@ if (run('git', ['rev-list', 'HEAD..origin/main', '--count']) !== '0') {
     fail('origin/main is ahead. Pull first.')
 }
 
+// Work lands on `dev`; `main` only moves at release time. Releasing while it
+// is behind ships the previous version's code under a new number, with a
+// CHANGELOG describing changes the tarball does not contain — and every other
+// check here would pass. On 2026-08-13 main was 23 commits behind.
+//
+// `rev-list` exits 128 rather than returning a count when the ref is missing,
+// which a single-branch clone would hit, so that has to read as "cannot tell"
+// instead of taking down the release with a stack trace.
+let unreleased
+try {
+    unreleased = run('git', ['rev-list', 'origin/main..origin/dev', '--count'], {
+        stdio: ['ignore', 'pipe', 'ignore']
+    })
+} catch {
+    fail(
+        'Cannot compare main with origin/dev — the ref is missing.\n' +
+            'Releases ship what is on dev, so this has to be checkable:  git fetch origin dev'
+    )
+}
+if (unreleased !== '0') {
+    fail(
+        `origin/dev is ${unreleased} commits ahead of main, so this would ship without them.\n` +
+            'Land them first, and merge any open PR that belongs in the release before you do:\n' +
+            '  gh pr create --base main --head dev --title "chore: bring main level with dev"'
+    )
+}
+
 // The workflow cannot publish without this, and a tag that fails has to be
 // deleted from the remote and the local repo before it can be retried.
 const secrets = run('gh', ['secret', 'list']) ?? ''
@@ -80,7 +138,7 @@ if (!secrets.includes('NPM_TOKEN')) {
             'Set it first:  gh secret set NPM_TOKEN'
     )
 }
-console.log('  on main, clean, up to date, NPM_TOKEN present')
+console.log('  on main, clean, level with dev, NPM_TOKEN present')
 
 const version = nextVersion()
 const tag = `v${version}`
@@ -201,12 +259,25 @@ if (!prNumber) fail('Could not open or find the release pull request.')
 console.log(`  release PR #${prNumber} on ${releaseBranch}`)
 
 step(`Waiting for the ci check on #${prNumber}`)
+
+// `gh pr checks --watch` does not wait for a check to exist. A PR opened a
+// second ago has none attached yet, and it exits non-zero saying so — which
+// read as a failure and aborted an otherwise healthy 1.1.0. Wait for the run
+// to appear first, then hand over to --watch for the run itself.
+if (!(await waitForChecksToAppear(prNumber))) {
+    fail(
+        `No check ever appeared on #${prNumber}. Nothing is tagged or published.\n` +
+            'ci.yml runs on pull requests to main — check that it is enabled, then run the same command again.'
+    )
+}
+
 try {
     run('gh', ['pr', 'checks', prNumber, '--watch', '--interval', '20'], { stdio: 'inherit' })
 } catch {
     fail(
         'CI failed on the release PR. Nothing is tagged or published.\n' +
-            `Fix it on ${releaseBranch}, then run the same command again.`
+            `Look at it with:  gh pr checks ${prNumber}\n` +
+            `If it is genuinely red, fix it on ${releaseBranch} and run the same command again.`
     )
 }
 
