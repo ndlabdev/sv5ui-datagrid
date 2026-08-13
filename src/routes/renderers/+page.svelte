@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Container, Link, ThemeModeButton } from 'sv5ui'
+    import { Badge, Container, Link, ThemeModeButton } from 'sv5ui'
     import {
         columnOps,
         createDataGrid,
@@ -7,7 +7,8 @@
         filtering,
         pagination,
         sorting,
-        type ColumnDef
+        type ColumnDef,
+        type DataGridCellContext
     } from '$lib/index.js'
 
     interface Member {
@@ -85,7 +86,23 @@
             sortable: true,
             align: 'right',
             width: 130,
-            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } }
+            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
+            // Says what the cell says — the formatted amount, not the number
+            // behind it — through the sv5ui tooltip.
+            tooltip: true
+        },
+        {
+            id: 'budget',
+            header: 'Budget',
+            accessor: (member) => member.salary * 3,
+            sortable: true,
+            align: 'right',
+            width: 150,
+            // `type` says what the value is and the snippet decorates it: the
+            // snippet reads `formatted` rather than restating typeOptions.
+            type: 'currency',
+            typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
+            cell: budgetCell
         },
         {
             id: 'share',
@@ -172,6 +189,15 @@
     })
 </script>
 
+{#snippet budgetCell({ value, formatted }: DataGridCellContext<Member>)}
+    <span class="inline-flex items-center gap-1.5" data-testid="budget-cell">
+        {formatted}
+        {#if Number(value) > 300000}
+            <Badge label="high" color="warning" size="xs" />
+        {/if}
+    </span>
+{/snippet}
+
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
@@ -182,6 +208,12 @@
                 <code>currency</code>, <code>percent</code>, <code>date</code>,
                 <code>datetime</code>, <code>boolean</code>, <code>progress</code>,
                 <code>rating</code>, <code>link</code>, <code>actions</code>.
+            </p>
+            <p class="text-sm text-on-surface-variant">
+                Cột <strong>Salary</strong> bật <code>tooltip: true</code> — di chuột vào ô để thấy
+                tooltip sv5ui nói đúng chữ ô đang hiện (<code>$204,000</code>), không phải số thô
+                phía sau. Cột <strong>Budget</strong> vừa khai <code>type</code> vừa có
+                <code>cell</code>: snippet đọc <code>formatted</code> rồi gắn thêm badge.
             </p>
         </div>
         <div class="flex items-center gap-2">

@@ -61,7 +61,8 @@ function requestedSpan<TRow>(
             node,
             row: node.row,
             value: grid.getValue(node, column),
-            rowIndex
+            rowIndex,
+            column
         }) ?? 1
     )
 }

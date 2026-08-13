@@ -42,7 +42,8 @@ export function rowColSpans<TRow>(
                 node,
                 row: node.row,
                 value: grid.getValue(node, column),
-                rowIndex
+                rowIndex,
+                column
             }) ?? 1
 
         // Grow the span up to the request, but never across a pin boundary —

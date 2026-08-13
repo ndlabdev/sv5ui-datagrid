@@ -1,6 +1,9 @@
 import type { Component } from 'svelte'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
+import { userEvent } from 'vitest/browser'
+import Qa from '../routes/qa/+page.svelte'
+import Renderers from '../routes/renderers/+page.svelte'
 import {
     columnOps,
     createDataGrid,
@@ -86,36 +89,89 @@ describe('ColumnDef.resizable', () => {
 })
 
 describe('ColumnDef.tooltip', () => {
-    it('titles every cell with its value when set to true', async () => {
-        const grid = makeGrid([{ id: 'name', header: 'Name', width: 160, tooltip: true }])
-        const screen = await render(TypedDataGrid, { grid })
-        await expect.element(screen.getByRole('grid')).toBeVisible()
+    /** The sv5ui tooltip wraps the cell in a trigger; this is that trigger. */
+    function triggerIn(container: Element, row: number, col: number): HTMLElement {
+        const trigger = cellAt(container, row, col).querySelector<HTMLElement>(
+            '[data-tooltip-trigger]'
+        )
+        if (!trigger) throw new Error(`no tooltip trigger at ${row}:${col}`)
+        return trigger
+    }
 
-        expect(cellAt(screen.container, 0, 0).title).toBe('Ada')
-        expect(cellAt(screen.container, 1, 0).title).toBe('Linus')
-    })
+    /**
+     * What the tooltip is showing. It lives in a portal, and sv5ui opens it
+     * after its own 700ms delay — longer than a default poll waits.
+     */
+    const tooltipContent = () =>
+        document.querySelector('[data-bits-floating-content-wrapper]')?.textContent?.trim()
 
-    it('takes the text from a callback', async () => {
+    async function openTooltip(trigger: HTMLElement): Promise<string> {
+        await userEvent.hover(trigger)
+        await expect.poll(tooltipContent, { timeout: 3000 }).toBeTruthy()
+        return tooltipContent() ?? ''
+    }
+
+    it('says what the cell says, through the sv5ui tooltip', async () => {
         const grid = makeGrid([
             {
                 id: 'score',
                 header: 'Score',
-                width: 120,
-                tooltip: ({ row, value }) => `${row.name}: ${value}/100`
+                width: 160,
+                type: 'currency',
+                typeOptions: { currency: 'USD', locale: 'en-US' },
+                tooltip: true
             }
         ])
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        expect(cellAt(screen.container, 0, 0).title).toBe('Ada: 91/100')
+        // Not the raw 91 behind it, and not through a native title.
+        expect(cellAt(screen.container, 0, 0).title).toBe('')
+        expect(await openTooltip(triggerIn(screen.container, 0, 0))).toBe('$91.00')
     })
 
-    it('leaves a blank cell untitled rather than showing "null"', async () => {
+    it('takes the text from a callback, which also gets the formatted text', async () => {
+        const seen: (string | undefined)[] = []
+        const grid = makeGrid([
+            {
+                id: 'score',
+                header: 'Score',
+                width: 120,
+                type: 'number',
+                tooltip: ({ row, value, formatted }) => {
+                    seen.push(formatted)
+                    return `${row.name}: ${value}/100`
+                }
+            }
+        ])
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        expect(await openTooltip(triggerIn(screen.container, 0, 0))).toBe('Ada: 91/100')
+        expect(seen).toContain('91')
+    })
+
+    it('leaves a blank cell without a tooltip rather than showing "null"', async () => {
         const grid = makeGrid([{ id: 'note', header: 'Note', width: 120, tooltip: true }])
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        expect(cellAt(screen.container, 1, 0).title).toBe('')
+        expect(cellAt(screen.container, 1, 0).querySelector('[data-tooltip-trigger]')).toBeNull()
+    })
+
+    it('keeps the grid one tab stop, tooltip trigger included', async () => {
+        const grid = makeGrid([
+            { id: 'name', header: 'Name', width: 160, tooltip: true },
+            { id: 'score', header: 'Score', width: 120, tooltip: true }
+        ])
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        // bits-ui hands its trigger a tabindex of 0. Left alone, a page of rows
+        // would be a page of tab stops — the fault the checkbox column had.
+        const triggers = screen.container.querySelectorAll<HTMLElement>('[data-tooltip-trigger]')
+        expect(triggers.length).toBeGreaterThan(0)
+        for (const trigger of triggers) expect(trigger.tabIndex).toBe(-1)
     })
 
     it('marks a column that manages its own tooltip so hover stays out of it', async () => {
@@ -139,5 +195,37 @@ describe('ColumnDef.meta', () => {
         await render(TypedDataGrid, { grid })
 
         expect(grid.columns.get('name')?.def.meta).toBe(meta)
+    })
+})
+
+describe('tooltip on the playground', () => {
+    it('shows the formatted amount on the renderers page', async () => {
+        const screen = await render(Renderers as never)
+        await expect.element(screen.getByRole('grid').first()).toBeVisible()
+
+        // Found by the trigger rather than by a column index the demo may move.
+        const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')!
+        const salary = trigger.closest<HTMLElement>('[data-dg-cell]')!
+        expect(trigger.tabIndex).toBe(-1)
+
+        await userEvent.hover(trigger)
+        await expect
+            .poll(
+                () =>
+                    document
+                        .querySelector('[data-bits-floating-content-wrapper]')
+                        ?.textContent?.trim(),
+                { timeout: 3000 }
+            )
+            .toBe(salary.textContent?.trim())
+    })
+
+    it('leaves a callback tooltip working on the QA page', async () => {
+        const screen = await render(Qa as never)
+        await expect.element(screen.getByRole('grid').first()).toBeVisible()
+
+        const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')
+        expect(trigger).not.toBeNull()
+        expect(trigger!.tabIndex).toBe(-1)
     })
 })

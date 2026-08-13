@@ -310,11 +310,58 @@ a 0 to 1 ratio unless you set `wholePercent`. A `cell` snippet always wins over
 `type`, so a column can graduate to a custom renderer without changing anything
 else.
 
-Null, undefined and empty string all render as `DEFAULT_EMPTY_TEXT`, whatever
-the column's `type` and whether it declares one at all. `typeOptions.emptyText`
+Declaring both is the way to decorate without losing the formatting. The
+snippet is handed `formatted`, the text the built-in renderer would have
+printed, so it never restates the column's own `typeOptions`:
+
+```svelte
+{
+    id: 'budget',
+    type: 'currency',
+    typeOptions: { currency: 'USD' },
+    cell: budgetCell
+}
+
+{#snippet budgetCell({ value, formatted }: DataGridCellContext<Row>)}
+    {formatted}
+    {#if Number(value) > 300_000}
+        <Badge label="high" color="warning" size="xs" />
+    {/if}
+{/snippet}
+```
+
+`formatted` is `undefined` where the built-in rendering is a widget rather than
+text — `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` —
+because there is no string standing for one. It is computed only if the snippet
+reads it. The snippet also receives `column`, so a renderer can reach its own
+`def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
+it too.
+
+### Tooltips
+
+`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` —
+the design system's, not the browser's `title`. A function takes its place when
+the text should say more; it receives the cell context, `formatted` included:
+
+```ts
+{ id: 'score', type: 'number', tooltip: ({ row, value }) => `${row.name}: ${value}/100` }
+```
+
+The trigger wraps the cell, so hovering anywhere in it opens the tooltip, and it
+is taken out of the tab order: the grid is one tab stop, and a page of rows must
+not become a page of them. A blank cell gets no tooltip at all.
+
+Text the column never asked to explain is a separate matter: a cell whose
+content is clipped gets a plain `title` on hover, measured only when hovered,
+because wrapping every cell in the grid is not affordable. `tooltip: false`
+turns that off for a column that manages its own.
+
+Null, undefined and empty string all render as an em dash, whatever the
+column's `type` and whether it declares one at all. `typeOptions.emptyText`
 overrides the text per column — not to be confused with the `emptyText` prop on
 `<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
-snippet owns its own output, blanks included.
+snippet owns its own output, `formatted` included: blanks arrive there already
+turned into that text.
 
 ### Spanning
 

@@ -5,6 +5,128 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `toSortRequest` finds a column that lives under a header group. The lookup was
+  a flat `find` over the defs it was handed, and a grid with header groups keeps
+  groups at the top level and the real columns in their `children`, so every
+  entry matched nothing and was dropped. A server-model grid built the way the
+  README shows — `toSortRequest(getSorting(grid)!.sort, grid.columns.defs)` —
+  sent an empty sort: the header arrow moved, `sortChanged` fired, the request
+  went out, and the rows came back in the order they left, with no error or
+  warning to say why.
+
+    The builder flattens now, so passing `columns.defs` works with or without
+    groups and the caller cannot get it wrong. A sort naming a column the grid
+    genuinely does not have is still dropped, as documented.
+
+- `ui.headerCell` typography reaches a sortable column's label. The classes were
+  on the cell — `uppercase` and `text-primary` both in its class list — but a
+  sortable column wraps its label in the `<button>` that toggles the sort, and a
+  button refuses `text-transform` and `text-align` from its parent by user-agent
+  rule. Tailwind's preflight resets `color` and `letter-spacing` on form
+  elements and not those two, so a themed header came out the right colour and
+  spacing in the wrong case, which read as `ui` half working.
+
+    The sort button is transparent to both now. The test that covered this
+    asserted the class was in the class list, which it always was; the new one
+    reads the computed style of the label.
+
+### Removed
+
+- Twenty-eight symbols leave the package entry. Nothing in this repository —
+  no demo, no line of the README, no test importing through the package
+  entry — reached for any of them, and a 1.0 surface should carry what an app
+  does with the grid rather than what happens to exist inside it. They are
+  still there internally; only the public door closed.
+
+    Gone: `datagridVariants`, `getGridContext`, `setGridContext`,
+    `GridCellValue`, `DEFAULT_EMPTY_TEXT`, `DEFAULT_CSV_DELIMITER`,
+    `HEADER_ROW`, `ROW_HANDLE_COLUMN_ID`, `isSyntheticColumn`, `dataColumns`,
+    `downloadCsv`, `neutralizeFormula`, `documentLocale`, `resolveLocale`,
+    `defaultAnnouncerStrings`, `filterConditions`, `isFilterGroup`,
+    `normalizeFilterEntry`, `DATE_OPS`, `NUMBER_OPS`, `TEXT_OPS`, and the
+    `DataGridVariantProps` type.
+
+    What each was for, if you were using one: `typeOptions.emptyText` and the
+    `emptyText` prop cover the empty-cell text; `toCsv` takes its delimiter as
+    an argument and neutralizes formulas itself; `Grid.Root` sets the context
+    that `getGridContext` read; theming goes through the `ui` prop and
+    `defineDataGridConfig`, which is what `datagridVariants` bypassed.
+
+    The formatters go with them — `formatCurrency`, `formatDate`,
+    `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank` and
+    `FormatOptions` — now that a snippet is handed the formatted text instead
+    of the tools to rebuild it. See `formatted` below.
+
+### Changed
+
+- `tooltip: true` shows what the cell shows, through sv5ui's `Tooltip`. It
+  returned the raw value behind the cell — a currency column reading
+  `$204,000.00` had a tooltip saying `204000`, a date reading `Aug 11, 2026`
+  said `2026-08-11` — and it went out as a native `title`, which the design
+  system cannot style. A `tooltip` function is unchanged apart from receiving
+  `formatted` alongside the raw `value`.
+
+    The trigger wraps the cell so a hover anywhere in it opens the tooltip, and
+    it is taken out of the tab order: bits-ui hands its trigger a `tabindex` of
+    0, and the grid is one tab stop. The `tooltipTrigger` slot is new and
+    themeable. Mounting 50 rows of two tooltip columns measures 30.9ms against
+    11.2ms without, which is the price of a component per cell — `tooltip` is
+    opt-in per column, so only the columns asking for one pay it.
+
+    The automatic tooltip for clipped text is untouched: it stays a `title`,
+    measured on hover, because it can fire on any cell in the grid.
+
+### Added
+
+- `formatted` on `exportCsv` and `copySelection`: writes what the grid is
+  showing rather than the value behind it. A user looking at `$204,000.00` and
+  `Aug 11, 2026` copied `204000` and `2026-08-11`, and asking for the other one
+  meant passing a `formatValue` callback that rebuilt formatting the grid had
+  already done.
+
+    Off by default, and deliberately so — a spreadsheet wants a number it can
+    sum and a date it can sort. An explicit `formatValue` still wins, and a
+    column whose `type` draws a widget has no text of its own, so the raw value
+    stands in rather than an empty column.
+
+- A `cell` snippet receives `formatted`: the text the built-in renderer would
+  have printed for that value. Declaring `type` and `cell` together is now how
+  a column keeps its formatting and decorates around it, rather than the
+  snippet restating the column's own `typeOptions` — which is the shape AG Grid
+  (`valueFormatted`) and MUI (`formattedValue`) both settled on. It is
+  `undefined` where the built-in rendering is a widget rather than text, since
+  no string stands for one, and it is computed only if the snippet reads it.
+- Every cell callback receives `column`: `cell`, `cellClass`, `tooltip`,
+  `colSpan` and `rowSpan`. A renderer that needs its own `def`, alignment or id
+  had no way to reach them.
+- `src/tests/public-api.test.ts` pins the runtime export list, so the surface
+  grows or shrinks by decision rather than by accident. The blanket
+  `export type *` over `core/types` had been publishing every type added there
+  without anyone choosing to.
+
+### Changed
+
+- The entry file is three lines. Each area names its own exports —
+  `core/index.ts`, `components/index.ts`, `features/index.ts` — one by one
+  rather than re-exporting modules wholesale, so nothing reaches an app
+  because it happened to be added to a folder. Nothing moved for a consumer:
+  the same names come from `@sv5ui/datagrid` as before.
+
+### Fixed
+
+- A row pinned to the bottom draws its separator on the edge facing the rows,
+  not on the one facing the grid's own border. Both pinned sections shared a
+  rule that put the hairline under every row, which suits the top section —
+  where the body is below — and left the bottom section with nothing between it
+  and the rows above, plus a rule under its last row sitting on the viewport's
+  bottom edge, where it read as a doubled line. The edge is now a `pinSide`
+  variant of the `pinnedRow` slot; a `ui.pinnedRow` override still applies to
+  both sections.
+
 ## [1.0.0] - 2026-08-10
 
 ### Added

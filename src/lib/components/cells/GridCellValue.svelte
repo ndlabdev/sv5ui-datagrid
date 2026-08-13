@@ -3,10 +3,7 @@
     import {
         clampToMax,
         DEFAULT_EMPTY_TEXT,
-        formatCurrency,
-        formatDate,
-        formatNumber,
-        formatPercent,
+        formatCellText,
         isBlank
     } from '../../core/utils/format.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
@@ -32,22 +29,9 @@
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))
 
-    const text = $derived.by(() => {
-        switch (def.type) {
-            case 'number':
-                return formatNumber(value, options)
-            case 'currency':
-                return formatCurrency(value, options)
-            case 'percent':
-                return formatPercent(value, options)
-            case 'date':
-                return formatDate(value, options)
-            case 'datetime':
-                return formatDate(value, options, true)
-            default:
-                return String(value ?? '')
-        }
-    })
+    // The same function a `cell` snippet reads through `formatted`, so the two
+    // cannot drift. Blank is handled there; this branch only runs when not.
+    const text = $derived(formatCellText(value, def, grid?.locale) ?? String(value ?? ''))
 
     const actions = $derived<RowAction<TRow>[]>(
         def.type === 'actions' ? (options.actions?.(row) ?? []) : []

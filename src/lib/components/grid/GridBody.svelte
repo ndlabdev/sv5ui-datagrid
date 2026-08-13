@@ -1,5 +1,5 @@
 <script lang="ts" generics="TRow">
-    import { Empty, Icon, Skeleton } from 'sv5ui'
+    import { Empty, Icon, Skeleton, Tooltip } from 'sv5ui'
     import {
         isSyntheticColumn,
         ROW_HANDLE_COLUMN_ID,
@@ -10,7 +10,7 @@
     } from '../../core/types/index.js'
     import { rowColSpans } from '../../core/columns/col-span.js'
     import { opensRowSpanGroup, rowSpansOf } from '../../core/columns/row-span.js'
-    import { DEFAULT_EMPTY_TEXT, isBlank } from '../../core/utils/format.js'
+    import { DEFAULT_EMPTY_TEXT, formatCellText, isBlank } from '../../core/utils/format.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -19,6 +19,7 @@
     import { getVirtualization } from '../../features/virtualization/index.js'
     import { twMerge } from 'tailwind-merge'
     import { getGridContext } from '../internal/context.js'
+    import { notTabbable } from '../internal/focus.js'
     import { getGridTheme } from '../internal/theme.js'
     import GridCellEditor from '../cells/GridCellEditor.svelte'
     import GridCellValue from '../cells/GridCellValue.svelte'
@@ -102,6 +103,11 @@
         right: slots.cell({ align: 'right', class: theme('cell') })
     } as const)
     const cellFocusClass = $derived(slots.cellFocus({ class: theme('cellFocus') }))
+    const tooltipTriggerClass = $derived({
+        left: slots.tooltipTrigger({ align: 'left', class: theme('tooltipTrigger') }),
+        center: slots.tooltipTrigger({ align: 'center', class: theme('tooltipTrigger') }),
+        right: slots.tooltipTrigger({ align: 'right', class: theme('tooltipTrigger') })
+    } as const)
     const pinnedCellClass = $derived(slots.pinnedCell({ class: theme('pinnedCell') }))
     const pinnedCellRaisedClass = $derived(
         slots.pinnedCellRaised({ class: theme('pinnedCellRaised') })
@@ -195,7 +201,8 @@
             node,
             row: node.row,
             value: grid.getValue(node, column),
-            rowIndex
+            rowIndex,
+            column
         })
         return extra ? twMerge(result, extra) : result
     }
@@ -355,8 +362,11 @@
         const tooltip = column.def.tooltip
         if (tooltip === undefined || tooltip === false) return undefined
         const value = grid.getValue(node, column)
-        if (tooltip === true) return isBlank(value) ? undefined : String(value)
-        return tooltip({ node, row: node.row, value, rowIndex })
+        const formatted = formatCellText(value, column.def, grid.locale)
+        // `true` means "say what the cell says", which is the formatted text
+        // and not the value behind it.
+        if (tooltip === true) return isBlank(value) ? undefined : (formatted ?? String(value))
+        return tooltip({ node, row: node.row, value, rowIndex, column, formatted })
     }
 
     /** The edge the drop line sits on, so it shows where the row lands. */
@@ -404,11 +414,18 @@
             </button>
         {/if}
         {#if column.def.cell}
+            {@const cellValue = grid.getValue(node, column)}
             {@render column.def.cell({
                 node,
                 row: node.row,
-                value: grid.getValue(node, column),
-                rowIndex
+                value: cellValue,
+                rowIndex,
+                column,
+                // A getter: a snippet that never reads it never pays for it,
+                // and a renderer runs per visible cell.
+                get formatted() {
+                    return formatCellText(cellValue, column.def, grid.locale)
+                }
             })}
         {:else if column.def.type}
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
@@ -492,10 +509,10 @@
                             aria-selected={decoration?.selected}
                             tabindex={isActiveInSpan(spanRow, colIndex, colSpan, rowSpan) ? 0 : -1}
                             data-dg-cell="{spanRow}:{colIndex}"
-                            title={tooltipOf(spanNode, column, spanRow)}
                             data-dg-manual-tooltip={column.def.tooltip === undefined
                                 ? undefined
                                 : ''}
+                            use:notTabbable={column.def.tooltip !== undefined}
                             class={classOfCell({
                                 node: spanNode,
                                 column,
@@ -532,7 +549,14 @@
                                     first={!inRowEdit || opensRowEdit(spanNode, column)}
                                 />
                             {:else}
-                                {@render cellContent(spanNode, column, colIndex, spanRow)}
+                                {@const tip = tooltipOf(spanNode, column, spanRow)}
+                                {#if tip}
+                                    <Tooltip text={tip} class={tooltipTriggerClass[column.align]}>
+                                        {@render cellContent(spanNode, column, colIndex, spanRow)}
+                                    </Tooltip>
+                                {:else}
+                                    {@render cellContent(spanNode, column, colIndex, spanRow)}
+                                {/if}
                             {/if}
                         </div>
                     {/if}
@@ -555,7 +579,7 @@
             role="row"
             aria-rowindex={baseIndex + pinIndex}
             data-dg-row-id={node.id}
-            class={slots.pinnedRow({ class: theme('pinnedRow') })}
+            class={slots.pinnedRow({ pinSide: section, class: theme('pinnedRow') })}
             style:width={columnWindow.rowWidth}
         >
             {#each columnWindow.renderColumns as entry (entry.column.id)}

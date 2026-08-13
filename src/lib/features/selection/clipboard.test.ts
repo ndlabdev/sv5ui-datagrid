@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createColumnState } from '../../core/columns/column-sizing.js'
 import { buildRowNodes } from '../../core/grid/row-node.js'
-import { SELECTION_COLUMN_ID, type ColumnDef } from '../../core/types/index.js'
+import { SELECTION_COLUMN_ID, type ColumnDef, type ColumnState } from '../../core/types/index.js'
 import { pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 
 interface Row {
@@ -103,5 +103,38 @@ describe('rowsToMatrix with a formatter', () => {
         )
         expect(matrix[0]).toEqual(['Alice', 'plain', 'Alice:2'])
         expect(matrix[2]).toEqual(['Carol\tTab', '—', 'Carol\tTab:6'])
+    })
+})
+
+describe('formatted export', () => {
+    const typed: ColumnState<Row>[] = [
+        createColumnState<Row>({
+            id: 'paid',
+            type: 'currency',
+            typeOptions: { currency: 'USD', locale: 'en-US' }
+        }),
+        createColumnState<Row>({ id: 'when', type: 'date', typeOptions: { locale: 'en-US' } }),
+        createColumnState<Row>({ id: 'done', type: 'boolean' })
+    ]
+    const typedNodes = buildRowNodes(
+        [{ paid: 204000, when: '2026-08-11', done: true }] as unknown as Row[],
+        () => '1'
+    )
+
+    it('writes the value behind the cell by default, for a spreadsheet', () => {
+        expect(rowsToMatrix(typedNodes, typed)).toEqual([['204000', '2026-08-11', 'true']])
+    })
+
+    it('writes what the grid shows when asked', () => {
+        expect(rowsToMatrix(typedNodes, typed, undefined, { formatted: true })).toEqual([
+            ['$204,000.00', 'Aug 11, 2026', 'true']
+        ])
+    })
+
+    it('lets an explicit formatter win over it', () => {
+        const matrix = rowsToMatrix(typedNodes, typed, ({ column }) => `<${column.id}>`, {
+            formatted: true
+        })
+        expect(matrix).toEqual([['<paid>', '<when>', '<done>']])
     })
 })

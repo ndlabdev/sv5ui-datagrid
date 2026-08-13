@@ -30,6 +30,15 @@ export interface ToggleModifiers {
 export interface CopyOptions {
     /** Prepends a header row with the visible column labels. */
     headers?: boolean
+
+    /**
+     * Copies what the grid is showing — the column's `type` applied — rather
+     * than the value behind it. Off by default, so a paste into a spreadsheet
+     * keeps a number a number. A column whose `type` draws a widget has no text
+     * of its own and falls back to the raw value.
+     * @default false
+     */
+    formatted?: boolean
 }
 
 export interface ExportCsvOptions<TRow = unknown> {
@@ -66,4 +75,15 @@ export interface ExportCsvOptions<TRow = unknown> {
 
     /** Without it a value is written raw, so a spreadsheet keeps its type. */
     formatValue?: ExportFormatter<TRow>
+
+    /**
+     * Writes what the grid is showing — the column's `type` applied — rather
+     * than the value behind it. Off by default, because a spreadsheet wants a
+     * number it can sum and a date it can sort. A column whose `type` draws a
+     * widget has no text of its own and falls back to the raw value.
+     *
+     * `formatValue` wins over this, being the caller saying something specific.
+     * @default false
+     */
+    formatted?: boolean
 }
