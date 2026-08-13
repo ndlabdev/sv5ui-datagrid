@@ -29,6 +29,32 @@ export function nextVersion(current, bump) {
     throw new Error(`Unknown bump "${bump}". Use patch, minor, major, or an explicit X.Y.Z.`)
 }
 
+/**
+ * Closes the CHANGELOG's Unreleased section as `version`, dates it, and files
+ * the link reference newest first.
+ *
+ * A fresh empty `[Unreleased]` is left above it. Keep a Changelog, which this
+ * file follows, wants somewhere for the next entry to go: without it the next
+ * contributor has to invent the heading, and the next release stops here
+ * because there is nothing left to close. 1.1.0 shipped without one.
+ *
+ * Throws when there is no Unreleased section, which means nothing is waiting.
+ */
+export function rotateChangelog(changelog, { version, date, url }) {
+    if (!/^## \[Unreleased\]/m.test(changelog)) {
+        throw new Error('CHANGELOG has no [Unreleased] section, so there is nothing to release.')
+    }
+
+    const dated = changelog.replace(
+        /^## \[Unreleased\]/m,
+        `## [Unreleased]\n\n## [${version}] - ${date}`
+    )
+
+    return /^\[\d+\.\d+\.\d+\]:/m.test(dated)
+        ? dated.replace(/^(\[\d+\.\d+\.\d+\]:)/m, `[${version}]: ${url}\n$1`)
+        : `${dated.trimEnd()}\n\n[${version}]: ${url}\n`
+}
+
 const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const WAIT_DEFAULTS = {

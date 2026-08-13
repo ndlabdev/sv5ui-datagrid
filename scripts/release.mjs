@@ -26,7 +26,7 @@
  */
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { nextVersion, waitForChecksToAppear } from './lib/release-helpers.mjs'
+import { nextVersion, rotateChangelog, waitForChecksToAppear } from './lib/release-helpers.mjs'
 
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
@@ -157,18 +157,16 @@ for (const script of ['lint', 'check', 'test']) {
 if (!resuming) {
     step('Prepare')
 
-    if (!/^## \[Unreleased\]/m.test(changelog)) {
-        fail('CHANGELOG has no [Unreleased] section, so there is nothing to release.')
-    }
-
     const today = new Date().toISOString().slice(0, 10)
-    changelog = changelog.replace(/^## \[Unreleased\]/m, `## [${version}] - ${today}`)
-
-    // Link references live in a block at the bottom, newest first.
-    const url = `https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/${tag}`
-    changelog = /^\[\d+\.\d+\.\d+\]:/m.test(changelog)
-        ? changelog.replace(/^(\[\d+\.\d+\.\d+\]:)/m, `[${version}]: ${url}\n$1`)
-        : `${changelog.trimEnd()}\n\n[${version}]: ${url}\n`
+    try {
+        changelog = rotateChangelog(changelog, {
+            version,
+            date: today,
+            url: `https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/${tag}`
+        })
+    } catch (error) {
+        fail(error.message)
+    }
 
     write(changelogPath, changelog)
     if (!dry) run('npm', ['version', version, '--no-git-tag-version'], { stdio: 'inherit' })
