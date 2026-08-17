@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A date editor opens on the date its cell is showing. It read the value as
+  `String(value).slice(0, 10)`, which is `2024-01-10` for a stored ISO string
+  and `Wed Jan 10` for a `Date` object, so a column holding real dates opened
+  an empty picker and committing it wrote the emptiness back. Epoch numbers
+  were as blank. All four forms are read now.
+
+- A column with a `type` stores what that type says, without needing `parse`.
+  Text arrives from places that carry no types, the clipboard chief among
+  them, so pasting `42` into a number column left the row holding the string
+  and every neighbour holding a number. A column declaring `number`, `currency`
+  or `percent` now parses text into a number when it is one, and leaves it
+  alone for validation to refuse when it is not. A `parse` of your own still
+  wins, and an editor that already hands back a number is unaffected.
+
 - The quick filter searches what the cells draw. It compared the value behind
   the cell, so no column with a `type` could be found by what was on screen: a
   cell reading `1,234.5` answered only to `1234.5`, one reading `5%` only to
