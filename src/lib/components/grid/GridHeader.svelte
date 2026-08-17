@@ -1,8 +1,7 @@
 <script lang="ts">
     import { Badge, Icon } from 'sv5ui'
-    import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
-    import { rafBatch } from '../../core/utils/raf-batch.js'
-    import { inlineDelta, inlineOffset, isRtl } from '../../core/utils/scroll.js'
+    import { HEADER_ROW } from '../../core/interaction/index.js'
+    import { inlineDelta, inlineOffset, isRtl, rafBatch } from '../../core/utils/index.js'
     import {
         isSyntheticColumn,
         SELECTION_COLUMN_ID,

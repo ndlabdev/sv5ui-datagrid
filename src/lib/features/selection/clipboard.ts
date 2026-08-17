@@ -1,5 +1,4 @@
-import { formatCellText } from '../../core/utils/format.js'
-import { getCellValue } from '../../core/utils/value.js'
+import { formatCellText, getCellValue } from '../../core/utils/index.js'
 import { isSyntheticColumn, type ColumnState, type RowNode } from '../../core/types/index.js'
 
 export type CellMatrix = string[][]

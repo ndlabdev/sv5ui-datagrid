@@ -1,4 +1,4 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
+import type { GridState } from '../../core/grid/index.js'
 import type { ColumnState } from '../../core/types/index.js'
 import { getPagination } from '../../features/pagination/index.js'
 import { getVirtualization } from '../../features/virtualization/index.js'

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { defaultLabels } from '../../core/interaction/labels.js'
-import { buildRowNodes } from '../../core/grid/row-node.js'
+import { defaultLabels } from '../../core/interaction/index.js'
+import { buildRowNodes } from '../../core/grid/index.js'
 import type { ColumnDef, ColumnFilter } from '../../core/types/index.js'
 import { DISTINCT_VALUES_CAP, distinctValues } from './distinct-values.js'
 import {

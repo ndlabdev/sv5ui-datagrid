@@ -1,6 +1,6 @@
 import { flushSync } from 'svelte'
 import { describe, expect, it } from 'vitest'
-import { createDataGrid, type GridState } from '../core/grid/grid.svelte.js'
+import { createDataGrid, type GridState } from '../core/grid/index.js'
 import type { ColumnDef, GridFeature } from '../core/types/index.js'
 import { columnOps, getColumnOps } from './column-ops/index.js'
 import { editing, getEditing } from './editing/index.js'

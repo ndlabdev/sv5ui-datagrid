@@ -1,9 +1,7 @@
-import { prefixSums } from '../../core/columns/column-sizing.js'
-import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { parentGroupIdOf } from '../../core/columns/header-groups.js'
-import { clamp } from '../../core/utils/math.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { parentGroupIdOf, prefixSums } from '../../core/columns/index.js'
+import { HEADER_ROW } from '../../core/interaction/index.js'
+import type { GridState } from '../../core/grid/index.js'
+import { clamp, mutator } from '../../core/utils/index.js'
 import {
     isSyntheticColumn,
     type GridFeature,

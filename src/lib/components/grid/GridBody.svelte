@@ -8,9 +8,8 @@
         type ColumnState,
         type RowNode
     } from '../../core/types/index.js'
-    import { rowColSpans } from '../../core/columns/col-span.js'
-    import { opensRowSpanGroup, rowSpansOf } from '../../core/columns/row-span.js'
-    import { DEFAULT_EMPTY_TEXT, formatCellText, isBlank } from '../../core/utils/format.js'
+    import { opensRowSpanGroup, rowColSpans, rowSpansOf } from '../../core/columns/index.js'
+    import { DEFAULT_EMPTY_TEXT, formatCellText, isBlank } from '../../core/utils/index.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -67,12 +66,19 @@
         return editing?.editableAt(node, column.def) ?? false
     }
 
-    /** The first editable column of a row edit: the one that takes the caret. */
-    function opensRowEdit(node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
-        return (
-            grid.columns.visible.find((candidate) => isEditable(node, candidate))?.id === column.id
-        )
-    }
+    /**
+     * The first editable column of a row edit: the one that takes the caret.
+     * Resolved once for the row being edited rather than per cell — asked per
+     * cell it walks the columns again for each of them, and `editable` is the
+     * app's own predicate.
+     */
+    const rowEditOpensAt = $derived.by(() => {
+        const rowId = editing?.rowEditId
+        if (!rowId) return null
+        const node = grid.nodeById(rowId)
+        if (!node) return null
+        return grid.columns.visible.find((candidate) => isEditable(node, candidate))?.id ?? null
+    })
 
     function startEdit(node: RowNode<TRow>, column: ColumnState<TRow>): void {
         // `beginEdit`, not `startEdit`: the feature's `mode` decides whether a
@@ -546,7 +552,7 @@
                                     node={spanNode}
                                     {column}
                                     rowMode={inRowEdit}
-                                    first={!inRowEdit || opensRowEdit(spanNode, column)}
+                                    first={!inRowEdit || rowEditOpensAt === column.id}
                                 />
                             {:else}
                                 {@const tip = tooltipOf(spanNode, column, spanRow)}

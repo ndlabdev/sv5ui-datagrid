@@ -1,5 +1,5 @@
 import { bench, describe } from 'vitest'
-import { createDataGrid } from '../lib/core/grid/grid.svelte.js'
+import { createDataGrid } from '../lib/core/grid/index.js'
 import { pagination } from '../lib/features/pagination/index.js'
 import { sorting } from '../lib/features/sorting/index.js'
 import { benchColumns, serverPageOf, type BenchRow } from './data.js'

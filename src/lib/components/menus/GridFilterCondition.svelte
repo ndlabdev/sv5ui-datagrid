@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Input, Select } from 'sv5ui'
-    import { DATE_OPS, NUMBER_OPS, TEXT_OPS } from '../../core/interaction/labels.js'
+    import { DATE_OPS, NUMBER_OPS, TEXT_OPS } from '../../core/interaction/index.js'
     import { isPresenceOp } from '../../features/filtering/index.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterConditionProps } from '../datagrid.types.js'

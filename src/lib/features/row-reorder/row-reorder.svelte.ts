@@ -1,6 +1,6 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
+import type { GridState } from '../../core/grid/index.js'
 import type { GridFeature, Keybinding, RowNode } from '../../core/types/index.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { mutator } from '../../core/utils/index.js'
 import type { RowDragState, RowReorderOptions } from './row-reorder.types.js'
 
 export const ROW_REORDER = 'rowReorder'

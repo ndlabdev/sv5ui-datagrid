@@ -1,7 +1,6 @@
-import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { popupOpen } from '../../core/utils/popup.js'
-import { getCellValue } from '../../core/utils/value.js'
+import { HEADER_ROW } from '../../core/interaction/index.js'
+import type { GridState } from '../../core/grid/index.js'
+import { getCellValue, popupOpen } from '../../core/utils/index.js'
 import type {
     ColumnDef,
     ColumnState,

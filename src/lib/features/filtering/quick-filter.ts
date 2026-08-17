@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode } from '../../core/types/index.js'
-import { getCellValue, isBlank } from '../../core/utils/value.js'
+import { getCellValue, isBlank } from '../../core/utils/index.js'
 
 export function quickFilterNodes<TRow>(
     nodes: RowNode<TRow>[],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
+import { createDataGrid, type GridState } from '../../core/grid/index.js'
 import type { ColumnDef } from '../../core/types/index.js'
 import { parseClipboardMatrix } from './edit-batch.js'
 import { editing, getEditing } from './index.js'
