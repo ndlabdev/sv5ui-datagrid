@@ -1,5 +1,5 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
-import { isBlank, sortValueGetter } from '../../core/utils/index.js'
+import { isBlank, sortValueGetter, toDate } from '../../core/utils/index.js'
 
 /**
  * Where the holes land. Blank is null, undefined or the empty string — the same
@@ -77,8 +77,16 @@ export function sortNodes<TRow>(
         // rows makes on the order of 1.7M comparisons, and what sits behind a
         // column is the app's `accessor`, called every one of those times.
         const valueOf = sortValueGetter(column)
+        // A date column draws every form of a date as a date, so it orders
+        // them as dates: a Date object against an ISO string would otherwise
+        // fall through to comparing text and put June before January. Reading
+        // it here also leaves the keys numeric, so they take the fast path.
+        const asDate = column.type === 'date' || column.type === 'datetime'
         const keys = new Array<unknown>(count)
-        for (let i = 0; i < count; i++) keys[i] = valueOf(nodes[i].row)
+        for (let i = 0; i < count; i++) {
+            const value = valueOf(nodes[i].row)
+            keys[i] = asDate && !isBlank(value) ? (toDate(value)?.getTime() ?? value) : value
+        }
 
         const compare = keyComparator(keys, nullSign)
         return [(a: number, b: number) => compare(a, b) * factor]

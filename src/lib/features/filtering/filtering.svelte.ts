@@ -106,7 +106,10 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
                 const quickFiltered = quickFilterNodes(
                     nodes,
                     grid.columns.visible.map((column) => column.def),
-                    state.quick
+                    state.quick,
+                    // The same locale the cells are drawn with, or the search
+                    // would be against text nobody is looking at.
+                    grid.locale
                 )
                 const predicate = state.columnPredicate
                 return predicate ? quickFiltered.filter(predicate) : quickFiltered

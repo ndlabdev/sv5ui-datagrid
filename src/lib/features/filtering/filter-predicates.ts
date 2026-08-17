@@ -10,6 +10,7 @@ import type {
     RowNode
 } from '../../core/types/index.js'
 import { getCellValue, isBlank } from '../../core/utils/index.js'
+import { setKeyOf } from './distinct-values.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
@@ -103,6 +104,8 @@ function localDay(date: Date): number {
 function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
     if (value instanceof Date) return localDay(value)
+    // An epoch, which `Date.parse` reads as no date at all.
+    if (typeof value === 'number') return localDay(new Date(value))
 
     const text = String(value).trim()
     if (DATE_ONLY.test(text)) return Date.parse(text) / MS_PER_DAY
@@ -135,10 +138,11 @@ function datePredicate(
 }
 
 function setPredicate(filter: Extract<ColumnFilter, { kind: 'set' }>): (value: unknown) => boolean {
-    const allowed = new Set(filter.values.map((entry) => (entry === null ? null : entry)))
-    // Blanks collapse to the one null entry the value list offers, so picking it
-    // matches the empty strings the grid already draws as empty.
-    return (value) => allowed.has(isBlank(value) ? null : (value as never))
+    // Keyed on both sides by the same function the value list is built with, or
+    // the cell holding a Date is never the entry the user picked, and a filter
+    // that came back through a snapshot is never the one that went in.
+    const allowed = new Set(filter.values.map((entry) => setKeyOf(entry)))
+    return (value) => allowed.has(setKeyOf(value))
 }
 
 function booleanPredicate(
