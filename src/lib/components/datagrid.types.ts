@@ -168,6 +168,16 @@ export interface GridExportMenuProps {
      * @default 'export.csv'
      */
     filename?: string
+
+    /**
+     * Takes over the "all rows" item, for the set the grid does not hold.
+     *
+     * Under `rowModel: 'server'` the grid has one page, and a browser cannot
+     * be handed ten million rows to turn into a file, so the whole set is an
+     * endpoint that streams one. Without this the item exports what the grid
+     * is holding and is named for that instead.
+     */
+    onExportAll?: () => void
     /** Additional classes applied to the trigger button. */
     class?: ClassNameValue
 }

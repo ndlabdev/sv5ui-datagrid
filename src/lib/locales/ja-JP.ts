@@ -97,6 +97,7 @@ export const jaJP: DataGridLocalePack = {
         copyWithHeaders: '見出し付きでコピー',
         exportCsv: 'CSVで書き出し',
         exportAllRows: 'すべての行',
+        exportLoadedRows: '読み込み済みの行',
         exportSelectedRows: '選択した行',
         clearSelection: '選択を解除'
     },

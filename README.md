@@ -482,6 +482,35 @@ reset the page to 1 by the time it reaches you. `setRowCount` pulls the page
 back inside a list that shrank, and a selection survives `data` being replaced,
 so a row picked on page 1 is still picked when the user returns to it.
 
+### Exporting a set the grid does not hold
+
+`exportCsv` writes the rows the grid is holding. Under a client row model that
+is every row your filter left, which is what the toolbar's "All rows" means.
+Under `rowModel: 'server'` the grid holds one page, so the same item writes
+that page and is named "Loaded rows" instead of promising the rest.
+
+For the whole set, export on the server. A browser cannot be handed ten million
+rows to turn into a file: the string alone outgrows the tab long before the
+download starts, and the rows would have to be fetched page by page first.
+Point the item at an endpoint that streams one:
+
+```svelte
+<Grid.ExportMenu onExportAll={() => (location.href = `/api/orders.csv?${query}`)} />
+```
+
+Build `query` from the same request the grid sends, so the file matches what is
+on screen:
+
+```ts
+const query = new URLSearchParams({
+    filter: JSON.stringify(toFilterRequest(getFiltering(grid)!.model, visibleIds)),
+    sort: JSON.stringify(toSortRequest(getSorting(grid)!.sort, grid.columns.defs))
+})
+```
+
+Selection is unaffected: selected ids are held across pages, so "Selected rows"
+writes what the user picked whichever model is in use.
+
 ### What your backend has to agree with
 
 The request carries everything the grid decided, and your backend decides the

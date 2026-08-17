@@ -25,9 +25,7 @@ interface Row {
     name: string
 }
 
-const columns: ColumnDef<Row>[] = [
-    { id: 'name', sortable: true, filter: 'text' }
-]
+const columns: ColumnDef<Row>[] = [{ id: 'name', sortable: true, filter: 'text' }]
 
 function pageOf(page: number, pageSize: number, total: number): Row[] {
     const start = (page - 1) * pageSize
@@ -43,12 +41,7 @@ function serverGrid(pageSize = 10): GridState<Row> {
         data: pageOf(1, pageSize, 100),
         getRowId: (row) => row.id,
         rowModel: 'server',
-        features: [
-            filtering(),
-            sorting(),
-            selection(),
-            pagination({ pageSize, rowCount: 100 })
-        ]
+        features: [filtering(), sorting(), selection(), pagination({ pageSize, rowCount: 100 })]
     })
 }
 
@@ -196,5 +189,40 @@ describe('a selection outlives the rows it was made on', () => {
 
         grid.data = pageOf(2, 10, 100)
         expect(select.allState).toBe('none')
+    })
+})
+
+describe('exporting what the grid does not hold', () => {
+    /** The toolbar's own logic, which is the part that can lie. */
+    function menuLabel(rowModel: 'client' | 'server', onExportAll?: () => void): string {
+        const grid = createDataGrid<Row>({
+            columns,
+            data: pageOf(1, 10, 100),
+            getRowId: (row) => row.id,
+            rowModel,
+            features: [selection(), pagination({ pageSize: 10, rowCount: 1_000_000 })]
+        })
+        const holdsEverything = grid.rowModel !== 'server' || onExportAll !== undefined
+        return holdsEverything ? grid.labels.exportAllRows : grid.labels.exportLoadedRows
+    }
+
+    it('writes only the rows it is holding', () => {
+        const grid = serverGrid()
+        getPagination(grid)!.setRowCount(1_000_000)
+        // What exportCsv({ allRows: true }) reaches for.
+        expect(grid.preWindowNodes).toHaveLength(10)
+        expect(getPagination(grid)!.total).toBe(1_000_000)
+    })
+
+    it('does not call a page of a million rows all of them', () => {
+        expect(menuLabel('server')).toBe('Loaded rows')
+    })
+
+    it('offers the whole set once an endpoint is there to answer for it', () => {
+        expect(menuLabel('server', () => {})).toBe('All rows')
+    })
+
+    it('leaves a client grid saying what it always said', () => {
+        expect(menuLabel('client')).toBe('All rows')
     })
 })

@@ -98,6 +98,7 @@ export const thTH: DataGridLocalePack = {
         copyWithHeaders: 'คัดลอกพร้อมหัวตาราง',
         exportCsv: 'ส่งออก CSV',
         exportAllRows: 'ทุกแถว',
+        exportLoadedRows: 'แถวที่โหลดแล้ว',
         exportSelectedRows: 'แถวที่เลือก',
         clearSelection: 'ยกเลิกการเลือก'
     },

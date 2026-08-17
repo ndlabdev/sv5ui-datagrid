@@ -34,6 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The export menu stops calling a page all rows. Under `rowModel: 'server'`
+  the grid holds one page, and "All rows" wrote that page out under a name
+  that promised the whole set: on a grid reporting a million rows it produced
+  a file of twenty-five. The item is named "Loaded rows" there now, in all
+  twelve languages, and `Grid.ExportMenu` takes an `onExportAll` for the set
+  the grid does not hold, which for the row counts a server model exists for
+  means an endpoint that streams the file rather than a browser building it.
+  A client row model is unchanged: it holds every row the filter left, so
+  "All rows" was always true there.
+
 - A `date` column orders its rows as dates whatever form each one arrived in.
   Values were compared like with like, so as soon as one row held a `Date` and
   the next an ISO string the column fell through to comparing text, and June
