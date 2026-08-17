@@ -86,10 +86,35 @@ function numberPredicate(
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 
+const MS_PER_DAY = 86_400_000
+
+/** A date with no zone in it: the day it spells, wherever it is read. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * The calendar day something is drawn on, which is the day it is filtered by.
+ *
+ * An instant is not a day. `getTime()` divided down lands on the UTC day, and
+ * a cell is drawn in local time, so anywhere the clock is ahead of UTC a
+ * midnight Date object reads as the day before: a row showing 10 January was
+ * not found by asking for 10 January. The same goes for a timestamp late
+ * enough in the day to have already turned over locally.
+ */
+function localDay(date: Date): number {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
+}
+
 function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
-    const time = value instanceof Date ? value.getTime() : Date.parse(String(value))
-    return Math.floor(time / 86_400_000)
+    if (value instanceof Date) return localDay(value)
+
+    const text = String(value).trim()
+    // What the filter's own date input produces, and what a date column
+    // usually holds. It has no time to move it across a boundary.
+    if (DATE_ONLY.test(text)) return Date.parse(text) / MS_PER_DAY
+
+    const parsed = new Date(text)
+    return Number.isNaN(parsed.getTime()) ? Number.NaN : localDay(parsed)
 }
 
 function datePredicate(

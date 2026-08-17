@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `date` column is filtered by the day it draws. Two things had pulled apart
+  from what the cell shows, and both of them only outside UTC, which is why the
+  suite never saw either. A cell holding a `Date` object was compared by its
+  instant rather than its day, so anywhere the clock runs ahead of Greenwich a
+  row reading 10 January went unfound by a filter asking for 10 January. And a
+  cell holding a plain `2026-03-14` was read as UTC midnight and drawn in local
+  time, so from New York it drew 13 March, a day the value does not say.
+
+    Both now resolve to the calendar day the cell is drawn on, and a plain date
+    is taken as the day it spells wherever it is read. A timestamp is filtered
+    by its local day, so one late enough to have turned over belongs to the day
+    the grid shows it on. An app running in UTC sees no change at all. Dates
+    that cannot mean a day, `2026-02-30` among them, are refused rather than
+    rolled forward into March.
+
 - A `percent` column can be filtered by the percentage it draws. The renderer
   holds a ratio and multiplies by 100 to draw it, so a cell reading `5%` holds
   `0.05`, and the number filter was compiled against the row: typing the 5 that
