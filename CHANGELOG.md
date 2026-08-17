@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A `percent` column can be filtered by the percentage it draws. The renderer
+  holds a ratio and multiplies by 100 to draw it, so a cell reading `5%` holds
+  `0.05`, and the number filter was compiled against the row: typing the 5 that
+  was on screen matched nothing, and nothing in the panel said why. The panel
+  now collects and reads back percentages, the value list and the chips are
+  written the way the cells are, and `%` sits in the inputs so the unit is not
+  something to work out.
+
+    What is stored is unchanged: the filter model, snapshots and the request
+    `toFilterRequest` builds stay in the units the rows are in, so a filter
+    written by an older version still means what it meant. A column setting
+    `wholePercent` already held what it drew and is untouched, as is every
+    other column type.
+
 ## [1.1.0] - 2026-08-13
 
 ### Fixed

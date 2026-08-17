@@ -208,14 +208,24 @@ function describeText(
     return `${op} "${filter.value}"`
 }
 
+/**
+ * How a value is written back to the reader. The chip says what the column
+ * says: a percent column filtered at `0.05` is one the user set to 5%, and a
+ * chip reading `0.05` describes a filter nobody typed.
+ */
+export type FilterValueFormat = (value: unknown) => string
+
+const plainValue: FilterValueFormat = (value) => String(value)
+
 function describeNumber(
     filter: Extract<ColumnFilter, { kind: 'number' }>,
-    labels: DataGridLabels
+    labels: DataGridLabels,
+    format: FilterValueFormat
 ): string {
     const op = labels.numberOps[filter.op]
     if (isPresence(filter.op)) return op
-    if (filter.op === 'between') return `${filter.value} – ${filter.to}`
-    return `${op} ${filter.value}`
+    if (filter.op === 'between') return `${format(filter.value)} – ${format(filter.to)}`
+    return `${op} ${format(filter.value)}`
 }
 
 function describeDate(
@@ -228,8 +238,14 @@ function describeDate(
     return `${op} ${filter.value}`
 }
 
-function describeSet(filter: Extract<ColumnFilter, { kind: 'set' }>): string {
-    const shown = filter.values.slice(0, 2).map(String).join(', ')
+function describeSet(
+    filter: Extract<ColumnFilter, { kind: 'set' }>,
+    format: FilterValueFormat
+): string {
+    const shown = filter.values
+        .slice(0, 2)
+        .map((value) => format(value))
+        .join(', ')
     const more = filter.values.length - 2
     return more > 0 ? `${shown} +${more}` : shown
 }
@@ -238,23 +254,36 @@ function isPresence(op: string): op is PresenceFilterOp {
     return op === 'blank' || op === 'notBlank'
 }
 
-function describeCondition(filter: ColumnFilter, labels: DataGridLabels): string {
+function describeCondition(
+    filter: ColumnFilter,
+    labels: DataGridLabels,
+    format: FilterValueFormat
+): string {
     switch (filter.kind) {
         case 'text':
             return describeText(filter, labels)
         case 'number':
-            return describeNumber(filter, labels)
+            return describeNumber(filter, labels, format)
         case 'date':
             return describeDate(filter, labels)
         case 'set':
-            return describeSet(filter)
+            return describeSet(filter, format)
         case 'boolean':
             return filter.value ? labels.yes : labels.no
     }
 }
 
-export function describeFilter(entry: ColumnFilterEntry, labels: DataGridLabels): string {
-    if (entry.kind !== 'group') return describeCondition(entry, labels)
+/**
+ * `format` is how the column draws a value; without one the numbers are
+ * written as they are stored, which is what a column drawing what it holds
+ * wants anyway.
+ */
+export function describeFilter(
+    entry: ColumnFilterEntry,
+    labels: DataGridLabels,
+    format: FilterValueFormat = plainValue
+): string {
+    if (entry.kind !== 'group') return describeCondition(entry, labels, format)
     const join = entry.join === 'or' ? ` ${labels.or} ` : ` ${labels.and} `
-    return entry.conditions.map((filter) => describeCondition(filter, labels)).join(join)
+    return entry.conditions.map((filter) => describeCondition(filter, labels, format)).join(join)
 }
