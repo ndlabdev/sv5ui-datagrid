@@ -317,6 +317,8 @@ hoá header group để lấy đúng `sortField`.
 **Có gì:**
 
 - **Quick filter** khớp trên mọi cột đang hiển thị, có debounce (mặc định 200ms) ở tầng UI.
+  Khớp cả **chữ đã định dạng** lẫn giá trị thô, nên ô hiện `5%` tìm được bằng `5%` và bằng
+  `0.05`. Chuỗi tìm kiếm của mỗi dòng được dựng một lần rồi giữ theo row object.
 - **Năm họ filter theo cột:**
     - `text` — `contains`, `notContains`, `equals`, `notEqual`, `startsWith`, `endsWith`,
       `blank`, `notBlank`; có ô tick **Match case**.
