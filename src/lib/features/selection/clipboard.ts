@@ -1,12 +1,41 @@
-import { formatCellText } from '../../core/utils/format.js'
+import { formatCellText, toDate } from '../../core/utils/format.js'
 import { getCellValue } from '../../core/utils/value.js'
-import { isSyntheticColumn, type ColumnState, type RowNode } from '../../core/types/index.js'
+import {
+    isSyntheticColumn,
+    type ColumnDef,
+    type ColumnState,
+    type RowNode
+} from '../../core/types/index.js'
 
 export type CellMatrix = string[][]
 
-function cellText(value: unknown): string {
+function pad(value: number, width = 2): string {
+    return String(value).padStart(width, '0')
+}
+
+/** The calendar the cell was drawn in, which is the one it is written in. */
+function isoDay(date: Date): string {
+    return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function isoDateTime(date: Date): string {
+    return `${isoDay(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+/**
+ * Unformatted, but not raw: a spreadsheet has to read a date back as a date.
+ * `toISOString` writes the UTC instant, which is the previous day wherever the
+ * clock is ahead of Greenwich, and an epoch column would leave as a number.
+ */
+function cellText<TRow>(value: unknown, def?: ColumnDef<TRow>): string {
     if (value === null || value === undefined) return ''
-    if (value instanceof Date) return value.toISOString()
+
+    const type = def?.type
+    if (type === 'date' || type === 'datetime') {
+        const date = toDate(value)
+        if (date) return type === 'date' ? isoDay(date) : isoDateTime(date)
+    }
+    if (value instanceof Date) return isoDateTime(value)
     return String(value)
 }
 
@@ -32,10 +61,10 @@ export function rowsToMatrix<TRow>(
         targets.map((column) => {
             const value = getCellValue(node.row, column.def)
             if (format) return format({ value, node, column })
-            if (!options.formatted) return cellText(value)
+            if (!options.formatted) return cellText(value, column.def)
             // A widget column has no text of its own; `formatCellText` says so
             // by returning undefined, and the raw value stands in.
-            return formatCellText(value, column.def, options.locale) ?? cellText(value)
+            return formatCellText(value, column.def, options.locale) ?? cellText(value, column.def)
         })
     )
 }

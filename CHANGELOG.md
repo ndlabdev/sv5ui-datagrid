@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The quick filter searches what the cells draw. It compared the value behind
+  the cell, so no column with a `type` could be found by what was on screen: a
+  cell reading `1,234.5` answered only to `1234.5`, one reading `5%` only to
+  `0.05`, and one holding a `Date` answered to nothing anybody would type, its
+  value being `Wed Jan 10 2024 00:00:00 GMT+0700 (Indochina Time)`. Both forms
+  now match, so a search that worked before still works.
+
+    It also got faster. The text a row is searched by is built once and held
+    against the row object, which an edit replaces rather than writes through,
+    so nothing has to invalidate it. On the bench at 100k rows it went from
+    29ms per keystroke to 6ms; at a million rows the first keystroke costs
+    about 2.5s and each one after about 180ms, for roughly 7MB of held text
+    per 100k rows.
+
+- An export writes a date as a date. A cell holding a `Date` was written with
+  `toISOString`, which is the UTC instant and so the previous day wherever the
+  clock is ahead of Greenwich, and a column holding epoch numbers left as
+  numbers. Both are now written in the calendar the cell was drawn in:
+  `2024-01-10` for a `date` column and `2024-01-10T09:30:00` for a `datetime`
+  one. This applies to the unformatted export and to clipboard copy; passing
+  `formatted` or a `formatValue` of your own is unchanged.
+
 - A `date` column is filtered by the day it draws. Two things had pulled apart
   from what the cell shows, and both of them only outside UTC, which is why the
   suite never saw either. A cell holding a `Date` object was compared by its

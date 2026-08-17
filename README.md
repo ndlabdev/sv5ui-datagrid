@@ -518,7 +518,7 @@ taken on trust.
 | DOM nodes            | 779       | 779       | 779     |
 | Sort                 | 81ms      | 67ms      | 67ms    |
 | Scroll, median frame | 19ms      | 23ms      | 35ms    |
-| Quick filter         | 0.5s      | 1.1s      | 2.1s    |
+| Quick filter, first  | 0.5s      | 1.1s      | 2.1s    |
 
 The DOM node count is the number worth reading: it is the same at a million
 rows as at a hundred thousand, because only the visible window is rendered. The
@@ -528,10 +528,20 @@ heap is your data, not the grid's overhead.
 
 - **Scrolling holds 60fps to roughly half a million rows** and falls to about
   28fps at a million with this many columns. Fewer columns move that line out.
-- **Quick filter is O(rows x visible columns) on the main thread.** At a million
-  rows and 39 columns that is 39 million string comparisons and about two
-  seconds of blocked UI. Filter on fewer columns, or use `rowModel: 'server'`,
-  until this is made incremental.
+- **Quick filter pays for its first keystroke and reuses it after.** The first
+  pass is O(rows x visible columns) on the main thread and formats every cell,
+  since the filter matches what a cell draws rather than the value behind it.
+  Each keystroke after that is one substring test per row against text already
+  built. Measured on the bench at a million rows across four columns: 2.5s for
+  the first keystroke, 180ms for each one after, at roughly 7MB of held text
+  per 100k rows. The row above is the first keystroke, and it predates the
+  cache, so read it as an upper bound. Filter on fewer columns, or use
+  `rowModel: 'server'`, where that first pass is what matters.
+
+    The text is held against the row object, so it is dropped when a row is
+    edited, when `data` is replaced, and when the visible columns or the
+    language change.
+
 - **Beyond the browser's maximum element height** the scroll range is scaled
   rather than clamped, so the last row stays reachable; a pixel of scrolling
   simply covers more than a pixel of content. Engines differ on where that
