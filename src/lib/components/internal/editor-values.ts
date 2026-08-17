@@ -1,11 +1,18 @@
 import { parseDate, parseTime, Time, type DateValue } from '@internationalized/date'
+import { toDate } from '../../core/utils/index.js'
 
-/** An ISO date string as the DatePicker's `DateValue`. */
+/** Whatever the cell holds, as the DatePicker's `DateValue`. */
 export function toDateValue(value: unknown): DateValue | undefined {
     if (value === null || value === undefined || value === '') return undefined
-    const text = String(value).slice(0, 10)
+
+    // Not `String(value).slice(0, 10)`: a Date object reads as "Wed Jan 10"
+    // that way, which parses as nothing, and the editor opened empty over a
+    // cell that was showing a date.
+    const date = toDate(value)
+    if (!date) return undefined
+    const pad = (part: number) => String(part).padStart(2, '0')
     try {
-        return parseDate(text)
+        return parseDate(`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`)
     } catch {
         return undefined
     }

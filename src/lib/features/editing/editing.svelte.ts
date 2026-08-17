@@ -1,6 +1,6 @@
 import { HEADER_ROW } from '../../core/interaction/index.js'
 import type { GridState } from '../../core/grid/index.js'
-import { getCellValue, popupOpen } from '../../core/utils/index.js'
+import { getCellValue, popupOpen, toNumber } from '../../core/utils/index.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -125,7 +125,7 @@ export class Editing<TRow> {
         def: ColumnDef<TRow>,
         raw: unknown
     ): Validated | Promise<Validated> {
-        const parsed = def.parse ? def.parse(raw, node.row) : raw
+        const parsed = def.parse ? def.parse(raw, node.row) : parseByType(raw, def)
         return runValidation(parsed, node.row, def)
     }
 
@@ -487,6 +487,23 @@ export function editing<TRow>(options: EditingOptions = {}): GridFeature<TRow> {
 
 export function getEditing<TRow>(grid: GridState<TRow>): Editing<TRow> | undefined {
     return grid.feature<Editing<TRow>>(EDITING)
+}
+
+/**
+ * What a column of a given type holds, when the app has not said otherwise
+ * with `parse`.
+ *
+ * Text arrives from places that have no types to offer: the clipboard, and any
+ * editor that hands back what was typed. Storing "42" in a number column
+ * leaves the row a different shape from its neighbours, and the app that reads
+ * it back gets a string where every other row has a number.
+ */
+function parseByType<TRow>(raw: unknown, def: ColumnDef<TRow>): unknown {
+    if (typeof raw !== 'string' || raw.trim() === '') return raw
+    if (def.type !== 'number' && def.type !== 'currency' && def.type !== 'percent') return raw
+    // Text that is not a number is left alone for validation to refuse, rather
+    // than stored as NaN.
+    return toNumber(raw) ?? raw
 }
 
 /** Editors a printable key can sensibly start with. */
