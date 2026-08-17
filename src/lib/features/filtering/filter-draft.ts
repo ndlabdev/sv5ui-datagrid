@@ -9,6 +9,7 @@ import type {
     TextFilterOp
 } from '../../core/types/index.js'
 import { normalizeFilterEntry } from './filter-model.js'
+import { toDisplayUnit, toModelUnit } from './filter-units.js'
 
 /** How many conditions one column's filter may hold. */
 export const MAX_CONDITIONS = 2
@@ -60,10 +61,12 @@ const numToStr = (value: number | undefined): string => (value !== undefined ? S
 // sv5ui Input type="number" binds a number, so drafts may hold non-strings.
 const str = (value: unknown): string => (value === null || value === undefined ? '' : String(value))
 
-function conditionDraft(type: FilterType, filter: ColumnFilter): ConditionDraft {
+function conditionDraft(type: FilterType, filter: ColumnFilter, scale: number): ConditionDraft {
     if (filter.kind === 'text') return { op: filter.op, value: filter.value, to: '' }
     if (filter.kind === 'number') {
-        return { op: filter.op, value: numToStr(filter.value), to: numToStr(filter.to) }
+        const shown = (value: number | undefined) =>
+            numToStr(value === undefined ? undefined : toDisplayUnit(value, scale))
+        return { op: filter.op, value: shown(filter.value), to: shown(filter.to) }
     }
     if (filter.kind === 'date') {
         return { op: filter.op, value: filter.value ?? '', to: filter.to ?? '' }
@@ -77,7 +80,8 @@ function caseSensitivityOf(filter: ColumnFilter): boolean {
 
 export function draftFromFilter(
     type: FilterType,
-    entry: ColumnFilterEntry | undefined
+    entry: ColumnFilterEntry | undefined,
+    scale = 1
 ): FilterDraft {
     const draft = emptyDraft(type)
     if (!entry) return draft
@@ -94,7 +98,7 @@ export function draftFromFilter(
         join,
         conditions: conditions
             .slice(0, MAX_CONDITIONS)
-            .map((filter) => conditionDraft(type, filter)),
+            .map((filter) => conditionDraft(type, filter, scale)),
         caseSensitive: caseSensitivityOf(first)
     }
 }
@@ -109,7 +113,7 @@ function buildText(draft: FilterDraft, condition: ConditionDraft): ColumnFilter 
         : { kind: 'text', op, value }
 }
 
-function buildNumber(condition: ConditionDraft): ColumnFilter | null {
+function buildNumber(condition: ConditionDraft, scale: number): ColumnFilter | null {
     if (isPresenceOp(condition.op)) {
         return { kind: 'number', op: condition.op as NumberFilterOp }
     }
@@ -120,9 +124,18 @@ function buildNumber(condition: ConditionDraft): ColumnFilter | null {
         const to = str(condition.to)
         const parsedTo = Number(to)
         if (to.trim() === '' || Number.isNaN(parsedTo)) return null
-        return { kind: 'number', op: 'between', value: parsed, to: parsedTo }
+        return {
+            kind: 'number',
+            op: 'between',
+            value: toModelUnit(parsed, scale),
+            to: toModelUnit(parsedTo, scale)
+        }
     }
-    return { kind: 'number', op: condition.op as NumberFilterOp, value: parsed }
+    return {
+        kind: 'number',
+        op: condition.op as NumberFilterOp,
+        value: toModelUnit(parsed, scale)
+    }
 }
 
 function buildDate(condition: ConditionDraft): ColumnFilter | null {
@@ -139,23 +152,28 @@ function buildDate(condition: ConditionDraft): ColumnFilter | null {
 function buildCondition(
     type: FilterType,
     draft: FilterDraft,
-    condition: ConditionDraft
+    condition: ConditionDraft,
+    scale: number
 ): ColumnFilter | null {
     if (type === 'text') return buildText(draft, condition)
-    if (type === 'number') return buildNumber(condition)
+    if (type === 'number') return buildNumber(condition, scale)
     if (type === 'date') return buildDate(condition)
     return null
 }
 
 /** Null when nothing usable was entered; a group only once both are valid. */
-export function buildColumnFilter(type: FilterType, draft: FilterDraft): ColumnFilterEntry | null {
+export function buildColumnFilter(
+    type: FilterType,
+    draft: FilterDraft,
+    scale = 1
+): ColumnFilterEntry | null {
     if (type === 'set') {
         return draft.setSelected.length > 0 ? { kind: 'set', values: draft.setSelected } : null
     }
     if (type === 'boolean') return { kind: 'boolean', value: draft.boolValue === 'true' }
 
     const built = draft.conditions
-        .map((condition) => buildCondition(type, draft, condition))
+        .map((condition) => buildCondition(type, draft, condition, scale))
         .filter((filter): filter is ColumnFilter => filter !== null)
 
     if (built.length === 0) return null

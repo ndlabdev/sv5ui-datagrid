@@ -306,7 +306,9 @@ Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
 
 Number and date types go through `Intl`, with formatters cached per
 configuration because a renderer runs on every visible cell. `percent` expects
-a 0 to 1 ratio unless you set `wholePercent`. A `cell` snippet always wins over
+a 0 to 1 ratio unless you set `wholePercent`; its filter panel and chips speak
+percentages either way, so a cell reading 5% is found by typing 5 and the stored
+filter stays the `0.05` the row holds. A `cell` snippet always wins over
 `type`, so a column can graduate to a custom renderer without changing anything
 else.
 

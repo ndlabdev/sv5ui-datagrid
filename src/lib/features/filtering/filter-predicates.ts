@@ -86,10 +86,29 @@ function numberPredicate(
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 
+const MS_PER_DAY = 86_400_000
+
+/** A date with no zone in it: the day it spells, wherever it is read. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * An instant is not a day. Dividing `getTime()` lands on the UTC day while the
+ * cell is drawn in local time, so east of Greenwich a midnight Date read as
+ * the day before the one on screen.
+ */
+function localDay(date: Date): number {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
+}
+
 function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
-    const time = value instanceof Date ? value.getTime() : Date.parse(String(value))
-    return Math.floor(time / 86_400_000)
+    if (value instanceof Date) return localDay(value)
+
+    const text = String(value).trim()
+    if (DATE_ONLY.test(text)) return Date.parse(text) / MS_PER_DAY
+
+    const parsed = new Date(text)
+    return Number.isNaN(parsed.getTime()) ? Number.NaN : localDay(parsed)
 }
 
 function datePredicate(
@@ -208,14 +227,20 @@ function describeText(
     return `${op} "${filter.value}"`
 }
 
+/** How a chip writes a value, so it reads in the units the user set it in. */
+export type FilterValueFormat = (value: unknown) => string
+
+const plainValue: FilterValueFormat = (value) => String(value)
+
 function describeNumber(
     filter: Extract<ColumnFilter, { kind: 'number' }>,
-    labels: DataGridLabels
+    labels: DataGridLabels,
+    format: FilterValueFormat
 ): string {
     const op = labels.numberOps[filter.op]
     if (isPresence(filter.op)) return op
-    if (filter.op === 'between') return `${filter.value} – ${filter.to}`
-    return `${op} ${filter.value}`
+    if (filter.op === 'between') return `${format(filter.value)} – ${format(filter.to)}`
+    return `${op} ${format(filter.value)}`
 }
 
 function describeDate(
@@ -228,8 +253,14 @@ function describeDate(
     return `${op} ${filter.value}`
 }
 
-function describeSet(filter: Extract<ColumnFilter, { kind: 'set' }>): string {
-    const shown = filter.values.slice(0, 2).map(String).join(', ')
+function describeSet(
+    filter: Extract<ColumnFilter, { kind: 'set' }>,
+    format: FilterValueFormat
+): string {
+    const shown = filter.values
+        .slice(0, 2)
+        .map((value) => format(value))
+        .join(', ')
     const more = filter.values.length - 2
     return more > 0 ? `${shown} +${more}` : shown
 }
@@ -238,23 +269,31 @@ function isPresence(op: string): op is PresenceFilterOp {
     return op === 'blank' || op === 'notBlank'
 }
 
-function describeCondition(filter: ColumnFilter, labels: DataGridLabels): string {
+function describeCondition(
+    filter: ColumnFilter,
+    labels: DataGridLabels,
+    format: FilterValueFormat
+): string {
     switch (filter.kind) {
         case 'text':
             return describeText(filter, labels)
         case 'number':
-            return describeNumber(filter, labels)
+            return describeNumber(filter, labels, format)
         case 'date':
             return describeDate(filter, labels)
         case 'set':
-            return describeSet(filter)
+            return describeSet(filter, format)
         case 'boolean':
             return filter.value ? labels.yes : labels.no
     }
 }
 
-export function describeFilter(entry: ColumnFilterEntry, labels: DataGridLabels): string {
-    if (entry.kind !== 'group') return describeCondition(entry, labels)
+export function describeFilter(
+    entry: ColumnFilterEntry,
+    labels: DataGridLabels,
+    format: FilterValueFormat = plainValue
+): string {
+    if (entry.kind !== 'group') return describeCondition(entry, labels, format)
     const join = entry.join === 'or' ? ` ${labels.or} ` : ` ${labels.and} `
-    return entry.conditions.map((filter) => describeCondition(filter, labels)).join(join)
+    return entry.conditions.map((filter) => describeCondition(filter, labels, format)).join(join)
 }

@@ -15,6 +15,7 @@ export {
     normalizeFilterEntry,
     toFilterRequest
 } from './filter-model.js'
+export { filterUnitScaleOf, toDisplayUnit, toModelUnit } from './filter-units.js'
 export {
     compileColumnFilters,
     describeFilter,

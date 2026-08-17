@@ -114,6 +114,8 @@ export interface GridFilterConditionProps {
     condition: ConditionDraft
     /** 1-based position, used to keep the accessible names apart. */
     ordinal: number
+    /** Drawn inside the value inputs, so it is clear that 5 means 5%. */
+    unit?: string
 }
 
 export interface GridFilterChipsProps {

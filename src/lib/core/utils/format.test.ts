@@ -30,6 +30,19 @@ describe('coercion', () => {
         expect(toDate(Date.parse(iso))?.toISOString()).toBe(iso)
     })
 
+    it('reads a plain date as the day it spells, not as UTC midnight', () => {
+        // Wherever the clock is behind Greenwich, `new Date('2026-03-14')`
+        // lands on the 13th, and the cell drew a day the value does not say.
+        const date = toDate('2026-03-14')!
+        expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2026, 2, 14])
+        expect(formatDate('2026-03-14', { locale: 'en-US' })).toBe('Mar 14, 2026')
+    })
+
+    it('refuses a plain date whose components cannot mean a day', () => {
+        expect(toDate('2026-02-30')).toBeNull()
+        expect(toDate('2026-13-01')).toBeNull()
+    })
+
     it.each([null, undefined, 'not a date', new Date('nope')])(
         'refuses %p rather than rendering Invalid Date',
         (value) => {

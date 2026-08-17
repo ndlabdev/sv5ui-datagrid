@@ -82,7 +82,9 @@ describe('date predicates', () => {
     it('compares by day, accepting ISO strings and Date objects', () => {
         const filter: ColumnFilter = { kind: 'date', op: 'equals', value: '2026-01-15' }
         expect(passes(filter, '2026-01-15')).toBe(true)
-        expect(passes(filter, new Date('2026-01-15T23:59:00Z'))).toBe(true)
+        // Was 2026-01-15T23:59:00Z, the 15th in UTC and the 16th from Bangkok
+        // eastwards, so it passed or failed on where it ran.
+        expect(passes(filter, new Date(2026, 0, 15, 23, 59))).toBe(true)
         expect(passes(filter, '2026-01-16')).toBe(false)
 
         expect(passes({ kind: 'date', op: 'before', value: '2026-01-15' }, '2026-01-14')).toBe(true)
@@ -94,6 +96,44 @@ describe('date predicates', () => {
             )
         ).toBe(true)
         expect(passes({ kind: 'date', op: 'equals', value: '2026-01-15' }, null)).toBe(false)
+    })
+})
+
+describe('a date is filtered by the day it is drawn on', () => {
+    // Read back the way the renderer reads it, so these hold in any zone. A
+    // run under UTC cannot fail: there the two were always the same day.
+    const dayOf = (date: Date): string =>
+        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+    const onDay = (value: unknown, day: string): boolean =>
+        passes({ kind: 'date', op: 'equals', value: day }, value)
+
+    it('matches a Date object just after local midnight', () => {
+        const midnight = new Date(2024, 0, 10, 0, 30)
+        expect(onDay(midnight, dayOf(midnight))).toBe(true)
+    })
+
+    it('matches a Date object late in the local evening', () => {
+        const evening = new Date(2024, 0, 10, 23, 30)
+        expect(onDay(evening, dayOf(evening))).toBe(true)
+    })
+
+    it('matches a timestamp on the day it is drawn on', () => {
+        const stamp = '2024-01-10T21:00:00Z'
+        expect(onDay(stamp, dayOf(new Date(stamp)))).toBe(true)
+    })
+
+    it('keeps a date-only string on the day it spells', () => {
+        expect(onDay('2024-01-10', '2024-01-10')).toBe(true)
+        expect(onDay('2024-01-10', '2024-01-09')).toBe(false)
+        expect(onDay('2024-01-10', '2024-01-11')).toBe(false)
+    })
+
+    it('orders a Date object against a day the same way', () => {
+        const evening = new Date(2024, 0, 10, 23, 30)
+        expect(passes({ kind: 'date', op: 'after', value: '2024-01-09' }, evening)).toBe(true)
+        expect(passes({ kind: 'date', op: 'before', value: '2024-01-11' }, evening)).toBe(true)
+        expect(passes({ kind: 'date', op: 'after', value: '2024-01-10' }, evening)).toBe(false)
     })
 })
 

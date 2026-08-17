@@ -553,3 +553,70 @@ describe('popup layering', () => {
         expect(Number(getComputedStyle(panel).zIndex)).toBeLessThan(50)
     })
 })
+
+interface Team {
+    id: number
+    name: string
+    share: number
+}
+
+const TeamGrid = DataGrid as unknown as Component<DataGridProps<Team>>
+
+/** The shape the /qa page has: a ratio in the row, a percentage on screen. */
+const teams: Team[] = [
+    { id: 1, name: 'Core', share: 0.05 },
+    { id: 2, name: 'Data', share: 0.1 },
+    { id: 3, name: 'Infra', share: 0.42 }
+]
+
+const teamColumns: ColumnDef<Team>[] = [
+    { id: 'name', header: 'Name', flex: 1, minWidth: 140 },
+    { id: 'share', header: 'Share', width: 120, filter: 'number', type: 'percent' }
+]
+
+describe('a column drawing a unit filters in that unit', () => {
+    async function openShareFilter() {
+        const screen = await render(TeamGrid, {
+            data: teams,
+            columns: teamColumns,
+            getRowId: (team: Team) => String(team.id),
+            toolbar: true
+        })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        await page.getByRole('button', { name: 'Filter Share' }).click()
+        const dialog = page.getByRole('dialog', { name: 'Filter Share' })
+        await expect.element(dialog).toBeVisible()
+        return { screen, dialog }
+    }
+
+    it('finds the row drawn as 5% for the 5 that was typed', async () => {
+        const { screen, dialog } = await openShareFilter()
+        await dialog.getByRole('spinbutton').fill('5')
+        await dialog.getByRole('button', { name: 'Apply' }).click()
+
+        await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '2')
+        expect(firstColumn(screen.container)).toEqual(['Core'])
+    })
+
+    it('says the percentage back in the chip, not the ratio behind it', async () => {
+        const { dialog } = await openShareFilter()
+        await dialog.getByRole('spinbutton').fill('5')
+        await dialog.getByRole('button', { name: 'Apply' }).click()
+
+        await expect
+            .element(page.getByRole('button', { name: /Remove filter Share/ }))
+            .toHaveTextContent('Share: = 5%')
+    })
+
+    it('reopens on the number that was typed', async () => {
+        const { dialog } = await openShareFilter()
+        await dialog.getByRole('spinbutton').fill('5')
+        await dialog.getByRole('button', { name: 'Apply' }).click()
+
+        // Exact: once a filter is set, the chip's "Remove filter Share" also
+        // contains the trigger's name.
+        await page.getByRole('button', { name: 'Filter Share', exact: true }).click()
+        const reopened = page.getByRole('dialog', { name: 'Filter Share' })
+        await expect.element(reopened.getByRole('spinbutton')).toHaveValue(5)
+    })
+})
