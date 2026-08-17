@@ -82,10 +82,8 @@ describe('date predicates', () => {
     it('compares by day, accepting ISO strings and Date objects', () => {
         const filter: ColumnFilter = { kind: 'date', op: 'equals', value: '2026-01-15' }
         expect(passes(filter, '2026-01-15')).toBe(true)
-        // Local, because the day a Date object counts as is the day its cell
-        // is drawn on. This used to read 2026-01-15T23:59:00Z, which is the
-        // 15th in UTC and the 16th from Bangkok eastwards: the assertion
-        // passed or failed depending on where it was run.
+        // Was 2026-01-15T23:59:00Z, the 15th in UTC and the 16th from Bangkok
+        // eastwards, so it passed or failed on where it ran.
         expect(passes(filter, new Date(2026, 0, 15, 23, 59))).toBe(true)
         expect(passes(filter, '2026-01-16')).toBe(false)
 
@@ -102,11 +100,8 @@ describe('date predicates', () => {
 })
 
 describe('a date is filtered by the day it is drawn on', () => {
-    // The cell is drawn in local time and the filter used to compare the UTC
-    // instant, so a row was findable on the wrong day wherever the clock is
-    // not on UTC. These read the day back off the value the way the renderer
-    // does, which holds in any zone: under UTC the two were always the same,
-    // so a run there cannot fail, and a run anywhere else can.
+    // Read back the way the renderer reads it, so these hold in any zone. A
+    // run under UTC cannot fail: there the two were always the same day.
     const dayOf = (date: Date): string =>
         `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 

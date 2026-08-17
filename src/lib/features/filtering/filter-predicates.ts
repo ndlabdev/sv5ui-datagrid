@@ -92,13 +92,9 @@ const MS_PER_DAY = 86_400_000
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 
 /**
- * The calendar day something is drawn on, which is the day it is filtered by.
- *
- * An instant is not a day. `getTime()` divided down lands on the UTC day, and
- * a cell is drawn in local time, so anywhere the clock is ahead of UTC a
- * midnight Date object reads as the day before: a row showing 10 January was
- * not found by asking for 10 January. The same goes for a timestamp late
- * enough in the day to have already turned over locally.
+ * An instant is not a day. Dividing `getTime()` lands on the UTC day while the
+ * cell is drawn in local time, so east of Greenwich a midnight Date read as
+ * the day before the one on screen.
  */
 function localDay(date: Date): number {
     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
@@ -109,8 +105,6 @@ function toEpochDay(value: unknown): number {
     if (value instanceof Date) return localDay(value)
 
     const text = String(value).trim()
-    // What the filter's own date input produces, and what a date column
-    // usually holds. It has no time to move it across a boundary.
     if (DATE_ONLY.test(text)) return Date.parse(text) / MS_PER_DAY
 
     const parsed = new Date(text)
@@ -233,11 +227,7 @@ function describeText(
     return `${op} "${filter.value}"`
 }
 
-/**
- * How a value is written back to the reader. The chip says what the column
- * says: a percent column filtered at `0.05` is one the user set to 5%, and a
- * chip reading `0.05` describes a filter nobody typed.
- */
+/** How a chip writes a value, so it reads in the units the user set it in. */
 export type FilterValueFormat = (value: unknown) => string
 
 const plainValue: FilterValueFormat = (value) => String(value)
@@ -298,11 +288,6 @@ function describeCondition(
     }
 }
 
-/**
- * `format` is how the column draws a value; without one the numbers are
- * written as they are stored, which is what a column drawing what it holds
- * wants anyway.
- */
 export function describeFilter(
     entry: ColumnFilterEntry,
     labels: DataGridLabels,

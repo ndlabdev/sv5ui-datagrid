@@ -59,15 +59,12 @@ export function toDate(value: unknown): Date | null {
     if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
     if (typeof value === 'string') {
         const parts = DATE_ONLY.exec(value.trim())
-        // A plain date names a calendar day, not an instant. `new Date` reads
-        // one as UTC midnight, which is still the previous day everywhere west
-        // of Greenwich, so a cell holding 2026-03-14 drew 13 March in New York
-        // and the row disagreed with the filter that found it.
+        // A plain date names a calendar day, not an instant: `new Date` reads
+        // one as UTC midnight, which draws as the day before west of Greenwich.
         if (parts) {
             const [year, month, day] = [Number(parts[1]), Number(parts[2]), Number(parts[3])]
             const date = new Date(year, month - 1, day)
-            // Rejects what the components cannot mean: `new Date` would roll
-            // 2026-02-30 forward into March rather than refusing it.
+            // `new Date` would roll 2026-02-30 forward into March.
             const spelled = date.getMonth() === month - 1 && date.getDate() === day
             return spelled ? date : null
         }

@@ -18,9 +18,7 @@
         if (!filteringState) return []
         return Object.entries(filteringState.columnFilters).map(([columnId, filter]) => {
             const column = grid.columns.get(columnId)
-            // The chip reads back what the user set, in the units they set it
-            // in: a percent column filtered at 5% stores 0.05 and would
-            // otherwise describe a filter nobody typed.
+            // A percent column filtered at 5% stores 0.05; the chip says 5%.
             const written = (value: unknown) =>
                 (column && formatCellText(value, column.def, grid.locale)) ?? String(value)
             return {

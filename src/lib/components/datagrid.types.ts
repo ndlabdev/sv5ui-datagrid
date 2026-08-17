@@ -114,10 +114,7 @@ export interface GridFilterConditionProps {
     condition: ConditionDraft
     /** 1-based position, used to keep the accessible names apart. */
     ordinal: number
-    /**
-     * Shown inside the value inputs where the column draws a unit the number
-     * alone does not carry, so it is clear that 5 means 5% and not 0.05.
-     */
+    /** Drawn inside the value inputs, so it is clear that 5 means 5%. */
     unit?: string
 }
 

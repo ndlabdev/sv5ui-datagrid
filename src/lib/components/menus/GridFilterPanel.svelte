@@ -39,8 +39,7 @@
     const PANEL_WIDTH = 272
 
     const type = $derived(filterTypeOf(column.def))
-    // The panel collects numbers in the units the column draws, and hands them
-    // back in the units the rows hold. 1 for every column drawing what it holds.
+    // Collected in the units the column draws, handed back in the row's own.
     const scale = $derived(filterUnitScaleOf(column.def))
     const unit = $derived(scale === 100 ? '%' : undefined)
     /** A value written the way its cell writes it, for the checkbox list. */

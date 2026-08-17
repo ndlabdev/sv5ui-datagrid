@@ -78,10 +78,6 @@ function caseSensitivityOf(filter: ColumnFilter): boolean {
     return filter.kind === 'text' && filter.caseSensitive === true
 }
 
-/**
- * `scale` is what the column's renderer multiplies by, so the panel shows the
- * number the cell shows. 1 for every column that draws what it holds.
- */
 export function draftFromFilter(
     type: FilterType,
     entry: ColumnFilterEntry | undefined,
@@ -165,12 +161,7 @@ function buildCondition(
     return null
 }
 
-/**
- * Null when nothing usable was entered; a group only once both are valid.
- *
- * `scale` is the unit the panel collected the numbers in, undone here so the
- * filter leaves in the units the rows are in. See `filter-units.ts`.
- */
+/** Null when nothing usable was entered; a group only once both are valid. */
 export function buildColumnFilter(
     type: FilterType,
     draft: FilterDraft,
