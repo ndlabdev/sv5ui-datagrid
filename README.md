@@ -453,7 +453,10 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
     grid.events.on(event, fetchPage)
 }
 
+let inFlight = 0
+
 async function fetchPage() {
+    const ticket = ++inFlight
     const { rows, total } = await api.load({
         filter: toFilterRequest(
             getFiltering(grid)!.model,
@@ -461,10 +464,21 @@ async function fetchPage() {
         ),
         sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs, getSorting(grid)!.nulls)
     })
+    // Typing into the quick filter sends a request per keystroke, and they do
+    // not come back in the order they left. Without this the grid ends up
+    // showing the answer to a question the user has already moved on from.
+    if (ticket !== inFlight) return
     grid.data = rows
     getPagination(grid)!.setRowCount(total)
 }
 ```
+
+The events fire after the feature has settled, which is what makes reading the
+state inside the handler safe: `pageChanged` reports the page the grid moved
+to rather than the one that was asked for, and a sort or a filter has already
+reset the page to 1 by the time it reaches you. `setRowCount` pulls the page
+back inside a list that shrank, and a selection survives `data` being replaced,
+so a row picked on page 1 is still picked when the user returns to it.
 
 ### What your backend has to agree with
 
