@@ -455,13 +455,44 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
 
 async function fetchPage() {
     const { rows, total } = await api.load({
-        filter: toFilterRequest(getFiltering(grid)!.model),
-        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs)
+        filter: toFilterRequest(
+            getFiltering(grid)!.model,
+            grid.columns.visible.map((column) => column.id)
+        ),
+        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs, getSorting(grid)!.nulls)
     })
     grid.data = rows
     getPagination(grid)!.setRowCount(total)
 }
 ```
+
+### What your backend has to agree with
+
+The request carries everything the grid decided, and your backend decides the
+rest. Under `rowModel: 'server'` the grid does not filter or sort what it is
+handed, so where the two disagree, what the reader sees is yours:
+
+| The grid means                                                  | A database's default                 |
+| --------------------------------------------------------------- | ------------------------------------ |
+| Text compares case-insensitively unless `caseSensitive` is set  | `LIKE` is case-sensitive in Postgres |
+| Text orders naturally, so `Item 2` precedes `Item 10`           | `Item 10` precedes `Item 2`          |
+| Blank is `null`, `undefined` or `''`                            | `IS NULL` misses `''`                |
+| `between` includes both ends                                    | varies                               |
+| A date condition means a calendar day, in the reader's own zone | a timestamp in the database's zone   |
+| A `percent` column holds the ratio, so 5% travels as `0.05`     | whatever the column stores           |
+
+`nulls` rides on every sort entry, written as the side blanks actually land on,
+so `ORDER BY … NULLS LAST` reproduces it without further thought. `quickFields`
+names the columns a bare query applies to, which is otherwise unguessable.
+
+Two things the request cannot carry, because they are functions: a column's
+`sortFn` and a filter's custom `predicate` run on the client only. Under a
+server row model they are never called, and the request describes the built-in
+meaning of the condition instead.
+
+`src/tests/server-contract.test.ts` is a backend written against this table.
+It answers what the client answers, and it is the shortest description of what
+conformance costs.
 
 `toFilterRequest` and `toSortRequest` produce normalized wire shapes, kept
 deliberately separate from the internal models so they can stay frozen while

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The server request carries what a backend cannot guess. `SortRequestEntry`
+  gains `nulls`, written as the side blanks actually land on rather than the
+  side the option names: a blank sorts as the smallest value here, so `first`
+  becomes last once the direction is descending, while SQL's `NULLS FIRST`
+  does not move. `FilterRequest` gains `quickFields`, naming the columns a
+  bare query string applies to, which the filter model never carried and a
+  backend had nothing to work out from. `toSortRequest` takes the nulls
+  placement as a third argument and `toFilterRequest` the fields as a second;
+  both default to what the grid does, so existing calls still compile and now
+  send more.
+
 ### Fixed
 
 - A date editor opens on the date its cell is showing. It read the value as

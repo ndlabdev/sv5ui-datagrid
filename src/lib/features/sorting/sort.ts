@@ -1,11 +1,7 @@
-import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
+import type { ColumnDef, RowNode, SortNulls, SortState } from '../../core/types/index.js'
 import { isBlank, sortValueGetter, toDate } from '../../core/utils/index.js'
 
-/**
- * Where the holes land. Blank is null, undefined or the empty string — the same
- * set the `blank` filter operator matches and the renderers show as empty.
- */
-export type SortNulls = 'first' | 'last'
+export type { SortNulls } from '../../core/types/index.js'
 
 /** Compares two rows by their position, so the keys can be read by index. */
 type IndexComparator = (a: number, b: number) => number
