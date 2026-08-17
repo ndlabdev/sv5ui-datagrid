@@ -1,4 +1,4 @@
-import { flattenColumns } from '../../core/columns/header-groups.js'
+import { flattenColumns } from '../../core/columns/index.js'
 import type { ColumnDef, SortRequestEntry, SortState } from '../../core/types/index.js'
 
 /**

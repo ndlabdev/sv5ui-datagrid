@@ -1,4 +1,4 @@
-import { clamp } from '../../core/utils/math.js'
+import { clamp } from '../../core/utils/index.js'
 
 export interface DropTarget {
     index: number

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createColumnState } from '../lib/core/columns/column-sizing.js'
-import { createDataGrid, type GridState } from '../lib/core/grid/grid.svelte.js'
+import { createColumnState } from '../lib/core/columns/index.js'
+import { createDataGrid, type GridState } from '../lib/core/grid/index.js'
 import { pagination } from '../lib/features/pagination/index.js'
-import { variableRowLayout } from '../lib/core/virtual/row-layout.js'
+import { variableRowLayout } from '../lib/core/virtual/index.js'
 import {
     compileColumnFilters,
     distinctValues,

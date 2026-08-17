@@ -4,11 +4,11 @@
         clampToMax,
         DEFAULT_EMPTY_TEXT,
         formatCellText,
-        isBlank
-    } from '../../core/utils/format.js'
+        isBlank,
+        safeHref
+    } from '../../core/utils/index.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
-    import { safeHref } from '../../core/utils/url.js'
-    import { defaultLabels } from '../../core/interaction/labels.js'
+    import { defaultLabels } from '../../core/interaction/index.js'
     import { getGridOrNull } from '../internal/context.js'
 
     let {

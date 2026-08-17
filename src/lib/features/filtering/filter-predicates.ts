@@ -9,7 +9,7 @@ import type {
     PresenceFilterOp,
     RowNode
 } from '../../core/types/index.js'
-import { getCellValue, isBlank } from '../../core/utils/value.js'
+import { getCellValue, isBlank } from '../../core/utils/index.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {

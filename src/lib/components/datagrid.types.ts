@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
-import type { GridState } from '../core/grid/grid.svelte.js'
+import type { GridState } from '../core/grid/index.js'
 import type { DataGridUi } from './datagrid.variants.js'
 import type {
     ColumnDef,

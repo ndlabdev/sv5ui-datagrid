@@ -1,11 +1,7 @@
 import { bench, describe } from 'vitest'
-import {
-    createColumnState,
-    prefixSums,
-    resolveColumnWidths
-} from '../lib/core/columns/column-sizing.js'
-import { buildRowNodes } from '../lib/core/grid/row-node.js'
-import { variableRowLayout } from '../lib/core/virtual/row-layout.js'
+import { createColumnState, prefixSums, resolveColumnWidths } from '../lib/core/columns/index.js'
+import { buildRowNodes } from '../lib/core/grid/index.js'
+import { variableRowLayout } from '../lib/core/virtual/index.js'
 import {
     compileColumnFilters,
     distinctValues,

@@ -1,6 +1,5 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { nodesById } from '../../core/grid/row-node.js'
-import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
+import { type GridState, nodesById } from '../../core/grid/index.js'
+import { HEADER_ROW } from '../../core/interaction/index.js'
 import {
     SELECTION_COLUMN_ID,
     type GridFeature,
@@ -8,7 +7,7 @@ import {
     type RowNode,
     type SelectionMode
 } from '../../core/types/index.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { mutator } from '../../core/utils/index.js'
 import { downloadCsv, pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 import {
     emptySelection,

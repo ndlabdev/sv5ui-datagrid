@@ -1,6 +1,5 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { type GridState, PIPELINE_ORDER } from '../../core/grid/index.js'
+import { mutator } from '../../core/utils/index.js'
 import type {
     GridFeature,
     MenuContext,

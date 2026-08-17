@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRowNodes } from '../../core/grid/row-node.js'
+import { buildRowNodes } from '../../core/grid/index.js'
 import type { ColumnDef } from '../../core/types/index.js'
 import { toSortRequest } from './sort-model.js'
 import { sortNodes } from './sort.js'
