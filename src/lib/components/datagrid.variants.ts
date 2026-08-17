@@ -56,7 +56,8 @@ export const datagridVariants = tv({
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
         cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
         cellEditorInRow:
-            'bg-surface focus-within:z-[7] focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary',
+            'bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent focus-within:z-[7] focus-within:bg-primary/8 focus-within:after:bg-primary',
+        cellEditorInRowWidget: 'bg-surface focus-within:z-[7]',
         cellEditorInRowDivider: 'border-s border-outline-variant',
         cellEditorPad: 'px-2',
         cellEditorWide: 'min-w-max',

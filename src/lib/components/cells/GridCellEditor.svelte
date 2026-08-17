@@ -95,9 +95,14 @@
         [
             slots.cellEditor({ class: theme('cellEditor') }),
             // Widget editors take the same surface as the text ones in a row
-            // edit, or they read as gaps in it.
+            // edit, or they read as gaps in it. What they do not take is the
+            // focus mark: a Select or a date field draws its own border and
+            // its own focus state, and a second one around it is the third
+            // line in the same corner.
             rowMode
-                ? slots.cellEditorInRow({ class: theme('cellEditorInRow') })
+                ? flatText
+                    ? slots.cellEditorInRow({ class: theme('cellEditorInRow') })
+                    : slots.cellEditorInRowWidget({ class: theme('cellEditorInRowWidget') })
                 : flatText
                   ? slots.cellEditorFlat({ class: theme('cellEditorFlat') })
                   : slots.cellEditorPad({ class: theme('cellEditorPad') }),

@@ -358,9 +358,35 @@ describe('row edit mode', () => {
         const seam = age.getBoundingClientRect().left - name.getBoundingClientRect().right
         expect(Math.abs(seam)).toBeLessThanOrEqual(1)
 
-        // The row carries the ring; a field only shows one while it has focus.
+        // The row carries the outline, and it is the only one: a field marking
+        // focus with a second box put four pixels of primary along the seam it
+        // shares with the row, and three lines in the corner of a widget that
+        // draws its own border.
         const row = cellAt(screen.container, 0, 0).parentElement!
         expect(getComputedStyle(row, '::after').boxShadow).not.toBe('none')
+
+        // `name` holds the caret: the first editable field takes it.
+        expect(name.contains(document.activeElement)).toBe(true)
+        expect(getComputedStyle(name).boxShadow).toBe('none')
+        expect(getComputedStyle(age).boxShadow).toBe('none')
+
+        // What it marks focus with instead: a tint, and a rule along the one
+        // edge the row's outline does not already occupy.
+        expect(getComputedStyle(name, '::after').backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+        expect(getComputedStyle(age, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    })
+
+    it('leaves a widget editor to draw its own focus, not a box around it', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // The dept column edits through a Select, which has a border and a
+        // focus state of its own.
+        const dept = cellAt(screen.container, 0, 2).firstElementChild as HTMLElement
+        expect(getComputedStyle(dept).boxShadow).toBe('none')
+        expect(getComputedStyle(dept, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
     })
 })
 

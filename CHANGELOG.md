@@ -34,6 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Row edit mode draws one line per edge. The row outlines itself, which is
+  what it is for, and every field inside outlined itself as well: along the
+  seam the two shared that came to four pixels of primary, and on a column
+  editing through a `Select` or a date picker it was a third line in the same
+  corner, since those draw their own border and their own focus state. A field
+  marks focus with a tint and a rule along its lower edge now, which is the
+  one edge the row's outline does not already occupy, and a widget editor is
+  left to mark its own.
+
 - The export menu stops calling a page all rows. Under `rowModel: 'server'`
   the grid holds one page, and "All rows" wrote that page out under a name
   that promised the whole set: on a grid reporting a million rows it produced
