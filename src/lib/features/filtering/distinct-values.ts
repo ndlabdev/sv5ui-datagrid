@@ -3,6 +3,23 @@ import { getCellValue, isBlank } from '../../core/utils/value.js'
 
 export const DISTINCT_VALUES_CAP = 200
 
+/**
+ * What a set filter holds instead of the value itself.
+ *
+ * The list the panel offers and the test the predicate runs have to agree on
+ * what counts as the same value, and a set filter also has to survive a
+ * snapshot, so the key is JSON-safe. A Date leaves as its instant rather than
+ * as `String(date)`, which carries the reader's own timezone into the file.
+ */
+export function setKeyOf(value: unknown): SetFilterValue {
+    // Blanks share the single null entry rather than offering the user both it
+    // and an empty-looking row, which they could not tell apart.
+    if (isBlank(value)) return null
+    if (typeof value === 'number' || typeof value === 'boolean') return value
+    if (value instanceof Date) return value.toISOString()
+    return String(value)
+}
+
 const cache = new WeakMap<object, Map<string, SetFilterValue[]>>()
 
 export function distinctValuesCached<TRow>(
@@ -30,14 +47,7 @@ export function distinctValues<TRow>(
     const seen = new Set<SetFilterValue>()
 
     for (const node of nodes) {
-        const raw = getCellValue(node.row, def)
-        // Blanks share the single null entry rather than offering the user both
-        // it and an empty-looking row, which they could not tell apart.
-        const value: SetFilterValue = isBlank(raw)
-            ? null
-            : typeof raw === 'number' || typeof raw === 'boolean'
-              ? raw
-              : String(raw)
+        const value = setKeyOf(getCellValue(node.row, def))
         if (!seen.has(value)) {
             seen.add(value)
             if (seen.size >= cap) break

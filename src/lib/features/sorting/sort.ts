@@ -1,4 +1,5 @@
 import type { ColumnDef, RowNode, SortState } from '../../core/types/index.js'
+import { toDate } from '../../core/utils/format.js'
 import { isBlank, sortValueGetter } from '../../core/utils/value.js'
 
 /**
@@ -6,6 +7,21 @@ import { isBlank, sortValueGetter } from '../../core/utils/value.js'
  * set the `blank` filter operator matches and the renderers show as empty.
  */
 export type SortNulls = 'first' | 'last'
+
+/**
+ * A date column draws every form of a date as a date, so it orders them as
+ * dates too. Left alone, a Date object against an ISO string falls through to
+ * comparing text and puts June before January.
+ */
+function readValue<TRow>(column: ColumnDef<TRow>): (row: TRow) => unknown {
+    const valueOf = sortValueGetter(column)
+    if (column.type !== 'date' && column.type !== 'datetime') return valueOf
+    return (row) => {
+        const value = valueOf(row)
+        if (isBlank(value)) return value
+        return toDate(value)?.getTime() ?? value
+    }
+}
 
 export function sortNodes<TRow>(
     nodes: RowNode<TRow>[],
@@ -23,7 +39,7 @@ export function sortNodes<TRow>(
         const factor = entry.direction === 'asc' ? 1 : -1
         // Resolved once per sort, not once per comparison: this runs on the
         // order of n log n times for 100k rows, so the branch belongs here.
-        const valueOf = sortValueGetter(column)
+        const valueOf = readValue(column)
         const compare =
             column.sortFn ?? ((a: TRow, b: TRow) => compareValues(valueOf(a), valueOf(b), nullSign))
 
