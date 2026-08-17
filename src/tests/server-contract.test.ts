@@ -59,41 +59,62 @@ const isBlank = (value: unknown) => value === null || value === undefined || val
  */
 const collator = new Intl.Collator(undefined, { numeric: true })
 
-/** The documented meaning of one condition, as a backend would implement it. */
-function conditionHolds(
-    value: unknown,
-    condition: FilterRequest['columns'][string]['conditions'][number]
-): boolean {
-    switch (condition.kind) {
-        case 'text': {
-            if (condition.op === 'blank') return isBlank(value)
-            if (condition.op === 'notBlank') return !isBlank(value)
-            const fold = (text: string) => (condition.caseSensitive ? text : text.toLowerCase())
-            const query = fold(condition.value.trim())
-            if (isBlank(value)) return condition.op === 'notContains' || condition.op === 'notEqual'
-            const text = fold(String(value))
-            if (condition.op === 'contains') return text.includes(query)
-            if (condition.op === 'notContains') return !text.includes(query)
-            if (condition.op === 'equals') return text === query
-            if (condition.op === 'notEqual') return text !== query
-            if (condition.op === 'startsWith') return text.startsWith(query)
+type Condition = FilterRequest['columns'][string]['conditions'][number]
+
+/** The documented meaning of a text condition, as a backend implements it. */
+function textHolds(value: unknown, condition: Extract<Condition, { kind: 'text' }>): boolean {
+    if (condition.op === 'blank') return isBlank(value)
+    if (condition.op === 'notBlank') return !isBlank(value)
+
+    const fold = (text: string) => (condition.caseSensitive ? text : text.toLowerCase())
+    const query = fold(condition.value.trim())
+    if (isBlank(value)) return condition.op === 'notContains' || condition.op === 'notEqual'
+
+    const text = fold(String(value))
+    switch (condition.op) {
+        case 'contains':
+            return text.includes(query)
+        case 'notContains':
+            return !text.includes(query)
+        case 'equals':
+            return text === query
+        case 'notEqual':
+            return text !== query
+        case 'startsWith':
+            return text.startsWith(query)
+        default:
             return text.endsWith(query)
-        }
-        case 'number': {
-            if (condition.op === 'blank') return isBlank(value)
-            if (condition.op === 'notBlank') return !isBlank(value)
-            if (isBlank(value)) return false
-            const numeric = Number(value)
-            const target = condition.value ?? Number.NaN
-            if (condition.op === 'between')
-                return numeric >= target && numeric <= (condition.to ?? Number.NaN)
-            if (condition.op === 'eq') return numeric === target
-            if (condition.op === 'neq') return numeric !== target
-            if (condition.op === 'gt') return numeric > target
-            if (condition.op === 'gte') return numeric >= target
-            if (condition.op === 'lt') return numeric < target
-            return numeric <= target
-        }
+    }
+}
+
+function numberHolds(value: unknown, condition: Extract<Condition, { kind: 'number' }>): boolean {
+    if (condition.op === 'blank') return isBlank(value)
+    if (condition.op === 'notBlank') return !isBlank(value)
+    if (isBlank(value)) return false
+
+    const numeric = Number(value)
+    const target = condition.value ?? Number.NaN
+    if (condition.op === 'between') {
+        return numeric >= target && numeric <= (condition.to ?? Number.NaN)
+    }
+    return comparisons[condition.op](numeric, target)
+}
+
+const comparisons: Record<string, (value: number, target: number) => boolean> = {
+    eq: (value, target) => value === target,
+    neq: (value, target) => value !== target,
+    gt: (value, target) => value > target,
+    gte: (value, target) => value >= target,
+    lt: (value, target) => value < target,
+    lte: (value, target) => value <= target
+}
+
+function conditionHolds(value: unknown, condition: Condition): boolean {
+    switch (condition.kind) {
+        case 'text':
+            return textHolds(value, condition)
+        case 'number':
+            return numberHolds(value, condition)
         case 'set':
             return condition.values.includes(isBlank(value) ? null : (value as never))
         case 'boolean':
@@ -101,6 +122,24 @@ function conditionHolds(
         default:
             return true
     }
+}
+
+/** One ORDER BY term: the direction moves the rows, `nulls` moves the holes. */
+function compareOn(left: Row, right: Row, entry: SortRequestEntry): number {
+    const a = left[entry.field as keyof Row]
+    const b = right[entry.field as keyof Row]
+    if (isBlank(a) && isBlank(b)) return 0
+    // Where the request says, rather than where SQL would put them by default.
+    const holes = entry.nulls === 'last' ? 1 : -1
+    if (isBlank(a)) return holes
+    if (isBlank(b)) return -holes
+
+    const factor = entry.direction === 'asc' ? 1 : -1
+    const result =
+        typeof a === 'number' && typeof b === 'number'
+            ? a - b
+            : collator.compare(String(a), String(b))
+    return result * factor
 }
 
 /** A backend, holding only the request. */
@@ -129,21 +168,8 @@ function applyRequest(source: Row[], filter: FilterRequest, sort: SortRequestEnt
         .map((row, index) => ({ row, index }))
         .sort((a, b) => {
             for (const entry of sort) {
-                const left = a.row[entry.field as keyof Row]
-                const right = b.row[entry.field as keyof Row]
-                const factor = entry.direction === 'asc' ? 1 : -1
-                if (isBlank(left) && isBlank(right)) continue
-                // Written where the request says, rather than where SQL would
-                // put them by default.
-                const holes = entry.nulls === 'last' ? 1 : -1
-                if (isBlank(left)) return holes
-                if (isBlank(right)) return -holes
-                if (left === right) continue
-                const result =
-                    typeof left === 'number' && typeof right === 'number'
-                        ? left - right
-                        : collator.compare(String(left), String(right))
-                if (result !== 0) return result * factor
+                const result = compareOn(a.row, b.row, entry)
+                if (result !== 0) return result
             }
             return a.index - b.index
         })
