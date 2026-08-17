@@ -306,9 +306,11 @@ Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
 
 Number and date types go through `Intl`, with formatters cached per
 configuration because a renderer runs on every visible cell. `percent` expects
-a 0 to 1 ratio unless you set `wholePercent`; its filter panel and chips speak
-percentages either way, so a cell reading 5% is found by typing 5 and the stored
-filter stays the `0.05` the row holds. A `cell` snippet always wins over
+a 0 to 1 ratio unless you set `wholePercent`. Either way its filter panel and
+chips speak percentages, so a cell reading 5% is found by typing 5; what the
+filter stores is what the row holds, `0.05` for a ratio column and `5` for a
+whole one, so a persisted filter and a server request keep the row's own
+units. A `cell` snippet always wins over
 `type`, so a column can graduate to a custom renderer without changing anything
 else.
 
@@ -509,8 +511,10 @@ It answers what the client answers, and it is the shortest description of what
 conformance costs.
 
 `toFilterRequest` and `toSortRequest` produce normalized wire shapes, kept
-deliberately separate from the internal models so they can stay frozen while
-those grow. A column's `sortField` is what travels, so an id that is a UI
+deliberately separate from the internal models: the models answer to the UI and
+change with it, while these answer to your backend and grow only by adding a
+field a backend could not otherwise know, the way `nulls` and `quickFields`
+were added. A column's `sortField` is what travels, so an id that is a UI
 concern need not be one your database recognizes.
 
 ## Theming
@@ -538,10 +542,30 @@ defineDataGridConfig({
 - A div-based ARIA `grid`, or `treegrid` once rows nest.
 - **One tab stop.** Cells carry a roving tabindex and every control inside
   answers through it, so leaving a thousand-row grid takes one press.
-- Arrows, `Home`/`End`, `PageUp`/`PageDown`, `Ctrl+Home`/`Ctrl+End`, `Space`,
-  `Enter`, `Escape`, `Ctrl+A`, `Ctrl+C`, `Ctrl+V`, and `Alt+Arrow` for moving
-  columns and rows. In an editor, `Ctrl`/`Cmd`+`Enter` commits without leaving
-  the cell, which is the way out of a textarea or tags field that owns `Enter`.
+- The whole keyboard surface, and every binding a feature adds is listed with
+  the feature that adds it:
+
+    | Keys                                      | What they do                                                                    |
+    | ----------------------------------------- | ------------------------------------------------------------------------------- |
+    | Arrows, `Home`/`End`, `PageUp`/`PageDown` | Move the focused cell                                                           |
+    | `Ctrl+Home`/`Ctrl+End`                    | First and last cell of the grid                                                 |
+    | `Enter` on a header                       | Cycle that column's sort                                                        |
+    | `Shift+Enter` on a header                 | Add the column to a multi-sort                                                  |
+    | `Space` / `Shift+Space` / `Ctrl+A`        | Select a row, a range, everything on the page                                   |
+    | `Ctrl+C` / `Ctrl+V`                       | Copy as TSV, paste across cells                                                 |
+    | `Enter`, `F2`, or any printable key       | Open the editor, seeded with what was typed                                     |
+    | `Escape`                                  | Close what the editor opened, then the editor                                   |
+    | `Ctrl`/`Cmd`+`Enter`                      | Commit without leaving the cell, for a textarea or tags field that owns `Enter` |
+    | `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`      | Undo and redo an edit                                                           |
+    | `Shift+←`/`Shift+→`                       | Resize the focused column                                                       |
+    | `Alt+←`/`Alt+→`                           | Move the focused column                                                         |
+    | `Alt+↓` on a header                       | Open the column menu                                                            |
+    | `Alt+↑`/`Alt+↓` on a row grip             | Move the row                                                                    |
+    | `←`/`→`/`Enter` on a nested row           | Collapse, expand, or step to the parent                                         |
+
+    Paste is bound to the paste event rather than to `Ctrl+V`, so it reads the
+    clipboard without a permission prompt and covers a right-click paste too.
+
 - A polite live region announces sorting, filtering, paging, selection, column
   changes and row moves, in the grid's language.
 - Layout uses logical properties, so `dir="rtl"` mirrors the grid, pinned
@@ -561,13 +585,27 @@ taken on trust.
 | Data into the grid   | 219ms     | 251ms     | 416ms   |
 | JS heap              | 100MB     | 315MB     | 472MB   |
 | DOM nodes            | 779       | 779       | 779     |
-| Sort                 | 81ms      | 67ms      | 67ms    |
 | Scroll, median frame | 19ms      | 23ms      | 35ms    |
-| Quick filter, first  | 0.5s      | 1.1s      | 2.1s    |
 
 The DOM node count is the number worth reading: it is the same at a million
 rows as at a hundred thousand, because only the visible window is rendered. The
 heap is your data, not the grid's overhead.
+
+Sorting and filtering are measured separately, by `pnpm bench`, because they
+are arithmetic rather than rendering and a browser adds noise to them. 100k
+rows, four columns, best of ten:
+
+| Operation                     | Time  |
+| ----------------------------- | ----- |
+| Sort by number                | 18ms  |
+| Sort by string                | 265ms |
+| Multi-sort, string and number | 264ms |
+| Quick filter, per keystroke   | 6ms   |
+| Build row nodes               | 2ms   |
+
+A string sort is slower than a numeric one by an order of magnitude and stays
+that way: most of it is `Intl.Collator`, which is what makes `Item 2` sort
+before `Item 10`, and the grid does not trade that away for speed.
 
 ### Known limits
 
@@ -579,9 +617,8 @@ heap is your data, not the grid's overhead.
   Each keystroke after that is one substring test per row against text already
   built. Measured on the bench at a million rows across four columns: 2.5s for
   the first keystroke, 180ms for each one after, at roughly 7MB of held text
-  per 100k rows. The row above is the first keystroke, and it predates the
-  cache, so read it as an upper bound. Filter on fewer columns, or use
-  `rowModel: 'server'`, where that first pass is what matters.
+  per 100k rows. Filter on fewer columns, or use `rowModel: 'server'`, where
+  that first pass is what matters.
 
     The text is held against the row object, so it is dropped when a row is
     edited, when `data` is replaced, and when the visible columns or the

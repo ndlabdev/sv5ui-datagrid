@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Sorting reads each column once per row rather than twice per comparison, and
+  compares through the branch a single pass over the keys says it needs. A
+  column of numbers without blanks can only ever have reached the subtraction
+  and one of non-empty strings only the collator, so the ordering is what it
+  was. On the bench at 100k rows, best of ten: sorting by number went from
+  73ms to 18ms, by string from 386ms to 265ms, and a two-column sort from
+  364ms to 264ms. What is left of the string case is mostly `Intl.Collator`,
+  which is what puts `Item 2` before `Item 10`.
+
 - The server request carries what a backend cannot guess. `SortRequestEntry`
   gains `nulls`, written as the side blanks actually land on rather than the
   side the option names: a blank sorts as the smallest value here, so `first`
@@ -16,11 +25,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   does not move. `FilterRequest` gains `quickFields`, naming the columns a
   bare query string applies to, which the filter model never carried and a
   backend had nothing to work out from. `toSortRequest` takes the nulls
-  placement as a third argument and `toFilterRequest` the fields as a second;
-  both default to what the grid does, so existing calls still compile and now
-  send more.
+  placement as a third argument, defaulting to the `first` the grid itself
+  defaults to; `toFilterRequest` takes the fields as a second, defaulting to
+  none, since it cannot see the grid to know which columns are visible. An
+  existing call still compiles, and a call that leaves `quickFields` out sends
+  an empty list, which a backend should read as a quick filter it has not been
+  told how to run. Pass `grid.columns.visible.map((column) => column.id)`.
 
 ### Fixed
+
+- A `date` column orders its rows as dates whatever form each one arrived in.
+  Values were compared like with like, so as soon as one row held a `Date` and
+  the next an ISO string the column fell through to comparing text, and June
+  came before January. An API makes the mixture easy: some rows through a JSON
+  reviver, the rest still strings.
+
+- A set filter matches a column of `Date` objects, and survives a snapshot.
+  The value list keyed its entries with `String(value)` while the predicate
+  compared entries against cells by identity, so the two never met and the
+  filter selected nothing at all. Both sides now key through one function, and
+  it keys a `Date` by its instant rather than by `String(date)`, which carried
+  the reader's timezone into a persisted filter and stopped matching in
+  another one.
+
+- A date filter finds rows in a column of epoch numbers, which `Date.parse`
+  reads as no date at all.
 
 - A date editor opens on the date its cell is showing. It read the value as
   `String(value).slice(0, 10)`, which is `2024-01-10` for a stored ISO string
