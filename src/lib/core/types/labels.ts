@@ -80,6 +80,11 @@ export interface DataGridLabels {
     copyWithHeaders: string
     exportCsv: string
     exportAllRows: string
+    /**
+     * What `exportAllRows` becomes under `rowModel: 'server'`, where the grid
+     * holds one page and cannot honestly offer the rest.
+     */
+    exportLoadedRows: string
     exportSelectedRows: string
     clearSelection: string
 }

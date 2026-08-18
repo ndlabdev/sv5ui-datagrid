@@ -63,6 +63,13 @@ export interface FilterRequestEntry {
  */
 export interface FilterRequest {
     quick: string
+    /**
+     * The fields the quick filter was matched against, in the order the grid
+     * shows them. Without it a backend has to guess which columns a bare query
+     * string means, and the guess is what a user experiences as a search that
+     * finds the wrong rows.
+     */
+    quickFields: string[]
     columns: Record<string, FilterRequestEntry>
 }
 

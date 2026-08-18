@@ -9,6 +9,7 @@ import {
     DataGrid,
     editing,
     getEditing,
+    getPagination,
     pagination,
     sorting,
     virtualization,
@@ -358,9 +359,109 @@ describe('row edit mode', () => {
         const seam = age.getBoundingClientRect().left - name.getBoundingClientRect().right
         expect(Math.abs(seam)).toBeLessThanOrEqual(1)
 
-        // The row carries the ring; a field only shows one while it has focus.
+        // The row carries the outline, and it is the only one: a field marking
+        // focus with a second box put four pixels of primary along the seam it
+        // shares with the row, and three lines in the corner of a widget that
+        // draws its own border.
         const row = cellAt(screen.container, 0, 0).parentElement!
         expect(getComputedStyle(row, '::after').boxShadow).not.toBe('none')
+
+        // `name` holds the caret: the first editable field takes it.
+        expect(name.contains(document.activeElement)).toBe(true)
+        expect(getComputedStyle(name).boxShadow).toBe('none')
+        expect(getComputedStyle(age).boxShadow).toBe('none')
+
+        // What it marks focus with instead: a tint, and a rule along the one
+        // edge the row's outline does not already occupy.
+        expect(getComputedStyle(name, '::after').backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+        expect(getComputedStyle(age, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    })
+
+    it('does not turn the page when Enter commits the last row of one', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+        const paging = getPagination(grid)!
+
+        // The last row the page holds, which is where the jump showed up.
+        cellAt(screen.container, 11, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await page.getByRole('textbox').first().fill('Edited')
+        await userEvent.keyboard('{Enter}')
+
+        expect(grid.data[11].name).toBe('Edited')
+        // Pressing Enter to save is not a request to go to page two.
+        expect(paging.page).toBe(1)
+        expect(grid.focus.active.row).toBe(11)
+    })
+
+    it('still moves down when the next row is on the same page', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 3, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await page.getByRole('textbox').first().fill('Edited')
+        await userEvent.keyboard('{Enter}')
+        expect(grid.focus.active.row).toBe(4)
+    })
+
+    it('leaves the arrow keys free to cross the boundary', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+        const paging = getPagination(grid)!
+
+        cellAt(screen.container, 11, 0).focus()
+        await userEvent.keyboard('{ArrowDown}')
+
+        // Going somewhere is what an arrow key is for.
+        expect(grid.focus.active.row).toBe(12)
+        expect(paging.page).toBe(2)
+    })
+
+    it('keeps the row separator from painting over the cell editor it rings', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 0, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        const box = cellAt(screen.container, 0, 0).firstElementChild as HTMLElement
+        const row = cellAt(screen.container, 0, 0).parentElement!
+        const separator = Number(getComputedStyle(row, '::after').zIndex)
+
+        // The editor fills its cell, so the separator lands on the ring rather
+        // than beside it: one grey pixel along one blue edge, which reads as
+        // three edges of one weight and a fourth of another.
+        expect(Number(getComputedStyle(box).zIndex)).toBeGreaterThan(separator)
+        // And no higher than the pinned cells, which stay above what scrolls
+        // beneath them whether or not it is being edited.
+        expect(Number(getComputedStyle(box).zIndex)).toBeLessThan(8)
+    })
+
+    it('leaves a widget editor to draw its own focus, not a box around it', async () => {
+        const grid = makeGrid({ mode: 'row' })
+        const screen = await renderGrid(grid)
+        getEditing(grid)!.startRowEdit('1')
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        // The dept column edits through a Select, which has a border and a
+        // focus state of its own.
+        const dept = cellAt(screen.container, 0, 2).firstElementChild as HTMLElement
+        expect(getComputedStyle(dept).boxShadow).toBe('none')
+        expect(getComputedStyle(dept, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
     })
 })
 

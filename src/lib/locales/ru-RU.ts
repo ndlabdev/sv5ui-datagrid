@@ -106,6 +106,7 @@ export const ruRU: DataGridLocalePack = {
         copyWithHeaders: 'Копировать с заголовками',
         exportCsv: 'Экспорт в CSV',
         exportAllRows: 'Все строки',
+        exportLoadedRows: 'Загруженные строки',
         exportSelectedRows: 'Выбранные строки',
         clearSelection: 'Снять выделение'
     },

@@ -189,8 +189,31 @@ export class Editing<TRow> {
         return this.#commitValue(node, def, validated)
     }
 
+    /** The rows the page in view holds, or null where nothing pages. */
+    #pageRows(): { first: number; last: number } | null {
+        const pagination = this.#grid.state['pagination'] as
+            { page?: number; pageSize?: number | null; server?: boolean } | undefined
+        const pageSize = pagination?.pageSize
+        if (!pageSize || pagination.server || !pagination.page) return null
+        const first = (pagination.page - 1) * pageSize
+        return { first, last: first + pageSize - 1 }
+    }
+
+    /**
+     * Committing is not navigating. Moving down off the last row of a page
+     * turns the page, which takes the row just edited off the screen and puts
+     * the caret somewhere the user was not looking: they pressed Enter to save
+     * what they typed. Arrow keys still cross the boundary, being a request to
+     * go somewhere rather than the tail of one to write something.
+     */
     #move(direction: MoveDirection): void {
         const delta = direction === 'down' ? [1, 0] : direction === 'right' ? [0, 1] : [0, -1]
+        const active = this.#grid.focus.active
+        if (delta[0] !== 0 && (active.section === undefined || active.section === 'body')) {
+            const page = this.#pageRows()
+            const target = active.row + delta[0]
+            if (page && (target < page.first || target > page.last)) return
+        }
         this.#grid.focus.moveBy(delta[0], delta[1])
     }
 

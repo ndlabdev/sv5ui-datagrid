@@ -185,3 +185,60 @@ describe('variable row heights', () => {
         expect(viewport.scrollTop).toBe(virt.virtualizer.indexToOffset(1_000))
     })
 })
+
+describe('a grid wider than anyone reads at once', () => {
+    const WIDE = 2000
+
+    function wideGrid(): GridState<Row> {
+        return createDataGrid<Row>({
+            data: Array.from({ length: 100 }, (_, i) => ({
+                id: i + 1,
+                name: `Row ${i + 1}`,
+                value: i
+            })),
+            columns: Array.from({ length: WIDE }, (_, i) => ({
+                id: `c${i}`,
+                header: `C${i}`,
+                width: 120,
+                accessor: (row: Row) => `${i}:${row.id}`
+            })),
+            getRowId: (row) => String(row.id),
+            features: [virtualization({ rowHeight: 40, columns: true })]
+        })
+    }
+
+    it('renders a handful of columns on the paint before it has been measured', async () => {
+        const grid = wideGrid()
+        const screen = await render(VirtualGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        // Widths resolve against a container the first paint has not measured,
+        // so there is nothing to window by yet. Rendering all two thousand
+        // columns of every rendered row there is the cost this bounds.
+        const cells = screen.container.querySelectorAll('[data-dg-cell]').length
+        expect(cells).toBeGreaterThan(0)
+        expect(cells).toBeLessThan(WIDE)
+
+        const perRow = screen.container.querySelectorAll(
+            '[data-dg-row-id]:first-of-type [role="gridcell"]'
+        ).length
+        expect(perRow).toBeLessThanOrEqual(25)
+    })
+
+    it('finds its window without walking the columns to get there', async () => {
+        const grid = wideGrid()
+        await render(VirtualGrid, { grid })
+        // Widths resolve once the container has a width, and the offsets they
+        // produce are what the window is found in.
+        grid.columns.containerWidth = 1200
+        const columnVirtualizer = getVirtualization(grid)!.columnVirtualizer!
+        columnVirtualizer.viewportWidth = 1200
+
+        // Far along a list where a scan from the first column would cost the
+        // whole list on every frame.
+        columnVirtualizer.scrollLeft = 120 * 1800
+        const range = columnVirtualizer.range
+        expect(range.start).toBeGreaterThan(1780)
+        expect(range.end - range.start).toBeLessThan(20)
+    })
+})

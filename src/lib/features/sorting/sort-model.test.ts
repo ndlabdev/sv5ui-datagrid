@@ -67,14 +67,14 @@ describe('toSortRequest', () => {
                 columns
             )
         ).toEqual([
-            { field: 'lastName', direction: 'asc' },
-            { field: 'age', direction: 'desc' }
+            { field: 'lastName', direction: 'asc', nulls: 'first' },
+            { field: 'age', direction: 'desc', nulls: 'last' }
         ])
     })
 
     it('falls back to the id when the column names no field', () => {
         expect(toSortRequest([{ columnId: 'age', direction: 'asc' }], columns)).toEqual([
-            { field: 'age', direction: 'asc' }
+            { field: 'age', direction: 'asc', nulls: 'first' }
         ])
     })
 
@@ -85,7 +85,22 @@ describe('toSortRequest', () => {
             { id: 'identity', header: 'Identity', children: columns }
         ]
         expect(toSortRequest([{ columnId: 'display', direction: 'asc' }], grouped)).toEqual([
-            { field: 'lastName', direction: 'asc' }
+            { field: 'lastName', direction: 'asc', nulls: 'first' }
+        ])
+    })
+
+    it('carries where the blanks go, which SQL will not guess', () => {
+        expect(toSortRequest([{ columnId: 'age', direction: 'asc' }], columns, 'last')).toEqual([
+            { field: 'age', direction: 'asc', nulls: 'last' }
+        ])
+    })
+
+    it('writes the side the blanks land on, not the side the option names', () => {
+        // A blank sorts as the smallest value here, so descending moves it to
+        // the other end. SQL's NULLS FIRST does not move, so the request has to
+        // say where they end up rather than what was asked for.
+        expect(toSortRequest([{ columnId: 'age', direction: 'desc' }], columns, 'first')).toEqual([
+            { field: 'age', direction: 'desc', nulls: 'last' }
         ])
     })
 

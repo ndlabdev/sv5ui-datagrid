@@ -134,6 +134,7 @@ export const defaultLabels: DataGridLabels = {
     copyWithHeaders: 'Copy with headers',
     exportCsv: 'Export CSV',
     exportAllRows: 'All rows',
+    exportLoadedRows: 'Loaded rows',
     exportSelectedRows: 'Selected rows',
     clearSelection: 'Clear selection'
 }

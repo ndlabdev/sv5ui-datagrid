@@ -307,7 +307,7 @@ undefined và `''` đều tính là blank), `cycle` (thứ tự header click đi
 **API:** `toggleSort(columnId, { append })`, `setSort(sort)`, `directionOf(columnId)`,
 `priorityOf(columnId)`, state `sort`.
 
-**Tiện ích:** `toSortRequest(sort, columns)` dựng payload chuẩn hoá cho server, tự phẳng
+**Tiện ích:** `toSortRequest(sort, columns, nulls)` dựng payload chuẩn hoá cho server, tự phẳng
 hoá header group để lấy đúng `sortField`.
 
 ### 6.2 `filtering()`
@@ -341,7 +341,7 @@ hoá header group để lấy đúng `sortField`.
 `applyFilterModel`, `distinctFor(columnId)`, state `quick` / `columnFilters` /
 `activeCount` / `filterFor`.
 
-**Tiện ích:** `toFilterRequest(model)` chuẩn hoá thành `{ quick, columns }` với mỗi cột
+**Tiện ích:** `toFilterRequest(model, quickFields)` chuẩn hoá thành `{ quick, quickFields, columns }` với mỗi cột
 luôn là `{ join, conditions[] }`, kể cả khi chỉ có một điều kiện.
 
 ### 6.3 `columnOps()`
@@ -730,14 +730,28 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
 
 async function fetchPage() {
     const { rows, total } = await api.load({
-        filter: toFilterRequest(getFiltering(grid)!.model),
-        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs)
+        filter: toFilterRequest(
+            getFiltering(grid)!.model,
+            grid.columns.visible.map((column) => column.id)
+        ),
+        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs, getSorting(grid)!.nulls)
     })
     grid.data = rows
     getPagination(grid)!.setRowCount(total)
 }
 ```
 
+- Request mang theo cả những thứ backend không thể tự đoán: `nulls` đi kèm **từng** entry
+  sort, ghi **phía mà ô rỗng thật sự rơi vào** chứ không phải chữ mà tuỳ chọn đặt tên (ô rỗng
+  được coi là giá trị nhỏ nhất, nên `first` thành `last` khi sort giảm dần, còn `NULLS FIRST`
+  của SQL thì không lật); `quickFields` nói rõ quick filter áp lên những cột nào.
+- Hai thứ **không** truyền được vì chúng là hàm: `sortFn` của cột và `predicate` riêng của
+  filter chỉ chạy ở client, dưới server model chúng không bao giờ được gọi.
+- Những chỗ backend phải tự khớp: collation tự nhiên (`Item 2` trước `Item 10`), không phân
+  biệt hoa thường trừ khi bật `caseSensitive`, blank gồm cả `''` chứ không chỉ `NULL`,
+  `between` đóng hai đầu, điều kiện ngày nghĩa là **ngày lịch theo múi giờ người đọc**, và cột
+  `percent` đi trên dây dưới dạng tỷ lệ (`5%` là `0.05`). Bảng đối chiếu đầy đủ nằm ở README;
+  `src/tests/server-contract-ops.test.ts` là một backend viết đúng theo bảng đó.
 - `toFilterRequest` và `toSortRequest` sinh ra shape truyền tải đã chuẩn hoá, cố ý tách rời
   khỏi model nội bộ để có thể đóng băng trong khi model nội bộ vẫn lớn lên.
 - `sortField` của cột mới là thứ đi trên dây, nên một `id` thuần chuyện giao diện không

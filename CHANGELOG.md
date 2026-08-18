@@ -7,7 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Sorting reads each column once per row rather than twice per comparison, and
+  compares through the branch a single pass over the keys says it needs. A
+  column of numbers without blanks can only ever have reached the subtraction
+  and one of non-empty strings only the collator, so the ordering is what it
+  was. On the bench at 100k rows, best of ten: sorting by number went from
+  73ms to 18ms, by string from 386ms to 265ms, and a two-column sort from
+  364ms to 264ms. What is left of the string case is mostly `Intl.Collator`,
+  which is what puts `Item 2` before `Item 10`.
+
+- The server request carries what a backend cannot guess. `SortRequestEntry`
+  gains `nulls`, written as the side blanks actually land on rather than the
+  side the option names: a blank sorts as the smallest value here, so `first`
+  becomes last once the direction is descending, while SQL's `NULLS FIRST`
+  does not move. `FilterRequest` gains `quickFields`, naming the columns a
+  bare query string applies to, which the filter model never carried and a
+  backend had nothing to work out from. `toSortRequest` takes the nulls
+  placement as a third argument, defaulting to the `first` the grid itself
+  defaults to; `toFilterRequest` takes the fields as a second, defaulting to
+  none, since it cannot see the grid to know which columns are visible. An
+  existing call still compiles, and a call that leaves `quickFields` out sends
+  an empty list, which a backend should read as a quick filter it has not been
+  told how to run. Pass `grid.columns.visible.map((column) => column.id)`.
+
 ### Fixed
+
+- A column-virtualized grid stops rendering every column on its first paint.
+  Column widths resolve against a container the first paint has not measured
+  yet, and with no widths there were no offsets to window by, so the window was
+  skipped and every column of every rendered row was drawn until the measure
+  landed. On 40 columns that is invisible. Measured in a browser at 100 rows:
+  500 columns mounted in 609ms, 2000 in 2.3s, and both drew every cell they
+  had. They now mount in 28ms and 37ms, drawing 420 cells either way, and
+  20,000 columns mounts in 304ms. `initialColumns` bounds that first paint, the
+  way `initialRows` already bounded the row axis, and defaults to 20.
+
+- The column window is searched rather than walked. Finding it stepped from the
+  first column every time, so a grid scrolled far to the right paid the whole
+  column list on every frame.
+
+- Committing an edit no longer turns the page. `Enter` commits and moves down,
+  and on the last row of a page that crossed into the next one: the row just
+  edited left the screen and the caret landed somewhere the reader was not
+  looking, in answer to a keystroke that meant save. The move now stops at the
+  page it started on. Arrow keys still cross it, being a request to go
+  somewhere rather than the tail of one to write something, and a virtualized
+  grid is untouched, since the row below is there either way.
+
+- A cell editor is not painted over by the line under its own row. The editor
+  fills its cell, and the row's separator sits at a layer above it, so one grey
+  pixel landed along the bottom of the ring: three edges of one weight and a
+  fourth of another. The editor sits above the separator now, and still below
+  the pinned columns, which have to stay over anything scrolling beneath them
+  whether or not it is being edited.
+
+- Row edit mode draws one line per edge. The row outlines itself, which is
+  what it is for, and every field inside outlined itself as well: along the
+  seam the two shared that came to four pixels of primary, and on a column
+  editing through a `Select` or a date picker it was a third line in the same
+  corner, since those draw their own border and their own focus state. A field
+  marks focus with a tint and a rule along its lower edge now, which is the
+  one edge the row's outline does not already occupy, and a widget editor is
+  left to mark its own.
+
+- The export menu stops calling a page all rows. Under `rowModel: 'server'`
+  the grid holds one page, and "All rows" wrote that page out under a name
+  that promised the whole set: on a grid reporting a million rows it produced
+  a file of twenty-five. The item is named "Loaded rows" there now, in all
+  twelve languages, and `Grid.ExportMenu` takes an `onExportAll` for the set
+  the grid does not hold, which for the row counts a server model exists for
+  means an endpoint that streams the file rather than a browser building it.
+  A client row model is unchanged: it holds every row the filter left, so
+  "All rows" was always true there.
+
+- A `date` column orders its rows as dates whatever form each one arrived in.
+  Values were compared like with like, so as soon as one row held a `Date` and
+  the next an ISO string the column fell through to comparing text, and June
+  came before January. An API makes the mixture easy: some rows through a JSON
+  reviver, the rest still strings.
+
+- A set filter matches a column of `Date` objects, and survives a snapshot.
+  The value list keyed its entries with `String(value)` while the predicate
+  compared entries against cells by identity, so the two never met and the
+  filter selected nothing at all. Both sides now key through one function, and
+  it keys a `Date` by its instant rather than by `String(date)`, which carried
+  the reader's timezone into a persisted filter and stopped matching in
+  another one.
+
+- A date filter finds rows in a column of epoch numbers, which `Date.parse`
+  reads as no date at all.
 
 - A date editor opens on the date its cell is showing. It read the value as
   `String(value).slice(0, 10)`, which is `2024-01-10` for a stored ISO string
