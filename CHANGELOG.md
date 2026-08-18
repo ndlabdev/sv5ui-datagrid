@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   20,000 columns mounts in 304ms. `initialColumns` bounds that first paint, the
   way `initialRows` already bounded the row axis, and defaults to 20.
 
+- `<DataGrid toolbar />` takes `onExportAll`, which until now reached the export
+  menu only through `Grid.ExportMenu` and the compound parts.
+
 - The column window is searched rather than walked. Finding it stepped from the
   first column every time, so a grid scrolled far to the right paid the whole
   column list on every frame.

@@ -227,6 +227,15 @@ export type DataGridProps<TRow> = {
      */
     exportFilename?: string
 
+    /**
+     * Takes over the toolbar's "all rows" item, for the set the grid does not
+     * hold. Under `rowModel: 'server'` that is everything but the page in
+     * hand, and at those row counts it is an endpoint that streams a file
+     * rather than a browser building one. Without it the item exports what
+     * the grid is holding and is named for that instead.
+     */
+    onExportAll?: () => void
+
     /** Renders skeleton rows instead of data rows. */
     loading?: boolean
 
