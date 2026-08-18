@@ -630,8 +630,10 @@ createDataGrid({ columns, data, getRowId, locales: [enUS, viVN, jaJP] })
   theo grid và định dạng lại cùng lúc.
 - Tag không ai trả lời thì rơi về tiếng Anh; `vi` được `vi-VN` trả lời.
 - `labels` và `announcer` ghi đè từng chuỗi lẻ lên trên gói đã chọn.
-- Một gói là `{ tag, labels, announcer }` và **mọi key đều có kiểu**, nên viết một ngôn ngữ
-  mới mà thiếu chuỗi thì build hỏng chứ không render ra ô trống.
+- Một gói là `{ tag, labels, announcer }` và **nói những gì nó có**; tiếng Anh trả lời cho
+  phần còn lại. Nên một gói năm chuỗi vẫn dùng được, và gói viết cho phiên bản cũ vẫn chạy
+  khi phiên bản mới thêm chuỗi: chuỗi đó hiện tiếng Anh, không phải ô trống, cũng không phải
+  build gãy. Những khoá gói **có** khai thì vẫn được kiểm kiểu.
 
 `DataGridLabels` phủ: toolbar, header và column menu, panel filter (kể cả ba bảng tên toán
 tử `textOps` / `numberOps` / `dateOps`), dòng, footer/status bar/overlay, context menu và

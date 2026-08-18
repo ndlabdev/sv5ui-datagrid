@@ -403,8 +403,11 @@ bundled.
 - A tag nobody answers for falls back to English. `vi` is answered by `vi-VN`.
 - `labels` and `announcer` override single strings on top of the chosen pack.
 
-A pack is `{ tag, labels, announcer }` and every key is typed, so writing your
-own language fails the build rather than rendering a blank.
+A pack is `{ tag, labels, announcer }` and says what it has. English answers
+for the rest, so a pack of five strings works, and a pack written against one
+version keeps working when the next names a string it has never heard of: that
+string arrives in English rather than as a blank or as a build that will not
+run. Every key is typed, so what a pack does say is checked.
 
 ## State persistence
 

@@ -1,11 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { defaultAnnouncerStrings } from '../core/interaction/announcer.svelte.js'
+import { createDataGrid } from '../core/grid/index.js'
 import { resolveLocale } from '../core/interaction/locale.js'
 import { defaultLabels } from '../core/interaction/labels.js'
-import type { DataGridLabels, DataGridLocalePack } from '../core/types/index.js'
+import type {
+    DataGridAnnouncerStrings,
+    DataGridLabels,
+    DataGridLocalePack
+} from '../core/types/index.js'
 import * as locales from './index.js'
 
 const packs = Object.values(locales) as DataGridLocalePack[]
+
+/**
+ * A pack says what it has and English answers for the rest, so the type does
+ * not promise a shipped pack is complete. These do: every pack here is, and
+ * the tests below read one as complete only after saying so.
+ */
+function announcerOf(pack: DataGridLocalePack): DataGridAnnouncerStrings {
+    for (const key of Object.keys(defaultAnnouncerStrings)) {
+        expect(
+            pack.announcer[key as keyof DataGridAnnouncerStrings],
+            `${pack.tag}: ${key}`
+        ).toBeDefined()
+    }
+    return pack.announcer as DataGridAnnouncerStrings
+}
 
 /**
  * Operators shown as maths rather than words: every language keeps them, so a
@@ -99,7 +119,7 @@ describe('shipped languages', () => {
 
         it('covers every operator the grid can offer', () => {
             for (const map of ['textOps', 'numberOps', 'dateOps'] as const) {
-                expect(Object.keys(locale.labels[map]).sort()).toEqual(
+                expect(Object.keys(locale.labels[map] ?? {}).sort()).toEqual(
                     Object.keys(defaultLabels[map]).sort()
                 )
             }
@@ -154,8 +174,9 @@ describe('counted announcements', () => {
         const inflects = INFLECTS_FOR_COUNT.includes(locale.tag)
 
         it.runIf(inflects)(`${locale.tag} says one row differently from many`, () => {
+            const announcer = announcerOf(locale)
             for (const key of counting) {
-                const speak = locale.announcer[key]
+                const speak = announcer[key]
                 // "1 rows selected" is the shape this guards against.
                 expect(speak(1), `${locale.tag} ${key}`).not.toBe(
                     speak(4).replace(/(?<![\d])4(?![\d])/, '1')
@@ -164,8 +185,9 @@ describe('counted announcements', () => {
         })
 
         it.runIf(!inflects)(`${locale.tag} has no number to mark, so it does not`, () => {
+            const announcer = announcerOf(locale)
             for (const key of counting) {
-                const speak = locale.announcer[key]
+                const speak = announcer[key]
                 expect(speak(1).replace(/(?<![\d])1(?![\d])/, '4'), `${locale.tag} ${key}`).toBe(
                     speak(4)
                 )
@@ -179,16 +201,48 @@ describe('counted announcements', () => {
 
         // French reads zero as singular; English does not. `count === 1` would
         // get one of these two wrong whichever way it was written.
-        expect(fr.announcer.selected(0)).toContain('ligne sélectionnée')
-        expect(en.announcer.selected(0)).toContain('rows')
+        expect(announcerOf(fr).selected(0)).toContain('ligne sélectionnée')
+        expect(announcerOf(en).selected(0)).toContain('rows')
     })
 
     it('uses the three forms Russian needs, not two', () => {
         const ru = packs.find((pack) => pack.tag === 'ru-RU')!
         // Anchored: 'строк' is a prefix of 'строки', so `toContain` would pass
         // on the wrong form.
-        expect(ru.announcer.selected(1)).toMatch(/строка$/)
-        expect(ru.announcer.selected(3)).toMatch(/строки$/)
-        expect(ru.announcer.selected(9)).toMatch(/строк$/)
+        const speak = announcerOf(ru).selected
+        expect(speak(1)).toMatch(/строка$/)
+        expect(speak(3)).toMatch(/строки$/)
+        expect(speak(9)).toMatch(/строк$/)
+    })
+})
+
+describe('a pack that says less than the grid asks', () => {
+    it('lets English answer for what it does not carry', () => {
+        const grid = createDataGrid<{ id: string }>({
+            columns: [{ id: 'id' }],
+            data: [],
+            getRowId: (row) => row.id,
+            locale: 'sv-SE',
+            // A pack written against an older grid, or a small one written by
+            // hand: it never has to be complete to be usable.
+            locales: [{ tag: 'sv-SE', labels: { search: 'Sök...' }, announcer: {} }]
+        })
+
+        expect(grid.labels.search).toBe('Sök...')
+        expect(grid.labels.exportAllRows).toBe(defaultLabels.exportAllRows)
+        expect(grid.labels.textOps.contains).toBe(defaultLabels.textOps.contains)
+        expect(grid.announcerStrings.sortCleared()).toBe(defaultAnnouncerStrings.sortCleared())
+    })
+
+    it('is still overridden by what the app says itself', () => {
+        const grid = createDataGrid<{ id: string }>({
+            columns: [{ id: 'id' }],
+            data: [],
+            getRowId: (row) => row.id,
+            locale: 'sv-SE',
+            locales: [{ tag: 'sv-SE', labels: { search: 'Sök...' }, announcer: {} }],
+            labels: { search: 'Hitta' }
+        })
+        expect(grid.labels.search).toBe('Hitta')
     })
 })
