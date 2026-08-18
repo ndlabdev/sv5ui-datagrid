@@ -112,13 +112,17 @@ if (unsynced !== '0') {
 
 // The workflow cannot publish without this, and a tag that fails has to be
 // deleted from the remote and the local repo before it can be retried.
-// Nothing to check for here any more. Publishing authenticates as this
-// repository through OIDC, against a trusted publisher registered on npmjs.com
-// for the package, so there is no secret whose presence this could read and no
-// token whose expiry it could get wrong. What it cannot see either way is
-// whether npm will accept the identity: that answer only arrives from the
-// registry, and the publish step is where it lands.
-console.log('  on dev, clean, main holds nothing dev lacks')
+const secrets = run('gh', ['secret', 'list']) ?? ''
+if (!secrets.includes('NPM_TOKEN')) {
+    fail(
+        'NPM_TOKEN is not set on the repo, so publish.yml would build and then fail.\n' +
+            'Set it first:  gh secret set NPM_TOKEN'
+    )
+}
+// Named, which is all this can see. Whether npm accepts it is a thing only npm
+// knows: a token can be expired, or be the granular kind that npm refuses to
+// exempt from 2FA, and both look like this line passing.
+console.log('  on dev, clean, main holds nothing dev lacks, a secret named NPM_TOKEN exists')
 
 let version
 try {
@@ -322,10 +326,10 @@ try {
 } catch {
     fail(
         `publish.yml failed. ${version} was not published.\n` +
-            'What the registry said is in the log above. A 404 on the PUT is npm\n' +
-            'refusing the write rather than missing the package, and both that and\n' +
-            'an EOTP mean the identity was rejected: check the trusted publisher on\n' +
-            'npmjs.com names this repository and publish.yml.\n' +
+            'What the registry said is in the log above, and it is about the token:\n' +
+            '  404 on the PUT   the token is expired or cannot write this scope\n' +
+            '  EOTP             the token is not the classic Automation kind, the\n' +
+            '                   only one npm exempts from 2FA\n' +
             'Fix the cause, then delete and re-push the tag:\n' +
             `  git push --delete origin ${tag} && git tag -d ${tag}\n` +
             `  git tag ${tag} <merge commit> && git push origin ${tag}`
