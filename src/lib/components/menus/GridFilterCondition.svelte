@@ -1,11 +1,11 @@
 <script lang="ts">
     import { Input, Select } from 'sv5ui'
-    import { DATE_OPS, NUMBER_OPS, TEXT_OPS } from '../../core/interaction/labels.js'
+    import { DATE_OPS, NUMBER_OPS, TEXT_OPS } from '../../core/interaction/index.js'
     import { isPresenceOp } from '../../features/filtering/index.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterConditionProps } from '../datagrid.types.js'
 
-    let { type, condition, ordinal }: GridFilterConditionProps = $props()
+    let { type, condition, ordinal, unit }: GridFilterConditionProps = $props()
 
     const grid = getGridContext()
     const labels = $derived(grid.labels)
@@ -23,12 +23,17 @@
     const needsValue = $derived(!isPresenceOp(condition.op))
 </script>
 
+{#snippet unitSlot()}
+    <span class="text-xs text-on-surface-variant">{unit}</span>
+{/snippet}
+
 <Select {items} bind:value={condition.op} aria-label={labels.filterOperator(ordinal)} />
 {#if needsValue}
     <Input
         type={inputType}
         placeholder={type === 'text' ? labels.valuePlaceholder : undefined}
         aria-label={labels.filterValue(ordinal)}
+        trailingSlot={unit ? unitSlot : undefined}
         bind:value={condition.value}
     />
     {#if condition.op === 'between'}
@@ -36,6 +41,7 @@
             type={type === 'number' ? 'number' : 'date'}
             placeholder={labels.upperBoundPlaceholder}
             aria-label={labels.filterUpperBound(ordinal)}
+            trailingSlot={unit ? unitSlot : undefined}
             bind:value={condition.to}
         />
     {/if}

@@ -97,6 +97,7 @@ export const viVN: DataGridLocalePack = {
         copyWithHeaders: 'Sao chép kèm tiêu đề',
         exportCsv: 'Xuất CSV',
         exportAllRows: 'Tất cả các dòng',
+        exportLoadedRows: 'Các dòng đã tải',
         exportSelectedRows: 'Các dòng đã chọn',
         clearSelection: 'Bỏ chọn'
     },

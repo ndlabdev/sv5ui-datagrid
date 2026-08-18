@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createColumnState } from '../../core/columns/column-sizing.js'
-import { buildRowNodes } from '../../core/grid/row-node.js'
+import { createColumnState } from '../../core/columns/index.js'
+import { buildRowNodes } from '../../core/grid/index.js'
 import { SELECTION_COLUMN_ID, type ColumnDef, type ColumnState } from '../../core/types/index.js'
 import { pickColumns, rowsToMatrix, toCsv, toTsv, withHeaderRow } from './clipboard.js'
 

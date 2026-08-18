@@ -306,7 +306,11 @@ Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
 
 Number and date types go through `Intl`, with formatters cached per
 configuration because a renderer runs on every visible cell. `percent` expects
-a 0 to 1 ratio unless you set `wholePercent`. A `cell` snippet always wins over
+a 0 to 1 ratio unless you set `wholePercent`. Either way its filter panel and
+chips speak percentages, so a cell reading 5% is found by typing 5; what the
+filter stores is what the row holds, `0.05` for a ratio column and `5` for a
+whole one, so a persisted filter and a server request keep the row's own
+units. A `cell` snippet always wins over
 `type`, so a column can graduate to a custom renderer without changing anything
 else.
 
@@ -399,8 +403,11 @@ bundled.
 - A tag nobody answers for falls back to English. `vi` is answered by `vi-VN`.
 - `labels` and `announcer` override single strings on top of the chosen pack.
 
-A pack is `{ tag, labels, announcer }` and every key is typed, so writing your
-own language fails the build rather than rendering a blank.
+A pack is `{ tag, labels, announcer }` and says what it has. English answers
+for the rest, so a pack of five strings works, and a pack written against one
+version keeps working when the next names a string it has never heard of: that
+string arrives in English rather than as a blank or as a build that will not
+run. Every key is typed, so what a pack does say is checked.
 
 ## State persistence
 
@@ -451,19 +458,95 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
     grid.events.on(event, fetchPage)
 }
 
+let inFlight = 0
+
 async function fetchPage() {
+    const ticket = ++inFlight
     const { rows, total } = await api.load({
-        filter: toFilterRequest(getFiltering(grid)!.model),
-        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs)
+        filter: toFilterRequest(
+            getFiltering(grid)!.model,
+            grid.columns.visible.map((column) => column.id)
+        ),
+        sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs, getSorting(grid)!.nulls)
     })
+    // Typing into the quick filter sends a request per keystroke, and they do
+    // not come back in the order they left. Without this the grid ends up
+    // showing the answer to a question the user has already moved on from.
+    if (ticket !== inFlight) return
     grid.data = rows
     getPagination(grid)!.setRowCount(total)
 }
 ```
 
+The events fire after the feature has settled, which is what makes reading the
+state inside the handler safe: `pageChanged` reports the page the grid moved
+to rather than the one that was asked for, and a sort or a filter has already
+reset the page to 1 by the time it reaches you. `setRowCount` pulls the page
+back inside a list that shrank, and a selection survives `data` being replaced,
+so a row picked on page 1 is still picked when the user returns to it.
+
+### Exporting a set the grid does not hold
+
+`exportCsv` writes the rows the grid is holding. Under a client row model that
+is every row your filter left, which is what the toolbar's "All rows" means.
+Under `rowModel: 'server'` the grid holds one page, so the same item writes
+that page and is named "Loaded rows" instead of promising the rest.
+
+For the whole set, export on the server. A browser cannot be handed ten million
+rows to turn into a file: the string alone outgrows the tab long before the
+download starts, and the rows would have to be fetched page by page first.
+Point the item at an endpoint that streams one:
+
+```svelte
+<Grid.ExportMenu onExportAll={() => (location.href = `/api/orders.csv?${query}`)} />
+```
+
+Build `query` from the same request the grid sends, so the file matches what is
+on screen:
+
+```ts
+const query = new URLSearchParams({
+    filter: JSON.stringify(toFilterRequest(getFiltering(grid)!.model, visibleIds)),
+    sort: JSON.stringify(toSortRequest(getSorting(grid)!.sort, grid.columns.defs))
+})
+```
+
+Selection is unaffected: selected ids are held across pages, so "Selected rows"
+writes what the user picked whichever model is in use.
+
+### What your backend has to agree with
+
+The request carries everything the grid decided, and your backend decides the
+rest. Under `rowModel: 'server'` the grid does not filter or sort what it is
+handed, so where the two disagree, what the reader sees is yours:
+
+| The grid means                                                  | A database's default                 |
+| --------------------------------------------------------------- | ------------------------------------ |
+| Text compares case-insensitively unless `caseSensitive` is set  | `LIKE` is case-sensitive in Postgres |
+| Text orders naturally, so `Item 2` precedes `Item 10`           | `Item 10` precedes `Item 2`          |
+| Blank is `null`, `undefined` or `''`                            | `IS NULL` misses `''`                |
+| `between` includes both ends                                    | varies                               |
+| A date condition means a calendar day, in the reader's own zone | a timestamp in the database's zone   |
+| A `percent` column holds the ratio, so 5% travels as `0.05`     | whatever the column stores           |
+
+`nulls` rides on every sort entry, written as the side blanks actually land on,
+so `ORDER BY … NULLS LAST` reproduces it without further thought. `quickFields`
+names the columns a bare query applies to, which is otherwise unguessable.
+
+Two things the request cannot carry, because they are functions: a column's
+`sortFn` and a filter's custom `predicate` run on the client only. Under a
+server row model they are never called, and the request describes the built-in
+meaning of the condition instead.
+
+`src/tests/server-contract.test.ts` is a backend written against this table.
+It answers what the client answers, and it is the shortest description of what
+conformance costs.
+
 `toFilterRequest` and `toSortRequest` produce normalized wire shapes, kept
-deliberately separate from the internal models so they can stay frozen while
-those grow. A column's `sortField` is what travels, so an id that is a UI
+deliberately separate from the internal models: the models answer to the UI and
+change with it, while these answer to your backend and grow only by adding a
+field a backend could not otherwise know, the way `nulls` and `quickFields`
+were added. A column's `sortField` is what travels, so an id that is a UI
 concern need not be one your database recognizes.
 
 ## Theming
@@ -491,10 +574,30 @@ defineDataGridConfig({
 - A div-based ARIA `grid`, or `treegrid` once rows nest.
 - **One tab stop.** Cells carry a roving tabindex and every control inside
   answers through it, so leaving a thousand-row grid takes one press.
-- Arrows, `Home`/`End`, `PageUp`/`PageDown`, `Ctrl+Home`/`Ctrl+End`, `Space`,
-  `Enter`, `Escape`, `Ctrl+A`, `Ctrl+C`, `Ctrl+V`, and `Alt+Arrow` for moving
-  columns and rows. In an editor, `Ctrl`/`Cmd`+`Enter` commits without leaving
-  the cell, which is the way out of a textarea or tags field that owns `Enter`.
+- The whole keyboard surface, and every binding a feature adds is listed with
+  the feature that adds it:
+
+    | Keys                                      | What they do                                                                    |
+    | ----------------------------------------- | ------------------------------------------------------------------------------- |
+    | Arrows, `Home`/`End`, `PageUp`/`PageDown` | Move the focused cell                                                           |
+    | `Ctrl+Home`/`Ctrl+End`                    | First and last cell of the grid                                                 |
+    | `Enter` on a header                       | Cycle that column's sort                                                        |
+    | `Shift+Enter` on a header                 | Add the column to a multi-sort                                                  |
+    | `Space` / `Shift+Space` / `Ctrl+A`        | Select a row, a range, everything on the page                                   |
+    | `Ctrl+C` / `Ctrl+V`                       | Copy as TSV, paste across cells                                                 |
+    | `Enter`, `F2`, or any printable key       | Open the editor, seeded with what was typed                                     |
+    | `Escape`                                  | Close what the editor opened, then the editor                                   |
+    | `Ctrl`/`Cmd`+`Enter`                      | Commit without leaving the cell, for a textarea or tags field that owns `Enter` |
+    | `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`      | Undo and redo an edit                                                           |
+    | `Shift+←`/`Shift+→`                       | Resize the focused column                                                       |
+    | `Alt+←`/`Alt+→`                           | Move the focused column                                                         |
+    | `Alt+↓` on a header                       | Open the column menu                                                            |
+    | `Alt+↑`/`Alt+↓` on a row grip             | Move the row                                                                    |
+    | `←`/`→`/`Enter` on a nested row           | Collapse, expand, or step to the parent                                         |
+
+    Paste is bound to the paste event rather than to `Ctrl+V`, so it reads the
+    clipboard without a permission prompt and covers a right-click paste too.
+
 - A polite live region announces sorting, filtering, paging, selection, column
   changes and row moves, in the grid's language.
 - Layout uses logical properties, so `dir="rtl"` mirrors the grid, pinned
@@ -514,22 +617,53 @@ taken on trust.
 | Data into the grid   | 219ms     | 251ms     | 416ms   |
 | JS heap              | 100MB     | 315MB     | 472MB   |
 | DOM nodes            | 779       | 779       | 779     |
-| Sort                 | 81ms      | 67ms      | 67ms    |
 | Scroll, median frame | 19ms      | 23ms      | 35ms    |
-| Quick filter         | 0.5s      | 1.1s      | 2.1s    |
 
 The DOM node count is the number worth reading: it is the same at a million
 rows as at a hundred thousand, because only the visible window is rendered. The
 heap is your data, not the grid's overhead.
 
+Sorting and filtering are measured separately, by `pnpm bench`, because they
+are arithmetic rather than rendering and a browser adds noise to them. 100k
+rows, four columns, best of ten:
+
+| Operation                     | Time  |
+| ----------------------------- | ----- |
+| Sort by number                | 18ms  |
+| Sort by string                | 265ms |
+| Multi-sort, string and number | 264ms |
+| Quick filter, per keystroke   | 6ms   |
+| Build row nodes               | 2ms   |
+
+A string sort is slower than a numeric one by an order of magnitude and stays
+that way: most of it is `Intl.Collator`, which is what makes `Item 2` sort
+before `Item 10`, and the grid does not trade that away for speed.
+
 ### Known limits
 
+- **A very wide grid costs its column list, not its columns.** Only the columns
+  in view are rendered, bounded even on the first paint before the container
+  has been measured, so the cells drawn stay flat as columns are added. What
+  does grow is the arithmetic behind them and the CSS grid template every row
+  declares: measured in a browser at 100 rows, 20,000 columns mounts in about
+  300ms, of which the template is 117KB per row. Thousands of columns are
+  comfortable; tens of thousands work and are worth measuring for your own
+  widths.
 - **Scrolling holds 60fps to roughly half a million rows** and falls to about
   28fps at a million with this many columns. Fewer columns move that line out.
-- **Quick filter is O(rows x visible columns) on the main thread.** At a million
-  rows and 39 columns that is 39 million string comparisons and about two
-  seconds of blocked UI. Filter on fewer columns, or use `rowModel: 'server'`,
-  until this is made incremental.
+- **Quick filter pays for its first keystroke and reuses it after.** The first
+  pass is O(rows x visible columns) on the main thread and formats every cell,
+  since the filter matches what a cell draws rather than the value behind it.
+  Each keystroke after that is one substring test per row against text already
+  built. Measured on the bench at a million rows across four columns: 2.5s for
+  the first keystroke, 180ms for each one after, at roughly 7MB of held text
+  per 100k rows. Filter on fewer columns, or use `rowModel: 'server'`, where
+  that first pass is what matters.
+
+    The text is held against the row object, so it is dropped when a row is
+    edited, when `data` is replaced, and when the visible columns or the
+    language change.
+
 - **Beyond the browser's maximum element height** the scroll range is scaled
   rather than clamped, so the last row stays reachable; a pixel of scrolling
   simply covers more than a pixel of content. Engines differ on where that

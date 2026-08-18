@@ -38,8 +38,9 @@ describe('toFilterRequest', () => {
     it('normalizes every column so a server sees one shape', () => {
         const model: FilterModel = { quick: 'x', columns: { name: single, dept: group } }
 
-        expect(toFilterRequest(model)).toEqual({
+        expect(toFilterRequest(model, ['name', 'dept'])).toEqual({
             quick: 'x',
+            quickFields: ['name', 'dept'],
             columns: {
                 name: { join: 'and', conditions: [single] },
                 dept: { join: 'or', conditions: group.conditions }
@@ -48,6 +49,15 @@ describe('toFilterRequest', () => {
     })
 
     it('survives a model missing its optional halves', () => {
-        expect(toFilterRequest({} as FilterModel)).toEqual({ quick: '', columns: {} })
+        expect(toFilterRequest({} as FilterModel)).toEqual({
+            quick: '',
+            quickFields: [],
+            columns: {}
+        })
+    })
+
+    it('names the columns a bare query applies to, which the model cannot', () => {
+        const model: FilterModel = { quick: 'ali', columns: {} }
+        expect(toFilterRequest(model, ['name', 'email']).quickFields).toEqual(['name', 'email'])
     })
 })

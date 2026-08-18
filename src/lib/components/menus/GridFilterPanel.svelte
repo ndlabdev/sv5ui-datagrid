@@ -15,9 +15,11 @@
         emptyCondition,
         emptyDraft,
         filterTypeOf,
+        filterUnitScaleOf,
         getFiltering,
         MAX_CONDITIONS
     } from '../../features/filtering/index.js'
+    import { formatCellText } from '../../core/utils/format.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterPanelProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
@@ -37,6 +39,12 @@
     const PANEL_WIDTH = 272
 
     const type = $derived(filterTypeOf(column.def))
+    // Collected in the units the column draws, handed back in the row's own.
+    const scale = $derived(filterUnitScaleOf(column.def))
+    const unit = $derived(scale === 100 ? '%' : undefined)
+    /** A value written the way its cell writes it, for the checkbox list. */
+    const shown = (value: SetFilterValue): string =>
+        formatCellText(value, column.def, grid.locale) ?? String(value)
     const open = $derived(filteringState.filterFor === column.id)
     const active = $derived(column.id in filteringState.columnFilters)
 
@@ -55,15 +63,13 @@
         const query = setSearch.trim().toLowerCase()
         if (!query) return distinct
         return distinct.filter((entry) =>
-            String(entry ?? labels.blankValue)
-                .toLowerCase()
-                .includes(query)
+            (entry === null ? labels.blankValue : shown(entry)).toLowerCase().includes(query)
         )
     })
 
     $effect(() => {
         if (!open || !type) return
-        const next = draftFromFilter(type, filteringState.columnFilters[column.id])
+        const next = draftFromFilter(type, filteringState.columnFilters[column.id], scale)
         draft = next
         setSearch = ''
         setSelected = next.setSelected
@@ -79,7 +85,7 @@
     }
 
     function apply() {
-        const filter = type ? buildColumnFilter(type, { ...draft, setSelected }) : null
+        const filter = type ? buildColumnFilter(type, { ...draft, setSelected }, scale) : null
         filteringState.setColumnFilter(column.id, filter)
         filteringState.filterFor = null
     }
@@ -178,7 +184,7 @@
                             aria-label={labels.combineConditions}
                         />
                     {/if}
-                    <GridFilterCondition {type} {condition} ordinal={index + 1} />
+                    <GridFilterCondition {type} {condition} {unit} ordinal={index + 1} />
                 {/each}
                 <!-- Wraps because a long translation ("Groß-/Kleinschreibung
                      beachten") takes both lines and would otherwise push the
@@ -221,7 +227,7 @@
                     {#each distinctShown as entry (entry)}
                         <div class={slots.chooserItem({ class: theme('chooserItem') })}>
                             <Checkbox
-                                label={entry === null ? labels.blankValue : String(entry)}
+                                label={entry === null ? labels.blankValue : shown(entry)}
                                 checked={setSelected.includes(entry)}
                                 onCheckedChange={(checked) => toggleValue(entry, checked)}
                             />

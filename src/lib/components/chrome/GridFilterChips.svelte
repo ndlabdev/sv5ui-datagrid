@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button } from 'sv5ui'
     import { describeFilter, getFiltering } from '../../features/filtering/index.js'
+    import { formatCellText } from '../../core/utils/format.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridFilterChipsProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
@@ -15,10 +16,16 @@
 
     const chips = $derived.by(() => {
         if (!filteringState) return []
-        return Object.entries(filteringState.columnFilters).map(([columnId, filter]) => ({
-            columnId,
-            label: `${grid.columns.get(columnId)?.header ?? columnId}: ${describeFilter(filter, grid.labels)}`
-        }))
+        return Object.entries(filteringState.columnFilters).map(([columnId, filter]) => {
+            const column = grid.columns.get(columnId)
+            // A percent column filtered at 5% stores 0.05; the chip says 5%.
+            const written = (value: unknown) =>
+                (column && formatCellText(value, column.def, grid.locale)) ?? String(value)
+            return {
+                columnId,
+                label: `${column?.header ?? columnId}: ${describeFilter(filter, grid.labels, written)}`
+            }
+        })
     })
 </script>
 

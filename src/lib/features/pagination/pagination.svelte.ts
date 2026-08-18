@@ -1,7 +1,6 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
+import { type GridState, PIPELINE_ORDER } from '../../core/grid/index.js'
 import type { GridFeature } from '../../core/types/index.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { mutator } from '../../core/utils/index.js'
 import { paginateNodes } from './paginate.js'
 
 export const PAGINATION = 'pagination'

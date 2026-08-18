@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { HEADER_ROW } from '../../core/interaction/focus-model.svelte.js'
-import { createDataGrid, type GridState } from '../../core/grid/grid.svelte.js'
+import { HEADER_ROW } from '../../core/interaction/index.js'
+import { createDataGrid, type GridState } from '../../core/grid/index.js'
 import type { ColumnDef, FilterModel } from '../../core/types/index.js'
 import { getSorting, sorting } from '../sorting/index.js'
 import { filtering, getFiltering } from './index.js'

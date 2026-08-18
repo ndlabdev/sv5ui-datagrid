@@ -1,7 +1,6 @@
-import type { GridState } from '../../core/grid/grid.svelte.js'
-import { PIPELINE_ORDER } from '../../core/grid/pipeline.svelte.js'
+import { type GridState, PIPELINE_ORDER } from '../../core/grid/index.js'
 import type { ColumnFilterEntry, FilterModel, GridFeature } from '../../core/types/index.js'
-import { mutator } from '../../core/utils/reactivity.js'
+import { mutator } from '../../core/utils/index.js'
 import { distinctValuesCached } from './distinct-values.js'
 import { compileColumnFilters } from './filter-predicates.js'
 import { quickFilterNodes } from './quick-filter.js'
@@ -107,7 +106,10 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
                 const quickFiltered = quickFilterNodes(
                     nodes,
                     grid.columns.visible.map((column) => column.def),
-                    state.quick
+                    state.quick,
+                    // The same locale the cells are drawn with, or the search
+                    // would be against text nobody is looking at.
+                    grid.locale
                 )
                 const predicate = state.columnPredicate
                 return predicate ? quickFiltered.filter(predicate) : quickFiltered

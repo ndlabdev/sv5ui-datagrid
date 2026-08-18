@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
-import type { GridState } from '../core/grid/grid.svelte.js'
+import type { GridState } from '../core/grid/index.js'
 import type { DataGridUi } from './datagrid.variants.js'
 import type {
     ColumnDef,
@@ -114,6 +114,8 @@ export interface GridFilterConditionProps {
     condition: ConditionDraft
     /** 1-based position, used to keep the accessible names apart. */
     ordinal: number
+    /** Drawn inside the value inputs, so it is clear that 5 means 5%. */
+    unit?: string
 }
 
 export interface GridFilterChipsProps {
@@ -166,6 +168,16 @@ export interface GridExportMenuProps {
      * @default 'export.csv'
      */
     filename?: string
+
+    /**
+     * Takes over the "all rows" item, for the set the grid does not hold.
+     *
+     * Under `rowModel: 'server'` the grid has one page, and a browser cannot
+     * be handed ten million rows to turn into a file, so the whole set is an
+     * endpoint that streams one. Without this the item exports what the grid
+     * is holding and is named for that instead.
+     */
+    onExportAll?: () => void
     /** Additional classes applied to the trigger button. */
     class?: ClassNameValue
 }
@@ -214,6 +226,15 @@ export type DataGridProps<TRow> = {
      * @default 'export.csv'
      */
     exportFilename?: string
+
+    /**
+     * Takes over the toolbar's "all rows" item, for the set the grid does not
+     * hold. Under `rowModel: 'server'` that is everything but the page in
+     * hand, and at those row counts it is an endpoint that streams a file
+     * rather than a browser building one. Without it the item exports what
+     * the grid is holding and is named for that instead.
+     */
+    onExportAll?: () => void
 
     /** Renders skeleton rows instead of data rows. */
     loading?: boolean

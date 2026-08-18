@@ -1,6 +1,6 @@
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
-    import { createDataGrid } from '../../core/grid/grid.svelte.js'
+    import { createDataGrid } from '../../core/grid/index.js'
     import { columnOps } from '../../features/column-ops/index.js'
     import { editing } from '../../features/editing/index.js'
     import { filtering } from '../../features/filtering/index.js'
@@ -35,6 +35,7 @@
         virtual,
         density,
         toolbar = false,
+        onExportAll,
         exportFilename,
         emptyText,
         loading,
@@ -88,7 +89,7 @@
             <GridQuickFilter class="min-w-64" />
             <GridFilterChips />
             <div class="grow"></div>
-            <GridExportMenu filename={exportFilename} />
+            <GridExportMenu filename={exportFilename} {onExportAll} />
             <GridColumnChooser />
             <GridDensityToggle />
         </GridToolbar>

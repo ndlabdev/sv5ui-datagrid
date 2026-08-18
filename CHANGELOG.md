@@ -5,6 +5,170 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.2.0] - 2026-08-18
+
+### Changed
+
+- Sorting reads each column once per row rather than twice per comparison, and
+  compares through the branch a single pass over the keys says it needs. A
+  column of numbers without blanks can only ever have reached the subtraction
+  and one of non-empty strings only the collator, so the ordering is what it
+  was. On the bench at 100k rows, best of ten: sorting by number went from
+  73ms to 18ms, by string from 386ms to 265ms, and a two-column sort from
+  364ms to 264ms. What is left of the string case is mostly `Intl.Collator`,
+  which is what puts `Item 2` before `Item 10`.
+
+- The server request carries what a backend cannot guess. `SortRequestEntry`
+  gains `nulls`, written as the side blanks actually land on rather than the
+  side the option names: a blank sorts as the smallest value here, so `first`
+  becomes last once the direction is descending, while SQL's `NULLS FIRST`
+  does not move. `FilterRequest` gains `quickFields`, naming the columns a
+  bare query string applies to, which the filter model never carried and a
+  backend had nothing to work out from. `toSortRequest` takes the nulls
+  placement as a third argument, defaulting to the `first` the grid itself
+  defaults to; `toFilterRequest` takes the fields as a second, defaulting to
+  none, since it cannot see the grid to know which columns are visible. An
+  existing call still compiles, and a call that leaves `quickFields` out sends
+  an empty list, which a backend should read as a quick filter it has not been
+  told how to run. Pass `grid.columns.visible.map((column) => column.id)`.
+
+### Fixed
+
+- A column-virtualized grid stops rendering every column on its first paint.
+  Column widths resolve against a container the first paint has not measured
+  yet, and with no widths there were no offsets to window by, so the window was
+  skipped and every column of every rendered row was drawn until the measure
+  landed. On 40 columns that is invisible. Measured in a browser at 100 rows:
+  500 columns mounted in 609ms, 2000 in 2.3s, and both drew every cell they
+  had. They now mount in 28ms and 37ms, drawing 420 cells either way, and
+  20,000 columns mounts in 304ms. `initialColumns` bounds that first paint, the
+  way `initialRows` already bounded the row axis, and defaults to 20.
+
+- `<DataGrid toolbar />` takes `onExportAll`, which until now reached the export
+  menu only through `Grid.ExportMenu` and the compound parts.
+
+- The column window is searched rather than walked. Finding it stepped from the
+  first column every time, so a grid scrolled far to the right paid the whole
+  column list on every frame.
+
+- Committing an edit no longer turns the page. `Enter` commits and moves down,
+  and on the last row of a page that crossed into the next one: the row just
+  edited left the screen and the caret landed somewhere the reader was not
+  looking, in answer to a keystroke that meant save. The move now stops at the
+  page it started on. Arrow keys still cross it, being a request to go
+  somewhere rather than the tail of one to write something, and a virtualized
+  grid is untouched, since the row below is there either way.
+
+- A cell editor is not painted over by the line under its own row. The editor
+  fills its cell, and the row's separator sits at a layer above it, so one grey
+  pixel landed along the bottom of the ring: three edges of one weight and a
+  fourth of another. The editor sits above the separator now, and still below
+  the pinned columns, which have to stay over anything scrolling beneath them
+  whether or not it is being edited.
+
+- Row edit mode draws one line per edge. The row outlines itself, which is
+  what it is for, and every field inside outlined itself as well: along the
+  seam the two shared that came to four pixels of primary, and on a column
+  editing through a `Select` or a date picker it was a third line in the same
+  corner, since those draw their own border and their own focus state. A field
+  marks focus with a tint and a rule along its lower edge now, which is the
+  one edge the row's outline does not already occupy, and a widget editor is
+  left to mark its own.
+
+- The export menu stops calling a page all rows. Under `rowModel: 'server'`
+  the grid holds one page, and "All rows" wrote that page out under a name
+  that promised the whole set: on a grid reporting a million rows it produced
+  a file of twenty-five. The item is named "Loaded rows" there now, in all
+  twelve languages, and `Grid.ExportMenu` takes an `onExportAll` for the set
+  the grid does not hold, which for the row counts a server model exists for
+  means an endpoint that streams the file rather than a browser building it.
+  A client row model is unchanged: it holds every row the filter left, so
+  "All rows" was always true there.
+
+- A `date` column orders its rows as dates whatever form each one arrived in.
+  Values were compared like with like, so as soon as one row held a `Date` and
+  the next an ISO string the column fell through to comparing text, and June
+  came before January. An API makes the mixture easy: some rows through a JSON
+  reviver, the rest still strings.
+
+- A set filter matches a column of `Date` objects, and survives a snapshot.
+  The value list keyed its entries with `String(value)` while the predicate
+  compared entries against cells by identity, so the two never met and the
+  filter selected nothing at all. Both sides now key through one function, and
+  it keys a `Date` by its instant rather than by `String(date)`, which carried
+  the reader's timezone into a persisted filter and stopped matching in
+  another one.
+
+- A date filter finds rows in a column of epoch numbers, which `Date.parse`
+  reads as no date at all.
+
+- A date editor opens on the date its cell is showing. It read the value as
+  `String(value).slice(0, 10)`, which is `2024-01-10` for a stored ISO string
+  and `Wed Jan 10` for a `Date` object, so a column holding real dates opened
+  an empty picker and committing it wrote the emptiness back. Epoch numbers
+  were as blank. All four forms are read now.
+
+- A column with a `type` stores what that type says, without needing `parse`.
+  Text arrives from places that carry no types, the clipboard chief among
+  them, so pasting `42` into a number column left the row holding the string
+  and every neighbour holding a number. A column declaring `number`, `currency`
+  or `percent` now parses text into a number when it is one, and leaves it
+  alone for validation to refuse when it is not. A `parse` of your own still
+  wins, and an editor that already hands back a number is unaffected.
+
+- The quick filter searches what the cells draw. It compared the value behind
+  the cell, so no column with a `type` could be found by what was on screen: a
+  cell reading `1,234.5` answered only to `1234.5`, one reading `5%` only to
+  `0.05`, and one holding a `Date` answered to nothing anybody would type, its
+  value being `Wed Jan 10 2024 00:00:00 GMT+0700 (Indochina Time)`. Both forms
+  now match, so a search that worked before still works.
+
+    It also got faster. The text a row is searched by is built once and held
+    against the row object, which an edit replaces rather than writes through,
+    so nothing has to invalidate it. On the bench at 100k rows it went from
+    29ms per keystroke to 6ms; at a million rows the first keystroke costs
+    about 2.5s and each one after about 180ms, for roughly 7MB of held text
+    per 100k rows.
+
+- An export writes a date as a date. A cell holding a `Date` was written with
+  `toISOString`, which is the UTC instant and so the previous day wherever the
+  clock is ahead of Greenwich, and a column holding epoch numbers left as
+  numbers. Both are now written in the calendar the cell was drawn in:
+  `2024-01-10` for a `date` column and `2024-01-10T09:30:00` for a `datetime`
+  one. This applies to the unformatted export and to clipboard copy; passing
+  `formatted` or a `formatValue` of your own is unchanged.
+
+- A `date` column is filtered by the day it draws. Two things had pulled apart
+  from what the cell shows, and both of them only outside UTC, which is why the
+  suite never saw either. A cell holding a `Date` object was compared by its
+  instant rather than its day, so anywhere the clock runs ahead of Greenwich a
+  row reading 10 January went unfound by a filter asking for 10 January. And a
+  cell holding a plain `2026-03-14` was read as UTC midnight and drawn in local
+  time, so from New York it drew 13 March, a day the value does not say.
+
+    Both now resolve to the calendar day the cell is drawn on, and a plain date
+    is taken as the day it spells wherever it is read. A timestamp is filtered
+    by its local day, so one late enough to have turned over belongs to the day
+    the grid shows it on. An app running in UTC sees no change at all. Dates
+    that cannot mean a day, `2026-02-30` among them, are refused rather than
+    rolled forward into March.
+
+- A `percent` column can be filtered by the percentage it draws. The renderer
+  holds a ratio and multiplies by 100 to draw it, so a cell reading `5%` holds
+  `0.05`, and the number filter was compiled against the row: typing the 5 that
+  was on screen matched nothing, and nothing in the panel said why. The panel
+  now collects and reads back percentages, the value list and the chips are
+  written the way the cells are, and `%` sits in the inputs so the unit is not
+  something to work out.
+
+    What is stored is unchanged: the filter model, snapshots and the request
+    `toFilterRequest` builds stay in the units the rows are in, so a filter
+    written by an older version still means what it meant. A column setting
+    `wholePercent` already held what it drew and is untouched, as is every
+    other column type.
+
 ## [1.1.0] - 2026-08-13
 
 ### Fixed
@@ -482,6 +646,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.0.0
 [0.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v0.3.0

@@ -107,6 +107,7 @@ export const ptBR: DataGridLocalePack = {
         copyWithHeaders: 'Copiar com cabeçalhos',
         exportCsv: 'Exportar CSV',
         exportAllRows: 'Todas as linhas',
+        exportLoadedRows: 'Linhas carregadas',
         exportSelectedRows: 'Linhas selecionadas',
         clearSelection: 'Limpar a seleção'
     },

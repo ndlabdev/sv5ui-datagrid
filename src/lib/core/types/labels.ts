@@ -80,6 +80,11 @@ export interface DataGridLabels {
     copyWithHeaders: string
     exportCsv: string
     exportAllRows: string
+    /**
+     * What `exportAllRows` becomes under `rowModel: 'server'`, where the grid
+     * holds one page and cannot honestly offer the rest.
+     */
+    exportLoadedRows: string
     exportSelectedRows: string
     clearSelection: string
 }
@@ -93,10 +98,20 @@ export type DataGridLabelsInput = Partial<
     dateOps?: Partial<Record<DateFilterOp, string>>
 }
 
-/** One language: what the grid shows and announces, under its tag. */
+/**
+ * One language: what the grid shows and announces, under its tag.
+ *
+ * A pack says what it has. English answers for the rest, so a pack written
+ * against one version of the grid keeps working when the next one names a
+ * string it has never heard of: that string arrives in English rather than
+ * arriving as a blank or as a build that will not run.
+ *
+ * The packs shipped here are complete, and `locales.test.ts` is what holds
+ * them to it.
+ */
 export interface DataGridLocalePack {
     /** BCP-47 tag, e.g. `'vi-VN'`. Matched against the page's language. */
     tag: string
-    labels: DataGridLabels
-    announcer: DataGridAnnouncerStrings
+    labels: DataGridLabelsInput
+    announcer: Partial<DataGridAnnouncerStrings>
 }

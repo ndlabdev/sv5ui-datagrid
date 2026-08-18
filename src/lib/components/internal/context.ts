@@ -1,5 +1,5 @@
 import { getContext, setContext } from 'svelte'
-import type { GridState } from '../../core/grid/grid.svelte.js'
+import type { GridState } from '../../core/grid/index.js'
 
 const GRID_CONTEXT_KEY = Symbol('sv5ui-datagrid')
 

@@ -1,4 +1,4 @@
-export { isInPortal } from '../../core/utils/popup.js'
+export { isInPortal } from '../../core/utils/index.js'
 
 /**
  * Moves a node to the end of `<body>`. A header cell clips its overflow and

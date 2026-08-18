@@ -107,6 +107,7 @@ export const esES: DataGridLocalePack = {
         copyWithHeaders: 'Copiar con encabezados',
         exportCsv: 'Exportar a CSV',
         exportAllRows: 'Todas las filas',
+        exportLoadedRows: 'Filas cargadas',
         exportSelectedRows: 'Filas seleccionadas',
         clearSelection: 'Quitar la selección'
     },

@@ -60,14 +60,20 @@ export class GridState<TRow> {
     /** The pack answering for `locale`, or none when English will do. */
     #pack = $derived(resolveLocale(this.#locales, this.locale))
 
-    /** Every string the grid's own UI renders. */
+    /**
+     * Every string the grid's own UI renders: English, with the chosen pack
+     * over it, with this app's own overrides over that. Layered rather than
+     * swapped, so a string the pack does not carry is the English one rather
+     * than nothing at all.
+     */
     labels: DataGridLabels = $derived(
-        mergeLabels(this.#labelOverrides, this.#pack?.labels ?? defaultLabels)
+        mergeLabels(this.#labelOverrides, mergeLabels(this.#pack?.labels, defaultLabels))
     )
 
-    /** Every string it announces. */
+    /** Every string it announces, layered the same way. */
     announcerStrings: DataGridAnnouncerStrings = $derived({
-        ...(this.#pack?.announcer ?? defaultAnnouncerStrings),
+        ...defaultAnnouncerStrings,
+        ...this.#pack?.announcer,
         ...this.#announcerOverrides
     })
     readonly expansion: ExpansionModel

@@ -16,7 +16,10 @@ export default defineConfig({
                 test: {
                     name: 'unit',
                     environment: 'node',
-                    include: ['src/**/*.{test,spec}.{js,ts}'],
+                    // `scripts/` ships nothing, but a release that misreads CI
+                    // or miscounts a version is expensive in its own way, so
+                    // the parts of it that can be tested are.
+                    include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.{js,mjs,ts}'],
                     exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
                 }
             },
