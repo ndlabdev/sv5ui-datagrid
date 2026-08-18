@@ -119,7 +119,11 @@ if (!secrets.includes('NPM_TOKEN')) {
             'Set it first:  gh secret set NPM_TOKEN'
     )
 }
-console.log('  on dev, clean, main holds nothing dev lacks, NPM_TOKEN present')
+// Named, which is all this can see. Whether npm still accepts it is a thing
+// only npm knows, and a token that published last month can be expired by
+// this one: the registry answers a write it will not allow with a 404, which
+// reads like the package is missing rather than like the token is finished.
+console.log('  on dev, clean, main holds nothing dev lacks, a secret named NPM_TOKEN exists')
 
 let version
 try {
@@ -323,8 +327,11 @@ try {
 } catch {
     fail(
         `publish.yml failed. ${version} was not published.\n` +
+            'A 404 on the PUT is npm refusing the write, not a missing package:\n' +
+            'the token is expired, read-only, or not permitted for this scope.\n' +
             'Fix the cause, then delete and re-push the tag:\n' +
-            `  git push --delete origin ${tag} && git tag -d ${tag}`
+            `  git push --delete origin ${tag} && git tag -d ${tag}\n` +
+            `  git tag ${tag} <merge commit> && git push origin ${tag}`
     )
 }
 
