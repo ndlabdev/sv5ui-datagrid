@@ -1,9 +1,18 @@
 # Dormant until a version tag is pushed. Nothing publishes on ordinary pushes
-# or PRs — the workflow only runs for a `vX.Y.Z` tag, and only then if the
-# `NPM_TOKEN` secret exists. Prerequisites before the first release (§16
-# Stage 2): the npm org `sv5ui` is registered, the repo is public (npm
-# provenance needs a public source repo), and `NPM_TOKEN` is set in the repo
-# secrets. To cut a release: bump the version, then push a matching tag.
+# or PRs: the workflow only runs for a `vX.Y.Z` tag. To cut a release, bump the
+# version and push a matching tag.
+#
+# Authentication is npm trusted publishing, so there is no token here to expire
+# or leak. npm mints a short-lived credential from the OIDC identity GitHub
+# issues to this workflow, which is why `id-token: write` is not optional.
+#
+# It needs a trusted publisher registered on npmjs.com against the package,
+# naming this repository and this file by name. What the registry checks is
+# the pair, so renaming this file breaks publishing until the entry is renamed
+# with it.
+#
+# Requires the repo to be public, as npm provenance does, and npm 11.5.1 or
+# newer, which is why npm is upgraded below rather than taken from Node.
 name: Publish to npm
 
 on:
@@ -16,7 +25,8 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: read
-            # Lets npm attach build provenance to the published package.
+            # The credential itself: npm exchanges this OIDC token for a
+            # short-lived publish token, and attaches provenance from it.
             id-token: write
 
         steps:
@@ -28,9 +38,16 @@ jobs:
 
             - uses: actions/setup-node@v6
               with:
+                  # Trusted publishing wants 22.14.0 or newer; 22 resolves
+                  # above that and keeps the runner on the current patch.
                   node-version: 22
                   cache: pnpm
                   registry-url: 'https://registry.npmjs.org'
+
+            # Node 22 ships npm 10, which has no idea what an OIDC exchange is
+            # and would fall back to looking for a token that is not here.
+            - name: Use an npm that can talk to a trusted publisher
+              run: npm install -g npm@^11.5.1
 
             - run: pnpm install --frozen-lockfile
 
@@ -48,7 +65,7 @@ jobs:
             - name: Build package
               run: pnpm run build
 
+            # No token and no --provenance: the credential comes from the OIDC
+            # exchange, and provenance is attached without being asked for.
             - name: Publish to npm
-              run: npm publish --access public --provenance
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: npm publish --access public
