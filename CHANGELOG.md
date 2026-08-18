@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-18
+
 ### Changed
 
 - Sorting reads each column once per row rather than twice per comparison, and
@@ -644,6 +646,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.0.0
 [0.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v0.3.0
