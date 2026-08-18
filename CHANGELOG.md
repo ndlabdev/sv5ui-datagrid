@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Committing an edit no longer turns the page. `Enter` commits and moves down,
+  and on the last row of a page that crossed into the next one: the row just
+  edited left the screen and the caret landed somewhere the reader was not
+  looking, in answer to a keystroke that meant save. The move now stops at the
+  page it started on. Arrow keys still cross it, being a request to go
+  somewhere rather than the tail of one to write something, and a virtualized
+  grid is untouched, since the row below is there either way.
+
 - A cell editor is not painted over by the line under its own row. The editor
   fills its cell, and the row's separator sits at a layer above it, so one grey
   pixel landed along the bottom of the ring: three edges of one weight and a

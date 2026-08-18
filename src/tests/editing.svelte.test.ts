@@ -9,6 +9,7 @@ import {
     DataGrid,
     editing,
     getEditing,
+    getPagination,
     pagination,
     sorting,
     virtualization,
@@ -374,6 +375,60 @@ describe('row edit mode', () => {
         // edge the row's outline does not already occupy.
         expect(getComputedStyle(name, '::after').backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
         expect(getComputedStyle(age, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    })
+
+    it('does not turn the page when Enter commits the last row of one', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+        const paging = getPagination(grid)!
+
+        // The last row the page holds, which is where the jump showed up.
+        cellAt(screen.container, 11, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await page.getByRole('textbox').first().fill('Edited')
+        await userEvent.keyboard('{Enter}')
+
+        expect(grid.data[11].name).toBe('Edited')
+        // Pressing Enter to save is not a request to go to page two.
+        expect(paging.page).toBe(1)
+        expect(grid.focus.active.row).toBe(11)
+    })
+
+    it('still moves down when the next row is on the same page', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 3, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await page.getByRole('textbox').first().fill('Edited')
+        await userEvent.keyboard('{Enter}')
+        expect(grid.focus.active.row).toBe(4)
+    })
+
+    it('leaves the arrow keys free to cross the boundary', async () => {
+        const grid = createDataGrid<Person>({
+            columns,
+            data: makeData(24),
+            getRowId: (person) => String(person.id),
+            features: [sorting(), editing(), pagination({ pageSize: 12 })]
+        })
+        const screen = await renderGrid(grid)
+        const paging = getPagination(grid)!
+
+        cellAt(screen.container, 11, 0).focus()
+        await userEvent.keyboard('{ArrowDown}')
+
+        // Going somewhere is what an arrow key is for.
+        expect(grid.focus.active.row).toBe(12)
+        expect(paging.page).toBe(2)
     })
 
     it('keeps the row separator from painting over the cell editor it rings', async () => {
