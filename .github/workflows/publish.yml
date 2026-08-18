@@ -72,5 +72,14 @@ jobs:
 
             # No token and no --provenance: the credential comes from the OIDC
             # exchange, and provenance is attached without being asked for.
+            #
+            # The two versions are printed because both have been the answer
+            # once: npm below 11.5.1 does not know how to make the exchange,
+            # and a job without the OIDC request URL has nothing to make it
+            # with. The URL is a capability, not a secret; the token it issues
+            # is never printed.
             - name: Publish to npm
-              run: npm publish --access public
+              run: |
+                  echo "npm $(npm --version), node $(node --version)"
+                  echo "OIDC available: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}${ACTIONS_ID_TOKEN_REQUEST_URL:-no}"
+                  npm publish --access public
