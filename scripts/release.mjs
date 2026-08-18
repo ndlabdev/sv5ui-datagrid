@@ -120,8 +120,8 @@ if (!secrets.includes('NPM_TOKEN')) {
     )
 }
 // Named, which is all this can see. Whether npm accepts it is a thing only npm
-// knows: a token can be expired, or be the granular kind that npm refuses to
-// exempt from 2FA, and both look like this line passing.
+// knows: a token can be expired, or be missing the 2FA bypass, or carry no
+// write permission on the package, and all three look like this line passing.
 console.log('  on dev, clean, main holds nothing dev lacks, a secret named NPM_TOKEN exists')
 
 let version
@@ -328,8 +328,8 @@ try {
         `publish.yml failed. ${version} was not published.\n` +
             'What the registry said is in the log above, and it is about the token:\n' +
             '  404 on the PUT   the token is expired or cannot write this scope\n' +
-            '  EOTP             the token is not the classic Automation kind, the\n' +
-            '                   only one npm exempts from 2FA\n' +
+            '  EOTP             the token was made without "Bypass two-factor\n' +
+            '                   authentication", which a runner cannot answer\n' +
             'Fix the cause, then delete and re-push the tag:\n' +
             `  git push --delete origin ${tag} && git tag -d ${tag}\n` +
             `  git tag ${tag} <merge commit> && git push origin ${tag}`

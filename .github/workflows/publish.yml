@@ -2,11 +2,14 @@
 # or PRs: the workflow only runs for a `vX.Y.Z` tag. To cut a release, bump the
 # version and push a matching tag.
 #
-# Authentication is `NPM_TOKEN`, and it has to be a classic Automation token.
-# That is the one kind npm exempts from 2FA, which a runner cannot answer, and
-# the one kind with no expiry to outlive. A granular token gets as far as the
-# registry and is turned away with EOTP; an expired one is refused with a 404
-# on the PUT, which reads like a missing package.
+# Authentication is `NPM_TOKEN`, a granular access token that has to be made
+# with two things npm leaves off by default: "Bypass two-factor
+# authentication", since a runner cannot answer an OTP prompt, and read and
+# write on this package, since the permission starts at no access. Without the
+# first npm refuses with EOTP; without the second, or once the token's expiry
+# passes, it refuses with a 404 on the PUT, which reads like a missing package.
+#
+# Granular tokens expire. Whoever renews this will meet the same two boxes.
 #
 # This is the same shape sv5ui publishes with, which is the reason to keep it.
 
