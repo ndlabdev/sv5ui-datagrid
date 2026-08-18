@@ -223,31 +223,52 @@ describe('a million rows', () => {
     // kept to the properties that would hide a lost row.
     const rows = makeRows(1_000_000)
 
-    it('sorts into a permutation of itself', () => {
-        const grid = gridOf(rows)
-        getSorting(grid)!.setSort([{ columnId: 'score', direction: 'desc' }])
-        const nodes = grid.nodes
-        expect(nodes).toHaveLength(1_000_000)
-        expect(new Set(nodes.map((node) => node.id)).size).toBe(1_000_000)
-    })
+    /**
+     * These do a million rows of real work each, so the default five seconds
+     * is not a deadline they should be held to: it is the deadline for a test
+     * that has hung. A shared runner is slower than the machine this was
+     * written on, and one of them passed here and timed out there, which is
+     * worse than being slow.
+     */
+    const HEAVY = 60_000
 
-    it('pages to the end and finds rows there', () => {
-        const grid = gridOf(rows, 25)
-        const page = getPagination(grid)!
-        expect(page.pageCount).toBe(40_000)
-        page.setPage(40_000)
-        expect(grid.nodes).toHaveLength(25)
-        expect(grid.nodes[24].id).toBe('1000000')
-    })
+    it(
+        'sorts into a permutation of itself',
+        () => {
+            const grid = gridOf(rows)
+            getSorting(grid)!.setSort([{ columnId: 'score', direction: 'desc' }])
+            const nodes = grid.nodes
+            expect(nodes).toHaveLength(1_000_000)
+            expect(new Set(nodes.map((node) => node.id)).size).toBe(1_000_000)
+        },
+        HEAVY
+    )
 
-    it('filters down to a handful and back', () => {
-        const grid = gridOf(rows)
-        const state = getFiltering(grid)!
-        state.setQuickFilter('person 999999')
-        expect(grid.nodes.length).toBeGreaterThan(0)
-        state.setQuickFilter('')
-        expect(grid.totalRows).toBe(1_000_000)
-    })
+    it(
+        'pages to the end and finds rows there',
+        () => {
+            const grid = gridOf(rows, 25)
+            const page = getPagination(grid)!
+            expect(page.pageCount).toBe(40_000)
+            page.setPage(40_000)
+            expect(grid.nodes).toHaveLength(25)
+            expect(grid.nodes[24].id).toBe('1000000')
+        },
+        HEAVY
+    )
+
+    it(
+        'filters down to a handful and back',
+        () => {
+            const grid = gridOf(rows)
+            const state = getFiltering(grid)!
+            state.setQuickFilter('person 999999')
+            expect(grid.nodes.length).toBeGreaterThan(0)
+            state.setQuickFilter('')
+            expect(grid.totalRows).toBe(1_000_000)
+        },
+        HEAVY
+    )
 })
 
 describe('the value list stays a list a person can read', () => {

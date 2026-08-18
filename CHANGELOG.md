@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Changed
+
+- Publishing authenticates as the repository rather than as a token. npm mints
+  a short-lived credential from the OIDC identity GitHub issues to the publish
+  workflow, checked against a trusted publisher registered for the package, so
+  there is no `NPM_TOKEN` to expire, leak or be the wrong kind. Provenance is
+  attached without being asked for. Nothing changes for anyone installing the
+  package; this is how it gets there.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed
