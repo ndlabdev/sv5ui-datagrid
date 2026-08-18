@@ -42,7 +42,11 @@ export class Virtualization<TRow> {
             ? new ColumnVirtualizer({
                   getOffsets: () => grid.columns.offsets ?? [],
                   overscanPx:
-                      typeof options.columns === 'object' ? options.columns.overscanPx : undefined
+                      typeof options.columns === 'object' ? options.columns.overscanPx : undefined,
+                  initialColumns:
+                      typeof options.columns === 'object'
+                          ? options.columns.initialColumns
+                          : undefined
               })
             : null
 

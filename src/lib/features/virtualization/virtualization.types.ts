@@ -6,6 +6,16 @@ export interface ColumnVirtualizationOptions {
      * @default 200
      */
     overscanPx?: number
+
+    /**
+     * Columns rendered before the viewport is measured, which is the first
+     * paint and every server-rendered one. The row axis calls this
+     * `initialRows`, and it matters more here: a grid of thousands of columns
+     * that renders them all for one frame pays for every cell in every
+     * rendered row before it has drawn anything.
+     * @default 20
+     */
+    initialColumns?: number
 }
 
 export interface VirtualizationOptions<TRow = unknown> {

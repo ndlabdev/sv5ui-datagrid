@@ -34,6 +34,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A column-virtualized grid stops rendering every column on its first paint.
+  Column widths resolve against a container the first paint has not measured
+  yet, and with no widths there were no offsets to window by, so the window was
+  skipped and every column of every rendered row was drawn until the measure
+  landed. On 40 columns that is invisible. Measured in a browser at 100 rows:
+  500 columns mounted in 609ms, 2000 in 2.3s, and both drew every cell they
+  had. They now mount in 28ms and 37ms, drawing 420 cells either way, and
+  20,000 columns mounts in 304ms. `initialColumns` bounds that first paint, the
+  way `initialRows` already bounded the row axis, and defaults to 20.
+
+- The column window is searched rather than walked. Finding it stepped from the
+  first column every time, so a grid scrolled far to the right paid the whole
+  column list on every frame.
+
 - Committing an edit no longer turns the page. `Enter` commits and moves down,
   and on the last row of a page that crossed into the next one: the row just
   edited left the screen and the caret landed somewhere the reader was not

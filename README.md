@@ -638,6 +638,14 @@ before `Item 10`, and the grid does not trade that away for speed.
 
 ### Known limits
 
+- **A very wide grid costs its column list, not its columns.** Only the columns
+  in view are rendered, bounded even on the first paint before the container
+  has been measured, so the cells drawn stay flat as columns are added. What
+  does grow is the arithmetic behind them and the CSS grid template every row
+  declares: measured in a browser at 100 rows, 20,000 columns mounts in about
+  300ms, of which the template is 117KB per row. Thousands of columns are
+  comfortable; tens of thousands work and are worth measuring for your own
+  widths.
 - **Scrolling holds 60fps to roughly half a million rows** and falls to about
   28fps at a million with this many columns. Fewer columns move that line out.
 - **Quick filter pays for its first keystroke and reuses it after.** The first

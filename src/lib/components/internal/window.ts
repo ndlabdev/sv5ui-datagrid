@@ -59,7 +59,7 @@ export function columnWindowOf<TRow>(grid: GridState<TRow>): ColumnWindow<TRow> 
     const { visible, pinnedLeft, pinnedRight, offsets } = grid.columns
     const columnVirtualizer = getVirtualization(grid)?.columnVirtualizer
 
-    if (!columnVirtualizer || !offsets) {
+    if (!columnVirtualizer) {
         return {
             windowed: false,
             renderColumns: visible.map((column, index) => ({ column, index })),
@@ -70,7 +70,14 @@ export function columnWindowOf<TRow>(grid: GridState<TRow>): ColumnWindow<TRow> 
 
     const leftCount = pinnedLeft.length
     const rightStart = visible.length - pinnedRight.length
-    const range = columnVirtualizer.range
+    // Widths are resolved against a container that has not been measured on the
+    // first paint, so there are no offsets to window by yet. Rendering every
+    // column until there are is what the row axis refuses to do with
+    // `initialRows`, and it costs more here: every column of every rendered
+    // row, before anything has been drawn.
+    const range = offsets
+        ? columnVirtualizer.range
+        : { start: 0, end: Math.min(columnVirtualizer.initialColumns, visible.length) }
     const centerStart = Math.max(range.start, leftCount)
     const centerEnd = Math.min(range.end, rightStart)
 
@@ -88,7 +95,7 @@ export function columnWindowOf<TRow>(grid: GridState<TRow>): ColumnWindow<TRow> 
     return {
         windowed: true,
         renderColumns,
-        rowWidth: `${offsets.at(-1)}px`,
+        rowWidth: offsets ? `${offsets.at(-1)}px` : undefined,
         has: (index) =>
             index < leftCount || index >= rightStart || (index >= centerStart && index < centerEnd)
     }
