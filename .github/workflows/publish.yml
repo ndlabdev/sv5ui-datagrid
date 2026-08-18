@@ -36,13 +36,18 @@ jobs:
               with:
                   version: 10
 
+            # No `registry-url`, deliberately. It writes an .npmrc holding
+            # `_authToken=${NODE_AUTH_TOKEN}` and sets that variable to a
+            # placeholder when no token is given, so npm finds a credential,
+            # never reaches for the OIDC exchange, and sends the placeholder to
+            # the registry, which refuses it. registry.npmjs.org is the default
+            # anyway.
             - uses: actions/setup-node@v6
               with:
                   # Trusted publishing wants 22.14.0 or newer; 22 resolves
                   # above that and keeps the runner on the current patch.
                   node-version: 22
                   cache: pnpm
-                  registry-url: 'https://registry.npmjs.org'
 
             # Node 22 ships npm 10, which has no idea what an OIDC exchange is
             # and would fall back to looking for a token that is not here.
