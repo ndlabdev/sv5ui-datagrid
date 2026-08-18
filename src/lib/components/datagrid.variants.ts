@@ -54,7 +54,12 @@ export const datagridVariants = tv({
         toggleButton:
             'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
         cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
-        cellEditorFlat: 'bg-surface ring-2 ring-inset ring-primary',
+        // z-7, not higher: above the row's own separator, which is at 6 and
+        // would otherwise paint its grey line along the bottom of the ring and
+        // leave three edges looking one weight and the fourth another. Below
+        // the pinned cells at 8, which have to stay over anything scrolling
+        // under them, an open editor included.
+        cellEditorFlat: 'z-[7] bg-surface ring-2 ring-inset ring-primary',
         cellEditorInRow:
             'bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent focus-within:z-[7] focus-within:bg-primary/8 focus-within:after:bg-primary',
         cellEditorInRowWidget: 'bg-surface focus-within:z-[7]',

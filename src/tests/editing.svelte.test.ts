@@ -376,6 +376,26 @@ describe('row edit mode', () => {
         expect(getComputedStyle(age, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
     })
 
+    it('keeps the row separator from painting over the cell editor it rings', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 0, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await expect.element(page.getByRole('textbox').first()).toBeVisible()
+
+        const box = cellAt(screen.container, 0, 0).firstElementChild as HTMLElement
+        const row = cellAt(screen.container, 0, 0).parentElement!
+        const separator = Number(getComputedStyle(row, '::after').zIndex)
+
+        // The editor fills its cell, so the separator lands on the ring rather
+        // than beside it: one grey pixel along one blue edge, which reads as
+        // three edges of one weight and a fourth of another.
+        expect(Number(getComputedStyle(box).zIndex)).toBeGreaterThan(separator)
+        // And no higher than the pinned cells, which stay above what scrolls
+        // beneath them whether or not it is being edited.
+        expect(Number(getComputedStyle(box).zIndex)).toBeLessThan(8)
+    })
+
     it('leaves a widget editor to draw its own focus, not a box around it', async () => {
         const grid = makeGrid({ mode: 'row' })
         const screen = await renderGrid(grid)

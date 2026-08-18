@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A cell editor is not painted over by the line under its own row. The editor
+  fills its cell, and the row's separator sits at a layer above it, so one grey
+  pixel landed along the bottom of the ring: three edges of one weight and a
+  fourth of another. The editor sits above the separator now, and still below
+  the pinned columns, which have to stay over anything scrolling beneath them
+  whether or not it is being edited.
+
 - Row edit mode draws one line per edge. The row outlines itself, which is
   what it is for, and every field inside outlined itself as well: along the
   seam the two shared that came to four pixels of primary, and on a column
