@@ -29,3 +29,7 @@ vite.config.ts.timestamp-*
 # test artifacts
 .vitest-attachments/
 __screenshots__/
+
+# Working notes, not documentation for anyone installing this. The repo is
+# public, so anything left here is published to strangers by default.
+docs/
