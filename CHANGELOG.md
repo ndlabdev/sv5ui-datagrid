@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `CellDecoration.style` — a feature decorating a cell can now write CSS
+  declarations onto it, not only class names. A class can say _which_ of a
+  fixed set of looks a cell takes; it cannot say a value computed per cell,
+  which is what a colour scale, a data bar or a per-user cursor tint is. The
+  hook takes a record keyed by CSS property, custom properties included
+  (`{ '--dg-bar': '42%' }` is how a feature reaches a pseudo-element), and
+  several features decorating the same cell merge per property with the later
+  one winning, the way classes already concatenated.
+
+    The grid writes its own layout — the grid column, the pinned offsets, the
+    editor's padding — as style _directives_, which outrank the attribute a
+    decoration lands in. So a decoration cannot move a cell out of its column,
+    unpin it, or escape the row: it can only paint. A value is also cut at the
+    first `;`, so one entry stays one declaration and a colour read out of row
+    data cannot open a second.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed

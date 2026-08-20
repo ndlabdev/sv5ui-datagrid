@@ -158,6 +158,21 @@
         { id: 'note', header: 'Note', flex: 1, minWidth: 180 }
     ]
 
+    function valueHeatmap(): GridFeature<Metric> {
+        const highest = Math.max(...metrics.map((metric) => metric.value))
+        return {
+            id: 'demo-heatmap',
+            cellDecoration: ({ column, node }) =>
+                column.id === 'value'
+                    ? {
+                          style: {
+                              'background-color': `color-mix(in oklab, var(--color-primary) ${Math.round((node.row.value / highest) * 40)}%, transparent)`
+                          }
+                      }
+                    : undefined
+        }
+    }
+
     const metricGrid = createDataGrid<Metric>({
         data: metrics,
         columns: metricColumns,
@@ -166,6 +181,7 @@
             filtering(),
             sorting(),
             columnOps(),
+            valueHeatmap(),
             rowPinning({
                 isRowPinned: (metric) =>
                     metric.name === 'Grand total'

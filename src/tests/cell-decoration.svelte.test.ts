@@ -105,11 +105,69 @@ describe('cellDecoration extension point', () => {
         expect(cellAt(screen.container, 0, 0).className).not.toContain('x-decorated')
     })
 
+    it('writes the style record onto the cell', async () => {
+        const heat: GridFeature<Cell> = {
+            id: 'heat-decorator',
+            cellDecoration: ({ rowIndex }) =>
+                rowIndex === 0 ? { style: { 'background-color': 'rgb(1, 2, 3)' } } : undefined
+        }
+        const screen = await renderGrid(makeGrid([heat]))
+
+        expect(cellAt(screen.container, 0, 0).style.backgroundColor).toBe('rgb(1, 2, 3)')
+        expect(cellAt(screen.container, 1, 0).style.backgroundColor).toBe('')
+    })
+
+    it('lets the later feature win one property without dropping the other', async () => {
+        const base: GridFeature<Cell> = {
+            id: 'base-decorator',
+            cellDecoration: () => ({ style: { color: 'rgb(1, 1, 1)', 'font-weight': '700' } })
+        }
+        const over: GridFeature<Cell> = {
+            id: 'over-decorator',
+            cellDecoration: ({ colIndex }) =>
+                colIndex === 0 ? { style: { color: 'rgb(2, 2, 2)' } } : undefined
+        }
+        const screen = await renderGrid(makeGrid([base, over]))
+
+        const cell = cellAt(screen.container, 0, 0)
+        expect(cell.style.color).toBe('rgb(2, 2, 2)')
+        expect(cell.style.fontWeight).toBe('700')
+        expect(cellAt(screen.container, 0, 1).style.color).toBe('rgb(1, 1, 1)')
+    })
+
+    // The grid writes its layout as style directives, which outrank the
+    // attribute a decoration lands in: a feature cannot move a cell out of
+    // its own column, whatever it asks for.
+    it('does not let a decoration override the layout the grid wrote', async () => {
+        const escapee: GridFeature<Cell> = {
+            id: 'escapee-decorator',
+            cellDecoration: () => ({
+                style: { 'grid-column': '4 / 5', 'background-color': 'rgb(9, 9, 9)' }
+            })
+        }
+        const screen = await renderGrid(makeGrid([escapee]))
+
+        const cell = cellAt(screen.container, 0, 0)
+        expect(cell.style.gridColumn).not.toContain('4')
+        expect(cell.style.backgroundColor).toBe('rgb(9, 9, 9)')
+    })
+
+    it('takes a custom property, which is how a feature reaches a pseudo-element', async () => {
+        const bar: GridFeature<Cell> = {
+            id: 'bar-decorator',
+            cellDecoration: ({ rowIndex }) => ({ style: { '--dg-bar': `${rowIndex * 10}%` } })
+        }
+        const screen = await renderGrid(makeGrid([bar]))
+
+        expect(cellAt(screen.container, 2, 0).style.getPropertyValue('--dg-bar')).toBe('20%')
+    })
+
     it('leaves cells untouched when no feature decorates', async () => {
         const screen = await renderGrid(makeGrid())
 
         const cell = cellAt(screen.container, 0, 0)
         expect(cell.getAttribute('aria-selected')).toBeNull()
+        expect(cell.style.backgroundColor).toBe('')
         expect(cell.className).not.toContain('x-decorated')
     })
 
