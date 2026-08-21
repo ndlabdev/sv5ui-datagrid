@@ -9,6 +9,10 @@
         "type": "git",
         "url": "git+https://github.com/ndlabdev/sv5ui-datagrid.git"
     },
+    "funding": {
+        "type": "ko_fi",
+        "url": "https://ko-fi.com/ndlabdev"
+    },
     "bugs": {
         "url": "https://github.com/ndlabdev/sv5ui-datagrid/issues"
     },
