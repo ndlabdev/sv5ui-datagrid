@@ -12,6 +12,7 @@ import {
     getFiltering,
     getSelection,
     selection,
+    virtualization,
     type ColumnDef,
     type DataGridProps,
     type GridFeature,
@@ -221,6 +222,49 @@ describe('the cells a gated grid draws', () => {
         const content = () =>
             document.querySelector('[data-bits-floating-content-wrapper]')?.textContent?.trim()
         await expect.poll(content, { timeout: 3000 }).toBe(`tip: ${MASK}`)
+    })
+})
+
+/**
+ * A virtualized grid draws a window and redraws it on every scroll, so the
+ * rows that arrive after the first paint have to come out gated too.
+ */
+describe('a gated grid that virtualizes', () => {
+    it('holds through a scroll into rows it had not drawn yet', async () => {
+        const many = Array.from({ length: 2000 }, (_, i) => ({
+            id: i + 1,
+            name: `Person ${i + 1}`,
+            salary: 900000 + i
+        }))
+        const grid = createDataGrid<Person>({
+            columns: [
+                { id: 'name', header: 'Name', width: 160 },
+                { id: 'salary', header: 'Salary', width: 160 }
+            ],
+            data: many,
+            getRowId: (row) => String(row.id),
+            features: [
+                virtualization({ rowHeight: 40, overscan: 5 }),
+                {
+                    id: 'policy',
+                    cellValue: ({ column }) => (column.id === 'salary' ? () => MASK : undefined)
+                }
+            ]
+        })
+
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(page.getByRole('grid')).toBeVisible()
+        expect(screen.container.innerHTML).not.toContain('900000')
+
+        const viewport = screen.getByRole('grid').element() as HTMLElement
+        viewport.scrollTop = 4000
+        await expect
+            .element(page.getByRole('gridcell', { name: 'Person 120', exact: true }))
+            .toBeVisible()
+
+        // The window has moved onto rows drawn for the first time here.
+        expect(screen.container.innerHTML).not.toContain('900119')
+        expect(screen.container.innerHTML).toContain(MASK)
     })
 })
 

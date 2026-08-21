@@ -8,7 +8,9 @@ import {
     filtering,
     getEditing,
     getFiltering,
+    getPagination,
     getSelection,
+    pagination,
     rowsToMatrix,
     selection,
     type CellValuePurpose,
@@ -272,6 +274,124 @@ describe('a gate is asked per column on the passes that read whole columns', () 
 
     it('costs the same to search 500 rows as to search 50', () => {
         expect(searchCost(500)).toBe(searchCost(50))
+    })
+})
+
+/**
+ * A window stage means the rows on screen are not the rows an export writes,
+ * so both sets have to come out gated.
+ */
+describe('a gated grid paging on the client', () => {
+    const crowd = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        name: `Person ${i + 1}`,
+        salary: 1000 + i
+    }))
+
+    function pagedGrid(): GridState<Person> {
+        return createDataGrid<Person>({
+            columns,
+            data: crowd,
+            getRowId: (row) => String(row.id),
+            features: [filtering(), selection(), editing(), pagination({ pageSize: 5 }), mask()]
+        })
+    }
+
+    it('substitutes the page on screen and every row behind it', () => {
+        const grid = pagedGrid()
+        expect(grid.nodes).toHaveLength(5)
+        expect(grid.getValue(firstNode(grid), salaryColumn(grid))).toBe(MASK)
+
+        // `allRows` reaches past the page: twenty rows, none of them readable.
+        const matrix = rowsToMatrix(grid.preWindowNodes, grid.columns.visible, undefined, {
+            read: (column) => grid.readerFor(column.id, 'export')
+        })
+        expect(matrix).toHaveLength(20)
+        expect(matrix.every((row) => row[1] === MASK)).toBe(true)
+
+        getPagination(grid)!.setPage(3)
+        expect(firstNode(grid).row.name).toBe('Person 11')
+        expect(grid.getValue(firstNode(grid), salaryColumn(grid))).toBe(MASK)
+    })
+
+    it('searches the substitute across pages, not the value', () => {
+        const grid = pagedGrid()
+        getFiltering(grid)!.setQuickFilter('1015')
+        expect(grid.nodes).toHaveLength(0)
+
+        getFiltering(grid)!.setQuickFilter('person 15')
+        expect(grid.nodes.map((node) => node.row.name)).toEqual(['Person 15'])
+    })
+})
+
+/**
+ * Server mode takes a different road: the filter stage passes rows through
+ * untouched, because the page arrived filtered. Everything else still reads
+ * cells, and the page in hand is the page a user can copy.
+ */
+describe('a gated grid on one page of a server', () => {
+    const database: Person[] = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        name: `Person ${i + 1}`,
+        salary: 1000 + i
+    }))
+    const pageOf = (page: number, size = 5) => database.slice((page - 1) * size, page * size)
+
+    function serverGrid(): GridState<Person> {
+        return createDataGrid<Person>({
+            columns,
+            data: pageOf(1),
+            getRowId: (row) => String(row.id),
+            rowModel: 'server',
+            features: [
+                filtering(),
+                selection(),
+                editing(),
+                pagination({ pageSize: 5, rowCount: database.length }),
+                mask()
+            ]
+        })
+    }
+
+    it('substitutes the page it holds, and the page it turns to', () => {
+        const grid = serverGrid()
+        expect(grid.getValue(firstNode(grid), salaryColumn(grid))).toBe(MASK)
+
+        getPagination(grid)!.setPage(2)
+        grid.data = pageOf(2)
+
+        expect(firstNode(grid).row.name).toBe('Person 6')
+        expect(grid.getValue(firstNode(grid), salaryColumn(grid))).toBe(MASK)
+    })
+
+    it('substitutes what the loaded page copies and exports', () => {
+        const grid = serverGrid()
+        getSelection(grid)!.selectAll()
+
+        const copied = getSelection(grid)!.copyText()!
+        expect(copied).toContain(MASK)
+        expect(copied).not.toContain('1000')
+
+        const matrix = rowsToMatrix(grid.preWindowNodes, grid.columns.visible, undefined, {
+            read: (column) => grid.readerFor(column.id, 'export')
+        })
+        expect(matrix.every((row) => row[1] === MASK)).toBe(true)
+    })
+
+    it('substitutes the values a set filter offers for the loaded page', () => {
+        expect(getFiltering(serverGrid())!.distinctFor('salary')).toEqual([MASK])
+    })
+
+    it('keeps the cell unopenable, and keeps the quick filter a pass-through', () => {
+        const grid = serverGrid()
+        expect(getEditing(grid)!.editableAt(firstNode(grid), salaryColumn(grid).def)).toBe(false)
+
+        // The server did the filtering, so the stage returns the page whole.
+        // The query never reads a cell, so there is nothing here for a gate to
+        // hold back: what leaves is the string the user typed.
+        getFiltering(grid)!.setQuickFilter('1000')
+        expect(grid.nodes).toHaveLength(5)
+        expect(getFiltering(grid)!.model.quick).toBe('1000')
     })
 })
 
