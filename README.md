@@ -298,6 +298,11 @@ const maskSalary = (visible: () => boolean): GridFeature<Row> => ({
 })
 ```
 
+Answer in the type the column draws. A built-in renderer formats what it is
+given, so `'***'` on a `type: 'currency'` column parses as no number and the
+cell draws empty; `null` draws the column's empty text, and a mark of your own
+needs an untyped column or a `cell` snippet. Nothing leaks either way.
+
 Hand the value back unchanged — the same reference — for a cell you are
 leaving alone; the grid compares by identity. A cell whose value a reader
 substitutes is one the grid refuses to edit, since an editor opened on it

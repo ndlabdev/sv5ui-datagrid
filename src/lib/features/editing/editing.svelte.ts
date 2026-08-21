@@ -270,9 +270,14 @@ export class Editing<TRow> {
         if (!node) return false
 
         const columns = this.#grid.columns
-        const validations = Object.keys(this.drafts).map((columnId) => {
-            const def = columns.get(columnId)!.def
-            return { columnId, def, result: this.#resolve(node, def, this.drafts[columnId]) }
+        // Filtered the way `applyEdits` filters. A draft only reaches this map
+        // through a field the row opened, so the two agree already; they have
+        // to keep agreeing when a draft is set through the API instead, or a
+        // column a gate is holding back could be written through this door.
+        const validations = Object.keys(this.drafts).flatMap((columnId) => {
+            const def = columns.get(columnId)?.def
+            if (!def || !this.editableAt(node, def)) return []
+            return [{ columnId, def, result: this.#resolve(node, def, this.drafts[columnId]) }]
         })
 
         const anyAsync = validations.some((entry) => isPromise(entry.result))

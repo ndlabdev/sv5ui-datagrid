@@ -46,13 +46,17 @@ function mask(purposes?: CellValuePurpose[]): GridFeature<Person> {
     }
 }
 
-function makeGrid(features: GridFeature<Person>[] = [], data = people): GridState<Person> {
+function makeGrid(
+    features: GridFeature<Person>[] = [],
+    data = people,
+    mode: 'cell' | 'row' = 'cell'
+): GridState<Person> {
     return createDataGrid<Person>({
         columns,
         // Copied: an edit replaces a row, and the fixtures are shared.
         data: data.map((row) => ({ ...row })),
         getRowId: (row) => String(row.id),
-        features: [filtering(), selection(), editing(), ...features]
+        features: [filtering(), selection(), editing({ mode }), ...features]
     })
 }
 
@@ -135,6 +139,48 @@ describe('a gate closes every way a value leaves the grid', () => {
         expect(written).toBe(true)
         // The edit replaces the row, so the fresh node is the one to read.
         expect(firstNode(grid).row).toEqual({ id: 1, name: 'Ada Lovelace', salary: 9000 })
+    })
+
+    it('keeps a gated column out of a row edit, and out of what the row writes', () => {
+        const grid = makeGrid([mask()], people, 'row')
+        const state = getEditing(grid)!
+        state.startRowEdit(firstNode(grid).id)
+
+        expect(Object.keys(state.drafts)).toEqual(['name'])
+
+        // Forced through the API rather than through a field the row opened:
+        // the commit has to drop it too, or this is the door around the rule.
+        state.setRowDraft('salary', 1)
+        state.setRowDraft('name', 'Ada Lovelace')
+        expect(state.commitRow()).toBe(true)
+        expect(firstNode(grid).row).toEqual({ id: 1, name: 'Ada Lovelace', salary: 9000 })
+    })
+
+    it('substitutes a formatted copy as well as a plain one', () => {
+        const grid = makeGrid([mask()])
+        getSelection(grid)!.selectAll()
+
+        const text = getSelection(grid)!.copyText({ formatted: true, headers: true })!
+        expect(text).toContain(MASK)
+        expect(text).not.toContain('9000')
+    })
+
+    it('reads per cell, so a gate may hide one row of a column and not the next', () => {
+        const perRow: GridFeature<Person> = {
+            id: 'per-row',
+            cellValue: ({ column }) =>
+                column.id === 'salary'
+                    ? (value, node) => (node.id === '1' ? MASK : value)
+                    : undefined
+        }
+        const grid = makeGrid([perRow])
+        const state = getEditing(grid)!
+        const [ada, grace] = grid.nodes
+
+        expect(grid.getValue(ada!, salaryColumn(grid))).toBe(MASK)
+        expect(grid.getValue(grace!, salaryColumn(grid))).toBe(8000)
+        expect(state.editableAt(ada!, salaryColumn(grid).def)).toBe(false)
+        expect(state.editableAt(grace!, salaryColumn(grid).def)).toBe(true)
     })
 
     it('leaves editing alone when the reader hands the value back unchanged', () => {
