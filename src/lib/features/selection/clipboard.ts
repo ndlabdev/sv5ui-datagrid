@@ -1,6 +1,8 @@
-import { formatCellText, getCellValue, toDate } from '../../core/utils/index.js'
+import { formatCellText, toDate } from '../../core/utils/index.js'
+import { readCell } from '../../core/grid/index.js'
 import {
     isSyntheticColumn,
+    type CellValueReader,
     type ColumnDef,
     type ColumnState,
     type RowNode
@@ -53,12 +55,24 @@ export function rowsToMatrix<TRow>(
     nodes: RowNode<TRow>[],
     columns: ColumnState<TRow>[],
     format?: ExportFormatter<TRow>,
-    options: { formatted?: boolean; locale?: string } = {}
+    options: {
+        formatted?: boolean
+        locale?: string
+        /**
+         * The gate a column's values leave through, asked once per column.
+         * Left out — which is what a call from outside the grid can do — the
+         * matrix carries the values as the data holds them.
+         */
+        read?: (column: ColumnState<TRow>) => CellValueReader<TRow> | undefined
+    } = {}
 ): CellMatrix {
     const targets = dataColumns(columns)
+    const readers = options.read ? targets.map(options.read) : undefined
     return nodes.map((node) =>
-        targets.map((column) => {
-            const value = getCellValue(node.row, column.def)
+        targets.map((column, index) => {
+            const value = readCell(node, column.def, readers?.[index])
+            // A formatter is downstream of the gate on purpose: an app writing
+            // its own export cell never sees the value the gate held back.
             if (format) return format({ value, node, column })
             if (!options.formatted) return cellText(value, column.def)
             // A widget column has no text of its own; `formatCellText` says so

@@ -17,6 +17,12 @@ const benchColumnStates = benchColumns.map((def) => createColumnState(def))
 
 const SAMPLES = 3
 
+/**
+ * What a gated column costs the passes that read whole columns. One reader,
+ * reused, which is the shape a feature is asked to hand back.
+ */
+const maskReader = () => '***'
+
 /** A grid on one page of a backend it never sees the rest of. */
 function serverGrid(pageSize: number, rowCount: number): GridState<BenchRow> {
     const grid = createDataGrid<BenchRow>({
@@ -100,6 +106,15 @@ describe(
         it('quick-filters 100k rows within budget', () => {
             const elapsed = measure(() => quickFilterNodes(nodes100k, benchColumns, 'person 12'))
             expect(elapsed).toBeLessThan(300)
+        })
+
+        it('quick-filters 100k rows through a value gate within budget', () => {
+            const elapsed = measure(() =>
+                quickFilterNodes(nodes100k, benchColumns, 'person 12', {
+                    read: (def) => (def.id === 'score' ? maskReader : undefined)
+                })
+            )
+            expect(elapsed).toBeLessThan(400)
         })
 
         it('builds a 100k variable-row layout within budget', () => {
@@ -192,6 +207,18 @@ describe(
                 toCsv(matrix)
             })
             expect(elapsed).toBeLessThan(200)
+        })
+
+        it('serializes 10k rows through a value gate within budget', () => {
+            const nodes10k = nodes100k.slice(0, 10_000)
+            const elapsed = measure(() => {
+                toCsv(
+                    rowsToMatrix(nodes10k, benchColumnStates, undefined, {
+                        read: (column) => (column.id === 'score' ? maskReader : undefined)
+                    })
+                )
+            })
+            expect(elapsed).toBeLessThan(250)
         })
     }
 )

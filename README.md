@@ -267,6 +267,7 @@ available to yours.
 | `keybindings`    | keyboard bindings, with a `when` guard                           |
 | `menuItems`      | column and context menu entries                                  |
 | `cellDecoration` | per-cell classes and `aria-selected`                             |
+| `cellValue`      | stands between a cell's value and every way it leaves the grid   |
 | `serialize`      | the feature's slice of a state snapshot                          |
 | `hydrate`        | restores what `serialize` produced                               |
 
@@ -280,6 +281,36 @@ const highlightNegative = (): GridFeature<Row> => ({
 
 `cellDecoration` runs for every rendered cell, so keep it cheap. A grid whose
 features do not define it skips the work entirely.
+
+### Gating a cell's value
+
+A class can only paint a cell. `cellValue` decides what the value _is_ on the
+way out, and it covers every way out at once: the cell and its tooltip, CSV,
+the clipboard, the text a quick filter searches, the list a set filter offers,
+and the draft an editor opens with.
+
+```ts
+const maskSalary = (visible: () => boolean): GridFeature<Row> => ({
+    id: 'mask-salary',
+    // Asked per column, not per value: return one reader and it is reused for
+    // the whole pass over the rows.
+    cellValue: ({ column }) => (column.id === 'salary' && !visible() ? () => '***' : undefined)
+})
+```
+
+Hand the value back unchanged — the same reference — for a cell you are
+leaving alone; the grid compares by identity. A cell whose value a reader
+substitutes is one the grid refuses to edit, since an editor opened on it
+would commit the substitute over the real data.
+
+Two things it deliberately does not cover. Sorting reads a column n log n
+times and stays on the raw value, so a masked column can still be ordered by
+what it hides; a filter predicate decides which rows survive and stays raw for
+the same reason, so a narrowing filter plus a row count says something about
+what was hidden. Take `sortable` and `filter` off a column you mask. And the
+row object itself still reaches your own `cell` snippet, `cellClass` and
+`tooltip` — this is a gate on the grid's own output, not a security boundary:
+data that must not reach the browser should not be sent to it.
 
 ## Columns
 

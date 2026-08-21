@@ -1,6 +1,7 @@
 import { HEADER_ROW } from '../../core/interaction/index.js'
 import type { GridState } from '../../core/grid/index.js'
-import { getCellValue, popupOpen, toNumber } from '../../core/utils/index.js'
+import { popupOpen, toNumber } from '../../core/utils/index.js'
+import { readCell } from '../../core/grid/index.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -56,8 +57,21 @@ export class Editing<TRow> {
         if (node.meta?.fullWidth) return false
         const editable = def.editable
         if (editable === undefined || editable === false) return false
+
+        const reader = this.#grid.readerFor(def.id, 'edit')
+        if (reader === undefined) {
+            if (editable === true) return true
+            return editable({ row: node.row, node, value: readCell(node, def) })
+        }
+
+        // A value the user is not being shown is not one they can overwrite:
+        // an editor opened on it would seed the substitute and commit it over
+        // the data behind it. Identity, not equality, is the test the reader
+        // contract is written against.
+        const value = readCell(node, def)
+        if (reader(value, node) !== value) return false
         if (editable === true) return true
-        return editable({ row: node.row, node, value: getCellValue(node.row, def) })
+        return editable({ row: node.row, node, value })
     }
 
     isEditing(rowId: string, columnId: string): boolean {
@@ -75,7 +89,7 @@ export class Editing<TRow> {
         if (!node || !def || !this.editableAt(node, def)) return
         this.active = { rowId, columnId }
         this.rowEditId = null
-        this.draft = getCellValue(node.row, def)
+        this.draft = readCell(node, def, this.#grid.readerFor(def.id, 'edit'))
         this.error = null
     }
 
@@ -239,7 +253,9 @@ export class Editing<TRow> {
         if (!node) return
         const drafts: Record<string, unknown> = {}
         for (const def of this.#editableDefs()) {
-            if (this.editableAt(node, def)) drafts[def.id] = getCellValue(node.row, def)
+            if (this.editableAt(node, def)) {
+                drafts[def.id] = readCell(node, def, this.#grid.readerFor(def.id, 'edit'))
+            }
         }
         this.rowEditId = rowId
         this.active = null

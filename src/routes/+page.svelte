@@ -144,7 +144,8 @@
                 <strong>Soi chất lượng:</strong>
                 <Link href="/qa">QA — mọi tính năng Free →</Link> ·
                 <Link href="/i18n">i18n — phủ hết chuỗi →</Link> ·
-                <Link href="/export">Xuất CSV →</Link>
+                <Link href="/export">Xuất CSV →</Link> ·
+                <Link href="/value-gate">Cổng giá trị ô →</Link>
             </p>
             <p class="text-sm text-on-surface-variant">
                 <Link href="/virtual">100k rows demo →</Link> ·
