@@ -23,7 +23,7 @@ export const zhCN: DataGridLocalePack = {
         pinLeft: '固定到左侧',
         pinRight: '固定到右侧',
         unpin: '取消固定',
-        openFilter: '筛选…',
+        openFilter: '筛选...',
         autosize: '适应内容',
         hideColumn: '隐藏此列',
 

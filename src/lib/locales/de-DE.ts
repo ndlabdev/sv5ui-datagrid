@@ -26,7 +26,7 @@ export const deDE: DataGridLocalePack = {
         pinLeft: 'Links anheften',
         pinRight: 'Rechts anheften',
         unpin: 'Lösen',
-        openFilter: 'Filtern…',
+        openFilter: 'Filtern...',
         autosize: 'An Inhalt anpassen',
         hideColumn: 'Spalte ausblenden',
 

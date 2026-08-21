@@ -57,7 +57,7 @@ export const defaultLabels: DataGridLabels = {
     pinLeft: 'Pin left',
     pinRight: 'Pin right',
     unpin: 'Unpin',
-    openFilter: 'Filter…',
+    openFilter: 'Filter...',
     autosize: 'Autosize',
     hideColumn: 'Hide column',
 

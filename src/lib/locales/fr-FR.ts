@@ -29,7 +29,7 @@ export const frFR: DataGridLocalePack = {
         pinLeft: 'Épingler à gauche',
         pinRight: 'Épingler à droite',
         unpin: 'Détacher',
-        openFilter: 'Filtrer…',
+        openFilter: 'Filtrer...',
         autosize: 'Ajuster au contenu',
         hideColumn: 'Masquer la colonne',
 

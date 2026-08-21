@@ -23,7 +23,7 @@ export const jaJP: DataGridLocalePack = {
         pinLeft: '左に固定',
         pinRight: '右に固定',
         unpin: '固定を解除',
-        openFilter: 'フィルター…',
+        openFilter: 'フィルター...',
         autosize: '内容に合わせる',
         hideColumn: '列を非表示',
 

@@ -243,7 +243,7 @@ function describeNumber(
 ): string {
     const op = labels.numberOps[filter.op]
     if (isPresence(filter.op)) return op
-    if (filter.op === 'between') return `${format(filter.value)} – ${format(filter.to)}`
+    if (filter.op === 'between') return `${format(filter.value)} - ${format(filter.to)}`
     return `${op} ${format(filter.value)}`
 }
 
@@ -253,7 +253,7 @@ function describeDate(
 ): string {
     const op = labels.dateOps[filter.op]
     if (isPresence(filter.op)) return op
-    if (filter.op === 'between') return `${filter.value} – ${filter.to}`
+    if (filter.op === 'between') return `${filter.value} - ${filter.to}`
     return `${op} ${filter.value}`
 }
 

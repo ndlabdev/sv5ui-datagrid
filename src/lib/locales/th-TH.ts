@@ -23,7 +23,7 @@ export const thTH: DataGridLocalePack = {
         pinLeft: 'ปักหมุดด้านซ้าย',
         pinRight: 'ปักหมุดด้านขวา',
         unpin: 'ยกเลิกการปักหมุด',
-        openFilter: 'ตัวกรอง…',
+        openFilter: 'ตัวกรอง...',
         autosize: 'พอดีกับเนื้อหา',
         hideColumn: 'ซ่อนคอลัมน์',
 
