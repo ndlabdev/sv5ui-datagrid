@@ -38,6 +38,16 @@ describe('coercion', () => {
         expect(formatDate('2026-03-14', { locale: 'en-US' })).toBe('Mar 14, 2026')
     })
 
+    it('keeps a year under a hundred out of the 1900s', () => {
+        // `new Date(y, m, d)` reads 0-99 as 1900 + y. A date field reporting a
+        // year mid-keystroke says 2 before it says 2026, and the field was
+        // handed 1902 back and jumped to it.
+        const date = toDate('0002-01-05')!
+        expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2, 0, 5])
+        expect(toDate('0099-12-31')?.getFullYear()).toBe(99)
+        expect(toDate('0100-01-01')?.getFullYear()).toBe(100)
+    })
+
     it('refuses a plain date whose components cannot mean a day', () => {
         expect(toDate('2026-02-30')).toBeNull()
         expect(toDate('2026-13-01')).toBeNull()
