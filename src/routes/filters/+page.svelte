@@ -152,11 +152,16 @@
             rồi gõ tiếp ở hàng thì toán tử đó được giữ, không bị đặt lại.
         </p>
         <p class="text-sm text-on-surface-variant">
-            Thứ một ô không chứa nổi thì hàng trả về cho panel chứ không làm phẳng: cột
-            <em>Dept</em> là filter tập giá trị, và bất kỳ cột nào đang có hai điều kiện, một khoảng
-            <code>between</code>, hay toán tử <code>blank</code> đều hiện thành chữ tóm tắt kèm nút
-            mở panel. Bàn phím: <Kbd size="sm">↓</Kbd> từ header vào thẳng ô nhập,
-            <Kbd size="sm">↓</Kbd> nữa là xuống dòng đầu.
+            Mỗi loại filter một control của riêng nó: ô nhập cho <em>Name</em>, ô số cho
+            <em>Salary</em>, lịch cho <em>Joined</em>, và <em>Dept</em> là danh sách tick có ô tìm kiếm
+            ngay trong hàng, không phải mở panel. Danh sách giá trị của cột chỉ được đọc khi mở ra lần
+            đầu, nên vẽ hàng này không phải quét 100k dòng.
+        </p>
+        <p class="text-sm text-on-surface-variant">
+            Thứ một ô không chứa nổi thì hàng trả về cho panel chứ không làm phẳng: cột nào đang có
+            hai điều kiện, một khoảng <code>between</code>, hay toán tử <code>blank</code> đều hiện
+            thành chữ tóm tắt kèm nút mở panel. Bàn phím: <Kbd size="sm">↓</Kbd> từ header vào thẳng ô
+            nhập, <Kbd size="sm">↓</Kbd> nữa là xuống dòng đầu.
         </p>
         <Checkbox bind:checked={floatingRow} label="Hiện hàng filter" />
     </Card>

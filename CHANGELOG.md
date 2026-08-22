@@ -35,6 +35,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     live: turning it off mid-session takes the row out of the keyboard grid and
     out of the row numbering with it.
 
+    Each field is the sv5ui component for what it filters: `Input` for text,
+    `InputNumber` for a number with the steppers out of the way, `DatePicker`
+    for a date next to a clear button since a picker has none of its own,
+    `Select` for a boolean, and a searchable multi-select for a set, which
+    reads the column's values only when it is first opened rather than
+    scanning every row to draw a row nobody has touched. The number and date
+    fields follow the grid's language, so a Vietnamese grid writes the day
+    before the month.
+
+    All of them wait the same 200ms before the model hears them. A segmented
+    date field reports every keystroke, so typing 01/05/2026 walks the year
+    through 2, 20 and 202: un-debounced that was three filters over the whole
+    set, on years nobody asked for. The clear button beside the picker is the
+    exception and applies at once, being a finished gesture rather than a
+    value half typed.
+
+- `DataGridLabels.anyValue` and `DataGridLabels.filterRowValue`, in all twelve
+  languages. The first is the choice that filters nothing on a boolean column,
+  which had been borrowing "Clear" and reading as an action. The second names
+  the field in the filter row apart from the panel's own trigger, which had
+  left two controls on one column answering to the same name.
+
+### Changed
+
+- A date condition in the filter panel is the sv5ui `DatePicker` rather than
+  the browser's own date input, which is what the filter row draws and what
+  the date cell editor already drew.
+
+### Fixed
+
+- A date typed one segment at a time is the date that was typed. Two places
+  wrote a year without padding it, and a segmented field reports a year on its
+  way to 2026 as 2, then 20, then 202. `fromDateValue` turned those into
+  `2-01-05`, which `toDateValue` could not read back, so the field was handed
+  nothing and cleared itself: typing a date into the filter panel ended with
+  no filter at all, and a cell editor left the same broken string on the row.
+  Both ends pad to four digits now.
+
+- `toDate` stops reading a year under a hundred as nineteen-hundred-and-it.
+  `new Date(y, m, d)` maps 0-99 onto 1900, so `0002-01-05` came back as 1902
+  and a date field being typed into jumped there.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed

@@ -43,11 +43,23 @@ describe('what one cell of the filter row offers', () => {
         ).toMatchObject({ value: '5' })
     })
 
+    it('offers a set column its values, ticked or not', () => {
+        expect(floatingCellOf('set', undefined)).toEqual({ kind: 'set', values: [] })
+        expect(floatingCellOf('set', { kind: 'set', values: ['a', 'b'] })).toEqual({
+            kind: 'set',
+            values: ['a', 'b']
+        })
+    })
+
+    it('hands a set column back to the panel when it holds something else', () => {
+        // Not written by this grid, so nothing here may flatten it.
+        expect(floatingCellOf('set', { kind: 'text', op: 'contains', value: 'a' })).toEqual({
+            kind: 'summary'
+        })
+    })
+
     it('hands back to the panel everything one field cannot hold', () => {
         const summary = { kind: 'summary' }
-        // A list of discrete values is the panel's own control.
-        expect(floatingCellOf('set', undefined)).toEqual(summary)
-        expect(floatingCellOf('set', { kind: 'set', values: ['a'] })).toEqual(summary)
         // Two conditions joined.
         expect(
             floatingCellOf('number', {

@@ -1,5 +1,5 @@
 <script lang="ts" generics="TRow">
-    import { FILTER_ROW } from '../../core/interaction/index.js'
+    import { FILTER_ROW, HEADER_ROW } from '../../core/interaction/index.js'
     import { isSyntheticColumn } from '../../core/types/index.js'
     import { popupOpen } from '../../core/utils/index.js'
     import { getFiltering } from '../../features/filtering/index.js'
@@ -8,7 +8,7 @@
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridTheme } from '../internal/theme.js'
     import { columnWindowOf, pinLeftVar, pinRightVar } from '../internal/window.js'
-    import GridFilterCell from './GridFilterCell.svelte'
+    import GridFilterCell from '../cells/GridFilterCell.svelte'
 
     let { debounce = 200, class: className }: GridFilterRowProps = $props()
 
@@ -18,6 +18,7 @@
     const theme = getGridTheme()
 
     const columnWindow = $derived(columnWindowOf(grid))
+
     const rowIndex = $derived(grid.columns.headerRowCount + 1)
 
     const cellClass = $derived(slots.filterCell({ class: theme('filterCell') }))
@@ -52,6 +53,13 @@
     }
 
     /**
+     * What a cell hands focus on to. In document order, so a date cell gives
+     * it to the first segment rather than to the calendar button standing
+     * after the segments.
+     */
+    const FIELD = 'input, [role="spinbutton"], [role="combobox"], button'
+
+    /**
      * Focus arriving on the cell itself came from the grid rather than from a
      * click in the field, so it is passed on to the field: a row you can reach
      * but not type into is not a filter row.
@@ -59,8 +67,19 @@
     function onfocus(event: FocusEvent): void {
         const cell = event.currentTarget as HTMLElement
         if (event.target !== cell) return
-        cell.querySelector<HTMLElement>('input, [role="combobox"], button')?.focus()
+        cell.querySelector<HTMLElement>(FIELD)?.focus()
     }
+
+    /**
+     * The row can be switched off while the caret is standing in it. Nothing
+     * else would move that caret, and a grid whose only tab stop is a row it
+     * no longer draws cannot be tabbed into at all.
+     */
+    $effect(() => {
+        if (filteringState?.floatingRow) return
+        const { row, col } = grid.focus.active
+        if (row === FILTER_ROW) grid.focus.focusCell({ row: HEADER_ROW, col })
+    })
 </script>
 
 {#if filteringState?.floatingRow}

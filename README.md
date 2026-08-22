@@ -231,11 +231,14 @@ column, and `<DataGrid floatingFilters />` is the same thing for a grid it
 builds itself. The field filters in the operator the column already uses, so
 changing the operator in the panel and then typing in the row keeps it.
 
-The row holds one condition. Everything that says more than a single field can
-stays with the panel and reads back in the row as a summary and a button that
-opens it: a set of discrete values, two conditions joined, a `between` range,
-and `blank` or `notBlank`, which an empty field would report as no filter at
-all.
+Each kind of filter gets the control it needs: a field for text, a number
+field, a date picker, a choice for a boolean, and a searchable list of ticks
+for a set, which reads its values from the column the first time it is opened.
+
+The row holds one condition, however many values are ticked in it. What says
+more than that stays with the panel and reads back in the row as a summary and
+a button that opens it: two conditions joined, a `between` range, and `blank`
+or `notBlank`, which an empty field would report as no filter at all.
 
 It is a row of the grid, not a strip above it. Arrow down from the header
 lands in the field, arrow down again is the first body row, and the rows below
@@ -699,6 +702,10 @@ within the filtered and sorted set, and rows carry `data-dg-row-id`. Both are
 public: delegate pointer events from a wrapper and read them with
 `event.target.closest('[data-dg-cell]')` rather than attaching a handler per
 cell.
+
+The two rows above the body use negative indices on the same attribute: `-1`
+for the leaf header row and `-2` for the filter row. A row index below zero is
+therefore never a data row.
 
 ## API stability
 

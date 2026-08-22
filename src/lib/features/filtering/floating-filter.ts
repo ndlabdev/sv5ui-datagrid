@@ -1,20 +1,26 @@
-import type { ColumnFilter, ColumnFilterEntry, FilterType } from '../../core/types/index.js'
+import type {
+    ColumnFilter,
+    ColumnFilterEntry,
+    FilterType,
+    SetFilterValue
+} from '../../core/types/index.js'
 import { emptyCondition, isPresenceOp } from './filter-draft.js'
 import { toDisplayUnit } from './filter-units.js'
 
 /**
  * What one cell of the filter row can offer for a column.
  *
- * The row holds one condition in the column's own operator. Everything it
- * cannot hold in a single field — a set of discrete values, two conditions
- * joined, a range, an operator with no value at all — reads back as a summary
- * and is handed to the panel, which is the whole of the difference between
- * the two surfaces.
+ * The row holds one condition, in the column's own operator: a field for the
+ * three that are typed, a choice for a boolean, a list of ticks for a set.
+ * Everything it cannot hold that way — two conditions joined, a range, an
+ * operator with no value at all — reads back as a summary and is handed to
+ * the panel, which is the whole of the difference between the two surfaces.
  */
 export type FloatingCell =
     | { kind: 'none' }
     | { kind: 'input'; op: string; value: string; caseSensitive: boolean }
     | { kind: 'boolean'; value: '' | 'true' | 'false' }
+    | { kind: 'set'; values: SetFilterValue[] }
     | { kind: 'summary' }
 
 /** A condition the row can put in one field. */
@@ -44,6 +50,14 @@ function booleanCell(entry: ColumnFilterEntry | undefined): FloatingCell {
     return { kind: 'boolean', value: entry.value ? 'true' : 'false' }
 }
 
+/** The values a set column has ticked, and the panel for anything else. */
+function setCell(entry: ColumnFilterEntry | undefined): FloatingCell {
+    // One condition still, however many values are ticked. Anything else on a
+    // set column was not written by this grid, so the panel keeps it.
+    if (entry === undefined) return { kind: 'set', values: [] }
+    return entry.kind === 'set' ? { kind: 'set', values: entry.values } : { kind: 'summary' }
+}
+
 /**
  * True for what one field cannot hold, so the panel keeps it: a range that
  * needs two bounds, and an operator with no value at all, which an empty field
@@ -60,8 +74,7 @@ export function floatingCellOf(
     scale = 1
 ): FloatingCell {
     if (type === null) return { kind: 'none' }
-    // A list of values is not a field, and it is the panel's own control.
-    if (type === 'set') return { kind: 'summary' }
+    if (type === 'set') return setCell(entry)
     if (type === 'boolean') return booleanCell(entry)
 
     if (entry === undefined) {
