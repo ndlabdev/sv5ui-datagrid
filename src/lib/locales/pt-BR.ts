@@ -37,12 +37,14 @@ export const ptBR: DataGridLocalePack = {
         filterOperator: (ordinal) =>
             ordinal > 1 ? `Operador do filtro ${ordinal}` : 'Operador do filtro',
         filterValue: (ordinal) => (ordinal > 1 ? `Valor do filtro ${ordinal}` : 'Valor do filtro'),
+        filterRowValue: (column) => `Valor do filtro ${column}`,
         filterUpperBound: (ordinal) =>
             ordinal > 1 ? `Limite superior ${ordinal}` : 'Limite superior',
         valuePlaceholder: 'Valor...',
         upperBoundPlaceholder: 'Até...',
         searchValues: 'Pesquisar valores...',
         blankValue: '(vazio)',
+        anyValue: '(qualquer)',
         combineConditions: 'Combinar condições',
         addCondition: 'Adicionar condição',
         removeCondition: 'Remover condição',

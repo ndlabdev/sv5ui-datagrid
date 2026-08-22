@@ -38,12 +38,14 @@ export const esES: DataGridLocalePack = {
             ordinal > 1 ? `Operador del filtro ${ordinal}` : 'Operador del filtro',
         filterValue: (ordinal) =>
             ordinal > 1 ? `Valor del filtro ${ordinal}` : 'Valor del filtro',
+        filterRowValue: (column) => `Valor del filtro ${column}`,
         filterUpperBound: (ordinal) =>
             ordinal > 1 ? `Límite superior ${ordinal}` : 'Límite superior',
         valuePlaceholder: 'Valor...',
         upperBoundPlaceholder: 'Hasta...',
         searchValues: 'Buscar valores...',
         blankValue: '(vacío)',
+        anyValue: '(cualquiera)',
         combineConditions: 'Combinar condiciones',
         addCondition: 'Añadir condición',
         removeCondition: 'Quitar condición',
