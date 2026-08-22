@@ -1,5 +1,6 @@
 import type { GridState } from '../../core/grid/index.js'
 import type { ColumnState } from '../../core/types/index.js'
+import { getFiltering } from '../../features/filtering/index.js'
 import { getPagination } from '../../features/pagination/index.js'
 import { getVirtualization } from '../../features/virtualization/index.js'
 
@@ -35,6 +36,14 @@ export function rowIndexOffsetOf<TRow>(grid: GridState<TRow>): number {
     const pagination = getPagination(grid)
     if (!pagination?.server || !pagination.pageSize) return 0
     return (pagination.page - 1) * pagination.pageSize
+}
+
+/**
+ * The rows drawn above the body: the header levels, the leaf header row, and
+ * the filter row when one is drawn. Everything below is numbered under them.
+ */
+export function headerRowsOf<TRow>(grid: GridState<TRow>): number {
+    return grid.columns.headerRowCount + (getFiltering(grid)?.floatingRow ? 1 : 0)
 }
 
 /** The rows `aria-rowindex` counts against — the server's total, if it said. */

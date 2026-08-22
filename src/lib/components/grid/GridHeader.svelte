@@ -17,6 +17,7 @@
     import { getGridTheme } from '../internal/theme.js'
     import GridColumnMenu from '../menus/GridColumnMenu.svelte'
     import GridFilterPanel from '../menus/GridFilterPanel.svelte'
+    import GridFilterRow from './GridFilterRow.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar } from '../internal/window.js'
 
@@ -372,6 +373,7 @@
             </div>
         {/each}
     </div>
+    <GridFilterRow />
     {#if columnOps?.drag}
         <div
             class={slots.dropIndicator({ class: theme('dropIndicator') })}

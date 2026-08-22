@@ -12,7 +12,7 @@
     import type { GridViewportProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridTheme } from '../internal/theme.js'
-    import { ariaRowCountOf, windowStartOf } from '../internal/window.js'
+    import { ariaRowCountOf, headerRowsOf, windowStartOf } from '../internal/window.js'
 
     let { class: className, children }: GridViewportProps = $props()
 
@@ -311,7 +311,7 @@
 <div
     bind:this={element}
     role={grid.expansion.enabled ? 'treegrid' : 'grid'}
-    aria-rowcount={ariaRowCountOf(grid) + grid.columns.headerRowCount + pinnedRowCount}
+    aria-rowcount={ariaRowCountOf(grid) + headerRowsOf(grid) + pinnedRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: [theme('viewport'), className] })}

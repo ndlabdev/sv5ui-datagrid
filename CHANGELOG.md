@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A filter row under the header. `filtering({ floatingRow: true })` draws one
+  field per column, and `<DataGrid floatingFilters />` is the same for a grid
+  it builds itself. The field filters in the operator the column already uses,
+  so an operator chosen in the panel survives the next thing typed in the row,
+  as does a Match case it turned on. A percent column is written in the unit it
+  draws, the way the panel writes it.
+
+    One condition is what a field holds, and the row does not pretend
+    otherwise. A set of discrete values, two conditions joined, a `between`
+    range, and `blank` or `notBlank` all stay with the panel: the row shows
+    what they contain in the words the chips use and a button that opens the
+    panel on it. Nothing is flattened to fit, so no filter is quietly narrowed
+    by a row that could not express it.
+
+    It is a row of the grid rather than a strip above it. `FILTER_ROW` is a
+    second navigable line: arrow down from the header lands in the field, arrow
+    down again is the first body row, arrow up comes back, and the rows below
+    are numbered under it in `aria-rowindex` while `aria-rowcount` counts it.
+    A field owns the left and right arrows, which is what a caret is for. The
+    row follows the column window, the pinned columns and the group dividers,
+    so it stays with its header when the grid scrolls sideways.
+
+    `Grid.FilterRow` is the part for a hand-assembled grid, and the flag is
+    live: turning it off mid-session takes the row out of the keyboard grid and
+    out of the row numbering with it.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed

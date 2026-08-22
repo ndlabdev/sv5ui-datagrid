@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { filtering } from '../../features/filtering/index.js'
 import { pagination } from '../../features/pagination/index.js'
 import { getSorting, sorting } from '../../features/sorting/index.js'
-import { HEADER_ROW } from './focus-model.svelte.js'
+import { rowPinning } from '../../features/row-pinning/index.js'
+import { FILTER_ROW, HEADER_ROW } from './focus-model.svelte.js'
 import { createDataGrid, type GridState } from '../grid/grid.svelte.js'
 import type { GridFeature } from '../types/index.js'
 
@@ -136,5 +137,78 @@ describe('FocusModel', () => {
         grid.data = people.slice(0, 3)
         grid.focus.focusCell({ row: 25, col: 0 })
         expect(grid.focus.active.row).toBe(2)
+    })
+
+    it('leaves the filter row out of the way of a grid without one', () => {
+        const grid = createGrid([sorting(), filtering()])
+
+        expect(grid.focus.headerLines).toBe(1)
+        expect(grid.focus.minRow).toBe(HEADER_ROW)
+
+        // Asking for it anyway lands on the header rather than above it.
+        grid.focus.focusCell({ row: FILTER_ROW, col: 0 })
+        expect(grid.focus.active).toEqual({ row: HEADER_ROW, col: 0 })
+    })
+})
+
+describe('FocusModel with a filter row', () => {
+    const withRow = (extra: GridFeature<Person>[] = []) =>
+        createGrid([sorting(), filtering({ floatingRow: true }), ...extra])
+
+    it('sits between the header and the first row, both ways', () => {
+        const grid = withRow()
+        const { focus } = grid
+
+        expect(focus.headerLines).toBe(2)
+
+        focus.handleKeydown(keyEvent('ArrowDown'))
+        expect(focus.active).toEqual({ row: FILTER_ROW, col: 0 })
+
+        focus.handleKeydown(keyEvent('ArrowDown'))
+        expect(focus.active).toEqual({ row: 0, col: 0 })
+
+        focus.handleKeydown(keyEvent('ArrowUp'))
+        expect(focus.active).toEqual({ row: FILTER_ROW, col: 0 })
+
+        focus.handleKeydown(keyEvent('ArrowUp'))
+        expect(focus.active).toEqual({ row: HEADER_ROW, col: 0 })
+
+        // And no further: it is the top of the grid.
+        focus.handleKeydown(keyEvent('ArrowUp'))
+        expect(focus.active).toEqual({ row: HEADER_ROW, col: 0 })
+    })
+
+    it('moves along its own line, and Enter on it sorts nothing', () => {
+        const grid = withRow()
+        grid.focus.focusCell({ row: FILTER_ROW, col: 0 })
+
+        grid.focus.handleKeydown(keyEvent('ArrowRight'))
+        expect(grid.focus.active).toEqual({ row: FILTER_ROW, col: 1 })
+
+        grid.focus.handleKeydown(keyEvent('Enter'))
+        expect(getSorting(grid)!.sort).toEqual([])
+    })
+
+    it('keeps the pinned rows in order below it', () => {
+        const grid = withRow([rowPinning({ isRowPinned: (row) => (row.id === 1 ? 'top' : null) })])
+        const { focus } = grid
+
+        focus.focusCell({ row: HEADER_ROW, col: 0 })
+        focus.handleKeydown(keyEvent('ArrowDown'))
+        expect(focus.active).toEqual({ row: FILTER_ROW, col: 0 })
+
+        focus.handleKeydown(keyEvent('ArrowDown'))
+        expect(focus.active).toEqual({ row: 0, col: 0, section: 'top' })
+
+        focus.handleKeydown(keyEvent('ArrowDown'))
+        expect(focus.active).toEqual({ row: 0, col: 0 })
+    })
+
+    it('reaches the top of the grid from a body row with Ctrl+Home unchanged', () => {
+        const grid = withRow()
+        grid.focus.focusCell({ row: 12, col: 1 })
+
+        grid.focus.handleKeydown(keyEvent('Home', { ctrlKey: true }))
+        expect(grid.focus.active).toEqual({ row: 0, col: 0 })
     })
 })

@@ -10,12 +10,24 @@ export const FILTERING = 'filtering'
 export interface FilteringOptions {
     initialQuick?: string
     initialColumns?: Record<string, ColumnFilterEntry>
+    /**
+     * Draws a filter row under the header: one condition per column, in the
+     * column's own operator. The panel keeps the rest — a second condition, a
+     * join, a set of discrete values — and the row hands those columns back to
+     * it rather than flattening what they hold.
+     *
+     * The kernel reads this too. The row is a second line focus can reach, and
+     * a line the rows below it are numbered under.
+     */
+    floatingRow?: boolean
 }
 
 export class Filtering<TRow> {
     quick = $state('')
     columnFilters = $state.raw<Record<string, ColumnFilterEntry>>({})
     filterFor = $state<string | null>(null)
+    /** Whether a filter row is drawn under the header. */
+    floatingRow = $state(false)
 
     #grid: GridState<TRow>
 
@@ -28,6 +40,7 @@ export class Filtering<TRow> {
         this.#grid = grid
         this.quick = options.initialQuick ?? ''
         this.columnFilters = { ...(options.initialColumns ?? {}) }
+        this.floatingRow = options.floatingRow ?? false
     }
 
     get model(): FilterModel {

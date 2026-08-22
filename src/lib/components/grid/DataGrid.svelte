@@ -3,7 +3,7 @@
     import { createDataGrid } from '../../core/grid/index.js'
     import { columnOps } from '../../features/column-ops/index.js'
     import { editing } from '../../features/editing/index.js'
-    import { filtering } from '../../features/filtering/index.js'
+    import { filtering, getFiltering } from '../../features/filtering/index.js'
     import { pagination } from '../../features/pagination/index.js'
     import { selection } from '../../features/selection/index.js'
     import { sorting } from '../../features/sorting/index.js'
@@ -35,6 +35,7 @@
         virtual,
         density,
         toolbar = false,
+        floatingFilters = false,
         onExportAll,
         exportFilename,
         emptyText,
@@ -58,7 +59,7 @@
                 rowClass,
                 density,
                 features: [
-                    filtering<TRow>(),
+                    filtering<TRow>({ floatingRow: floatingFilters }),
                     sorting<TRow>(),
                     columnOps<TRow>(),
                     ...(selectionProp
@@ -73,6 +74,17 @@
                 ]
             })
     )
+
+    // A grid built elsewhere still answers the prop: the row is a line the
+    // focus model and the row numbering below it both have to know about, so
+    // the flag lives on the feature rather than in the markup. Set before the
+    // header renders, so the first paint counts its rows correctly.
+    untrack(() => {
+        if (floatingFilters && externalGrid) {
+            const state = getFiltering(grid)
+            if (state) state.floatingRow = true
+        }
+    })
 
     const isVirtual = untrack(() => Boolean(getVirtualization(grid)))
 

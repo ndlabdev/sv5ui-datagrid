@@ -29,6 +29,7 @@
     import {
         ariaRowCountOf,
         columnWindowOf,
+        headerRowsOf,
         pinLeftVar,
         pinRightVar,
         rowIndexOffsetOf,
@@ -262,7 +263,7 @@
     // it from 0, while a screen reader is told the position in the set.
     const rowIndexOffset = $derived(rowIndexOffsetOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
-    const headerRows = $derived(grid.columns.headerRowCount)
+    const headerRows = $derived(headerRowsOf(grid))
     const topRows = $derived(pinning?.topNodes.length ?? 0)
     // Indent and expand toggles belong to the first column carrying data.
     const firstDataIndex = $derived(
