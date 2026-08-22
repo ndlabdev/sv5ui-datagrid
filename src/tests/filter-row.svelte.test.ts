@@ -143,6 +143,21 @@ describe('the filter row', () => {
         await expect.poll(() => cell.textContent).toContain('Core')
     })
 
+    it('opens the column one panel, not a second of its own', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        // The row asks; the header's panel answers. Two instances of the panel
+        // for one column both read the same open flag and both appear.
+        await filterCell(screen.container, 1).querySelector('button')!.click()
+
+        await expect.poll(() => document.querySelectorAll('[role="dialog"]').length).toBe(1)
+        expect(getFiltering(grid)!.filterFor).toBe('team')
+
+        await filterCell(screen.container, 1).querySelector('button')!.click()
+        await expect.poll(() => document.querySelectorAll('[role="dialog"]').length).toBe(0)
+    })
+
     it('says what a filter the row cannot hold contains', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)

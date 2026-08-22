@@ -1,6 +1,6 @@
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
-    import { Input, Select, useDebouncedState } from 'sv5ui'
+    import { Button, Input, Select, useDebouncedState } from 'sv5ui'
     import {
         buildColumnFilter,
         describeFilter,
@@ -14,7 +14,6 @@
     import { getGridContext } from '../internal/context.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridTheme } from '../internal/theme.js'
-    import GridFilterPanel from '../menus/GridFilterPanel.svelte'
 
     let { column, debounce = 200 }: GridFilterCellProps<TRow> = $props()
 
@@ -128,7 +127,20 @@
     />
 {:else if cell.kind === 'summary'}
     <!-- A set of values, a second condition, a range: more than one field can
-         hold, so the row says what is there and hands it to the panel. -->
+         hold, so the row says what is there and asks the panel to open.
+         Asks rather than draws one: a column has a single panel, on its
+         header, and a second instance of it would open alongside the first. -->
     <span class={slots.filterSummary({ class: theme('filterSummary') })}>{summary}</span>
-    <GridFilterPanel {column} />
+    <Button
+        variant="ghost"
+        size="xs"
+        icon="lucide:filter"
+        color={entry ? 'primary' : 'secondary'}
+        aria-label={labels.filterColumn(column.header)}
+        aria-expanded={filteringState.filterFor === column.id}
+        tabindex={-1}
+        onclick={() => {
+            filteringState.filterFor = filteringState.filterFor === column.id ? null : column.id
+        }}
+    />
 {/if}
