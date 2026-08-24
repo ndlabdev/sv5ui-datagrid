@@ -89,6 +89,23 @@ describe('surface consumed by @sv5ui/datagrid-pro', () => {
         }
     })
 
+    it('offers the value gate the pro exits have to read through', () => {
+        // XLSX export, range copy and aggregation read values in bulk. Each
+        // asks for the column's reader once and then loops, which is the only
+        // way a policy feature's mask reaches an exit built in the pro repo.
+        const grid = createDataGrid<Row>({
+            columns: [{ id: 'name', header: 'Name' }],
+            data: [{ id: 1, name: 'Ada' }],
+            getRowId: (row) => String(row.id),
+            features: [{ id: 'gate', cellValue: () => () => '***' }]
+        })
+
+        const reader = grid.readerFor('name', 'export')
+        expect(reader).toBeDefined()
+        expect(reader!('Ada', grid.nodes[0]!)).toBe('***')
+        expect(grid.getValue(grid.nodes[0]!, grid.columns.get('name')!)).toBe('***')
+    })
+
     it('keeps the row metadata pro row structures write', () => {
         const meta: RowMeta = { level: 1, expandable: true, fullWidth: false }
         const sort: SortState[] = [{ columnId: 'name', direction: 'asc' }]

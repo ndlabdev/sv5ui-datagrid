@@ -165,7 +165,8 @@ export class Selection<TRow> {
         const columns = this.#grid.columns.visible
         const matrix = rowsToMatrix(nodes, columns, undefined, {
             formatted: options.formatted,
-            locale: this.#grid.locale
+            locale: this.#grid.locale,
+            read: (column) => this.#grid.readerFor(column.id, 'clipboard')
         })
         return toTsv(options.headers ? withHeaderRow(matrix, columns) : matrix)
     }
@@ -190,7 +191,8 @@ export class Selection<TRow> {
 
         const matrix = rowsToMatrix(nodes, columns, options.formatValue, {
             formatted: options.formatted,
-            locale: this.#grid.locale
+            locale: this.#grid.locale,
+            read: (column) => this.#grid.readerFor(column.id, 'export')
         })
         const csv = toCsv(
             (options.headers ?? true) ? withHeaderRow(matrix, columns) : matrix,

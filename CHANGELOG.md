@@ -25,6 +25,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     first `;`, so one entry stays one declaration and a colour read out of row
     data cannot open a second.
 
+- `GridFeature.cellValue`: a feature can now stand between a cell's value and
+  every way that value leaves the grid. Until now the only per-cell hook was
+  `cellDecoration`, which paints: a feature could grey a cell out and the
+  value behind it still went to the clipboard, to the CSV, and into the text a
+  quick filter searches. The new hook covers six exits at once, named by a
+  `purpose`: `render`, `export`, `clipboard`, `search`, `facet` (the list a set
+  filter offers) and `edit`.
+
+    It is asked per column rather than per value. The passes that read a whole
+    column at a time ask once and then loop over the rows, so a feature that
+    hides one column of thirty-nine costs the other thirty-eight nothing, and
+    a grid whose features do not define the hook does no extra work at all. A
+    reader hands the value back by reference when it is leaving a cell alone,
+    and the grid uses that identity to decide one more thing: a cell whose
+    value was substituted cannot be edited, because an editor opened on it
+    would seed the substitute and commit it over the real data.
+
+    Two exits stay on the raw value on purpose. Sorting reads a column n log n
+    times, and a gate there would undo the single-pass comparators of 1.2.0, so
+    a masked column can still be ordered by what it hides. A filter predicate
+    decides which rows survive, which cannot be decided on a substitute, so
+    narrowing a masked column and reading the row count still says something
+    about what is behind it. Take `sortable` and `filter` off a column you
+    mask. The row object also still reaches an app's own `cell` snippet: this
+    gates the grid's own output, and is not a security boundary.
+
+    `rowsToMatrix` takes an optional `read` in its options bag for the same
+    reason; `exportCsv` and the clipboard always pass it. Called bare, as a
+    pure function outside the grid, it reads values as the data holds them.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed

@@ -208,6 +208,12 @@ export function compileColumnFilters<TRow>(
         if (!def || filterTypeOf(def) === null) continue
 
         const test = entryPredicate(def, entry)
+        // Reads past any `cellValue` gate, deliberately. A predicate decides
+        // which rows survive, and deciding that on a substituted value would
+        // make a masked column filter by its mask. What it costs is honest and
+        // written down: filtering a masked column narrows it to a value the
+        // count then reveals, which is why a policy feature has to take the
+        // filter off such a column rather than rely on the gate.
         compiled.push((node) => test(getCellValue(node.row, def), node.row))
     }
 

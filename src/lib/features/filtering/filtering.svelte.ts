@@ -67,7 +67,14 @@ export class Filtering<TRow> {
     distinctFor(columnId: string) {
         const def = this.#grid.columns.leafDefs.find((candidate) => candidate.id === columnId)
         if (!def) return []
-        return distinctValuesCached(this.#grid.sourceNodes, def)
+        // Through the gate: the list a set filter offers is a list the user
+        // reads, and it would otherwise spell out every value a masked column
+        // holds.
+        return distinctValuesCached(
+            this.#grid.sourceNodes,
+            def,
+            this.#grid.readerFor(def.id, 'facet')
+        )
     }
 }
 
@@ -107,9 +114,14 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
                     nodes,
                     grid.columns.visible.map((column) => column.def),
                     state.quick,
-                    // The same locale the cells are drawn with, or the search
-                    // would be against text nobody is looking at.
-                    grid.locale
+                    {
+                        // The same locale the cells are drawn with, or the
+                        // search would be against text nobody is looking at.
+                        locale: grid.locale,
+                        // And the same gate they are drawn through, or it
+                        // would find what the cells do not show.
+                        read: (def) => grid.readerFor(def.id, 'search')
+                    }
                 )
                 const predicate = state.columnPredicate
                 return predicate ? quickFiltered.filter(predicate) : quickFiltered

@@ -11,6 +11,7 @@ export { createDataGrid } from './grid.svelte.js'
 export type { GridState } from './grid.svelte.js'
 export { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
 export { buildRowNodes, nodeIndexById, nodesById } from './row-node.js'
+export { composeReaders, readCell, readerToken } from './value-gate.js'
 export {
     buildColumnSnapshot,
     isDensity,

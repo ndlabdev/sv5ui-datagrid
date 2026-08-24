@@ -1,6 +1,7 @@
 import { HEADER_ROW } from '../../core/interaction/index.js'
 import type { GridState } from '../../core/grid/index.js'
-import { getCellValue, popupOpen, toNumber } from '../../core/utils/index.js'
+import { popupOpen, toNumber } from '../../core/utils/index.js'
+import { readCell } from '../../core/grid/index.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -56,8 +57,21 @@ export class Editing<TRow> {
         if (node.meta?.fullWidth) return false
         const editable = def.editable
         if (editable === undefined || editable === false) return false
+
+        const reader = this.#grid.readerFor(def.id, 'edit')
+        if (reader === undefined) {
+            if (editable === true) return true
+            return editable({ row: node.row, node, value: readCell(node, def) })
+        }
+
+        // A value the user is not being shown is not one they can overwrite:
+        // an editor opened on it would seed the substitute and commit it over
+        // the data behind it. Identity, not equality, is the test the reader
+        // contract is written against.
+        const value = readCell(node, def)
+        if (reader(value, node) !== value) return false
         if (editable === true) return true
-        return editable({ row: node.row, node, value: getCellValue(node.row, def) })
+        return editable({ row: node.row, node, value })
     }
 
     isEditing(rowId: string, columnId: string): boolean {
@@ -75,7 +89,7 @@ export class Editing<TRow> {
         if (!node || !def || !this.editableAt(node, def)) return
         this.active = { rowId, columnId }
         this.rowEditId = null
-        this.draft = getCellValue(node.row, def)
+        this.draft = readCell(node, def, this.#grid.readerFor(def.id, 'edit'))
         this.error = null
     }
 
@@ -239,7 +253,9 @@ export class Editing<TRow> {
         if (!node) return
         const drafts: Record<string, unknown> = {}
         for (const def of this.#editableDefs()) {
-            if (this.editableAt(node, def)) drafts[def.id] = getCellValue(node.row, def)
+            if (this.editableAt(node, def)) {
+                drafts[def.id] = readCell(node, def, this.#grid.readerFor(def.id, 'edit'))
+            }
         }
         this.rowEditId = rowId
         this.active = null
@@ -254,9 +270,14 @@ export class Editing<TRow> {
         if (!node) return false
 
         const columns = this.#grid.columns
-        const validations = Object.keys(this.drafts).map((columnId) => {
-            const def = columns.get(columnId)!.def
-            return { columnId, def, result: this.#resolve(node, def, this.drafts[columnId]) }
+        // Filtered the way `applyEdits` filters. A draft only reaches this map
+        // through a field the row opened, so the two agree already; they have
+        // to keep agreeing when a draft is set through the API instead, or a
+        // column a gate is holding back could be written through this door.
+        const validations = Object.keys(this.drafts).flatMap((columnId) => {
+            const def = columns.get(columnId)?.def
+            if (!def || !this.editableAt(node, def)) return []
+            return [{ columnId, def, result: this.#resolve(node, def, this.drafts[columnId]) }]
         })
 
         const anyAsync = validations.some((entry) => isPromise(entry.result))
