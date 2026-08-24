@@ -31,11 +31,13 @@ export const idID: DataGridLocalePack = {
         filterOperator: (ordinal) =>
             ordinal > 1 ? `Operator filter ${ordinal}` : 'Operator filter',
         filterValue: (ordinal) => (ordinal > 1 ? `Nilai filter ${ordinal}` : 'Nilai filter'),
+        filterRowValue: (column) => `Nilai filter ${column}`,
         filterUpperBound: (ordinal) => (ordinal > 1 ? `Batas atas ${ordinal}` : 'Batas atas'),
         valuePlaceholder: 'Nilai...',
         upperBoundPlaceholder: 'Sampai...',
         searchValues: 'Cari nilai...',
         blankValue: '(kosong)',
+        anyValue: '(semua)',
         combineConditions: 'Gabungkan kondisi',
         addCondition: 'Tambah kondisi',
         removeCondition: 'Hapus kondisi',

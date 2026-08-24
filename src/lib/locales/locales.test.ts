@@ -51,6 +51,7 @@ const ARGS: Record<string, unknown[]> = {
     filterColumn: ['Name'],
     filterOperator: [1],
     filterValue: [1],
+    filterRowValue: ['Name'],
     filterUpperBound: [1],
     selectRow: [3],
     dragRow: [3],

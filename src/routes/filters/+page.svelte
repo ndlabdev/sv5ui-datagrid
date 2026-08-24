@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Badge, Button, Container, Kbd, Link, ThemeModeButton } from 'sv5ui'
+    import { Badge, Button, Card, Checkbox, Container, Kbd, Link, ThemeModeButton } from 'sv5ui'
     import {
         columnOps,
         createDataGrid,
@@ -91,7 +91,7 @@
         columns,
         getRowId: (employee) => String(employee.id),
         features: [
-            filtering(),
+            filtering({ floatingRow: true }),
             sorting({ nulls: 'last' }),
             columnOps(),
             pagination({ pageSize: 25 })
@@ -100,6 +100,13 @@
     const filteringState = getFiltering(grid)!
 
     let savedModel = $state<string>('')
+
+    // A live flag, not a build-time one: turning it off takes the row out of
+    // the keyboard grid and out of the row numbering with it.
+    let floatingRow = $state(true)
+    $effect(() => {
+        filteringState.floatingRow = floatingRow
+    })
 
     function saveModel() {
         savedModel = JSON.stringify(filteringState.getFilterModel())
@@ -136,6 +143,28 @@
             <ThemeModeButton />
         </div>
     </div>
+
+    <Card class="space-y-2 p-4">
+        <h2 class="font-medium text-on-surface">Hàng filter dưới header</h2>
+        <p class="text-sm text-on-surface-variant">
+            Mỗi cột một điều kiện, dùng đúng toán tử cột đang lọc: gõ vào ô <em>Name</em> là
+            <code>contains</code>, vào <em>Salary</em> là <code>eq</code>. Đổi toán tử trong panel
+            rồi gõ tiếp ở hàng thì toán tử đó được giữ, không bị đặt lại.
+        </p>
+        <p class="text-sm text-on-surface-variant">
+            Mỗi loại filter một control của riêng nó: ô nhập cho <em>Name</em>, ô số cho
+            <em>Salary</em>, lịch cho <em>Joined</em>, và <em>Dept</em> là danh sách tick có ô tìm kiếm
+            ngay trong hàng, không phải mở panel. Danh sách giá trị của cột chỉ được đọc khi mở ra lần
+            đầu, nên vẽ hàng này không phải quét 100k dòng.
+        </p>
+        <p class="text-sm text-on-surface-variant">
+            Thứ một ô không chứa nổi thì hàng trả về cho panel chứ không làm phẳng: cột nào đang có
+            hai điều kiện, một khoảng <code>between</code>, hay toán tử <code>blank</code> đều hiện
+            thành chữ tóm tắt kèm nút mở panel. Bàn phím: <Kbd size="sm">↓</Kbd> từ header vào thẳng ô
+            nhập, <Kbd size="sm">↓</Kbd> nữa là xuống dòng đầu.
+        </p>
+        <Checkbox bind:checked={floatingRow} label="Hiện hàng filter" />
+    </Card>
 
     <div class="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" label="Save filter model" onclick={saveModel} />

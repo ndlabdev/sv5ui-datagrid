@@ -7,6 +7,7 @@ export { Announcer, defaultAnnouncerStrings } from './announcer.svelte.js'
 export { ExpansionModel } from './expansion.svelte.js'
 export {
     FocusModel,
+    FILTER_ROW,
     HEADER_ROW,
     type CellPosition,
     type GridSection

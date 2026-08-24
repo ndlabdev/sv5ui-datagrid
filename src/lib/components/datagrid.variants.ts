@@ -84,6 +84,12 @@ export const datagridVariants = tv({
             'after:pointer-events-none after:absolute after:inset-0 after:z-[8] after:ring-2 after:ring-inset after:ring-primary',
         groupBoundary: 'border-e border-outline-variant',
         headerDivider: 'border-e border-outline-variant',
+        filterRow:
+            'grid min-w-min border-t border-outline-variant bg-surface-container-low [grid-template-columns:var(--dg-grid-template)]',
+        filterCell:
+            'relative flex h-(--dg-row-h) min-w-0 items-center gap-1 overflow-hidden px-1.5 outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        filterCellPinned: 'sticky z-[15] bg-surface-container-low',
+        filterSummary: 'min-w-0 grow truncate text-xs text-on-surface-variant',
         filterPanel:
             'fixed z-40 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
         filterChips: 'flex flex-wrap items-center gap-1.5',

@@ -58,19 +58,19 @@ you use, and nothing else reaches your bundle.
 
 ## Features
 
-| Area              | What you get                                                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Rows**          | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows |
-| **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                                    |
-| **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                       |
-| **Filtering**     | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, chips                            |
-| **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                   |
-| **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                          |
-| **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                              |
-| **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                |
-| **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                                                   |
-| **Accessibility** | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                     |
-| **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                                     |
+| Area              | What you get                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rows**          | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
+| **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                                        |
+| **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
+| **Filtering**     | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
+| **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
+| **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
+| **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
+| **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
+| **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
+| **Accessibility** | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                                         |
 
 Features are opt-in. A feature you do not register is never imported, so its
 code stays out of your bundle.
@@ -208,22 +208,42 @@ registered.
 
 ## Feature modules
 
-| Feature            | Adds                                           |
-| ------------------ | ---------------------------------------------- |
-| `sorting()`        | Multi-sort, header cycle, priority badges      |
-| `filtering()`      | Quick filter, column filters, filter chips     |
-| `columnOps()`      | Resize, reorder, pin, hide, autosize           |
-| `selection()`      | Checkbox column, copy, CSV export              |
-| `editing()`        | Cell/row editing, validation, undo/redo, paste |
-| `pagination()`     | Client paging and the server hooks             |
-| `virtualization()` | Row and column virtualization                  |
-| `rowPinning()`     | Rows pinned to the top or bottom               |
-| `rowReorder()`     | Drag grip and keyboard reorder                 |
+| Feature            | Adds                                            |
+| ------------------ | ----------------------------------------------- |
+| `sorting()`        | Multi-sort, header cycle, priority badges       |
+| `filtering()`      | Quick filter, column filters, filter row, chips |
+| `columnOps()`      | Resize, reorder, pin, hide, autosize            |
+| `selection()`      | Checkbox column, copy, CSV export               |
+| `editing()`        | Cell/row editing, validation, undo/redo, paste  |
+| `pagination()`     | Client paging and the server hooks              |
+| `virtualization()` | Row and column virtualization                   |
+| `rowPinning()`     | Rows pinned to the top or bottom                |
+| `rowReorder()`     | Drag grip and keyboard reorder                  |
 
 Call a factory inside the `features` array, as above, and `TRow` is inferred
 from the array's own type. A factory held in a variable first has nothing to
 infer from and resolves to `GridFeature<unknown>`, so spell the argument out
 there: `const sort = sorting<Person>()`.
+
+### The filter row
+
+`filtering({ floatingRow: true })` draws a row under the header, one field per
+column, and `<DataGrid floatingFilters />` is the same thing for a grid it
+builds itself. The field filters in the operator the column already uses, so
+changing the operator in the panel and then typing in the row keeps it.
+
+Each kind of filter gets the control it needs: a field for text, a number
+field, a date picker, a choice for a boolean, and a searchable list of ticks
+for a set, which reads its values from the column the first time it is opened.
+
+The row holds one condition, however many values are ticked in it. What says
+more than that stays with the panel and reads back in the row as a summary and
+a button that opens it: two conditions joined, a `between` range, and `blank`
+or `notBlank`, which an empty field would report as no filter at all.
+
+It is a row of the grid, not a strip above it. Arrow down from the header
+lands in the field, arrow down again is the first body row, and the rows below
+are numbered under it for a screen reader.
 
 Read a feature's state back with the matching accessor:
 
@@ -742,6 +762,10 @@ within the filtered and sorted set, and rows carry `data-dg-row-id`. Both are
 public: delegate pointer events from a wrapper and read them with
 `event.target.closest('[data-dg-cell]')` rather than attaching a handler per
 cell.
+
+The two rows above the body use negative indices on the same attribute: `-1`
+for the leaf header row and `-2` for the filter row. A row index below zero is
+therefore never a data row.
 
 ## API stability
 

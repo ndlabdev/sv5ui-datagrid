@@ -26,6 +26,7 @@ export type {
     GridBodyProps,
     GridContextMenuProps,
     GridExportMenuProps,
+    GridFilterRowProps,
     GridPaginationProps,
     GridQuickFilterProps,
     GridRootProps

@@ -15,6 +15,13 @@ export interface CellPosition {
 
 export const HEADER_ROW = -1
 
+/**
+ * The floating filter row: a second navigable line above the body, drawn only
+ * when `filtering({ floatingRow: true })` asked for one. Negative like the
+ * header so a body index stays what it always was.
+ */
+export const FILTER_ROW = -2
+
 export class FocusModel<TRow> {
     // Body positions carry no `section` at all, so `active` keeps the exact
     // shape it had before pinned rows became focusable.
@@ -36,6 +43,21 @@ export class FocusModel<TRow> {
         return this.#grid.columns.visible.length - 1
     }
 
+    /**
+     * Navigable lines above the body: the leaf header row, and the filter row
+     * when one is drawn. Group header levels are not among them — nothing in
+     * them takes focus, so movement steps straight past.
+     */
+    get headerLines(): number {
+        const filtering = this.#grid.state['filtering'] as { floatingRow?: boolean } | undefined
+        return filtering?.floatingRow ? 2 : 1
+    }
+
+    /** The topmost row focus may reach, which the filter row lowers by one. */
+    get minRow(): number {
+        return this.headerLines > 1 ? FILTER_ROW : HEADER_ROW
+    }
+
     /** Pinned rows live outside the pipeline, so they are counted separately. */
     rowsIn(section: GridSection): number {
         if (section === 'body') return this.#grid.totalRows
@@ -49,19 +71,26 @@ export class FocusModel<TRow> {
      * arithmetic rather than a special case per boundary. */
     #toLinear(position: CellPosition): number {
         const section = position.section ?? 'body'
+        const lines = this.headerLines
         const top = this.rowsIn('top')
-        if (section === 'top') return 1 + position.row
-        if (section === 'bottom') return 1 + top + this.#grid.totalRows + position.row
-        return position.row === HEADER_ROW ? 0 : 1 + top + position.row
+        if (section === 'top') return lines + position.row
+        if (section === 'bottom') return lines + top + this.#grid.totalRows + position.row
+        if (position.row === HEADER_ROW) return 0
+        // Last of the header lines, so it is undrawn rather than out of reach
+        // when there is no filter row.
+        if (position.row === FILTER_ROW) return lines - 1
+        return lines + top + position.row
     }
 
     #fromLinear(index: number): CellPosition {
+        const lines = this.headerLines
         const top = this.rowsIn('top')
         const body = this.#grid.totalRows
         if (index <= 0) return { row: HEADER_ROW, col: 0 }
-        if (index <= top) return { row: index - 1, col: 0, section: 'top' }
-        if (index <= top + body) return { row: index - top - 1, col: 0 }
-        return { row: index - top - body - 1, col: 0, section: 'bottom' }
+        if (index < lines) return { row: FILTER_ROW, col: 0 }
+        if (index < lines + top) return { row: index - lines, col: 0, section: 'top' }
+        if (index < lines + top + body) return { row: index - lines - top, col: 0 }
+        return { row: index - lines - top - body, col: 0, section: 'bottom' }
     }
 
     /** Column spans of a body row, so focus can land on the covering cell. */
@@ -84,7 +113,8 @@ export class FocusModel<TRow> {
             return
         }
 
-        const row = clamp(position.row, HEADER_ROW, Math.max(HEADER_ROW, this.maxRow))
+        const min = this.minRow
+        const row = clamp(position.row, min, Math.max(min, this.maxRow))
         const fullWidth = row >= 0 && this.#grid.preWindowNodes[row]?.meta?.fullWidth
         if (fullWidth) {
             this.active = { row, col: 0 }
@@ -113,7 +143,8 @@ export class FocusModel<TRow> {
         }
         const col = this.active.col + cols
 
-        const last = this.rowsIn('top') + this.#grid.totalRows + this.rowsIn('bottom')
+        const last =
+            this.headerLines - 1 + this.rowsIn('top') + this.#grid.totalRows + this.rowsIn('bottom')
         const target = clamp(this.#toLinear(this.active) + rows, 0, last)
         // Spreading the linear result, not `active`, so crossing back into the
         // body drops the section rather than carrying a stale one.

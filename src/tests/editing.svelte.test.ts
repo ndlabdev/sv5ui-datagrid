@@ -244,6 +244,26 @@ describe('cell editing', () => {
         await expect.poll(() => grid.data[0].joined).toBe('2027-07-04')
     })
 
+    it('commits a half-typed year as a date rather than as a broken string', async () => {
+        const grid = makeGrid()
+        const screen = await renderGrid(grid)
+
+        cellAt(screen.container, 0, 6).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await expect
+            .poll(() => cellAt(screen.container, 0, 6).querySelector('[role="spinbutton"]'))
+            .not.toBeNull()
+
+        // Leaving while the year is still one digit. What lands is wrong, as
+        // any half-typed value is, but it has to be a date: `2-07-04` parsed
+        // as nothing, drew as nothing, and went to a server as nothing.
+        await userEvent.keyboard('07')
+        await userEvent.keyboard('04')
+        await userEvent.keyboard('2')
+        await userEvent.keyboard('{Enter}')
+
+        await expect.poll(() => grid.data[0].joined).toBe('0002-07-04')
+    })
+
     it('mounts the sv5ui Rating editor for a rating column and commits via the API', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)

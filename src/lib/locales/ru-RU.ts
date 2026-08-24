@@ -38,12 +38,14 @@ export const ruRU: DataGridLocalePack = {
             ordinal > 1 ? `Условие фильтра ${ordinal}` : 'Условие фильтра',
         filterValue: (ordinal) =>
             ordinal > 1 ? `Значение фильтра ${ordinal}` : 'Значение фильтра',
+        filterRowValue: (column) => `Значение фильтра ${column}`,
         filterUpperBound: (ordinal) =>
             ordinal > 1 ? `Верхняя граница ${ordinal}` : 'Верхняя граница',
         valuePlaceholder: 'Значение...',
         upperBoundPlaceholder: 'До...',
         searchValues: 'Поиск значений...',
         blankValue: '(пусто)',
+        anyValue: '(любое)',
         combineConditions: 'Объединение условий',
         addCondition: 'Добавить условие',
         removeCondition: 'Удалить условие',

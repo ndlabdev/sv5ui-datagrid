@@ -10,21 +10,33 @@ export function toDateValue(value: unknown): DateValue | undefined {
     // cell that was showing a date.
     const date = toDate(value)
     if (!date) return undefined
-    const pad = (part: number) => String(part).padStart(2, '0')
+    // Four digits of year, as `parseDate` requires: a year still being typed
+    // is a real year to the field reporting it, and one it has to get back.
+    const pad = (part: number, width = 2) => String(part).padStart(width, '0')
     try {
-        return parseDate(`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`)
+        return parseDate(
+            `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+        )
     } catch {
         return undefined
     }
 }
 
-/** Back to ISO, built from the parts: `toString()` is locale-formatted. */
+/**
+ * Back to ISO, built from the parts: `toString()` is locale-formatted.
+ *
+ * The year is padded to four digits like the rest. A segmented field reports
+ * a year on its way to 2026 as 2, then 20, then 202, and unpadded those left
+ * as `2-01-05`: a string `toDateValue` cannot read back, a value no server
+ * would take, and, from a cell editor, one that could be committed onto the
+ * row itself.
+ */
 export function fromDateValue(
     value: { year: number; month: number; day: number } | undefined
 ): string {
     if (!value) return ''
-    const pad = (part: number) => String(part).padStart(2, '0')
-    return `${value.year}-${pad(value.month)}-${pad(value.day)}`
+    const pad = (part: number, width = 2) => String(part).padStart(width, '0')
+    return `${pad(value.year, 4)}-${pad(value.month)}-${pad(value.day)}`
 }
 
 /** Converts a stored `HH:mm[:ss]` string into a `Time`. */

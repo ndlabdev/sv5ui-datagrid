@@ -36,11 +36,15 @@ export interface DataGridLabels {
     filterColumn: (column: string) => string
     filterOperator: (ordinal: number) => string
     filterValue: (ordinal: number) => string
+    /** The field in the filter row: named apart from the panel's own trigger. */
+    filterRowValue: (column: string) => string
     filterUpperBound: (ordinal: number) => string
     valuePlaceholder: string
     upperBoundPlaceholder: string
     searchValues: string
     blankValue: string
+    /** The choice that filters nothing, on a column whose filter is a choice. */
+    anyValue: string
     combineConditions: string
     addCondition: string
     removeCondition: string

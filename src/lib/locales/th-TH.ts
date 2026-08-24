@@ -31,11 +31,13 @@ export const thTH: DataGridLocalePack = {
         filterOperator: (ordinal) =>
             ordinal > 1 ? `เงื่อนไขตัวกรอง ${ordinal}` : 'เงื่อนไขตัวกรอง',
         filterValue: (ordinal) => (ordinal > 1 ? `ค่าที่ใช้กรอง ${ordinal}` : 'ค่าที่ใช้กรอง'),
+        filterRowValue: (column) => `ค่าที่ใช้กรอง ${column}`,
         filterUpperBound: (ordinal) => (ordinal > 1 ? `ค่าสูงสุด ${ordinal}` : 'ค่าสูงสุด'),
         valuePlaceholder: 'ค่า...',
         upperBoundPlaceholder: 'ถึง...',
         searchValues: 'ค้นหาค่า...',
         blankValue: '(ว่าง)',
+        anyValue: '(ทั้งหมด)',
         combineConditions: 'รวมเงื่อนไข',
         addCondition: 'เพิ่มเงื่อนไข',
         removeCondition: 'ลบเงื่อนไข',

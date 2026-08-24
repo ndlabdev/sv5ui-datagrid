@@ -17,6 +17,7 @@
     import { getGridTheme } from '../internal/theme.js'
     import GridColumnMenu from '../menus/GridColumnMenu.svelte'
     import GridFilterPanel from '../menus/GridFilterPanel.svelte'
+    import GridFilterRow from './GridFilterRow.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
     import { columnWindowOf, pinLeftVar, pinRightVar } from '../internal/window.js'
 
@@ -59,10 +60,18 @@
         slots.headerControlsPinned({ class: theme('headerControlsPinned') })
     )
 
-    /** Hidden until hovered, so the label gets the cell — unless filtered. */
+    /**
+     * Hidden until hovered, so the label gets the cell — unless the column is
+     * filtered, or its panel is open. The panel is portalled out of the header
+     * and takes focus with it, so `focus-within` cannot keep the trigger it is
+     * anchored to on screen, and a panel opened from the column menu or from
+     * the filter row would otherwise hang under nothing.
+     */
     function controlsClass(columnId: string): string {
-        const active = filteringState ? columnId in filteringState.columnFilters : false
-        return active ? `${controlsBaseClass} ${controlsPinnedClass}` : controlsBaseClass
+        const shown = filteringState
+            ? columnId in filteringState.columnFilters || filteringState.filterFor === columnId
+            : false
+        return shown ? `${controlsBaseClass} ${controlsPinnedClass}` : controlsBaseClass
     }
     const resizeHandleClass = $derived(slots.resizeHandle({ class: theme('resizeHandle') }))
 
@@ -372,6 +381,7 @@
             </div>
         {/each}
     </div>
+    <GridFilterRow />
     {#if columnOps?.drag}
         <div
             class={slots.dropIndicator({ class: theme('dropIndicator') })}
