@@ -58,22 +58,21 @@ you use, and nothing else reaches your bundle.
 
 ## Features
 
-| Area              | What you get                                                                                                                          |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rows**          | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
-| **Columns**       | Resize, reorder, pin left/right, hide, nested header groups, autosize, `colSpan` and `rowSpan`                                        |
-| **Sorting**       | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
-| **Filtering**     | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
-| **Selection**     | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
-| **Editing**       | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
-| **Reordering**    | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
-| **Persistence**   | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
-| **Localization**  | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
-| **Accessibility** | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
-| **Server**        | `rowModel: 'server'` with normalized filter and sort requests                                                                         |
-
-Features are opt-in. A feature you do not register is never imported, so its
-code stays out of your bundle.
+| Area                                                                         | What you get                                                                                                                          |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rows**                                                                     | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
+| **Columns**                                                                  | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
+| **Sorting**                                                                  | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
+| **Filtering**                                                                | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
+| **Selection**                                                                | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
+| **Editing**                                                                  | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
+| **Reordering**                                                               | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
+| **Persistence**                                                              | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
+| **Localization**                                                             | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
+| **Accessibility**                                                            | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Server**                                                                   | `rowModel: 'server'` with normalized filter and sort requests                                                                         |
+| Features are opt-in. A feature you do not register is never imported, so its |
+| code stays out of your bundle.                                               |
 
 ## Installation
 
@@ -461,6 +460,88 @@ Row spans are resolved against the whole row list rather than the rendered
 window, so scrolling into the middle of one still draws it. They are sized from
 the rows they cover, so use them with uniform row heights rather than `'auto'`.
 
+### Header groups that fold
+
+A group folds when one of its children says what it is for. `columnGroupShow:
+'open'` marks the detail a closed group puts away, `'closed'` the summary it
+folds down to, and a child that says neither is drawn either way:
+
+```ts
+const columns: ColumnDef<Row>[] = [
+    {
+        id: 'pay',
+        header: 'Pay',
+        collapsed: true, // its starting state, if not open
+        children: [
+            { id: 'total', header: 'Total', columnGroupShow: 'closed' },
+            { id: 'base', header: 'Base', columnGroupShow: 'open' },
+            { id: 'bonus', header: 'Bonus', columnGroupShow: 'open' }
+        ]
+    }
+]
+```
+
+The toggle sits at the trailing edge of the group's own header cell. A
+keyboard reaches it too: the header levels are part of the roving focus, so
+`ArrowUp` from a leaf header walks up into the groups above it, `ArrowLeft`
+and `ArrowRight` step between the groups of a level, `Enter` or `Space` folds
+the one under the caret, and `ArrowDown` comes back. A column with no group
+above it has nowhere to go up to. The same action is also in the column menu
+of every column in the group. From code it is `grid.api.toggleGroup(groupId)`
+and
+`grid.api.setGroupCollapsed(groupId, collapsed)`, which announce and emit
+`columnGroupToggled` the way every other column operation does.
+
+`headerGroupCell` draws the group header yourself, the way `headerCell` draws
+a leaf one. The snippet is handed the group cell — id, label, span, whether it
+is folded — and a `toggle`, and the grid's own control stays beside whatever
+it draws:
+
+````svelte
+{#snippet payHeader({ cell, toggle }: HeaderGroupContext)}
+    <Badge label={`${cell.header} (${cell.span})`} onclick={toggle} />
+{/snippet}
+``` Folding is not hiding —
+what the Column chooser put away stays away, and what a group folded comes
+back when it opens — and the state travels in a snapshot, keyed by group.
+
+A group is only offered a toggle when the state it would switch to leaves a
+column of it on screen. One whose children are all `'open'` would fold its own
+header away with them, and nothing would be left to click to bring it back.
+
+### Folding to a rail
+
+`collapseMode: 'rail'` folds the other way: the whole group goes, header and
+cells alike, and a narrow drawer stands in its place with the group's name down
+its length. It runs the full height of the grid, header included, and the name
+starts at the top of the header and stays there as the rows scroll.
+
+```ts
+{
+    id: 'planning',
+    header: 'Planning',
+    collapseMode: 'rail',
+    children: [target, variance] // no `columnGroupShow` needed
+}
+```
+
+Nothing has to declare `columnGroupShow` for this: the drawer is what folds the
+group back open, so a group with no summary column can still fold. Clicking
+anywhere down it opens the group again, which is why no toggle sits in the
+header over it. The drawer holds no data, so it is not exported, copied or
+filtered on, and the group's own header cell is still there underneath it,
+named and marked collapsed, which is how the keyboard reaches it. A pinned
+group folds to a pinned drawer, which stays at its edge while the rest scrolls.
+
+The `/groups/cases` page walks ten of these: four levels of nesting, a drawer
+inside another group, two drawers side by side, pinned drawers on both edges,
+pinned rows, virtualized rows and columns, a group with nothing to fold into,
+a grid that opens folded and survives a snapshot round trip, right to left,
+and an export taken while folded.
+
+A group's `id` shares a namespace with the columns', so it needs one of its
+own: a group and a column that answer to the same id cannot both be addressed.
+
 ## Localization
 
 Hand the grid the languages it may use. It picks one from the page's own
@@ -470,7 +551,7 @@ language, so nothing else needs configuring:
 import { enUS, jaJP, viVN } from '@sv5ui/datagrid/locales'
 
 createDataGrid({ columns, data, getRowId, locales: [enUS, viVN, jaJP] })
-```
+````
 
 Twelve packs ship: `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`,
 `de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only what you import is
@@ -765,7 +846,10 @@ cell.
 
 The two rows above the body use negative indices on the same attribute: `-1`
 for the leaf header row and `-2` for the filter row. A row index below zero is
-therefore never a data row.
+therefore never a data row. A header group spans columns, so it cannot be
+named by a column index at all: its cells carry
+`data-dg-header-cell="level:firstColumn"` instead, counted from the topmost
+level.
 
 ## API stability
 

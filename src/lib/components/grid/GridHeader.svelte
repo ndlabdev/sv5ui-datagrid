@@ -1,12 +1,15 @@
 <script lang="ts">
-    import { Badge, Icon } from 'sv5ui'
+    import type { Snippet } from 'svelte'
+    import { Badge, Button, Icon } from 'sv5ui'
     import { HEADER_ROW } from '../../core/interaction/index.js'
     import { inlineDelta, inlineOffset, isRtl, rafBatch } from '../../core/utils/index.js'
     import {
         isSyntheticColumn,
+        railGroupIdOf,
         SELECTION_COLUMN_ID,
         type ColumnState,
-        type HeaderGroupCell
+        type HeaderGroupCell,
+        type HeaderGroupContext
     } from '../../core/types/index.js'
     import { getColumnOps } from '../../features/column-ops/index.js'
     import { getFiltering } from '../../features/filtering/index.js'
@@ -14,12 +17,22 @@
     import { getGridContext } from '../internal/context.js'
     import type { GridHeaderProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import { twMerge } from 'tailwind-merge'
     import { getGridTheme } from '../internal/theme.js'
     import GridColumnMenu from '../menus/GridColumnMenu.svelte'
     import GridFilterPanel from '../menus/GridFilterPanel.svelte'
     import GridFilterRow from './GridFilterRow.svelte'
     import GridSelectionCell from '../cells/GridSelectionCell.svelte'
-    import { columnWindowOf, pinLeftVar, pinRightVar } from '../internal/window.js'
+    import {
+        columnWindowOf,
+        pinLeftVar,
+        pinRightVar,
+        isRailAt,
+        railEdgeClasses,
+        railInset,
+        railsOf,
+        type RailBand
+    } from '../internal/window.js'
 
     let { class: className }: GridHeaderProps = $props()
 
@@ -31,6 +44,8 @@
     const theme = getGridTheme()
 
     const columnWindow = $derived(columnWindowOf(grid))
+    // The head of every drawer the header has to cover, in row coordinates.
+    const rails = $derived(railsOf(grid, columnWindow))
     const headerLevels = $derived(grid.columns.headerLevels)
     const leafRowIndex = $derived(grid.columns.headerRowCount)
 
@@ -40,10 +55,47 @@
         right: slots.headerCell({ align: 'right', class: theme('headerCell') })
     } as const)
     const groupCellClass = $derived(slots.groupCell({ class: theme('groupCell') }))
+    const groupFoldableClass = $derived(
+        slots.groupCellFoldable({ class: theme('groupCellFoldable') })
+    )
+    const groupToggleClass = $derived(slots.groupToggle({ class: theme('groupToggle') }))
+    const groupContentClass = $derived(slots.groupContent({ class: theme('groupContent') }))
+
+    /** Whether the caret stands on this group cell. */
+    function groupActive(level: number, cell: HeaderGroupCell): boolean {
+        const { row, col, section } = grid.focus.active
+        return section === 'header' && row === level && col === cell.start
+    }
+
+    /** A group folded to a rail: its name runs down the strip, not in here. */
+    function railedShut(cell: HeaderGroupCell): boolean {
+        return cell.collapsed && grid.columns.isRail(cell.id)
+    }
+
+    /** An app's own drawing for this group, if it gave one. */
+    function groupSnippetOf(cell: HeaderGroupCell): Snippet<[HeaderGroupContext]> | undefined {
+        return cell.isPlaceholder ? undefined : grid.columns.groupDef(cell.id)?.headerGroupCell
+    }
+
+    /** Pinned and foldable are independent of each other. */
+    function groupClassOf(cell: HeaderGroupCell): string {
+        const plain = cell.pinned ? `${groupCellClass} ${pinnedHeaderClass}` : groupCellClass
+        const base = withRailSurface(plain, columnIdUnder(cell))
+        // The room kept for the toggle lands on the same side as the cell's
+        // own padding, and the one that wins is the one Tailwind emits last.
+        // What holds it honest is the layout test, which measures the label
+        // against the toggle rather than trusting either class.
+        // Not when it is folded to a rail: there is no toggle in there then,
+        // and 44px of track cannot hold 44px of padding, so the cell would
+        // stand a pixel wider than its column and double the line down its
+        // edge.
+        return cell.collapsible && !railedShut(cell) ? `${base} ${groupFoldableClass}` : base
+    }
     const boundaryClass = slots.groupBoundary()
 
     function withBoundary(base: string, endIndex: number): string {
-        return grid.columns.groupBoundaryFlags[endIndex] ? `${base} ${boundaryClass}` : base
+        if (!grid.columns.groupBoundaryFlags[endIndex] || isRailAt(grid, endIndex + 1)) return base
+        return `${base} ${boundaryClass}`
     }
 
     const dividerClass = $derived(slots.headerDivider({ class: theme('headerDivider') }))
@@ -51,7 +103,48 @@
 
     /** The last column's edge is the grid's own border. */
     function withDivider(base: string, index: number): string {
-        return index === lastColumnIndex ? base : `${base} ${dividerClass}`
+        if (index === lastColumnIndex || isRailAt(grid, index + 1)) return base
+        return `${base} ${dividerClass}`
+    }
+
+    const railSurfaceClass = $derived(slots.railSurface({ class: theme('railSurface') }))
+    const railHeadClass = $derived(slots.railHead({ class: theme('railHead') }))
+    const railEdgeClass = $derived(slots.railEdge({ class: theme('railEdge') }))
+    const railFocusClass = $derived(slots.railFocus({ class: theme('railFocus') }))
+    const railInnerClass = $derived(slots.railInner({ class: theme('railInner') }))
+    const railLabelClass = $derived(slots.railLabel({ class: theme('railLabel') }))
+
+    /**
+     * Whether the caret stands anywhere in this drawer's column. The cells
+     * there are covered, header and rows alike, so the drawer shows the
+     * caret for whichever of them the caret is on.
+     */
+    function railFocused(columnId: string): boolean {
+        return grid.columns.visible[grid.focus.active.col]?.id === columnId
+    }
+
+    function railHeadClassOf(rail: RailBand): string {
+        let result = `${railHeadClass} ${railEdgeClasses(grid, rail.index, { lead: railEdgeClass, trail: boundaryClass })}`
+        if (railFocused(rail.id)) result += ` ${railFocusClass}`
+        return result
+    }
+
+    /**
+     * A rail's own cells wear the strip's surface, not the header's. Merged
+     * rather than appended: a pinned cell brings a surface of its own, and
+     * which one lands last in the sheet is not this file's to know.
+     */
+    function withRailSurface(base: string, columnId: string | undefined): string {
+        return columnId && railGroupIdOf(columnId) ? twMerge(base, railSurfaceClass) : base
+    }
+
+    /**
+     * The column a group cell stands over, when it stands over exactly one.
+     * A rail is one column wide, so this is what tells a cell at any level
+     * that the drawer runs under it.
+     */
+    function columnIdUnder(cell: HeaderGroupCell): string | undefined {
+        return cell.span === 1 ? grid.columns.visible[cell.start]?.id : undefined
     }
     const pinnedHeaderClass = $derived(slots.pinnedHeaderCell({ class: theme('pinnedHeaderCell') }))
     const hasControls = $derived(Boolean(filteringState || columnOps))
@@ -78,6 +171,28 @@
     function isActive(index: number): boolean {
         const { row, col } = grid.focus.active
         return row === HEADER_ROW && col === index
+    }
+
+    /** Says which way the click goes, so the name is the action taken. */
+    function groupToggleLabel(cell: HeaderGroupCell): string {
+        return cell.collapsed
+            ? grid.labels.expandGroup(cell.header)
+            : grid.labels.collapseGroup(cell.header)
+    }
+
+    /**
+     * Folds the group, and leaves the caret on the group's own cell rather
+     * than on the control inside it. Focus lives on cells everywhere else in
+     * the grid, and a control that keeps it after a click is what leaves a
+     * ring sitting in the header afterwards.
+     */
+    function toggleGroup(event: Event, groupId: string, level: number, start: number): void {
+        columnOps?.toggleGroup(groupId)
+        grid.focus.focusCell({ row: level, col: start, section: 'header' })
+        // Taken by hand: the viewport will not pull focus off a control that
+        // sits inside a cell, which is how an open editor keeps the
+        // keystrokes meant for it.
+        ;(event.currentTarget as HTMLElement).closest<HTMLElement>('[data-dg-header-cell]')?.focus()
     }
 
     function ariaSort(columnId: string): 'ascending' | 'descending' | undefined {
@@ -238,6 +353,28 @@
     class={slots.header({ class: [theme('header'), className] })}
     style:width={columnWindow.rowWidth}
 >
+    <!-- The head of each folded group's drawer. Hidden from the accessibility
+         tree for the same reason the strip under it is: the group's own cell,
+         which this covers, is what a reader and the keyboard already have. -->
+    {#each rails as rail (rail.id)}
+        <div
+            aria-hidden="true"
+            data-dg-rail-head={rail.groupId}
+            class={railHeadClassOf(rail)}
+            style:inset-inline-start={railInset(rail).start}
+            style:width={railInset(rail).width}
+            onclick={() => columnOps?.toggleGroup(rail.groupId)}
+        >
+            <!-- At the top of the drawer, which is the top of the grid: the
+                 name of a folded group belongs where the name of an open one
+                 is, and the header is where the header is read. It stays
+                 there while the rows scroll because the header does. -->
+            <span class={railInnerClass}>
+                <Icon name="lucide:chevrons-right" class="size-3.5 shrink-0" />
+                <span data-dg-truncate class={railLabelClass}>{rail.header}</span>
+            </span>
+        </div>
+    {/each}
     {#each headerLevels as level, levelIndex (levelIndex)}
         <div
             role="row"
@@ -246,43 +383,117 @@
         >
             {#each level as cell (`${cell.id}-${cell.start}`)}
                 {#if cellVisible(cell)}
-                    <!-- A placeholder sits above columns that belong to no
-                         group. It names nothing, so exposing it as a header
-                         would put an unlabelled one in the accessibility tree;
-                         the leaf header below already describes the column. -->
-                    <div
-                        role={cell.isPlaceholder ? 'presentation' : 'columnheader'}
-                        aria-colindex={cell.isPlaceholder ? undefined : cell.start + 1}
-                        aria-colspan={!cell.isPlaceholder && cell.span > 1 ? cell.span : undefined}
-                        class={withBoundary(
-                            cell.pinned ? `${groupCellClass} ${pinnedHeaderClass}` : groupCellClass,
-                            cell.start + cell.span - 1
-                        )}
-                        style:grid-column={`${cell.start + 1} / span ${cell.span}`}
-                        style:inset-inline-start={pinLeftOf(cell)}
-                        style:inset-inline-end={pinRightOf(cell)}
-                    >
-                        {cell.header}
-                        {#if columnOps?.canResize && !cell.isPlaceholder}
-                            <div
-                                data-dg-noreorder
-                                role="separator"
-                                aria-orientation="vertical"
-                                aria-label={grid.labels.resizeGroup(cell.header)}
-                                class={resizeHandleClass}
-                                onpointerdown={(event) => startGroupResize(event, cell)}
-                                onpointermove={moveResize}
-                                onpointerup={endResize}
-                                onpointercancel={endResize}
-                            ></div>
-                        {/if}
-                    </div>
+                    {#if cell.isPlaceholder}
+                        <!-- A placeholder sits above columns that belong to no
+                             group. It names nothing and does nothing, so it is
+                             neither a header in the accessibility tree nor a
+                             cell focus can stand on; the leaf header below
+                             already describes the column. -->
+                        <div
+                            role="presentation"
+                            class={withBoundary(groupClassOf(cell), cell.start + cell.span - 1)}
+                            style:grid-column={`${cell.start + 1} / span ${cell.span}`}
+                            style:inset-inline-start={pinLeftOf(cell)}
+                            style:inset-inline-end={pinRightOf(cell)}
+                        ></div>
+                    {:else}
+                        <div
+                            role="columnheader"
+                            aria-colindex={cell.start + 1}
+                            aria-colspan={cell.span > 1 ? cell.span : undefined}
+                            aria-expanded={cell.collapsible ? !cell.collapsed : undefined}
+                            tabindex={groupActive(levelIndex, cell) ? 0 : -1}
+                            data-dg-header-cell="{levelIndex}:{cell.start}"
+                            class={withBoundary(groupClassOf(cell), cell.start + cell.span - 1)}
+                            style:grid-column={`${cell.start + 1} / span ${cell.span}`}
+                            style:inset-inline-start={pinLeftOf(cell)}
+                            style:inset-inline-end={pinRightOf(cell)}
+                        >
+                            {#if railedShut(cell)}
+                                <!-- Drawn by the strip under it, which covers
+                                     this cell: 44px of header would clip the
+                                     name, and the strip carries it down its
+                                     own length. Out of sight is not out of
+                                     the accessibility tree, though, or the
+                                     header this cell is would be an empty
+                                     one and the caret would land on nothing
+                                     a reader can say. -->
+                                <span class="sr-only">{cell.header}</span>
+                            {:else if groupSnippetOf(cell)}
+                                <!-- In a box of its own: a group is at its
+                                     narrowest when folded, and what an app
+                                     draws has to give way there rather than
+                                     spill over the group beside it. -->
+                                <span class={groupContentClass}>
+                                    {@render groupSnippetOf(cell)!({
+                                        cell,
+                                        // Plainly what it says. An app owns
+                                        // the markup it drew and the caret
+                                        // inside it, so nothing here moves
+                                        // focus on its behalf.
+                                        toggle: () => columnOps?.toggleGroup(cell.id)
+                                    })}
+                                </span>
+                            {:else}
+                                <!-- A group is at its narrowest exactly when it is
+                                 folded, so the label has to give way rather
+                                 than run under the toggle beside it. -->
+                                <span class="truncate" data-dg-truncate>{cell.header}</span>
+                            {/if}
+                            {#if cell.collapsible && !railedShut(cell)}
+                                <!-- At the trailing edge, so the label sits where
+                                 it sits in every other group and the toggle
+                                 reads as belonging to this block rather than
+                                 to the seam between two.
+
+                                 Not a tab stop of its own: the grid is one,
+                                 and the cell around it takes the roving
+                                 focus, where Enter and Space do what this
+                                 does. -->
+                                <span data-dg-noreorder class={groupToggleClass}>
+                                    <Button
+                                        variant="ghost"
+                                        color="secondary"
+                                        size="xs"
+                                        square
+                                        tabindex={-1}
+                                        icon={cell.collapsed
+                                            ? 'lucide:chevrons-right'
+                                            : 'lucide:chevrons-left'}
+                                        label={groupToggleLabel(cell)}
+                                        ui={{ label: 'sr-only' }}
+                                        onclick={(event: MouseEvent) =>
+                                            toggleGroup(event, cell.id, levelIndex, cell.start)}
+                                    />
+                                </span>
+                            {/if}
+                            {#if columnOps?.canResize && !railedShut(cell)}
+                                <div
+                                    data-dg-noreorder
+                                    role="separator"
+                                    aria-orientation="vertical"
+                                    aria-label={grid.labels.resizeGroup(cell.header)}
+                                    class={resizeHandleClass}
+                                    onpointerdown={(event) => startGroupResize(event, cell)}
+                                    onpointermove={moveResize}
+                                    onpointerup={endResize}
+                                    onpointercancel={endResize}
+                                ></div>
+                            {/if}
+                        </div>
+                    {/if}
                 {/if}
             {/each}
         </div>
     {/each}
     {#snippet headerLabel(column: ColumnState<unknown>)}
-        {#if column.def.headerCell}
+        {#if railGroupIdOf(column.id)}
+            <!-- The strip below carries the name down its length; repeating it
+                 here would only clip it against the strip's own width. The
+                 cell takes the strip's own surface, so the drawer reads as one
+                 block from the header down. -->
+            <span class="sr-only">{column.header}</span>
+        {:else if column.def.headerCell}
             {@render column.def.headerCell({ column, header: column.header })}
         {:else if column.header === ''}
             <!-- Action columns are usually headerless; a column header
@@ -309,14 +520,17 @@
                 aria-sort={ariaSort(column.id)}
                 tabindex={isActive(index) ? 0 : -1}
                 data-dg-cell="{HEADER_ROW}:{index}"
-                class={withDivider(
-                    withBoundary(
-                        column.pinned
-                            ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
-                            : headerCellClass[column.align],
+                class={withRailSurface(
+                    withDivider(
+                        withBoundary(
+                            column.pinned
+                                ? `${headerCellClass[column.align]} ${pinnedHeaderClass}`
+                                : headerCellClass[column.align],
+                            index
+                        ),
                         index
                     ),
-                    index
+                    column.id
                 )}
                 style:grid-column={columnWindow.windowed ? index + 1 : undefined}
                 style:inset-inline-start={pinLeftVar(column)}

@@ -26,6 +26,8 @@ export const thTH: DataGridLocalePack = {
         openFilter: 'ตัวกรอง...',
         autosize: 'พอดีกับเนื้อหา',
         hideColumn: 'ซ่อนคอลัมน์',
+        collapseGroup: (group) => `ยุบ ${group}`,
+        expandGroup: (group) => `ขยาย ${group}`,
 
         filterColumn: (column) => `กรอง ${column}`,
         filterOperator: (ordinal) =>
@@ -114,6 +116,7 @@ export const thTH: DataGridLocalePack = {
         columnMoved: (column, position) => `ย้ายคอลัมน์ ${column} ไปตำแหน่งที่ ${position}`,
         columnPinned: (column, side) =>
             side ? `ปักหมุดคอลัมน์ ${column} แล้ว` : `ยกเลิกการปักหมุดคอลัมน์ ${column} แล้ว`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'ถูกยุบ' : 'ถูกขยาย'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `ซ่อนคอลัมน์ ${column} แล้ว` : `แสดงคอลัมน์ ${column} แล้ว`,
         selected: (count) => `เลือก ${count} แถวแล้ว`,

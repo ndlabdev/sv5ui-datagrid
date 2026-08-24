@@ -26,6 +26,8 @@ export const zhCN: DataGridLocalePack = {
         openFilter: '筛选...',
         autosize: '适应内容',
         hideColumn: '隐藏此列',
+        collapseGroup: (group) => `折叠${group}`,
+        expandGroup: (group) => `展开${group}`,
 
         filterColumn: (column) => `筛选${column}`,
         filterOperator: (ordinal) => (ordinal > 1 ? `筛选条件 ${ordinal}` : '筛选条件'),
@@ -111,6 +113,7 @@ export const zhCN: DataGridLocalePack = {
         columnResized: (column, width) => `${column}列宽已调整为 ${width} 像素`,
         columnMoved: (column, position) => `${column}列已移动到第 ${position} 位`,
         columnPinned: (column, side) => (side ? `已固定${column}列` : `已取消固定${column}列`),
+        groupCollapsed: (group, collapsed) => `${collapsed ? '已折叠' : '已展开'}${group}`,
         columnVisibility: (column, hidden) => (hidden ? `已隐藏${column}列` : `已显示${column}列`),
         selected: (count) => `已选择 ${count} 行`,
         copied: (count) => `已复制 ${count} 行`,

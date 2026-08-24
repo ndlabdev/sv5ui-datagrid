@@ -2,6 +2,7 @@ import { Announcer, defaultAnnouncerStrings } from '../interaction/announcer.sve
 import { defaultLabels, mergeLabels } from '../interaction/labels.js'
 import { resolveLocale } from '../interaction/locale.js'
 import { ColumnModel } from '../columns/column-model.svelte.js'
+import { groupIdsOf } from '../columns/header-groups.js'
 import { EventBus } from './events.js'
 import { ExpansionModel } from '../interaction/expansion.svelte.js'
 import { FocusModel } from '../interaction/focus-model.svelte.js'
@@ -193,12 +194,14 @@ export class GridState<TRow> {
     setState(snapshot: GridSnapshot): void {
         const columns = resolveColumnSnapshot(
             snapshot.columns,
-            this.columns.leafDefs.map((def) => def.id)
+            this.columns.leafDefs.map((def) => def.id),
+            groupIdsOf(this.columns.defs)
         )
         this.columns.orderIds = columns.orderIds
         this.columns.widthOverrides = columns.widthOverrides
         this.columns.hiddenOverrides = columns.hiddenOverrides
         this.columns.pinnedOverrides = columns.pinnedOverrides
+        this.columns.collapsedGroups = columns.collapsedGroups
 
         if (isDensity(snapshot.density)) this.density = snapshot.density
 

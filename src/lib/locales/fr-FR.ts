@@ -32,6 +32,8 @@ export const frFR: DataGridLocalePack = {
         openFilter: 'Filtrer...',
         autosize: 'Ajuster au contenu',
         hideColumn: 'Masquer la colonne',
+        collapseGroup: (group) => `Replier ${group}`,
+        expandGroup: (group) => `Déplier ${group}`,
 
         filterColumn: (column) => `Filtrer ${column}`,
         filterOperator: (ordinal) =>
@@ -123,6 +125,7 @@ export const frFR: DataGridLocalePack = {
         columnMoved: (column, position) => `colonne ${column} déplacée en position ${position}`,
         columnPinned: (column, side) =>
             side ? `colonne ${column} épinglée` : `colonne ${column} détachée`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'replié' : 'déplié'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `colonne ${column} masquée` : `colonne ${column} affichée`,
         selected: (count) => `${count} ${selectedRows(count)}`,

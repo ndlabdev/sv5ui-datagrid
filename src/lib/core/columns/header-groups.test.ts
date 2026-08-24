@@ -4,7 +4,10 @@ import {
     buildGroupPaths,
     buildHeaderLevels,
     flattenColumns,
+    foldableGroupIds,
     groupBoundaries,
+    groupIdsOf,
+    hiddenByCollapse,
     parentGroupIdOf
 } from './header-groups.js'
 import type { ColumnDef, ColumnState } from '../types/index.js'
@@ -144,5 +147,88 @@ describe('buildHeaderLevels', () => {
             [true, 2],
             [false, 1]
         ])
+    })
+})
+
+describe('columnGroupShow', () => {
+    /**
+     * A group that folds down to one summary column, holding a nested group
+     * that folds on its own account.
+     */
+    const defs: ColumnDef<Row>[] = [
+        { id: 'id', header: '#' },
+        {
+            id: 'pay',
+            header: 'Pay',
+            children: [
+                { id: 'total', header: 'Total', columnGroupShow: 'closed' },
+                { id: 'base', header: 'Base', columnGroupShow: 'open' },
+                {
+                    id: 'extras',
+                    header: 'Extras',
+                    columnGroupShow: 'open',
+                    children: [
+                        { id: 'bonus', header: 'Bonus' },
+                        { id: 'stock', header: 'Stock', columnGroupShow: 'open' }
+                    ]
+                }
+            ]
+        }
+    ]
+
+    const paths = buildGroupPaths(defs)
+    const leaves = flattenColumns(defs)
+    const leafOf = (id: string) => leaves.find((def) => def.id === id)!
+
+    function shown(collapsed: string[]): string[] {
+        const set = new Set(collapsed)
+        return leaves
+            .filter(
+                (leaf) => !hiddenByCollapse(paths.get(leaf.id) ?? [], leaf, (id) => set.has(id))
+            )
+            .map((leaf) => leaf.id)
+    }
+
+    it('lists the groups a child asks to fold, and no others', () => {
+        expect(foldableGroupIds(defs)).toEqual(new Set(['pay', 'extras']))
+        expect(
+            foldableGroupIds([{ id: 'a', header: 'A', children: [{ id: 'b', header: 'B' }] }])
+        ).toEqual(new Set())
+    })
+
+    it('names every group in the tree', () => {
+        expect(groupIdsOf(defs)).toEqual(['pay', 'extras'])
+    })
+
+    it('draws the detail while the group is open and the summary once it folds', () => {
+        expect(shown([])).toEqual(['id', 'base', 'bonus', 'stock'])
+        expect(shown(['pay'])).toEqual(['id', 'total'])
+    })
+
+    it('folds a nested group on its own account, not on the one above it', () => {
+        // `extras` closed: its own `open` child goes, the rest of `pay` stays.
+        expect(shown(['extras'])).toEqual(['id', 'base', 'bonus'])
+        // And an outer fold takes the whole nested group with it.
+        expect(shown(['pay', 'extras'])).toEqual(['id', 'total'])
+    })
+
+    it('leaves a column alone when nothing on its path declares anything', () => {
+        expect(hiddenByCollapse([], leafOf('id'), () => true)).toBe(false)
+    })
+
+    it('stamps the toggle onto the group cells, and never onto a placeholder', () => {
+        const visible = [
+            createColumnState<Row>({ id: 'id', header: '#' }),
+            createColumnState<Row>({ id: 'total', header: 'Total' })
+        ]
+        const levels = buildHeaderLevels(
+            visible,
+            buildGroupPaths([defs[0]!, { ...defs[1]!, children: [defs[1]!.children![0]!] }]),
+            new Map([['pay', { collapsible: true, collapsed: true }]])
+        )
+
+        const [placeholder, group] = levels[0]!
+        expect(placeholder).toMatchObject({ isPlaceholder: true, collapsible: false })
+        expect(group).toMatchObject({ id: 'pay', collapsible: true, collapsed: true })
     })
 })

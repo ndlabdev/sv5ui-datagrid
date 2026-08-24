@@ -32,6 +32,8 @@ export const ruRU: DataGridLocalePack = {
         openFilter: 'Фильтр...',
         autosize: 'По содержимому',
         hideColumn: 'Скрыть столбец',
+        collapseGroup: (group) => `Свернуть ${group}`,
+        expandGroup: (group) => `Развернуть ${group}`,
 
         filterColumn: (column) => `Фильтр ${column}`,
         filterOperator: (ordinal) =>
@@ -122,6 +124,7 @@ export const ruRU: DataGridLocalePack = {
         columnMoved: (column, position) => `столбец ${column} перемещён на позицию ${position}`,
         columnPinned: (column, side) =>
             side ? `столбец ${column} закреплён` : `столбец ${column} откреплён`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'свёрнута' : 'развёрнута'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `столбец ${column} скрыт` : `столбец ${column} показан`,
         selected: (count) => `выбрано ${count} ${rows(count)}`,
