@@ -188,6 +188,21 @@ export class ColumnOps<TRow> {
         this.#grid.events.emit('columnVisibilityChanged', { columnId: id, hidden })
     })
 
+    /**
+     * Folds or unfolds a header group. The model settles whether the group may
+     * take that state at all; this is the door that says so to everyone else,
+     * which is why the header's toggle and the column menu both come through
+     * here rather than calling the model and staying quiet.
+     */
+    setGroupCollapsed = mutator((groupId: string, collapsed: boolean): void => {
+        if (!this.#grid.columns.setGroupCollapsed(groupId, collapsed)) return
+        this.#grid.events.emit('columnGroupToggled', { groupId, collapsed })
+    })
+
+    toggleGroup = mutator((groupId: string): void => {
+        this.setGroupCollapsed(groupId, !this.#grid.columns.isCollapsed(groupId))
+    })
+
     toggleHidden = mutator((id: string): void => {
         const column = this.#grid.columns.get(id)
         if (column) this.setColumnHidden(id, !column.hidden)
@@ -329,7 +344,9 @@ export function columnOps<TRow>(options: ColumnOpsOptions = {}): GridFeature<TRo
                 autoSizeColumns: state.autoSizeColumns,
                 moveColumn: state.moveColumn,
                 pinColumn: state.pinColumn,
-                setColumnHidden: state.setColumnHidden
+                setColumnHidden: state.setColumnHidden,
+                setGroupCollapsed: state.setGroupCollapsed,
+                toggleGroup: state.toggleGroup
             }
         },
         keybindings: createKeybindings<TRow>()
@@ -348,5 +365,7 @@ declare module '../../core/types/api.js' {
         moveColumn?: (id: string, toVisibleIndex: number) => number
         pinColumn?: (id: string, side: PinnedSide | null) => void
         setColumnHidden?: (id: string, hidden: boolean) => void
+        setGroupCollapsed?: (groupId: string, collapsed: boolean) => void
+        toggleGroup?: (groupId: string) => void
     }
 }

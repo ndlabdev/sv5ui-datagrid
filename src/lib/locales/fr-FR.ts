@@ -29,21 +29,25 @@ export const frFR: DataGridLocalePack = {
         pinLeft: 'Épingler à gauche',
         pinRight: 'Épingler à droite',
         unpin: 'Détacher',
-        openFilter: 'Filtrer…',
+        openFilter: 'Filtrer...',
         autosize: 'Ajuster au contenu',
         hideColumn: 'Masquer la colonne',
+        collapseGroup: (group) => `Replier ${group}`,
+        expandGroup: (group) => `Déplier ${group}`,
 
         filterColumn: (column) => `Filtrer ${column}`,
         filterOperator: (ordinal) =>
             ordinal > 1 ? `Opérateur de filtre ${ordinal}` : 'Opérateur de filtre',
         filterValue: (ordinal) =>
             ordinal > 1 ? `Valeur du filtre ${ordinal}` : 'Valeur du filtre',
+        filterRowValue: (column) => `Valeur du filtre ${column}`,
         filterUpperBound: (ordinal) =>
             ordinal > 1 ? `Borne supérieure ${ordinal}` : 'Borne supérieure',
         valuePlaceholder: 'Valeur...',
         upperBoundPlaceholder: 'Jusqu’à...',
         searchValues: 'Rechercher des valeurs...',
         blankValue: '(vide)',
+        anyValue: '(tous)',
         combineConditions: 'Combiner les conditions',
         addCondition: 'Ajouter une condition',
         removeCondition: 'Supprimer la condition',
@@ -121,6 +125,7 @@ export const frFR: DataGridLocalePack = {
         columnMoved: (column, position) => `colonne ${column} déplacée en position ${position}`,
         columnPinned: (column, side) =>
             side ? `colonne ${column} épinglée` : `colonne ${column} détachée`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'replié' : 'déplié'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `colonne ${column} masquée` : `colonne ${column} affichée`,
         selected: (count) => `${count} ${selectedRows(count)}`,

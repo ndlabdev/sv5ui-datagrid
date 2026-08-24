@@ -1,5 +1,6 @@
-import type { ColumnDef, RowNode, SetFilterValue } from '../../core/types/index.js'
-import { getCellValue, isBlank } from '../../core/utils/index.js'
+import type { CellValueReader, ColumnDef, RowNode, SetFilterValue } from '../../core/types/index.js'
+import { readCell, readerToken } from '../../core/grid/index.js'
+import { isBlank } from '../../core/utils/index.js'
 
 export const DISTINCT_VALUES_CAP = 200
 
@@ -24,17 +25,21 @@ const cache = new WeakMap<object, Map<string, SetFilterValue[]>>()
 
 export function distinctValuesCached<TRow>(
     nodes: RowNode<TRow>[],
-    def: ColumnDef<TRow>
+    def: ColumnDef<TRow>,
+    reader?: CellValueReader<TRow>
 ): SetFilterValue[] {
     let byColumn = cache.get(nodes)
     if (!byColumn) {
         byColumn = new Map()
         cache.set(nodes, byColumn)
     }
-    let values = byColumn.get(def.id)
+    // Keyed by the gate as well as the column: a list built for one gate is
+    // the wrong list once another one stands in front of the same column.
+    const key = `${def.id}#${readerToken(reader)}`
+    let values = byColumn.get(key)
     if (!values) {
-        values = distinctValues(nodes, def)
-        byColumn.set(def.id, values)
+        values = distinctValues(nodes, def, DISTINCT_VALUES_CAP, reader)
+        byColumn.set(key, values)
     }
     return values
 }
@@ -42,12 +47,13 @@ export function distinctValuesCached<TRow>(
 export function distinctValues<TRow>(
     nodes: RowNode<TRow>[],
     def: ColumnDef<TRow>,
-    cap: number = DISTINCT_VALUES_CAP
+    cap: number = DISTINCT_VALUES_CAP,
+    reader?: CellValueReader<TRow>
 ): SetFilterValue[] {
     const seen = new Set<SetFilterValue>()
 
     for (const node of nodes) {
-        const value = setKeyOf(getCellValue(node.row, def))
+        const value = setKeyOf(readCell(node, def, reader))
         if (!seen.has(value)) {
             seen.add(value)
             if (seen.size >= cap) break

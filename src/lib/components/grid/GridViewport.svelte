@@ -12,7 +12,7 @@
     import type { GridViewportProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridTheme } from '../internal/theme.js'
-    import { ariaRowCountOf, windowStartOf } from '../internal/window.js'
+    import { ariaRowCountOf, headerRowsOf, windowStartOf } from '../internal/window.js'
 
     let { class: className, children }: GridViewportProps = $props()
 
@@ -174,12 +174,32 @@
         setScrollStart(element, scrollStart(element) + (isRtl(element) ? -offset : offset))
     }
 
-    /** Pinned rows are outside the pipeline, so they carry their own descriptor. */
+    /**
+     * Pinned rows and header groups are outside the body's coordinates, so
+     * each carries its own descriptor: a group cell spans many columns, and a
+     * pinned row is outside the pipeline the body is indexed by.
+     */
     function selectorFor(position: CellPosition): string {
         const section = sectionOf(position)
-        return section === 'body'
-            ? `[data-dg-cell="${position.row}:${position.col}"]`
-            : `[data-dg-pinned-cell="${section}:${position.row}:${position.col}"]`
+        if (section === 'body') return `[data-dg-cell="${position.row}:${position.col}"]`
+        if (section === 'header') {
+            return `[data-dg-header-cell="${position.row}:${position.col}"]`
+        }
+        return `[data-dg-pinned-cell="${section}:${position.row}:${position.col}"]`
+    }
+
+    /** A descriptor written by a section that keeps its own coordinates. */
+    function outsideBody(target: HTMLElement | null): CellPosition | null {
+        const header = target?.closest('[data-dg-header-cell]')?.getAttribute('data-dg-header-cell')
+        if (header) {
+            const [level, col] = header.split(':')
+            return { row: Number(level), col: Number(col), section: 'header' }
+        }
+
+        const pinned = target?.closest('[data-dg-pinned-cell]')?.getAttribute('data-dg-pinned-cell')
+        if (!pinned) return null
+        const [section, row, col] = pinned.split(':')
+        return { row: Number(row), col: Number(col), section: section as 'top' | 'bottom' }
     }
 
     /** The cell an event landed in, read back from its descriptor attribute. */
@@ -188,15 +208,9 @@
         // The filter panel renders inside a header cell, so its events bubble
         // here; treating them as cell interactions steals its focus.
         if (target?.closest('[role="dialog"]')) return null
-        const pinned = target?.closest('[data-dg-pinned-cell]')?.getAttribute('data-dg-pinned-cell')
-        if (pinned) {
-            const [section, row, col] = pinned.split(':')
-            return {
-                row: Number(row),
-                col: Number(col),
-                section: section as 'top' | 'bottom'
-            }
-        }
+
+        const outside = outsideBody(target)
+        if (outside) return outside
 
         const descriptor = target?.closest('[data-dg-cell]')?.getAttribute('data-dg-cell')
         if (!descriptor) return null
@@ -295,8 +309,28 @@
         }
     }
 
+    /**
+     * How far the columns have scrolled, written onto the element rather than
+     * held in state: what reads it is a drawer standing over a pinned group,
+     * which has to follow the pin the cells follow, and state here would be a
+     * rerender of the grid on every scroll frame.
+     */
+    function markScroll(target: HTMLElement): void {
+        target.style.setProperty('--dg-scroll-x', `${scrollStart(target)}px`)
+        target.style.setProperty('--dg-view-w', `${target.clientWidth}px`)
+    }
+
+    // Also whenever the grid or its columns are resized: the distance left to
+    // scroll changes with them, and nothing scrolled to say so.
+    $effect(() => {
+        void size.width
+        void grid.columns.style
+        if (element) markScroll(element)
+    })
+
     function handleScroll(event: Event) {
         const target = event.currentTarget as HTMLElement
+        markScroll(target)
         virtualization?.virtualizer.onScroll(target.scrollTop)
         columnVirtualizer?.onScroll(scrollStart(target))
         if (filteringState?.filterFor) filteringState.filterFor = null
@@ -311,7 +345,7 @@
 <div
     bind:this={element}
     role={grid.expansion.enabled ? 'treegrid' : 'grid'}
-    aria-rowcount={ariaRowCountOf(grid) + grid.columns.headerRowCount + pinnedRowCount}
+    aria-rowcount={ariaRowCountOf(grid) + headerRowsOf(grid) + pinnedRowCount}
     aria-colcount={grid.columns.visible.length}
     tabindex={activeRendered ? undefined : 0}
     class={slots.viewport({ class: [theme('viewport'), className] })}

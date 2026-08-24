@@ -57,21 +57,25 @@ export const defaultLabels: DataGridLabels = {
     pinLeft: 'Pin left',
     pinRight: 'Pin right',
     unpin: 'Unpin',
-    openFilter: 'Filter…',
+    openFilter: 'Filter...',
     autosize: 'Autosize',
     hideColumn: 'Hide column',
+    collapseGroup: (group) => `Collapse ${group}`,
+    expandGroup: (group) => `Expand ${group}`,
 
     filterColumn: (column) => `Filter ${column}`,
     // The first condition keeps the unsuffixed name it has always had, so a
     // second one can appear without renaming the first.
     filterOperator: (ordinal) => (ordinal > 1 ? `Filter operator ${ordinal}` : 'Filter operator'),
     filterValue: (ordinal) => (ordinal > 1 ? `Filter value ${ordinal}` : 'Filter value'),
+    filterRowValue: (column) => `${column} filter value`,
     filterUpperBound: (ordinal) =>
         ordinal > 1 ? `Filter upper bound ${ordinal}` : 'Filter upper bound',
     valuePlaceholder: 'Value...',
     upperBoundPlaceholder: 'To...',
     searchValues: 'Search values...',
     blankValue: '(blank)',
+    anyValue: '(any)',
     combineConditions: 'Combine conditions',
     addCondition: 'Add condition',
     removeCondition: 'Remove condition',

@@ -31,16 +31,24 @@ export interface DataGridLabels {
     openFilter: string
     autosize: string
     hideColumn: string
+    /** Folds a header group down to the columns it shows when closed. */
+    collapseGroup: (group: string) => string
+    /** Unfolds it again. */
+    expandGroup: (group: string) => string
 
     // Filter panel. The ordinal is 1 for the first condition of a column.
     filterColumn: (column: string) => string
     filterOperator: (ordinal: number) => string
     filterValue: (ordinal: number) => string
+    /** The field in the filter row: named apart from the panel's own trigger. */
+    filterRowValue: (column: string) => string
     filterUpperBound: (ordinal: number) => string
     valuePlaceholder: string
     upperBoundPlaceholder: string
     searchValues: string
     blankValue: string
+    /** The choice that filters nothing, on a column whose filter is a choice. */
+    anyValue: string
     combineConditions: string
     addCondition: string
     removeCondition: string

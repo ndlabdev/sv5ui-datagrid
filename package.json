@@ -1,6 +1,6 @@
 {
     "name": "@sv5ui/datagrid",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "A high-performance data grid for Svelte 5, built on sv5ui",
     "author": "ndlabdev",
     "license": "MIT",
@@ -8,6 +8,10 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/ndlabdev/sv5ui-datagrid.git"
+    },
+    "funding": {
+        "type": "ko_fi",
+        "url": "https://ko-fi.com/ndlabdev"
     },
     "bugs": {
         "url": "https://github.com/ndlabdev/sv5ui-datagrid/issues"

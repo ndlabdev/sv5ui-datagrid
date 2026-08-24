@@ -11,6 +11,7 @@ export interface ColumnSnapshotSource {
     widthOverrides: Record<string, number>
     hiddenOverrides: Record<string, boolean>
     pinnedOverrides: Record<string, PinnedSide | null>
+    collapsedGroups: Record<string, boolean>
 }
 
 const DENSITIES: Density[] = ['compact', 'standard', 'comfortable']
@@ -31,23 +32,37 @@ export function buildColumnSnapshot(
     if (!isEmpty(source.widthOverrides)) columns.widths = { ...source.widthOverrides }
     if (!isEmpty(source.hiddenOverrides)) columns.hidden = { ...source.hiddenOverrides }
     if (!isEmpty(source.pinnedOverrides)) columns.pinned = { ...source.pinnedOverrides }
+    if (!isEmpty(source.collapsedGroups)) columns.collapsed = { ...source.collapsedGroups }
     return isEmpty(columns) ? undefined : columns
 }
 
-/** Ids that disappeared are dropped; ids that appeared keep their defaults. */
+/**
+ * Ids that disappeared are dropped; ids that appeared keep their defaults.
+ * Groups are named apart from columns, since a folded group is keyed by the
+ * group's own id and no column carries it.
+ */
+function resolveOrder(stored: string[] | undefined, known: Set<string>, knownIds: string[]) {
+    const order = (stored ?? []).filter((id) => known.has(id))
+    if (order.length === 0) return []
+    // A column that appeared since the snapshot was written goes last rather
+    // than disappearing for want of a place in the order.
+    return [...order, ...knownIds.filter((id) => !order.includes(id))]
+}
+
 export function resolveColumnSnapshot(
     stored: GridSnapshot['columns'],
-    knownIds: string[]
+    knownIds: string[],
+    knownGroupIds: string[] = []
 ): ColumnSnapshotSource {
     const known = new Set(knownIds)
-    const order = (stored?.order ?? []).filter((id) => known.has(id))
-    const missing = knownIds.filter((id) => !order.includes(id))
+    const columns = stored ?? {}
 
     return {
-        orderIds: order.length === 0 ? [] : [...order, ...missing],
-        widthOverrides: pruneRecord(stored?.widths ?? {}, known),
-        hiddenOverrides: pruneRecord(stored?.hidden ?? {}, known),
-        pinnedOverrides: prunePinned(stored?.pinned ?? {}, known)
+        orderIds: resolveOrder(columns.order, known, knownIds),
+        widthOverrides: pruneRecord(columns.widths ?? {}, known),
+        hiddenOverrides: pruneRecord(columns.hidden ?? {}, known),
+        pinnedOverrides: prunePinned(columns.pinned ?? {}, known),
+        collapsedGroups: pruneRecord(columns.collapsed ?? {}, new Set(knownGroupIds))
     }
 }
 

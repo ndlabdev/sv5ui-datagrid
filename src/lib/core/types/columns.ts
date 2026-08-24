@@ -101,8 +101,30 @@ export const SELECTION_COLUMN_ID = '__dg-select__'
 export const ROW_HANDLE_COLUMN_ID = '__dg-row-handle__'
 
 /** A column the grid added itself: no data, so every data path skips it. */
+/** The column a group folded to a rail leaves behind, keyed by group id. */
+export const RAIL_COLUMN_PREFIX = '__dg-rail:'
+
+export function railColumnId(groupId: string): string {
+    return `${RAIL_COLUMN_PREFIX}${groupId}`
+}
+
+export function railGroupIdOf(columnId: string): string | null {
+    return columnId.startsWith(RAIL_COLUMN_PREFIX)
+        ? columnId.slice(RAIL_COLUMN_PREFIX.length)
+        : null
+}
+
+/**
+ * A column the grid draws for itself rather than one an app declared: the
+ * checkbox, the drag grip, and the rail a folded group leaves behind. None of
+ * them holds data, so none of them is exported, copied or filtered on.
+ */
 export function isSyntheticColumn(id: string): boolean {
-    return id === SELECTION_COLUMN_ID || id === ROW_HANDLE_COLUMN_ID
+    return (
+        id === SELECTION_COLUMN_ID ||
+        id === ROW_HANDLE_COLUMN_ID ||
+        id.startsWith(RAIL_COLUMN_PREFIX)
+    )
 }
 
 /** One rendered cell of a header group row. */
@@ -121,6 +143,14 @@ export interface HeaderGroupCell {
     leafIds: string[]
     /** Pin side shared by the spanned leaves, if any. */
     pinned: PinnedSide | null
+    /**
+     * Whether this group offers a toggle. False for a placeholder, for a group
+     * no child declares `columnGroupShow` on, and for one whose other state
+     * would leave nothing of it on screen to toggle back.
+     */
+    collapsible: boolean
+    /** Whether the group is folded right now. */
+    collapsed: boolean
 }
 
 /** Context passed to a custom header snippet. */
@@ -129,6 +159,16 @@ export interface HeaderContext<TRow> {
     column: ColumnState<TRow>
     /** The resolved header label, i.e. `header` or the column id. */
     header: string
+}
+
+/**
+ * What a custom header-group snippet is handed. The cell carries the group's
+ * id, label, span and fold state; `toggle` is the same action the built-in
+ * control performs, and does nothing on a group that cannot fold.
+ */
+export interface HeaderGroupContext {
+    cell: HeaderGroupCell
+    toggle: () => void
 }
 
 /** Context passed to a custom cell snippet. */
@@ -216,10 +256,55 @@ export interface ColumnDef<TRow> {
     pinned?: PinnedSide
 
     /**
-     * Child columns, making this a header group: only `id` and `header` apply
-     * to it, the rest belong to the leaves. Nesting is unlimited.
+     * Child columns, making this a header group: only `id`, `header` and
+     * `collapsed` apply to it, the rest belong to the leaves. Nesting is
+     * unlimited.
      */
     children?: ColumnDef<TRow>[]
+
+    /**
+     * Whether this column is drawn while the group above it is open, closed,
+     * or either way.
+     *
+     * Declaring it on any child is what makes that group collapsible: `'open'`
+     * is the detail a closed group folds away, `'closed'` the summary it folds
+     * down to. A child that declares nothing is drawn either way. It reads
+     * against the nearest group above the column, so a nested group's own
+     * children answer to that group rather than to the one above it.
+     */
+    columnGroupShow?: 'open' | 'closed'
+
+    /**
+     * A header group's own starting state. Only meaningful on a group.
+     * @default false
+     */
+    collapsed?: boolean
+
+    /**
+     * What folding this group does.
+     *
+     * `'summary'` swaps the columns over: the children marked `'open'` go and
+     * the ones marked `'closed'` arrive, so the group keeps its place in the
+     * row at its normal width.
+     *
+     * `'rail'` folds the group away entirely — every column under it, header
+     * and cells alike — and leaves a narrow strip in its place, labelled down
+     * its length. A group folds this way whether or not any child declares
+     * `columnGroupShow`, since the strip is what unfolds it again.
+     *
+     * @default 'summary'
+     */
+    collapseMode?: 'summary' | 'rail'
+
+    /**
+     * Draws this group's header. Only meaningful on a group, and the group's
+     * own control still sits beside whatever it draws, the way `headerCell`
+     * leaves a leaf column its sort button and menu.
+     *
+     * `header` stays the label everything non-visual reads: the column menu,
+     * the announcer and the name of the fold action.
+     */
+    headerGroupCell?: Snippet<[HeaderGroupContext]>
 
     /**
      * Set false to freeze one column's width.

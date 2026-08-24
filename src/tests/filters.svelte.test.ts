@@ -100,7 +100,7 @@ describe('column filters', () => {
         // Open via the column menu, not the filter icon — the path that used to
         // leave the panel stranded at the top-left corner.
         await page.getByRole('button', { name: 'Name column menu' }).click()
-        await page.getByRole('menuitem', { name: 'Filter…' }).click()
+        await page.getByRole('menuitem', { name: 'Filter...' }).click()
 
         const dialog = page.getByRole('dialog', { name: 'Filter Name' })
         await expect.element(dialog).toBeVisible()
@@ -263,6 +263,67 @@ describe('status bar + pagination', () => {
 
         getFiltering(grid)!.setColumnFilter('dept', { kind: 'set', values: ['Core'] })
         await expect.element(screen.getByText('2 of 5 rows')).toBeVisible()
+    })
+})
+
+describe('the date condition, through the sv5ui picker', () => {
+    it('filters on a day chosen in the calendar', async () => {
+        const grid = makeGrid()
+        const screen = await render(TypedDataGrid, { grid, toolbar: true })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        await page.getByRole('button', { name: 'Filter Joined' }).click()
+
+        const dialog = page.getByRole('dialog', { name: 'Filter Joined' })
+        await expect.element(dialog).toBeVisible()
+        // A segmented field and a calendar, not the browser's own date input.
+        expect(document.querySelector('input[type="date"]')).toBeNull()
+
+        await dialog.getByRole('button', { name: 'Open calendar' }).click()
+        await page.getByRole('button', { name: '15' }).click()
+
+        // The calendar is portalled out of the dialog; the panel's click
+        // handler has to know that is still itself, or picking closes it.
+        await expect.element(dialog).toBeVisible()
+
+        await dialog.getByRole('button', { name: 'Apply' }).click()
+        await expect
+            .poll(() => getFiltering(grid)!.columnFilters['joined'])
+            .toEqual({
+                kind: 'date',
+                op: 'equals',
+                value: expect.stringMatching(/^\d{4}-\d{2}-15$/)
+            })
+    })
+})
+
+describe('typing a date into the panel', () => {
+    it('keeps the digits the person typed, one segment at a time', async () => {
+        const grid = makeGrid()
+        const screen = await render(TypedDataGrid, { grid, toolbar: true })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        await page.getByRole('button', { name: 'Filter Joined' }).click()
+
+        const dialog = page.getByRole('dialog', { name: 'Filter Joined' })
+        await expect.element(dialog).toBeVisible()
+
+        // The field is controlled by the draft it writes to, so every
+        // keystroke round-trips through an ISO string and back. A year mid-way
+        // to 2025 is 2, then 20, then 202, and the trip has to return each of
+        // them unchanged or the segments fight what is being typed.
+        const segment = screen.container.ownerDocument.querySelector<HTMLElement>(
+            '[role="dialog"] [role="spinbutton"]'
+        )!
+        segment.focus()
+        await userEvent.keyboard('03152025')
+
+        await dialog.getByRole('button', { name: 'Apply' }).click()
+        await expect
+            .poll(() => getFiltering(grid)!.columnFilters['joined'])
+            .toEqual({
+                kind: 'date',
+                op: 'equals',
+                value: '2025-03-15'
+            })
     })
 })
 

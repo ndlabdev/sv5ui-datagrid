@@ -5,6 +5,234 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.3.0] - 2026-08-24
+
+### Added
+
+- `CellDecoration.style` — a feature decorating a cell can now write CSS
+  declarations onto it, not only class names. A class can say _which_ of a
+  fixed set of looks a cell takes; it cannot say a value computed per cell,
+  which is what a colour scale, a data bar or a per-user cursor tint is. The
+  hook takes a record keyed by CSS property, custom properties included
+  (`{ '--dg-bar': '42%' }` is how a feature reaches a pseudo-element), and
+  several features decorating the same cell merge per property with the later
+  one winning, the way classes already concatenated.
+
+    The grid writes its own layout — the grid column, the pinned offsets, the
+    editor's padding — as style _directives_, which outrank the attribute a
+    decoration lands in. So a decoration cannot move a cell out of its column,
+    unpin it, or escape the row: it can only paint. A value is also cut at the
+    first `;`, so one entry stays one declaration and a colour read out of row
+    data cannot open a second.
+
+- `GridFeature.cellValue`: a feature can now stand between a cell's value and
+  every way that value leaves the grid. Until now the only per-cell hook was
+  `cellDecoration`, which paints: a feature could grey a cell out and the
+  value behind it still went to the clipboard, to the CSV, and into the text a
+  quick filter searches. The new hook covers six exits at once, named by a
+  `purpose`: `render`, `export`, `clipboard`, `search`, `facet` (the list a set
+  filter offers) and `edit`.
+
+    It is asked per column rather than per value. The passes that read a whole
+    column at a time ask once and then loop over the rows, so a feature that
+    hides one column of thirty-nine costs the other thirty-eight nothing, and
+    a grid whose features do not define the hook does no extra work at all. A
+    reader hands the value back by reference when it is leaving a cell alone,
+    and the grid uses that identity to decide one more thing: a cell whose
+    value was substituted cannot be edited, because an editor opened on it
+    would seed the substitute and commit it over the real data.
+
+    Two exits stay on the raw value on purpose. Sorting reads a column n log n
+    times, and a gate there would undo the single-pass comparators of 1.2.0, so
+    a masked column can still be ordered by what it hides. A filter predicate
+    decides which rows survive, which cannot be decided on a substitute, so
+    narrowing a masked column and reading the row count still says something
+    about what is behind it. Take `sortable` and `filter` off a column you
+    mask. The row object also still reaches an app's own `cell` snippet: this
+    gates the grid's own output, and is not a security boundary.
+
+    `rowsToMatrix` takes an optional `read` in its options bag for the same
+    reason; `exportCsv` and the clipboard always pass it. Called bare, as a
+    pure function outside the grid, it reads values as the data holds them.
+
+- A filter row under the header. `filtering({ floatingRow: true })` draws one
+  field per column, and `<DataGrid floatingFilters />` is the same for a grid
+  it builds itself. The field filters in the operator the column already uses,
+  so an operator chosen in the panel survives the next thing typed in the row,
+  as does a Match case it turned on. A percent column is written in the unit it
+  draws, the way the panel writes it.
+
+    One condition is what a field holds, and the row does not pretend
+    otherwise. A set of discrete values, two conditions joined, a `between`
+    range, and `blank` or `notBlank` all stay with the panel: the row shows
+    what they contain in the words the chips use and a button that opens the
+    panel on it. Nothing is flattened to fit, so no filter is quietly narrowed
+    by a row that could not express it.
+
+    It is a row of the grid rather than a strip above it. `FILTER_ROW` is a
+    second navigable line: arrow down from the header lands in the field, arrow
+    down again is the first body row, arrow up comes back, and the rows below
+    are numbered under it in `aria-rowindex` while `aria-rowcount` counts it.
+    A field owns the left and right arrows, which is what a caret is for. The
+    row follows the column window, the pinned columns and the group dividers,
+    so it stays with its header when the grid scrolls sideways.
+
+    `Grid.FilterRow` is the part for a hand-assembled grid, and the flag is
+    live: turning it off mid-session takes the row out of the keyboard grid and
+    out of the row numbering with it.
+
+    Each field is the sv5ui component for what it filters: `Input` for text,
+    `InputNumber` for a number with the steppers out of the way, `DatePicker`
+    for a date next to a clear button since a picker has none of its own,
+    `Select` for a boolean, and a searchable multi-select for a set, which
+    reads the column's values only when it is first opened rather than
+    scanning every row to draw a row nobody has touched. The number and date
+    fields follow the grid's language, so a Vietnamese grid writes the day
+    before the month.
+
+    All of them wait the same 200ms before the model hears them. A segmented
+    date field reports every keystroke, so typing 01/05/2026 walks the year
+    through 2, 20 and 202: un-debounced that was three filters over the whole
+    set, on years nobody asked for. The clear button beside the picker is the
+    exception and applies at once, being a finished gesture rather than a
+    value half typed.
+
+- `DataGridLabels.anyValue` and `DataGridLabels.filterRowValue`, in all twelve
+  languages. The first is the choice that filters nothing on a boolean column,
+  which had been borrowing "Clear" and reading as an action. The second names
+  the field in the filter row apart from the panel's own trigger, which had
+  left two controls on one column answering to the same name.
+
+- Header groups fold. A child says what it is for and the group above it
+  learns to collapse: `columnGroupShow: 'open'` marks the detail a closed
+  group puts away, `'closed'` the summary it folds down to, and a child that
+  says neither is drawn either way. A group can start folded with
+  `collapsed: true`. Nesting reads the way it should: a nested group's own
+  children answer to that group rather than to the one above it, and folding
+  the outer one takes the whole nested group with it.
+
+    Folding is not hiding, and the two are kept in separate records. A column
+    the Column chooser put away is still put away when its group opens; a
+    column a group folded away is still ticked in the chooser, because the
+    user did not put it there. The fold travels in a snapshot, keyed by group
+    id rather than by column, and a snapshot written before this reads as
+    nothing folded.
+
+    A group is offered a toggle only when the state it would switch to leaves
+    a column of it on screen. One whose children are all `'open'` would fold
+    its own header cell away with them, and nothing would be left to click to
+    bring it back; so would one whose summary column the user has already put
+    away. Both cases are worked out by simulation rather than guessed at.
+
+    The toggle sits at the trailing edge of the group's header cell with
+    `aria-expanded`, and the header levels join the roving focus to reach it:
+    `ArrowUp` from a leaf header walks up through the groups over that column,
+    `ArrowLeft` and `ArrowRight` step between the groups of a level, `Enter`
+    and `Space` fold the one under the caret, `ArrowDown` comes back out. A
+    column with no group above it has nowhere to go, rather than landing on a
+    placeholder that names nothing. Group cells keep their own descriptor,
+    `data-dg-header-cell="level:column"`, because a cell that spans columns
+    cannot be named by a column index. The same action is in the column menu
+    of every column in the group, and from code it is `grid.api.toggleGroup`
+    and `grid.api.setGroupCollapsed`; every route goes through one door, so
+    each emits `columnGroupToggled` and is announced in all twelve languages
+    rather than each caller remembering to.
+
+    `headerGroupCell` draws a group header the way `headerCell` draws a leaf
+    one. The snippet is handed the group cell — id, label, span, whether it is
+    folded — and a `toggle`, and the grid's own control stays beside what it
+    draws, so a badge or a count up there costs nothing. It draws into a box
+    of its own that shrinks and clips: a group is at its narrowest exactly
+    when it is folded, and what an app drew for the open state has to give way
+    there rather than spill over the group beside it. The group cell clips too,
+    which the leaf header always did and this one did not.
+
+    Clicking the toggle leaves the caret on the group's cell rather than on the
+    button inside it, the way clicking a body cell does. A control that keeps
+    focus after a click leaves a ring sitting in the header and leaves the
+    arrow keys with nothing to move.
+
+- A header group can fold to a rail instead of to a summary column.
+  `collapseMode: 'rail'` takes the whole group away, header and cells alike,
+  and leaves a narrow drawer in its place carrying the group's name down its
+  length, turned to read up it. The name starts at the top of the header,
+  where a group's name goes, and stays there however far the rows scroll. Nothing has to declare `columnGroupShow` for it: the strip is
+  what folds the group back open, so a group with no summary column can fold
+  too, which the summary mode has to refuse.
+
+    It reads as a closed drawer rather than as a gap: one band the whole
+    height of the grid, header included. The header draws the head of it,
+    over its own cells and over the rules it draws between them, so the band
+    is not cut into pieces by lines that belong to the header rather than to
+    the drawer; the strip draws over the row lines below for the same reason,
+    and the name is not struck through by every row it passes. The drawer draws both of
+    its own edges, head and length alike, and the cell before it gives up the
+    one it would have drawn: framed the same on both sides wherever it
+    stands, including in the middle of a group, where the grid draws no line
+    of its own. The one edge it leaves to something else is an edge the
+    grid's own border is standing on, and only while the columns reach that
+    border: a grid whose columns come up short of its width leaves its last
+    column in open ground, and a drawer left open there has one side. Its own
+    cells carry those edges as well, for the rows the strip does not reach:
+    a row pinned above or below the body stands outside it, and without them
+    the lines down the drawer break at exactly those rows. Those cells also
+    give up the raise a pinned cell takes over the row lines, because raised
+    they cover the drawer standing on them and its edges go with it. Two drawers side by side are told apart by one line, drawn once,
+    the whole way down rather than only across the header. The cell
+    the head covers keeps no room for a toggle it no longer has: 44px of
+    column cannot hold 44px of padding, and a cell that tried stood a pixel
+    wide of its own column and laid a second line beside the drawer's.
+
+    The drawer is also the whole of the control: no toggle sits in the header
+    over it, because a folded group is 44px wide and a button in there is a
+    box inside a box. Clicking anywhere down its length opens the group
+    again, and an arrow over the name says so. The cell the head covers keeps
+    its place in the accessibility tree and on the keyboard path, named and
+    marked collapsed. The caret it would have shown is shown by the drawer
+    instead, as a bar down the leading edge and a wash over the surface
+    rather than a ring: the drawer is two elements meeting, and a box around
+    each of them is two boxes rather than one drawer. The strip is a column the grid draws for itself, like the
+    checkbox and the drag grip, so `isSyntheticColumn` covers it and nothing
+    exports, copies or filters on it. It stands exactly where the group's columns stood and takes
+    their pin side, and it holds that pin the way the cells do: an overlay
+    over every row cannot be `sticky`, so it hangs off the same offset and
+    the scroll distance the viewport writes down as it goes, and like them it
+    travels no further than it has to, which is not at all while the grid has
+    nothing to scroll. It is drawn from
+    the first frame, on estimated widths until the grid has been measured,
+    rather than leaving a blank column where a group opened folded. Its name is in the accessible
+    tree where a group's name goes, on the group's own cell and on the column
+    under it, rather than shown in a header cell too narrow to hold it.
+
+### Changed
+
+- A date condition in the filter panel is the sv5ui `DatePicker` rather than
+  the browser's own date input, which is what the filter row draws and what
+  the date cell editor already drew.
+
+### Fixed
+
+- A date typed one segment at a time is the date that was typed. Two places
+  wrote a year without padding it, and a segmented field reports a year on its
+  way to 2026 as 2, then 20, then 202. `fromDateValue` turned those into
+  `2-01-05`, which `toDateValue` could not read back, so the field was handed
+  nothing and cleared itself: typing a date into the filter panel ended with
+  no filter at all, and a cell editor left the same broken string on the row.
+  Both ends pad to four digits now.
+
+- `toDate` stops reading a year under a hundred as nineteen-hundred-and-it.
+  `new Date(y, m, d)` maps 0-99 onto 1900, so `0002-01-05` came back as 1902
+  and a date field being typed into jumped there.
+
+- Focus stands where the grid still draws. The active position was clamped
+  only when something moved it, so putting the focused column away through the
+  Column chooser left the position pointing past the last column: no cell
+  claimed the roving tabindex, and a grid whose one tab stop it was could not
+  be tabbed into at all. It is read against the columns and rows on screen
+  now, which a folding group made easy to hit and the chooser could always do.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed
@@ -644,6 +872,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[1.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.0
 [1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.0.0

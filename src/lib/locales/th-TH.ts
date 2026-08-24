@@ -23,19 +23,23 @@ export const thTH: DataGridLocalePack = {
         pinLeft: 'ปักหมุดด้านซ้าย',
         pinRight: 'ปักหมุดด้านขวา',
         unpin: 'ยกเลิกการปักหมุด',
-        openFilter: 'ตัวกรอง…',
+        openFilter: 'ตัวกรอง...',
         autosize: 'พอดีกับเนื้อหา',
         hideColumn: 'ซ่อนคอลัมน์',
+        collapseGroup: (group) => `ยุบ ${group}`,
+        expandGroup: (group) => `ขยาย ${group}`,
 
         filterColumn: (column) => `กรอง ${column}`,
         filterOperator: (ordinal) =>
             ordinal > 1 ? `เงื่อนไขตัวกรอง ${ordinal}` : 'เงื่อนไขตัวกรอง',
         filterValue: (ordinal) => (ordinal > 1 ? `ค่าที่ใช้กรอง ${ordinal}` : 'ค่าที่ใช้กรอง'),
+        filterRowValue: (column) => `ค่าที่ใช้กรอง ${column}`,
         filterUpperBound: (ordinal) => (ordinal > 1 ? `ค่าสูงสุด ${ordinal}` : 'ค่าสูงสุด'),
         valuePlaceholder: 'ค่า...',
         upperBoundPlaceholder: 'ถึง...',
         searchValues: 'ค้นหาค่า...',
         blankValue: '(ว่าง)',
+        anyValue: '(ทั้งหมด)',
         combineConditions: 'รวมเงื่อนไข',
         addCondition: 'เพิ่มเงื่อนไข',
         removeCondition: 'ลบเงื่อนไข',
@@ -112,6 +116,7 @@ export const thTH: DataGridLocalePack = {
         columnMoved: (column, position) => `ย้ายคอลัมน์ ${column} ไปตำแหน่งที่ ${position}`,
         columnPinned: (column, side) =>
             side ? `ปักหมุดคอลัมน์ ${column} แล้ว` : `ยกเลิกการปักหมุดคอลัมน์ ${column} แล้ว`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'ถูกยุบ' : 'ถูกขยาย'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `ซ่อนคอลัมน์ ${column} แล้ว` : `แสดงคอลัมน์ ${column} แล้ว`,
         selected: (count) => `เลือก ${count} แถวแล้ว`,

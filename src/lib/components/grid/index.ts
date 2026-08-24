@@ -6,6 +6,7 @@
 
 export { default as DataGrid } from './DataGrid.svelte'
 export { default as GridBody } from './GridBody.svelte'
+export { default as GridFilterRow } from './GridFilterRow.svelte'
 export { default as GridHeader } from './GridHeader.svelte'
 export { default as GridRoot } from './GridRoot.svelte'
 export { default as GridStatePersistence } from './GridStatePersistence.svelte'

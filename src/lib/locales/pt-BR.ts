@@ -29,20 +29,24 @@ export const ptBR: DataGridLocalePack = {
         pinLeft: 'Fixar à esquerda',
         pinRight: 'Fixar à direita',
         unpin: 'Desafixar',
-        openFilter: 'Filtrar…',
+        openFilter: 'Filtrar...',
         autosize: 'Ajustar ao conteúdo',
         hideColumn: 'Ocultar a coluna',
+        collapseGroup: (group) => `Recolher ${group}`,
+        expandGroup: (group) => `Expandir ${group}`,
 
         filterColumn: (column) => `Filtrar ${column}`,
         filterOperator: (ordinal) =>
             ordinal > 1 ? `Operador do filtro ${ordinal}` : 'Operador do filtro',
         filterValue: (ordinal) => (ordinal > 1 ? `Valor do filtro ${ordinal}` : 'Valor do filtro'),
+        filterRowValue: (column) => `Valor do filtro ${column}`,
         filterUpperBound: (ordinal) =>
             ordinal > 1 ? `Limite superior ${ordinal}` : 'Limite superior',
         valuePlaceholder: 'Valor...',
         upperBoundPlaceholder: 'Até...',
         searchValues: 'Pesquisar valores...',
         blankValue: '(vazio)',
+        anyValue: '(qualquer)',
         combineConditions: 'Combinar condições',
         addCondition: 'Adicionar condição',
         removeCondition: 'Remover condição',
@@ -121,6 +125,7 @@ export const ptBR: DataGridLocalePack = {
         columnMoved: (column, position) => `coluna ${column} movida para a posição ${position}`,
         columnPinned: (column, side) =>
             side ? `coluna ${column} fixada` : `coluna ${column} desafixada`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'recolhido' : 'expandido'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `coluna ${column} oculta` : `coluna ${column} visível`,
         selected: (count) => `${count} ${selectedRows(count)}`,

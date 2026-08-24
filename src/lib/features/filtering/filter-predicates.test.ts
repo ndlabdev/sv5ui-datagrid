@@ -270,7 +270,7 @@ describe('describeFilter', () => {
         expect(describeFilter({ kind: 'number', op: 'gte', value: 50 }, defaultLabels)).toBe('≥ 50')
         expect(
             describeFilter({ kind: 'number', op: 'between', value: 1, to: 9 }, defaultLabels)
-        ).toBe('1 – 9')
+        ).toBe('1 - 9')
         expect(
             describeFilter({ kind: 'date', op: 'before', value: '2026-01-01' }, defaultLabels)
         ).toBe('Before 2026-01-01')

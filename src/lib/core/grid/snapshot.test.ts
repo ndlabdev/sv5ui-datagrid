@@ -12,7 +12,8 @@ const empty: ColumnSnapshotSource = {
     orderIds: [],
     widthOverrides: {},
     hiddenOverrides: {},
-    pinnedOverrides: {}
+    pinnedOverrides: {},
+    collapsedGroups: {}
 }
 
 describe('buildColumnSnapshot', () => {
@@ -113,5 +114,35 @@ describe('isDensity', () => {
         expect(['compact', 'standard', 'comfortable'].every(isDensity)).toBe(true)
         expect(isDensity('huge')).toBe(false)
         expect(isDensity(undefined)).toBe(false)
+    })
+})
+
+describe('folded groups in a snapshot', () => {
+    it('round-trips the groups the user folded', () => {
+        const stored = buildColumnSnapshot({ ...empty, collapsedGroups: { pay: true } })
+        expect(stored).toEqual({ collapsed: { pay: true } })
+
+        expect(resolveColumnSnapshot(stored, ['total'], ['pay']).collapsedGroups).toEqual({
+            pay: true
+        })
+    })
+
+    it('drops a group the columns no longer have', () => {
+        const stored = { collapsed: { pay: true, gone: true } }
+        expect(resolveColumnSnapshot(stored, ['total'], ['pay']).collapsedGroups).toEqual({
+            pay: true
+        })
+    })
+
+    it('reads a snapshot written before groups could fold', () => {
+        expect(resolveColumnSnapshot({ widths: { a: 10 } }, ['a']).collapsedGroups).toEqual({})
+    })
+
+    it('keys groups apart from columns', () => {
+        // A column id is not a group id, whatever it is called.
+        expect(
+            resolveColumnSnapshot({ collapsed: { total: true } }, ['total'], ['pay'])
+                .collapsedGroups
+        ).toEqual({})
     })
 })

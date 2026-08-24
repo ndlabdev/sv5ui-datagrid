@@ -107,6 +107,26 @@ export interface GridFilterPanelProps<TRow> {
     column: ColumnState<TRow>
 }
 
+export interface GridFilterRowProps {
+    /**
+     * Milliseconds a typed value waits before it reaches the filter model.
+     * @default 200
+     */
+    debounce?: number
+    /** Additional classes applied to the filter row. */
+    class?: ClassNameValue
+}
+
+export interface GridFilterCellProps<TRow> {
+    /** The column this cell filters. */
+    column: ColumnState<TRow>
+    /**
+     * Milliseconds a typed value waits before it reaches the filter model.
+     * @default 200
+     */
+    debounce?: number
+}
+
 export interface GridFilterConditionProps {
     /** Which operator list and input type to render. */
     type: FilterType
@@ -219,6 +239,15 @@ export type DataGridProps<TRow> = {
      * export menu, the column chooser and the density toggle.
      */
     toolbar?: boolean
+
+    /**
+     * Draws a filter row under the header: one condition per column, in the
+     * column's own operator, next to the panel that still holds the rest.
+     *
+     * Turns on `filtering({ floatingRow: true })`, which is what a grid built
+     * with `createDataGrid` passes for itself.
+     */
+    floatingFilters?: boolean
 
     /**
      * File name for the toolbar's export menu and the context menu's

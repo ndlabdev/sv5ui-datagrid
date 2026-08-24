@@ -26,18 +26,22 @@ export const deDE: DataGridLocalePack = {
         pinLeft: 'Links anheften',
         pinRight: 'Rechts anheften',
         unpin: 'Lösen',
-        openFilter: 'Filtern…',
+        openFilter: 'Filtern...',
         autosize: 'An Inhalt anpassen',
         hideColumn: 'Spalte ausblenden',
+        collapseGroup: (group) => `${group} einklappen`,
+        expandGroup: (group) => `${group} ausklappen`,
 
         filterColumn: (column) => `${column} filtern`,
         filterOperator: (ordinal) => (ordinal > 1 ? `Filteroperator ${ordinal}` : 'Filteroperator'),
         filterValue: (ordinal) => (ordinal > 1 ? `Filterwert ${ordinal}` : 'Filterwert'),
+        filterRowValue: (column) => `Filterwert ${column}`,
         filterUpperBound: (ordinal) => (ordinal > 1 ? `Obergrenze ${ordinal}` : 'Obergrenze'),
         valuePlaceholder: 'Wert...',
         upperBoundPlaceholder: 'Bis...',
         searchValues: 'Werte suchen...',
         blankValue: '(leer)',
+        anyValue: '(beliebig)',
         combineConditions: 'Bedingungen verknüpfen',
         addCondition: 'Bedingung hinzufügen',
         removeCondition: 'Bedingung entfernen',
@@ -115,6 +119,8 @@ export const deDE: DataGridLocalePack = {
         columnMoved: (column, position) => `Spalte ${column} an Position ${position} verschoben`,
         columnPinned: (column, side) =>
             side ? `Spalte ${column} angeheftet` : `Spalte ${column} gelöst`,
+        groupCollapsed: (group, collapsed) =>
+            `${group} ${collapsed ? 'eingeklappt' : 'ausgeklappt'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `Spalte ${column} ausgeblendet` : `Spalte ${column} eingeblendet`,
         selected: (count) => `${count} ${rows(count)} ausgewählt`,

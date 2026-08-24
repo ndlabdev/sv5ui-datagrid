@@ -1,4 +1,4 @@
-import { GridBody, GridHeader, GridRoot, GridViewport } from './grid/index.js'
+import { GridBody, GridFilterRow, GridHeader, GridRoot, GridViewport } from './grid/index.js'
 import { GridContextMenu } from './menus/index.js'
 import {
     GridColumnChooser,
@@ -24,6 +24,7 @@ export interface GridParts {
     Root: typeof GridRoot
     Viewport: typeof GridViewport
     Header: typeof GridHeader
+    FilterRow: typeof GridFilterRow
     Body: typeof GridBody
     Pagination: typeof GridPagination
     Toolbar: typeof GridToolbar
@@ -40,6 +41,7 @@ export const Grid: GridParts = {
     Root: GridRoot,
     Viewport: GridViewport,
     Header: GridHeader,
+    FilterRow: GridFilterRow,
     Body: GridBody,
     Pagination: GridPagination,
     Toolbar: GridToolbar,

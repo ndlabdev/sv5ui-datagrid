@@ -144,11 +144,14 @@
                 <strong>Soi chất lượng:</strong>
                 <Link href="/qa">QA — mọi tính năng Free →</Link> ·
                 <Link href="/i18n">i18n — phủ hết chuỗi →</Link> ·
-                <Link href="/export">Xuất CSV →</Link>
+                <Link href="/export">Xuất CSV →</Link> ·
+                <Link href="/value-gate">Cổng giá trị ô →</Link>
             </p>
             <p class="text-sm text-on-surface-variant">
                 <Link href="/virtual">100k rows demo →</Link> ·
                 <Link href="/columns">Columns UX demo →</Link> ·
+                <Link href="/groups">Nhóm header gập được →</Link> ·
+                <Link href="/groups/cases">Nhóm header: các case →</Link> ·
                 <Link href="/filters">Data ops demo →</Link> ·
                 <Link href="/selection">Selection demo →</Link> ·
                 <Link href="/server">Server row model demo →</Link> ·
