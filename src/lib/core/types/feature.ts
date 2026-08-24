@@ -42,6 +42,15 @@ export interface CellDecoration {
     class?: string
     /** Sets `aria-selected` on the cell. */
     selected?: boolean
+    /**
+     * Declarations written onto the cell's `style`, for the values a class
+     * cannot name: a colour scale, a bar width, a per-user cursor tint.
+     * Keyed by CSS property (`background-color`, `--dg-bar`); a custom
+     * property is the way to reach a pseudo-element. The grid's own layout
+     * styles are directives and take precedence, so a feature cannot move a
+     * cell out of its column or unpin it.
+     */
+    style?: Record<string, string>
 }
 
 /** Context handed to feature menu-item factories. */

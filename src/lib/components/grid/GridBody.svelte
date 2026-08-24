@@ -9,7 +9,12 @@
         type RowNode
     } from '../../core/types/index.js'
     import { opensRowSpanGroup, rowColSpans, rowSpansOf } from '../../core/columns/index.js'
-    import { DEFAULT_EMPTY_TEXT, formatCellText, isBlank } from '../../core/utils/index.js'
+    import {
+        DEFAULT_EMPTY_TEXT,
+        formatCellText,
+        inlineStyle,
+        isBlank
+    } from '../../core/utils/index.js'
     import { getEditing } from '../../features/editing/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
@@ -236,12 +241,19 @@
                 colIndex
             })
             if (!decoration) continue
-            merged = {
-                class: [merged?.class, decoration.class].filter(Boolean).join(' ') || undefined,
-                selected: merged?.selected || decoration.selected
-            }
+            merged = mergeDecorations(merged, decoration)
         }
         return merged
+    }
+
+    /** Later feature wins per property; a class only ever adds. */
+    function mergeDecorations(base: CellDecoration | undefined, next: CellDecoration) {
+        const style = base?.style || next.style ? { ...base?.style, ...next.style } : undefined
+        return {
+            class: [base?.class, next.class].filter(Boolean).join(' ') || undefined,
+            selected: base?.selected || next.selected,
+            style
+        }
     }
 
     /**
@@ -528,6 +540,7 @@
                                 decoration,
                                 rowSpanning: rowSpan > 1
                             })}
+                            style={inlineStyle(decoration?.style)}
                             style:grid-column={spanColumn(colIndex, colSpan)}
                             style:inset-inline-start={pinLeftVar(column)}
                             style:inset-inline-end={pinRightVar(column)}

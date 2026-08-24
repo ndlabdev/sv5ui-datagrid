@@ -23,7 +23,7 @@ export const viVN: DataGridLocalePack = {
         pinLeft: 'Ghim trái',
         pinRight: 'Ghim phải',
         unpin: 'Bỏ ghim',
-        openFilter: 'Lọc…',
+        openFilter: 'Lọc...',
         autosize: 'Vừa nội dung',
         hideColumn: 'Ẩn cột',
 

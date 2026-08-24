@@ -10,6 +10,7 @@
   <a href="https://www.npmjs.com/package/@sv5ui/datagrid"><img src="https://img.shields.io/npm/v/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@sv5ui/datagrid"><img src="https://img.shields.io/npm/dm/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="npm downloads" /></a>
   <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@sv5ui/datagrid?style=flat-square&colorA=18181b&colorB=ff3e00" alt="license" /></a>
+  <a href="https://ko-fi.com/ndlabdev"><img src="https://img.shields.io/badge/Ko--fi-donate-x?style=flat-square&colorA=18181b&colorB=ff3e00&logo=kofi&logoColor=white" alt="donate on Ko-fi" /></a>
 </p>
 
 <p align="center">
@@ -266,7 +267,7 @@ available to yours.
 | `createApi`      | imperative methods merged into `grid.api` (see below)            |
 | `keybindings`    | keyboard bindings, with a `when` guard                           |
 | `menuItems`      | column and context menu entries                                  |
-| `cellDecoration` | per-cell classes and `aria-selected`                             |
+| `cellDecoration` | per-cell classes, inline style and `aria-selected`               |
 | `serialize`      | the feature's slice of a state snapshot                          |
 | `hydrate`        | restores what `serialize` produced                               |
 
@@ -280,6 +281,29 @@ const highlightNegative = (): GridFeature<Row> => ({
 
 `cellDecoration` runs for every rendered cell, so keep it cheap. A grid whose
 features do not define it skips the work entirely.
+
+A class cannot name a value computed per cell, so the hook also takes `style`,
+a record keyed by CSS property — custom properties included, which is how a
+feature reaches a pseudo-element:
+
+```ts
+const heat = (max: number): GridFeature<Row> => ({
+    id: 'heat',
+    cellDecoration: ({ node, column }) =>
+        column.id === 'total'
+            ? {
+                  style: {
+                      'background-color': `color-mix(in oklab, var(--color-primary) ${Math.round((node.row.total / max) * 40)}%, transparent)`
+                  }
+              }
+            : undefined
+})
+```
+
+Several features decorating the same cell merge per property, the later one
+winning. The grid writes its own layout as style directives, which outrank the
+attribute a decoration lands in, so a decoration can paint a cell but cannot
+move it out of its column or unpin it.
 
 ## Columns
 

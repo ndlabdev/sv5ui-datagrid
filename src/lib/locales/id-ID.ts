@@ -23,7 +23,7 @@ export const idID: DataGridLocalePack = {
         pinLeft: 'Sematkan di kiri',
         pinRight: 'Sematkan di kanan',
         unpin: 'Lepas sematan',
-        openFilter: 'Filter…',
+        openFilter: 'Filter...',
         autosize: 'Sesuaikan dengan isi',
         hideColumn: 'Sembunyikan kolom',
 

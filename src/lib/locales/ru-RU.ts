@@ -29,7 +29,7 @@ export const ruRU: DataGridLocalePack = {
         pinLeft: 'Закрепить слева',
         pinRight: 'Закрепить справа',
         unpin: 'Открепить',
-        openFilter: 'Фильтр…',
+        openFilter: 'Фильтр...',
         autosize: 'По содержимому',
         hideColumn: 'Скрыть столбец',
 

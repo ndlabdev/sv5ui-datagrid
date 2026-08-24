@@ -23,7 +23,7 @@ export const koKR: DataGridLocalePack = {
         pinLeft: '왼쪽에 고정',
         pinRight: '오른쪽에 고정',
         unpin: '고정 해제',
-        openFilter: '필터…',
+        openFilter: '필터...',
         autosize: '내용에 맞추기',
         hideColumn: '열 숨기기',
 
