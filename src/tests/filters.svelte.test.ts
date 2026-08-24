@@ -100,7 +100,7 @@ describe('column filters', () => {
         // Open via the column menu, not the filter icon — the path that used to
         // leave the panel stranded at the top-left corner.
         await page.getByRole('button', { name: 'Name column menu' }).click()
-        await page.getByRole('menuitem', { name: 'Filter…' }).click()
+        await page.getByRole('menuitem', { name: 'Filter...' }).click()
 
         const dialog = page.getByRole('dialog', { name: 'Filter Name' })
         await expect.element(dialog).toBeVisible()
