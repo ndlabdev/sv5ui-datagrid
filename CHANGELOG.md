@@ -5,6 +5,120 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Header groups fold. A child says what it is for and the group above it
+  learns to collapse: `columnGroupShow: 'open'` marks the detail a closed
+  group puts away, `'closed'` the summary it folds down to, and a child that
+  says neither is drawn either way. A group can start folded with
+  `collapsed: true`. Nesting reads the way it should: a nested group's own
+  children answer to that group rather than to the one above it, and folding
+  the outer one takes the whole nested group with it.
+
+    Folding is not hiding, and the two are kept in separate records. A column
+    the Column chooser put away is still put away when its group opens; a
+    column a group folded away is still ticked in the chooser, because the
+    user did not put it there. The fold travels in a snapshot, keyed by group
+    id rather than by column, and a snapshot written before this reads as
+    nothing folded.
+
+    A group is offered a toggle only when the state it would switch to leaves
+    a column of it on screen. One whose children are all `'open'` would fold
+    its own header cell away with them, and nothing would be left to click to
+    bring it back; so would one whose summary column the user has already put
+    away. Both cases are worked out by simulation rather than guessed at.
+
+    The toggle sits at the trailing edge of the group's header cell with
+    `aria-expanded`, and the header levels join the roving focus to reach it:
+    `ArrowUp` from a leaf header walks up through the groups over that column,
+    `ArrowLeft` and `ArrowRight` step between the groups of a level, `Enter`
+    and `Space` fold the one under the caret, `ArrowDown` comes back out. A
+    column with no group above it has nowhere to go, rather than landing on a
+    placeholder that names nothing. Group cells keep their own descriptor,
+    `data-dg-header-cell="level:column"`, because a cell that spans columns
+    cannot be named by a column index. The same action is in the column menu
+    of every column in the group, and from code it is `grid.api.toggleGroup`
+    and `grid.api.setGroupCollapsed`; every route goes through one door, so
+    each emits `columnGroupToggled` and is announced in all twelve languages
+    rather than each caller remembering to.
+
+    `headerGroupCell` draws a group header the way `headerCell` draws a leaf
+    one. The snippet is handed the group cell — id, label, span, whether it is
+    folded — and a `toggle`, and the grid's own control stays beside what it
+    draws, so a badge or a count up there costs nothing. It draws into a box
+    of its own that shrinks and clips: a group is at its narrowest exactly
+    when it is folded, and what an app drew for the open state has to give way
+    there rather than spill over the group beside it. The group cell clips too,
+    which the leaf header always did and this one did not.
+
+    Clicking the toggle leaves the caret on the group's cell rather than on the
+    button inside it, the way clicking a body cell does. A control that keeps
+    focus after a click leaves a ring sitting in the header and leaves the
+    arrow keys with nothing to move.
+
+- A header group can fold to a rail instead of to a summary column.
+  `collapseMode: 'rail'` takes the whole group away, header and cells alike,
+  and leaves a narrow drawer in its place carrying the group's name down its
+  length, turned to read up it. The name starts at the top of the header,
+  where a group's name goes, and stays there however far the rows scroll. Nothing has to declare `columnGroupShow` for it: the strip is
+  what folds the group back open, so a group with no summary column can fold
+  too, which the summary mode has to refuse.
+
+    It reads as a closed drawer rather than as a gap: one band the whole
+    height of the grid, header included. The header draws the head of it,
+    over its own cells and over the rules it draws between them, so the band
+    is not cut into pieces by lines that belong to the header rather than to
+    the drawer; the strip draws over the row lines below for the same reason,
+    and the name is not struck through by every row it passes. The drawer draws both of
+    its own edges, head and length alike, and the cell before it gives up the
+    one it would have drawn: framed the same on both sides wherever it
+    stands, including in the middle of a group, where the grid draws no line
+    of its own. The one edge it leaves to something else is an edge the
+    grid's own border is standing on, and only while the columns reach that
+    border: a grid whose columns come up short of its width leaves its last
+    column in open ground, and a drawer left open there has one side. Its own
+    cells carry those edges as well, for the rows the strip does not reach:
+    a row pinned above or below the body stands outside it, and without them
+    the lines down the drawer break at exactly those rows. Those cells also
+    give up the raise a pinned cell takes over the row lines, because raised
+    they cover the drawer standing on them and its edges go with it. Two drawers side by side are told apart by one line, drawn once,
+    the whole way down rather than only across the header. The cell
+    the head covers keeps no room for a toggle it no longer has: 44px of
+    column cannot hold 44px of padding, and a cell that tried stood a pixel
+    wide of its own column and laid a second line beside the drawer's.
+
+    The drawer is also the whole of the control: no toggle sits in the header
+    over it, because a folded group is 44px wide and a button in there is a
+    box inside a box. Clicking anywhere down its length opens the group
+    again, and an arrow over the name says so. The cell the head covers keeps
+    its place in the accessibility tree and on the keyboard path, named and
+    marked collapsed. The caret it would have shown is shown by the drawer
+    instead, as a bar down the leading edge and a wash over the surface
+    rather than a ring: the drawer is two elements meeting, and a box around
+    each of them is two boxes rather than one drawer. The strip is a column the grid draws for itself, like the
+    checkbox and the drag grip, so `isSyntheticColumn` covers it and nothing
+    exports, copies or filters on it. It stands exactly where the group's columns stood and takes
+    their pin side, and it holds that pin the way the cells do: an overlay
+    over every row cannot be `sticky`, so it hangs off the same offset and
+    the scroll distance the viewport writes down as it goes, and like them it
+    travels no further than it has to, which is not at all while the grid has
+    nothing to scroll. It is drawn from
+    the first frame, on estimated widths until the grid has been measured,
+    rather than leaving a blank column where a group opened folded. Its name is in the accessible
+    tree where a group's name goes, on the group's own cell and on the column
+    under it, rather than shown in a header cell too narrow to hold it.
+
+### Fixed
+
+- Focus stands where the grid still draws. The active position was clamped
+  only when something moved it, so putting the focused column away through the
+  Column chooser left the position pointing past the last column: no cell
+  claimed the roving tabindex, and a grid whose one tab stop it was could not
+  be tabbed into at all. It is read against the columns and rows on screen
+  now, which a folding group made easy to hit and the chooser could always do.
+
 ## [1.2.0] - 2026-08-18
 
 ### Changed

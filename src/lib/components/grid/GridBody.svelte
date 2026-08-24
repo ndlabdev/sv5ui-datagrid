@@ -2,6 +2,7 @@
     import { Empty, Icon, Skeleton, Tooltip } from 'sv5ui'
     import {
         isSyntheticColumn,
+        railGroupIdOf,
         ROW_HANDLE_COLUMN_ID,
         SELECTION_COLUMN_ID,
         type CellDecoration,
@@ -31,8 +32,13 @@
         columnWindowOf,
         pinLeftVar,
         pinRightVar,
+        isRailAt,
+        railEdgeClasses,
+        railInset,
+        railsOf,
         rowIndexOffsetOf,
-        windowStartOf
+        windowStartOf,
+        type RailBand
     } from '../internal/window.js'
 
     let {
@@ -160,6 +166,7 @@
         slots.rowDropIndicator({ class: theme('rowDropIndicator') })
     )
     const boundaryClass = slots.groupBoundary()
+    const railSurfaceClass = $derived(slots.railSurface({ class: theme('railSurface') }))
 
     interface CellClassInput {
         node: RowNode<TRow>
@@ -171,10 +178,16 @@
         rowSpanning?: boolean
     }
 
-    /** Raised over the separator and the spans, so it draws what it covers. */
-    function pinnedClasses(node: RowNode<TRow>): string {
+    /**
+     * Raised over the separator and the spans, so it draws what it covers.
+     * A drawer's own cells are the exception: they carry nothing to draw, and
+     * raised they would cover the drawer standing over them, which is where
+     * that column's surface and its edges come from.
+     */
+    function pinnedClasses(node: RowNode<TRow>, column: ColumnState<TRow>): string {
         const selected = selectionState?.isSelected(node.id)
-        return `${pinnedCellClass} ${pinnedCellRaisedClass}${selected ? ` ${pinnedCellSelectedClass}` : ''}`
+        const raised = railGroupIdOf(column.id) ? '' : ` ${pinnedCellRaisedClass}`
+        return `${pinnedCellClass}${raised}${selected ? ` ${pinnedCellSelectedClass}` : ''}`
     }
 
     /**
@@ -191,7 +204,7 @@
     function classOfCell(input: CellClassInput): string {
         const { node, column, colIndex, rowIndex, decoration } = input
         let result = `${cellClass[column.align]} ${editStateClasses(input)}`
-        if (column.pinned) result += ` ${pinnedClasses(node)}`
+        if (column.pinned) result += ` ${pinnedClasses(node, column)}`
         if (input.rowSpanning) result += ` ${cellRowSpanClass}`
         else {
             // A run of one has no overhang to carry the column's edges.
@@ -199,6 +212,15 @@
             if (edges) result += ` ${edges}`
         }
         if (decoration?.class) result += ` ${decoration.class}`
+        // The strip covers the rows it folded away, but a pinned row group
+        // sits outside it, so the cells carry the drawer's surface as well.
+        if (railGroupIdOf(column.id)) {
+            result = twMerge(
+                result,
+                railSurfaceClass,
+                railEdgeClasses(grid, colIndex, { lead: railEdgeClass, trail: boundaryClass })
+            )
+        }
         result = withBoundary(result, colIndex)
 
         const custom = column.def.cellClass
@@ -214,7 +236,8 @@
     }
 
     function withBoundary(base: string, index: number): string {
-        return grid.columns.groupBoundaryFlags[index] ? `${base} ${boundaryClass}` : base
+        if (!grid.columns.groupBoundaryFlags[index] || isRailAt(grid, index + 1)) return base
+        return `${base} ${boundaryClass}`
     }
 
     const decorators = grid.features.filter((feature) => feature.cellDecoration)
@@ -263,6 +286,23 @@
     const rowIndexOffset = $derived(rowIndexOffsetOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(grid.columns.headerRowCount)
+
+    const rails = $derived(railsOf(grid, columnWindow))
+    const railClass = $derived(slots.rail({ class: theme('rail') }))
+    const railEdgeClass = $derived(slots.railEdge({ class: theme('railEdge') }))
+    const railFocusClass = $derived(slots.railFocus({ class: theme('railFocus') }))
+
+    /**
+     * The caret shows on the whole drawer, head and length alike, because it
+     * stands on one thing. The header holds the cell it actually sits on.
+     */
+    function railClassOf(rail: RailBand): string {
+        let result = `${railClass} ${railEdgeClasses(grid, rail.index, { lead: railEdgeClass, trail: boundaryClass })}`
+        if (grid.columns.visible[grid.focus.active.col]?.id === rail.id) {
+            result += ` ${railFocusClass}`
+        }
+        return result
+    }
     const topRows = $derived(pinning?.topNodes.length ?? 0)
     // Indent and expand toggles belong to the first column carrying data.
     const firstDataIndex = $derived(
@@ -399,6 +439,10 @@
         <GridRowHandleCell {node} position={rowIndex + 1} />
     {:else if column.id === SELECTION_COLUMN_ID}
         <GridSelectionCell {node} />
+    {:else if railGroupIdOf(column.id)}
+        <!-- A folded group's strip. The rows it covered are not drawn, which
+             is the whole of what folding to a rail does; its name runs down
+             the strip once, over the body, rather than in every cell. -->
     {:else}
         {#if colIndex === firstDataIndex && node.meta?.expandable}
             <button
@@ -630,6 +674,26 @@
         ? `${virtualization.virtualizer.totalHeight}px`
         : undefined}
 >
+    <!-- Before the rows on purpose. The strip is positioned over them either
+         way, and after them it would take the last row's `:last-child` away,
+         which is the one thing hiding that row's separator from doubling up
+         with the grid's own bottom border. -->
+    {#each rails as rail (rail.id)}
+        <!-- Hidden from the accessibility tree on purpose: a rowgroup holds
+             rows, and the group's own header cell above the strip is the
+             control a reader and a keyboard already have. This is the pointer
+             finding the same door on a target the length of the table. -->
+        <div
+            aria-hidden="true"
+            data-dg-rail={rail.groupId}
+            class={railClassOf(rail)}
+            style:inset-inline-start={railInset(rail).start}
+            style:width={railInset(rail).width}
+            onclick={() => grid.api.toggleGroup?.(rail.groupId)}
+            onkeydown={null}
+        ></div>
+    {/each}
+
     {#if error}
         <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
             <div

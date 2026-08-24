@@ -60,6 +60,8 @@ export const defaultLabels: DataGridLabels = {
     openFilter: 'Filter…',
     autosize: 'Autosize',
     hideColumn: 'Hide column',
+    collapseGroup: (group) => `Collapse ${group}`,
+    expandGroup: (group) => `Expand ${group}`,
 
     filterColumn: (column) => `Filter ${column}`,
     // The first condition keeps the unsuffixed name it has always had, so a

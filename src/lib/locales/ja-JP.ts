@@ -26,6 +26,8 @@ export const jaJP: DataGridLocalePack = {
         openFilter: 'フィルター…',
         autosize: '内容に合わせる',
         hideColumn: '列を非表示',
+        collapseGroup: (group) => `${group}を折りたたむ`,
+        expandGroup: (group) => `${group}を展開`,
 
         filterColumn: (column) => `${column}をフィルター`,
         filterOperator: (ordinal) => (ordinal > 1 ? `フィルター条件 ${ordinal}` : 'フィルター条件'),
@@ -111,6 +113,8 @@ export const jaJP: DataGridLocalePack = {
         columnMoved: (column, position) => `${column}列を${position}番目に移動しました`,
         columnPinned: (column, side) =>
             side ? `${column}列を固定しました` : `${column}列の固定を解除しました`,
+        groupCollapsed: (group, collapsed) =>
+            `${group}を${collapsed ? '折りたたみました' : '展開しました'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `${column}列を非表示にしました` : `${column}列を表示しました`,
         selected: (count) => `${count}行を選択しました`,

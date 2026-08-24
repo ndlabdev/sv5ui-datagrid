@@ -106,10 +106,50 @@
             id: 'performance',
             header: 'Performance',
             children: [
-                { id: 'q1', header: 'Q1', sortable: true, align: 'right', width: 90 },
-                { id: 'q2', header: 'Q2', sortable: true, align: 'right', width: 90 },
-                { id: 'q3', header: 'Q3', sortable: true, align: 'right', width: 90 },
-                { id: 'q4', header: 'Q4', sortable: true, align: 'right', width: 90 }
+                // The summary the group folds down to, and the four it folds
+                // away. `Compensation` above declares neither, so it is a
+                // group with nothing to fold and no toggle.
+                {
+                    id: 'ytd',
+                    header: 'YTD',
+                    columnGroupShow: 'closed',
+                    accessor: (employee) => employee.q1 + employee.q2 + employee.q3 + employee.q4,
+                    sortable: true,
+                    align: 'right',
+                    width: 90
+                },
+                {
+                    id: 'q1',
+                    header: 'Q1',
+                    columnGroupShow: 'open',
+                    sortable: true,
+                    align: 'right',
+                    width: 90
+                },
+                {
+                    id: 'q2',
+                    header: 'Q2',
+                    columnGroupShow: 'open',
+                    sortable: true,
+                    align: 'right',
+                    width: 90
+                },
+                {
+                    id: 'q3',
+                    header: 'Q3',
+                    columnGroupShow: 'open',
+                    sortable: true,
+                    align: 'right',
+                    width: 90
+                },
+                {
+                    id: 'q4',
+                    header: 'Q4',
+                    columnGroupShow: 'open',
+                    sortable: true,
+                    align: 'right',
+                    width: 90
+                }
             ]
         }
     ]
@@ -234,10 +274,18 @@
             <h1 class="text-2xl font-semibold text-on-surface">Columns UX — Phase 3</h1>
             <p class="text-sm text-on-surface-variant">
                 Resize (kéo mép / double-click autosize) · Reorder (kéo header) · Pin · Ẩn/hiện ·
-                Header groups · Column menu · <code>headerCell</code> (cột Salary) — tất cả điều
-                khiển được bằng bàn phím.
+                Header groups thu gọn được · Column menu · <code>headerCell</code> (cột Salary) —
+                tất cả điều khiển được bằng bàn phím.
                 <strong>Sắp xếp lại rồi F5</strong>: layout, sort, filter, page size và density đều
                 được giữ nguyên.
+            </p>
+            <p class="text-sm text-on-surface-variant">
+                Nhóm <em>Performance</em> gập được: bấm mũi tên kép trên ô nhóm thì Q1 tới Q4 gập
+                lại còn cột <em>YTD</em>, bấm lần nữa thì mở ra. Cột nào gập theo là do
+                <code>columnGroupShow</code> của chính cột đó nói:
+                <code>'open'</code> là chi tiết, <code>'closed'</code> là bản tóm tắt. Nhóm
+                <em>Compensation</em> không khai gì nên không có nút. Bằng bàn phím thì mục thu gọn nằm
+                trong column menu của cột trong nhóm. Trạng thái gập cũng được lưu qua F5.
             </p>
         </div>
         <div class="flex items-center gap-2">

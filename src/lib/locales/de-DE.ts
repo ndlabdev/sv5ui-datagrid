@@ -29,6 +29,8 @@ export const deDE: DataGridLocalePack = {
         openFilter: 'Filtern…',
         autosize: 'An Inhalt anpassen',
         hideColumn: 'Spalte ausblenden',
+        collapseGroup: (group) => `${group} einklappen`,
+        expandGroup: (group) => `${group} ausklappen`,
 
         filterColumn: (column) => `${column} filtern`,
         filterOperator: (ordinal) => (ordinal > 1 ? `Filteroperator ${ordinal}` : 'Filteroperator'),
@@ -115,6 +117,8 @@ export const deDE: DataGridLocalePack = {
         columnMoved: (column, position) => `Spalte ${column} an Position ${position} verschoben`,
         columnPinned: (column, side) =>
             side ? `Spalte ${column} angeheftet` : `Spalte ${column} gelöst`,
+        groupCollapsed: (group, collapsed) =>
+            `${group} ${collapsed ? 'eingeklappt' : 'ausgeklappt'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `Spalte ${column} ausgeblendet` : `Spalte ${column} eingeblendet`,
         selected: (count) => `${count} ${rows(count)} ausgewählt`,

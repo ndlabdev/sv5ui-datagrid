@@ -31,6 +31,10 @@ export interface DataGridLabels {
     openFilter: string
     autosize: string
     hideColumn: string
+    /** Folds a header group down to the columns it shows when closed. */
+    collapseGroup: (group: string) => string
+    /** Unfolds it again. */
+    expandGroup: (group: string) => string
 
     // Filter panel. The ordinal is 1 for the first condition of a column.
     filterColumn: (column: string) => string

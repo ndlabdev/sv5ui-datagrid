@@ -26,6 +26,8 @@ export const idID: DataGridLocalePack = {
         openFilter: 'Filter…',
         autosize: 'Sesuaikan dengan isi',
         hideColumn: 'Sembunyikan kolom',
+        collapseGroup: (group) => `Ciutkan ${group}`,
+        expandGroup: (group) => `Bentangkan ${group}`,
 
         filterColumn: (column) => `Filter ${column}`,
         filterOperator: (ordinal) =>
@@ -112,6 +114,8 @@ export const idID: DataGridLocalePack = {
         columnMoved: (column, position) => `kolom ${column} dipindahkan ke posisi ${position}`,
         columnPinned: (column, side) =>
             side ? `kolom ${column} disematkan` : `sematan kolom ${column} dilepas`,
+        groupCollapsed: (group, collapsed) =>
+            `${group} ${collapsed ? 'diciutkan' : 'dibentangkan'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `kolom ${column} disembunyikan` : `kolom ${column} ditampilkan`,
         selected: (count) => `${count} baris dipilih`,

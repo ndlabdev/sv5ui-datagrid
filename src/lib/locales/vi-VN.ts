@@ -26,6 +26,8 @@ export const viVN: DataGridLocalePack = {
         openFilter: 'Lọc…',
         autosize: 'Vừa nội dung',
         hideColumn: 'Ẩn cột',
+        collapseGroup: (group) => `Thu gọn ${group}`,
+        expandGroup: (group) => `Mở rộng ${group}`,
 
         filterColumn: (column) => `Lọc ${column}`,
         filterOperator: (ordinal) => (ordinal > 1 ? `Toán tử lọc ${ordinal}` : 'Toán tử lọc'),
@@ -111,6 +113,7 @@ export const viVN: DataGridLocalePack = {
         columnMoved: (column, position) => `cột ${column} chuyển tới vị trí ${position}`,
         columnPinned: (column, side) =>
             side ? `đã ghim cột ${column}` : `đã bỏ ghim cột ${column}`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'đã thu gọn' : 'đã mở rộng'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `đã ẩn cột ${column}` : `đã hiện cột ${column}`,
         selected: (count) => `đã chọn ${count} dòng`,

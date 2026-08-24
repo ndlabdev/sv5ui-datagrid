@@ -32,6 +32,8 @@ export const esES: DataGridLocalePack = {
         openFilter: 'Filtrar…',
         autosize: 'Ajustar al contenido',
         hideColumn: 'Ocultar la columna',
+        collapseGroup: (group) => `Contraer ${group}`,
+        expandGroup: (group) => `Expandir ${group}`,
 
         filterColumn: (column) => `Filtrar ${column}`,
         filterOperator: (ordinal) =>
@@ -121,6 +123,7 @@ export const esES: DataGridLocalePack = {
         columnMoved: (column, position) => `columna ${column} movida a la posición ${position}`,
         columnPinned: (column, side) =>
             side ? `columna ${column} fijada` : `columna ${column} ya no está fijada`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'contraído' : 'expandido'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `columna ${column} oculta` : `columna ${column} visible`,
         selected: (count) => `${count} ${selectedRows(count)}`,

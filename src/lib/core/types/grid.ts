@@ -30,6 +30,8 @@ export interface DataGridAnnouncerStrings {
     columnPinned: (column: string, side: PinnedSide | null) => string
     /** Announced when a column is hidden or shown. */
     columnVisibility: (column: string, hidden: boolean) => string
+    /** Announced when a header group is folded or unfolded. */
+    groupCollapsed: (group: string, collapsed: boolean) => string
     /** Announced with the selected row count when the selection changes. */
     selected: (count: number) => string
     /** Announced after rows are copied to the clipboard. */
@@ -58,6 +60,8 @@ export interface GridSnapshot {
         widths?: Record<string, number>
         hidden?: Record<string, boolean>
         pinned?: Record<string, PinnedSide | null>
+        /** Folded header groups, keyed by group id rather than by column. */
+        collapsed?: Record<string, boolean>
     }
     density?: Density
     /** Per-feature slices, keyed by feature id. */
@@ -87,6 +91,7 @@ export interface GridEventMap {
     columnMoved: { columnId: string; toIndex: number }
     columnPinned: { columnId: string; side: PinnedSide | null }
     columnVisibilityChanged: { columnId: string; hidden: boolean }
+    columnGroupToggled: { groupId: string; collapsed: boolean }
     selectionChanged: { selectedIds: string[] }
     rowsCopied: { count: number }
     rowExpanded: { id: string; expanded: boolean }

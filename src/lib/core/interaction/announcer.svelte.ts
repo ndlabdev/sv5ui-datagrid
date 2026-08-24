@@ -15,6 +15,7 @@ export const defaultAnnouncerStrings: DataGridAnnouncerStrings = {
     columnMoved: (column, position) => `${column} column moved to position ${position}`,
     columnPinned: (column, side) =>
         side ? `${column} column pinned ${side}` : `${column} column unpinned`,
+    groupCollapsed: (group, collapsed) => `${group} ${collapsed ? 'collapsed' : 'expanded'}`,
     columnVisibility: (column, hidden) => `${column} column ${hidden ? 'hidden' : 'shown'}`,
     selected: (count) => `${count} ${rows(count)} selected`,
     copied: (count) => `${count} ${rows(count)} copied`,
@@ -69,6 +70,14 @@ export class Announcer<TRow> {
         })
         grid.events.on('columnVisibilityChanged', ({ columnId, hidden }) => {
             this.message = locale().columnVisibility(headerOf(columnId), hidden)
+        })
+        grid.events.on('columnGroupToggled', ({ groupId, collapsed }) => {
+            // A group is not a column, so its name comes from the header
+            // levels rather than from a column lookup.
+            const group = grid.columns.headerLevels
+                .flat()
+                .find((cell) => !cell.isPlaceholder && cell.id === groupId)
+            this.message = locale().groupCollapsed(group?.header ?? groupId, collapsed)
         })
         grid.events.on('selectionChanged', ({ selectedIds }) => {
             this.message = locale().selected(selectedIds.length)

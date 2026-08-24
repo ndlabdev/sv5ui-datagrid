@@ -26,6 +26,8 @@ export const koKR: DataGridLocalePack = {
         openFilter: '필터…',
         autosize: '내용에 맞추기',
         hideColumn: '열 숨기기',
+        collapseGroup: (group) => `${group} 접기`,
+        expandGroup: (group) => `${group} 펼치기`,
 
         filterColumn: (column) => `${column} 필터`,
         filterOperator: (ordinal) => (ordinal > 1 ? `필터 조건 ${ordinal}` : '필터 조건'),
@@ -111,6 +113,7 @@ export const koKR: DataGridLocalePack = {
         columnMoved: (column, position) => `${column} 열을 ${position}번째로 옮겼습니다`,
         columnPinned: (column, side) =>
             side ? `${column} 열을 고정했습니다` : `${column} 열 고정을 해제했습니다`,
+        groupCollapsed: (group, collapsed) => `${group} ${collapsed ? '접힘' : '펼침'}`,
         columnVisibility: (column, hidden) =>
             hidden ? `${column} 열을 숨겼습니다` : `${column} 열을 표시했습니다`,
         selected: (count) => `${count}행을 선택했습니다`,

@@ -1,5 +1,6 @@
+import { prefixSums } from '../../core/columns/index.js'
 import type { GridState } from '../../core/grid/index.js'
-import type { ColumnState } from '../../core/types/index.js'
+import { railGroupIdOf, type ColumnState } from '../../core/types/index.js'
 import { getPagination } from '../../features/pagination/index.js'
 import { getVirtualization } from '../../features/virtualization/index.js'
 
@@ -99,4 +100,119 @@ export function columnWindowOf<TRow>(grid: GridState<TRow>): ColumnWindow<TRow> 
         has: (index) =>
             index < leftCount || index >= rightStart || (index >= centerStart && index < centerEnd)
     }
+}
+
+export interface RailBand {
+    id: string
+    groupId: string
+    header: string
+    /** Where the drawer stands among the visible columns. */
+    index: number
+    start: number
+    width: number
+    /** The side it is pinned to, when the group it folded was pinned. */
+    pinned: ColumnState<unknown>['pinned']
+    /** The offset that pin is held at, as a CSS variable name. */
+    pinVar: string
+}
+
+/**
+ * Where to hang a drawer from. A drawer stands over a column, so a pinned
+ * one has to stay with it: the cells do that with `sticky`, which an overlay
+ * spanning every row cannot be, so it hangs off the same pin offset and the
+ * scroll distance the viewport writes down as it goes. Both boxes it hangs
+ * in are the width of a row, which is what the trailing edge is measured
+ * back from.
+ */
+/**
+ * Whether a drawer stands at this column. The cell before one draws no edge
+ * of its own: a drawer draws both of its own, so the two would land on
+ * neighbouring pixels and read as one thick line.
+ */
+export function isRailAt<TRow>(grid: GridState<TRow>, index: number): boolean {
+    const id = grid.columns.visible[index]?.id
+    return id !== undefined && railGroupIdOf(id) !== null
+}
+
+/**
+ * Which of its own edges a drawer draws. A drawer is a surface of its own, so
+ * it has to be closed on both sides wherever it stands; the cells beside it
+ * give up the line they would have drawn, and the only edge it leaves to
+ * something else is one the grid's own border is already standing on.
+ *
+ * That border is only there when the columns reach it: a grid whose columns
+ * come up short of its width leaves the last of them in open ground, and a
+ * drawer left open there is a drawer with one side.
+ */
+export function railEdgeClasses<TRow>(
+    grid: GridState<TRow>,
+    index: number,
+    edges: { lead: string; trail: string }
+): string {
+    const columns = grid.columns
+    // Until the grid has been measured, nothing is known about where its
+    // border stands, and a drawer closed on both sides is the safer of the
+    // two guesses: an extra line for one frame reads better than a side
+    // missing for one.
+    const filled =
+        columns.containerWidth > 0 && (columns.offsets?.at(-1) ?? 0) >= columns.containerWidth
+    const leading = index === 0 && filled ? '' : edges.lead
+    const lastColumn = index === columns.visible.length - 1
+    const trailing = (lastColumn && filled) || isRailAt(grid, index + 1) ? '' : ` ${edges.trail}`
+    return `${leading}${trailing}`
+}
+
+export function railInset(rail: RailBand): {
+    start: string
+    width: string
+} {
+    const track = `${rail.start}px`
+    const width = `${rail.width}px`
+    const scrolled = 'var(--dg-scroll-x, 0px)'
+    const pin = `var(${rail.pinVar})`
+    // A pinned cell holds its place with `sticky`, which travels only as far
+    // as it has to: no further than the pin, and not at all while the grid
+    // has nothing to scroll. The drawer is one element over every row, so it
+    // cannot be sticky, and these say the same thing in arithmetic.
+    if (rail.pinned === 'left') {
+        return { start: `max(${track}, calc(${scrolled} + ${pin}))`, width }
+    }
+    if (rail.pinned === 'right') {
+        const edge = `calc(${scrolled} + var(--dg-view-w, 0px) - ${pin} - ${width})`
+        return { start: `min(${track}, ${edge})`, width }
+    }
+    return { start: track, width }
+}
+
+/**
+ * Where a folded group's drawer stands, in the coordinates a row is laid out
+ * in. The header and the body each draw their own piece of it, and both read
+ * it from here so the two pieces line up to the pixel. Only the rails the
+ * column window is drawing: one scrolled out of view has nothing to label.
+ */
+export function railsOf<TRow>(grid: GridState<TRow>, window: ColumnWindow<TRow>): RailBand[] {
+    // Estimates until the grid has been measured, rather than nothing: a grid
+    // that opens with a group already folded would otherwise paint a blank
+    // column first and the drawer a frame later, and the server, which
+    // measures nothing at all, would send the blank.
+    const offsets = grid.columns.offsets ?? prefixSums(grid.columns.trackWidths)
+    return window.renderColumns.flatMap(({ column, index }) => {
+        const groupId = railGroupIdOf(column.id)
+        if (!groupId) return []
+        const start = offsets[index]
+        const width = grid.columns.trackWidths[index]
+        if (start === undefined || width === undefined) return []
+        return [
+            {
+                id: column.id,
+                groupId,
+                header: column.header,
+                index,
+                start,
+                width,
+                pinned: column.pinned,
+                pinVar: column.pinVar
+            }
+        ]
+    })
 }
