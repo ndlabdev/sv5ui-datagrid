@@ -13,6 +13,14 @@ import { getCellValue, isBlank } from '../../core/utils/index.js'
 import { setKeyOf } from './distinct-values.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
+/**
+ * What an unreadable condition does: nothing. `sanitizeFilterModel` is the
+ * boundary that should have dropped it, and this is the layer that keeps a
+ * condition arriving some other way out of the pipeline's `$derived`, where a
+ * throw costs the whole render pass rather than one column.
+ */
+const PASSES = (): boolean => true
+
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
     if (def.filter === false || def.filter === undefined) return null
     return typeof def.filter === 'string' ? def.filter : def.filter.type
@@ -24,18 +32,27 @@ function customPredicateOf<TRow>(
     return typeof def.filter === 'object' ? def.filter.predicate : undefined
 }
 
+/** Folding once here keeps `toLowerCase` out of the per-row loop. */
+function foldedQuery(filter: Extract<ColumnFilter, { kind: 'text' }>): {
+    query: string
+    read: (value: unknown) => string
+} {
+    const fold = filter.caseSensitive
+        ? (text: string) => text
+        : (text: string) => text.toLowerCase()
+    return {
+        query: fold(String(filter.value ?? '').trim()),
+        read: (value: unknown) => fold(String(value))
+    }
+}
+
 function textPredicate(
     filter: Extract<ColumnFilter, { kind: 'text' }>
 ): (value: unknown) => boolean {
     if (filter.op === 'blank') return (value) => isBlank(value)
     if (filter.op === 'notBlank') return (value) => !isBlank(value)
 
-    // Folding once here keeps `toLowerCase` out of the per-row loop.
-    const fold = filter.caseSensitive
-        ? (text: string) => text
-        : (text: string) => text.toLowerCase()
-    const query = fold(filter.value.trim())
-    const read = (value: unknown) => fold(String(value))
+    const { query, read } = foldedQuery(filter)
 
     switch (filter.op) {
         case 'equals':
@@ -52,12 +69,16 @@ function textPredicate(
             return (value) => !isBlank(value) && read(value).includes(query)
         case 'notContains':
             return (value) => isBlank(value) || !read(value).includes(query)
+        default:
+            return PASSES
     }
 }
 
+type NumberComparator = (value: number, target: number) => boolean
+
 const numberComparators: Record<
     Exclude<NumberFilterOp, 'blank' | 'notBlank' | 'between'>,
-    (value: number, target: number) => boolean
+    NumberComparator
 > = {
     eq: (value, target) => value === target,
     neq: (value, target) => value !== target,
@@ -83,7 +104,12 @@ function numberPredicate(
             return numeric >= target && numeric <= to
         }
     }
-    const compare = numberComparators[filter.op]
+    // Widened on purpose: the key is exhaustive by type, and an operator that
+    // reached here from outside the type system is exactly what this catches.
+    const compare = (numberComparators as Partial<Record<NumberFilterOp, NumberComparator>>)[
+        filter.op
+    ]
+    if (!compare) return PASSES
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 
@@ -134,10 +160,13 @@ function datePredicate(
                 const day = toEpochDay(value)
                 return day >= target && day <= to
             }
+        default:
+            return PASSES
     }
 }
 
 function setPredicate(filter: Extract<ColumnFilter, { kind: 'set' }>): (value: unknown) => boolean {
+    if (!Array.isArray(filter.values)) return PASSES
     // Keyed on both sides by the same function the value list is built with, or
     // the cell holding a Date is never the entry the user picked, and a filter
     // that came back through a snapshot is never the one that went in.
@@ -163,6 +192,8 @@ export function valuePredicateFor(filter: ColumnFilter): (value: unknown) => boo
             return setPredicate(filter)
         case 'boolean':
             return booleanPredicate(filter)
+        default:
+            return PASSES
     }
 }
 
@@ -174,7 +205,8 @@ function entryPredicate<TRow>(
     const { join, conditions } = normalizeFilterEntry(entry)
     const custom = customPredicateOf(def)
 
-    const tests = conditions.map((condition) => {
+    const listed = Array.isArray(conditions) ? conditions : []
+    const tests = listed.map((condition) => {
         if (custom) return (value: unknown, row: TRow) => custom(value, row, condition)
         const predicate = valuePredicateFor(condition)
         return (value: unknown) => predicate(value)

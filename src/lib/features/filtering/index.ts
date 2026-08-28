@@ -15,6 +15,7 @@ export {
     normalizeFilterEntry,
     toFilterRequest
 } from './filter-model.js'
+export { sanitizeFilterModel } from './filter-sanitize.js'
 export { filterUnitScaleOf, toDisplayUnit, toModelUnit } from './filter-units.js'
 export { floatingCellOf, type FloatingCell } from './floating-filter.js'
 export {

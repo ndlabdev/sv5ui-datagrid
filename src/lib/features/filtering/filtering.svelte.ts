@@ -3,6 +3,7 @@ import type { ColumnFilterEntry, FilterModel, GridFeature } from '../../core/typ
 import { mutator } from '../../core/utils/index.js'
 import { distinctValuesCached } from './distinct-values.js'
 import { compileColumnFilters } from './filter-predicates.js'
+import { sanitizeFilterModel } from './filter-sanitize.js'
 import { quickFilterNodes } from './quick-filter.js'
 
 export const FILTERING = 'filtering'
@@ -112,9 +113,8 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
             return active ? model : undefined
         },
         hydrate: (slice, grid) => {
-            if (slice && typeof slice === 'object') {
-                getFiltering(grid)?.applyFilterModel(slice as FilterModel)
-            }
+            const model = sanitizeFilterModel(slice)
+            if (model !== null) getFiltering(grid)?.applyFilterModel(model)
         },
         pipelineStage: {
             order: PIPELINE_ORDER.filter,
