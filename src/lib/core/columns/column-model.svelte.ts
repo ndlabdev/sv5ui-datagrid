@@ -241,6 +241,11 @@ export class ColumnModel<TRow> {
     setWidth(id: string, width: number): number {
         const column = this.get(id)
         if (!column) return 0
+        // `clamp` and `Math.round` both carry `NaN` through, and a width the
+        // layout cannot draw takes `grid-template-columns` down with it rather
+        // than making one column wrong. Refuse it and say what the width still
+        // is.
+        if (!Number.isFinite(width)) return this.widthOf(id) ?? 0
         const clamped = Math.round(clamp(width, column.minWidth, column.maxWidth))
         this.widthOverrides = { ...this.widthOverrides, [id]: clamped }
         return clamped
@@ -250,7 +255,8 @@ export class ColumnModel<TRow> {
         const next = { ...this.widthOverrides }
         for (const [id, width] of Object.entries(widths)) {
             const column = this.get(id)
-            if (column) next[id] = Math.round(clamp(width, column.minWidth, column.maxWidth))
+            if (!column || !Number.isFinite(width)) continue
+            next[id] = Math.round(clamp(width, column.minWidth, column.maxWidth))
         }
         this.widthOverrides = next
     }

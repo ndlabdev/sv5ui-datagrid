@@ -16,8 +16,39 @@ export interface ColumnSnapshotSource {
 
 const DENSITIES: Density[] = ['compact', 'standard', 'comfortable']
 
-function pruneRecord<T>(record: Record<string, T>, known: Set<string>): Record<string, T> {
-    return Object.fromEntries(Object.entries(record).filter(([id]) => known.has(id)))
+/**
+ * Keys pruned against the columns that exist, values against what the model
+ * can actually hold. A snapshot has been outside the grid - a share link,
+ * `localStorage`, anything handed back to `setState` - so a key surviving is
+ * no evidence its value did.
+ */
+function pruneRecord<T>(
+    record: unknown,
+    known: Set<string>,
+    keep: (value: unknown) => value is T
+): Record<string, T> {
+    if (typeof record !== 'object' || record === null) return {}
+
+    const kept: Record<string, T> = {}
+    for (const [id, value] of Object.entries(record)) {
+        if (known.has(id) && keep(value)) kept[id] = value
+    }
+    return kept
+}
+
+function isBoolean(value: unknown): value is boolean {
+    return typeof value === 'boolean'
+}
+
+/**
+ * A width the layout can draw. `NaN` and `Infinity` are the ones that matter:
+ * they reach the CSS custom property as `NaNpx`, which makes
+ * `grid-template-columns` invalid at computed-value time and collapses every
+ * column into one track. Nothing throws on the way there, so an unusable width
+ * has to be refused rather than reported.
+ */
+function isDrawableWidth(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value)
 }
 
 function isEmpty(value: object): boolean {
@@ -41,8 +72,9 @@ export function buildColumnSnapshot(
  * Groups are named apart from columns, since a folded group is keyed by the
  * group's own id and no column carries it.
  */
-function resolveOrder(stored: string[] | undefined, known: Set<string>, knownIds: string[]) {
-    const order = (stored ?? []).filter((id) => known.has(id))
+function resolveOrder(stored: unknown, known: Set<string>, knownIds: string[]) {
+    if (!Array.isArray(stored)) return []
+    const order = stored.filter((id): id is string => typeof id === 'string' && known.has(id))
     if (order.length === 0) return []
     // A column that appeared since the snapshot was written goes last rather
     // than disappearing for want of a place in the order.
@@ -50,29 +82,41 @@ function resolveOrder(stored: string[] | undefined, known: Set<string>, knownIds
 }
 
 export function resolveColumnSnapshot(
-    stored: GridSnapshot['columns'],
+    stored: unknown,
     knownIds: string[],
     knownGroupIds: string[] = []
 ): ColumnSnapshotSource {
     const known = new Set(knownIds)
-    const columns = stored ?? {}
+    // Read as unknown fields rather than as `GridSnapshot['columns']`. Naming
+    // the type here would be the same promise that let a broken snapshot in:
+    // every field below is checked where it is used, so none of them may claim
+    // a shape on the way past.
+    const columns: Record<string, unknown> =
+        typeof stored === 'object' && stored !== null && !Array.isArray(stored)
+            ? (stored as Record<string, unknown>)
+            : {}
 
     return {
         orderIds: resolveOrder(columns.order, known, knownIds),
-        widthOverrides: pruneRecord(columns.widths ?? {}, known),
-        hiddenOverrides: pruneRecord(columns.hidden ?? {}, known),
-        pinnedOverrides: prunePinned(columns.pinned ?? {}, known),
-        collapsedGroups: pruneRecord(columns.collapsed ?? {}, new Set(knownGroupIds))
+        widthOverrides: pruneRecord(columns.widths, known, isDrawableWidth),
+        hiddenOverrides: pruneRecord(columns.hidden, known, isBoolean),
+        pinnedOverrides: prunePinned(columns.pinned, known),
+        collapsedGroups: pruneRecord(columns.collapsed, new Set(knownGroupIds), isBoolean)
     }
 }
 
-/** Values too, not just keys: a corrupt entry must not reach the model. */
-function prunePinned(
-    stored: Record<string, PinnedSide | null>,
-    known: Set<string>
-): Record<string, PinnedSide | null> {
+/**
+ * Values too, not just keys: a corrupt entry must not reach the model. A side
+ * that cannot be read is kept as an explicit `null` rather than dropped, so a
+ * column the user unpinned stays unpinned instead of springing back to the
+ * side its definition names.
+ */
+function prunePinned(stored: unknown, known: Set<string>): Record<string, PinnedSide | null> {
+    if (typeof stored !== 'object' || stored === null) return {}
+
     const pinned: Record<string, PinnedSide | null> = {}
-    for (const [id, side] of Object.entries(pruneRecord(stored, known))) {
+    for (const [id, side] of Object.entries(stored)) {
+        if (!known.has(id)) continue
         pinned[id] = side === 'left' || side === 'right' ? side : null
     }
     return pinned
