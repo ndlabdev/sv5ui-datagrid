@@ -25,6 +25,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sorting`'s `hydrate` checked `Array.isArray` and then cast, so a null entry
   in the array threw on `columnId`. Entries that do not name a column and a
   direction are now dropped.
+- A column width that the layout cannot draw no longer destroys the grid. A
+  `NaN` or `Infinity` width reached the CSS custom property as `NaNpx`, which
+  makes `grid-template-columns` invalid at computed-value time: the browser
+  dropped the declaration, every column folded into one track and the cells
+  stacked down the page, with nothing thrown and nothing logged. Such a width
+  is now refused where it becomes CSS, so no route reaches the property: a
+  container measured as `NaN`, a definition written with `width: NaN` or
+  `flex: NaN`, a snapshot carrying one, and `setWidth`/`setWidths`, where
+  `clamp` and `Math.round` had been passing `NaN` straight through. A track
+  that cannot be drawn falls back to the column's minimum.
+- Two rows sharing an id no longer fail silently. The row index keeps the last
+  row for a repeated id, so an edit addressed to the row the user opened was
+  written to the other one and nothing said so. A development build now names
+  the ids that collided. Production pays one integer comparison for the check
+  and nothing more; working out which ids repeated happens only in a build that
+  will print it.
+- `setState` no longer throws on a corrupt `columns` slice. An `order` that was
+  not an array reached `.filter` and threw inside the caller's own call. Values
+  are now read as carefully as keys already were: only string ids order the
+  columns, only real booleans hide a column or fold a group, and a `columns`
+  slice that is not an object is taken as nothing at all.
 
 ## [1.3.0] - 2026-08-24
 
