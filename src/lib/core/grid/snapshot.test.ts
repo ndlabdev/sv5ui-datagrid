@@ -146,3 +146,64 @@ describe('folded groups in a snapshot', () => {
         ).toEqual({})
     })
 })
+
+describe('a column snapshot that has been outside the grid', () => {
+    const knownIds = ['a', 'b']
+
+    it('ignores an order that is not a list', () => {
+        expect(resolveColumnSnapshot({ order: 'a' }, knownIds).orderIds).toEqual([])
+        expect(resolveColumnSnapshot({ order: 42 }, knownIds).orderIds).toEqual([])
+    })
+
+    it('keeps only the string ids in an order', () => {
+        expect(resolveColumnSnapshot({ order: [null, 7, 'b'] }, knownIds).orderIds).toEqual([
+            'b',
+            'a'
+        ])
+    })
+
+    it('drops a width the layout could not draw', () => {
+        const widths = {
+            a: Number.NaN,
+            b: Number.POSITIVE_INFINITY
+        }
+        expect(resolveColumnSnapshot({ widths }, knownIds).widthOverrides).toEqual({})
+    })
+
+    it('drops a width that is not a number at all', () => {
+        expect(
+            resolveColumnSnapshot({ widths: { a: '120', b: null } }, knownIds).widthOverrides
+        ).toEqual({})
+    })
+
+    it('keeps a width it can draw, negative included, since the model clamps it', () => {
+        expect(
+            resolveColumnSnapshot({ widths: { a: 120, b: -5 } }, knownIds).widthOverrides
+        ).toEqual({ a: 120, b: -5 })
+    })
+
+    it('keeps only real booleans for hidden and collapsed', () => {
+        const stored = { hidden: { a: 'yes', b: true }, collapsed: { g: 1 } }
+        const resolved = resolveColumnSnapshot(stored, knownIds, ['g'])
+        expect(resolved.hiddenOverrides).toEqual({ b: true })
+        expect(resolved.collapsedGroups).toEqual({})
+    })
+
+    it('reads an unpinnable side as unpinned rather than dropping the entry', () => {
+        expect(
+            resolveColumnSnapshot({ pinned: { a: 'middle' } }, knownIds).pinnedOverrides
+        ).toEqual({ a: null })
+    })
+
+    it('takes a columns slice that is not an object as nothing at all', () => {
+        for (const stored of ['nope', 42, ['a'], null, undefined]) {
+            expect(resolveColumnSnapshot(stored, knownIds)).toEqual({
+                orderIds: [],
+                widthOverrides: {},
+                hiddenOverrides: {},
+                pinnedOverrides: {},
+                collapsedGroups: {}
+            })
+        }
+    })
+})

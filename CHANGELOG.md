@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-03
+
+### Fixed
+
+- A malformed filter snapshot no longer brings the grid down. `filtering`'s
+  `hydrate` cast the slice straight to `FilterModel`, so an operator that
+  belonged to another kind, a `set` whose `values` was not a list, or a
+  condition missing the value its operator needs all threw while the pipeline
+  was reading them - a throw inside a `$derived` costs the render pass, not one
+  column. Six of the seven shapes measured against 1.3.0 threw. The slice is
+  now sanitized at the boundary: what cannot be read is dropped, and a column
+  left with nothing stops filtering, which shows more rows rather than none.
+- The filter predicates no longer assume the condition handed to them is well
+  formed. An unknown operator, a missing value, a `set` whose values are not a
+  list and a kind nothing knows now pass every row instead of throwing. This is
+  the layer that covers `applyFilterModel`, which an app can call with a model
+  it read back from its own storage.
+- `sorting`'s `hydrate` checked `Array.isArray` and then cast, so a null entry
+  in the array threw on `columnId`. Entries that do not name a column and a
+  direction are now dropped.
+- A column width that the layout cannot draw no longer destroys the grid. A
+  `NaN` or `Infinity` width reached the CSS custom property as `NaNpx`, which
+  makes `grid-template-columns` invalid at computed-value time: the browser
+  dropped the declaration, every column folded into one track and the cells
+  stacked down the page, with nothing thrown and nothing logged. Such a width
+  is now refused where it becomes CSS, so no route reaches the property: a
+  container measured as `NaN`, a definition written with `width: NaN` or
+  `flex: NaN`, a snapshot carrying one, and `setWidth`/`setWidths`, where
+  `clamp` and `Math.round` had been passing `NaN` straight through. A track
+  that cannot be drawn falls back to the column's minimum.
+- Two rows sharing an id no longer fail silently. The row index keeps the last
+  row for a repeated id, so an edit addressed to the row the user opened was
+  written to the other one and nothing said so. A development build now names
+  the ids that collided. Production pays one integer comparison for the check
+  and nothing more; working out which ids repeated happens only in a build that
+  will print it.
+- `setState` no longer throws on a corrupt `columns` slice. An `order` that was
+  not an array reached `.filter` and threw inside the caller's own call. Values
+  are now read as carefully as keys already were: only string ids order the
+  columns, only real booleans hide a column or fold a group, and a `columns`
+  slice that is not an object is taken as nothing at all.
+
 ## [1.3.0] - 2026-08-24
 
 ### Added
@@ -872,6 +914,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[1.3.1]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.1
 [1.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.0
 [1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.1.0

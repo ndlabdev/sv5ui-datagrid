@@ -108,3 +108,59 @@ describe('toStyleString', () => {
         expect(toStyleString({ '--a': '1px', '--b': '2px' })).toBe('--a: 1px; --b: 2px')
     })
 })
+
+describe('a track the browser could not parse', () => {
+    // Every one of these produced `NaNpx`, which makes grid-template-columns
+    // invalid at computed-value time: the declaration is dropped, the columns
+    // fold into one track and the cells stack down the page.
+    it('never writes a non-finite width, whichever way it arrived', () => {
+        const fromOverride = buildColumnCssVars([createColumnState({ id: 'a' })], null, null, {
+            a: Number.NaN
+        })
+        const fromDefinition = buildColumnCssVars([
+            createColumnState({ id: 'a', width: Number.NaN })
+        ])
+        const fromResolved = buildColumnCssVars([createColumnState({ id: 'a' })], [Number.NaN])
+
+        for (const vars of [fromOverride, fromDefinition, fromResolved]) {
+            expect(vars['--dg-col-a-w']).not.toContain('NaN')
+        }
+    })
+
+    it('falls back to the column minimum rather than to nothing', () => {
+        const vars = buildColumnCssVars(
+            [createColumnState({ id: 'a', minWidth: 64 })],
+            [Number.NaN]
+        )
+        expect(vars['--dg-col-a-w']).toBe('64px')
+    })
+
+    it('reads an unusable flex weight as one', () => {
+        expect(columnTrackSize(createColumnState({ id: 'a', flex: Number.NaN }))).toBe(
+            'minmax(40px, 1fr)'
+        )
+    })
+
+    it('reads an unusable minimum as a width it can draw', () => {
+        expect(columnTrackSize(createColumnState({ id: 'a', minWidth: Number.NaN }))).toBe(
+            'minmax(100px, 1fr)'
+        )
+    })
+
+    it('writes a pin offset it can draw', () => {
+        const vars = buildColumnCssVars([createColumnState({ id: 'a', pinned: 'left' })], [100], {
+            a: Number.NaN
+        })
+        expect(vars['--dg-col-a-pin']).toBe('0px')
+    })
+
+    it('leaves a healthy track exactly as it was', () => {
+        expect(columnTrackSize(createColumnState({ id: 'a', width: 120 }))).toBe('120px')
+        expect(columnTrackSize(createColumnState({ id: 'a', flex: 2, minWidth: 80 }))).toBe(
+            'minmax(80px, 2fr)'
+        )
+        expect(buildColumnCssVars([createColumnState({ id: 'a' })], [220])['--dg-col-a-w']).toBe(
+            '220px'
+        )
+    })
+})

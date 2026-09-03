@@ -68,3 +68,16 @@ describe('sort cycle', () => {
         expect(sort.sort).toEqual([{ columnId: 'name', direction: 'asc' }])
     })
 })
+
+describe('hydrating a malformed sort snapshot', () => {
+    it('reads every row and keeps only the entry it could rebuild', () => {
+        const target = grid()
+        target.setState({
+            version: 1,
+            features: { sorting: [null, { columnId: 'name', direction: 'asc' }] }
+        } as never)
+
+        expect(() => target.nodes).not.toThrow()
+        expect(getSorting(target)?.sort).toEqual([{ columnId: 'name', direction: 'asc' }])
+    })
+})

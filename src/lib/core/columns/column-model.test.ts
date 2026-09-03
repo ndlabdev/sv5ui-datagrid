@@ -85,3 +85,33 @@ describe('ColumnModel runtime state', () => {
         expect(model.visible.map((column) => column.id)).toEqual(['x', 'y', 'z'])
     })
 })
+
+describe('a width the layout could not draw', () => {
+    it('refuses it and reports the width the column still has', () => {
+        const model = createModel()
+        expect(model.setWidth('a', Number.NaN)).toBe(100)
+        expect(model.setWidth('a', Number.POSITIVE_INFINITY)).toBe(100)
+        expect(model.widthOverrides).toEqual({})
+        expect(model.widthOf('a')).toBe(100)
+    })
+
+    it('reports zero for a column that is not there, as before', () => {
+        expect(createModel().setWidth('missing', Number.NaN)).toBe(0)
+    })
+
+    it('skips it in a batch and keeps the rest', () => {
+        const model = createModel()
+        model.setWidths({ a: Number.NaN, c: 150, d: Number.NEGATIVE_INFINITY })
+
+        expect(model.widthOverrides).toEqual({ c: 150 })
+        expect(model.widthOf('a')).toBe(100)
+        expect(model.widthOf('d')).toBe(90)
+    })
+
+    it('leaves a width already set alone', () => {
+        const model = createModel()
+        model.setWidth('a', 250)
+        expect(model.setWidth('a', Number.NaN)).toBe(250)
+        expect(model.widthOf('a')).toBe(250)
+    })
+})

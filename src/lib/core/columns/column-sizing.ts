@@ -42,6 +42,27 @@ export function createColumnState<TRow>(
 
 export type WidthOverrides = Record<string, number>
 
+/** What a track falls back to when nothing usable is left to fall back on. */
+const LAST_RESORT_WIDTH = 100
+
+/**
+ * The last gate before a number becomes CSS. A non-finite one reaches the
+ * custom property as `NaNpx`, and `grid-template-columns: var(...)` is then
+ * invalid at computed-value time: the browser drops the whole declaration,
+ * every column folds into a single track and the cells stack down the page,
+ * with nothing thrown and nothing logged.
+ *
+ * The width setters and the snapshot boundary each refuse such a value on the
+ * way in. This is here because they are not the only way in - a container
+ * measured as `NaN` and a column definition written with `width: NaN` reach
+ * the same line without passing either - and because a track that is merely
+ * the wrong size is a far smaller failure than a grid that will not lay out.
+ */
+function px(value: number | undefined, fallback: number): string {
+    if (typeof value === 'number' && Number.isFinite(value)) return `${value}px`
+    return `${Number.isFinite(fallback) ? fallback : LAST_RESORT_WIDTH}px`
+}
+
 function effectiveWidth<TRow>(
     column: ColumnState<TRow>,
     overrides: WidthOverrides
@@ -55,9 +76,10 @@ export function columnTrackSize<TRow>(
 ): string {
     const width = effectiveWidth(column, overrides)
     if (width !== undefined) {
-        return `${clamp(width, column.minWidth, column.maxWidth)}px`
+        return px(clamp(width, column.minWidth, column.maxWidth), column.minWidth)
     }
-    return `minmax(${column.minWidth}px, ${column.flex ?? 1}fr)`
+    const flex = typeof column.flex === 'number' && Number.isFinite(column.flex) ? column.flex : 1
+    return `minmax(${px(column.minWidth, LAST_RESORT_WIDTH)}, ${flex}fr)`
 }
 
 export function trackWidthEstimates<TRow>(
@@ -106,10 +128,10 @@ export function buildColumnCssVars<TRow>(
     const vars: Record<string, string> = {}
     visible.forEach((column, index) => {
         vars[column.cssVar] = resolvedWidths
-            ? `${resolvedWidths[index]}px`
+            ? px(resolvedWidths[index], column.minWidth)
             : columnTrackSize(column, overrides)
         if (column.pinned && pins) {
-            vars[column.pinVar] = `${pins[column.id] ?? 0}px`
+            vars[column.pinVar] = px(pins[column.id], 0)
         }
     })
     vars['--dg-grid-template'] = visible.map((column) => `var(${column.cssVar})`).join(' ')
