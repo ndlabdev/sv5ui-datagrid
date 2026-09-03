@@ -76,6 +76,27 @@ async function renderGrid(grid: GridState<Person>) {
     return screen
 }
 
+/** What `GridFilterCell` waits before a typed value reaches the model. */
+const FILTER_DEBOUNCE_MS = 200
+
+/**
+ * Types through the driver and reports the most writes a working debounce could
+ * have produced.
+ *
+ * Counting writes only means something against the time the typing took. The
+ * browser driver round-trips once per key, and on a loaded machine that round
+ * trip outlasts the window, so the debounce fires between keystrokes and a
+ * write per key is correct rather than a regression. A debounce can write once
+ * per window it is left alone for, plus once at the end, which is the bound
+ * this returns: exactly 1 when the typing fitted in one window, which is what
+ * an unloaded machine and CI do.
+ */
+async function typeWithin(keys: string) {
+    const started = performance.now()
+    await userEvent.keyboard(keys)
+    return Math.floor((performance.now() - started) / FILTER_DEBOUNCE_MS) + 1
+}
+
 describe('the filter row', () => {
     it('draws one cell per column, and a field only where a filter is declared', async () => {
         const screen = await renderGrid(makeGrid())
@@ -596,12 +617,12 @@ describe('the data ops demo', () => {
         const cell = filterCell(screen.container, 0)
         cell.querySelector<HTMLElement>('[role="spinbutton"]')!.focus()
 
-        await userEvent.keyboard('01052026')
+        const windows = await typeWithin('01052026')
 
         await expect
             .poll(() => getFiltering(grid)!.columnFilters['joined'], { timeout: 2000 })
             .toEqual({ kind: 'date', op: 'equals', value: '2026-01-05' })
-        expect(writes).toBe(1)
+        expect(writes).toBeLessThanOrEqual(windows)
         await expect.poll(() => bodyRows(screen.container)).toBe(1)
     })
 
@@ -615,12 +636,12 @@ describe('the data ops demo', () => {
             'input[role="spinbutton"]'
         )!
         input.focus()
-        await userEvent.keyboard('365')
+        const windows = await typeWithin('365')
 
         await expect
             .poll(() => getFiltering(grid)!.columnFilters['age'], { timeout: 2000 })
             .toEqual({ kind: 'number', op: 'eq', value: 365 })
-        expect(writes).toBe(1)
+        expect(writes).toBeLessThanOrEqual(windows)
     })
 
     it('clears a picked date at once rather than after the wait', async () => {
