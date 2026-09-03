@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A malformed filter snapshot no longer brings the grid down. `filtering`'s
+  `hydrate` cast the slice straight to `FilterModel`, so an operator that
+  belonged to another kind, a `set` whose `values` was not a list, or a
+  condition missing the value its operator needs all threw while the pipeline
+  was reading them - a throw inside a `$derived` costs the render pass, not one
+  column. Six of the seven shapes measured against 1.3.0 threw. The slice is
+  now sanitized at the boundary: what cannot be read is dropped, and a column
+  left with nothing stops filtering, which shows more rows rather than none.
+- The filter predicates no longer assume the condition handed to them is well
+  formed. An unknown operator, a missing value, a `set` whose values are not a
+  list and a kind nothing knows now pass every row instead of throwing. This is
+  the layer that covers `applyFilterModel`, which an app can call with a model
+  it read back from its own storage.
+- `sorting`'s `hydrate` checked `Array.isArray` and then cast, so a null entry
+  in the array threw on `columnId`. Entries that do not name a column and a
+  direction are now dropped.
 - A column width that the layout cannot draw no longer destroys the grid. A
   `NaN` or `Infinity` width reached the CSS custom property as `NaNpx`, which
   makes `grid-template-columns` invalid at computed-value time: the browser

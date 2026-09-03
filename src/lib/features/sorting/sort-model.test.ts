@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildRowNodes } from '../../core/grid/index.js'
 import type { ColumnDef } from '../../core/types/index.js'
-import { toSortRequest } from './sort-model.js'
+import { sanitizeSortState, toSortRequest } from './sort-model.js'
 import { sortNodes } from './sort.js'
 
 interface Person {
@@ -111,5 +111,42 @@ describe('toSortRequest', () => {
 
     it('is empty for an empty sort', () => {
         expect(toSortRequest([], columns)).toEqual([])
+    })
+})
+
+describe('sanitizeSortState', () => {
+    it('keeps the entries that name a column and a direction', () => {
+        expect(
+            sanitizeSortState([
+                { columnId: 'lastName', direction: 'asc' },
+                { columnId: 'age', direction: 'desc' }
+            ])
+        ).toEqual([
+            { columnId: 'lastName', direction: 'asc' },
+            { columnId: 'age', direction: 'desc' }
+        ])
+    })
+
+    it('drops a null entry rather than reading through it', () => {
+        expect(sanitizeSortState([null, { columnId: 'age', direction: 'asc' }])).toEqual([
+            { columnId: 'age', direction: 'asc' }
+        ])
+    })
+
+    it('drops what a sort cannot be built from', () => {
+        expect(
+            sanitizeSortState([
+                { columnId: 'age', direction: 'sideways' },
+                { direction: 'asc' },
+                { columnId: '', direction: 'asc' },
+                'age',
+                42
+            ])
+        ).toEqual([])
+    })
+
+    it('rejects a slice that is not a list', () => {
+        expect(sanitizeSortState({ columnId: 'age', direction: 'asc' })).toBeNull()
+        expect(sanitizeSortState(null)).toBeNull()
     })
 })
