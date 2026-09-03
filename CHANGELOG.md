@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-03
+
 ### Fixed
 
 - A malformed filter snapshot no longer brings the grid down. `filtering`'s
@@ -912,6 +914,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[1.3.1]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.1
 [1.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.0
 [1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.1.0
