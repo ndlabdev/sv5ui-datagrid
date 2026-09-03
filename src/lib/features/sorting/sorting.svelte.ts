@@ -3,6 +3,7 @@ import { type GridState, PIPELINE_ORDER } from '../../core/grid/index.js'
 import type { GridFeature, Keybinding, SortDirection, SortState } from '../../core/types/index.js'
 import { mutator } from '../../core/utils/index.js'
 import { sortNodes, type SortNulls } from './sort.js'
+import { sanitizeSortState } from './sort-model.js'
 
 export const SORTING = 'sorting'
 
@@ -116,7 +117,8 @@ export function sorting<TRow>(options: SortingOptions = {}): GridFeature<TRow> {
             return sort.length > 0 ? sort : undefined
         },
         hydrate: (slice, grid) => {
-            if (Array.isArray(slice)) getSorting(grid)?.setSort(slice as SortState[])
+            const sort = sanitizeSortState(slice)
+            if (sort !== null) getSorting(grid)?.setSort(sort)
         },
         pipelineStage: {
             order: PIPELINE_ORDER.sort,
