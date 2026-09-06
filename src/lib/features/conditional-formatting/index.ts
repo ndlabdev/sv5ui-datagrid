@@ -1,5 +1,4 @@
 export {
-    CONDITIONAL_FORMATTING,
     ConditionalFormatting,
     conditionalFormatting,
     getConditionalFormatting

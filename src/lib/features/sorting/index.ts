@@ -4,7 +4,6 @@ export {
     getSorting,
     Sorting,
     sorting,
-    SORTING,
     type SortCycle,
     type SortingOptions,
     type ToggleSortOptions

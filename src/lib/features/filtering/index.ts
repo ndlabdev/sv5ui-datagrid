@@ -6,8 +6,7 @@ export {
     emptyDraft,
     isPresenceOp,
     MAX_CONDITIONS,
-    type ConditionDraft,
-    type FilterDraft
+    type ConditionDraft
 } from './filter-draft.js'
 export {
     filterConditions,
@@ -17,18 +16,12 @@ export {
 } from './filter-model.js'
 export { sanitizeFilterModel } from './filter-sanitize.js'
 export { filterUnitScaleOf, toDisplayUnit, toModelUnit } from './filter-units.js'
-export { floatingCellOf, type FloatingCell } from './floating-filter.js'
+export { floatingCellOf } from './floating-filter.js'
 export {
     compileColumnFilters,
     describeFilter,
     filterTypeOf,
     valuePredicateFor
 } from './filter-predicates.js'
-export {
-    Filtering,
-    filtering,
-    FILTERING,
-    getFiltering,
-    type FilteringOptions
-} from './filtering.svelte.js'
+export { Filtering, filtering, getFiltering, type FilteringOptions } from './filtering.svelte.js'
 export { quickFilterNodes } from './quick-filter.js'

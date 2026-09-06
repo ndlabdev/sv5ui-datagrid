@@ -1,10 +1,4 @@
-export {
-    ADVANCED_FILTER,
-    advancedFilter,
-    AdvancedFilter,
-    getAdvancedFilter
-} from './advanced-filter.svelte.js'
-export { matchesNode } from './evaluate.js'
+export { advancedFilter, AdvancedFilter, getAdvancedFilter } from './advanced-filter.svelte.js'
 export type {
     AdvancedFilterOp,
     AdvancedFilterOptions,

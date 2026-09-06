@@ -160,12 +160,14 @@ export {
     getShowValuesAs,
     showValuesAs,
     type ShowAs,
+    type ShowValuesAs,
     type ShowValuesAsOptions
 } from './show-values-as/index.js'
 
 export {
     dataImport,
     getDataImport,
+    type DataImport,
     type DataImportOptions,
     type DuplicateScope,
     type ImportDedupe,
@@ -178,6 +180,7 @@ export {
     getPolicy,
     policy,
     type MaskKind,
+    type Policy,
     type PolicyContext,
     type PolicyOptions,
     type PolicyRule

@@ -3,6 +3,5 @@ export {
     getPagination,
     Pagination,
     pagination,
-    PAGINATION,
     type PaginationOptions
 } from './pagination.svelte.js'

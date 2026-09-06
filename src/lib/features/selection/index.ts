@@ -11,7 +11,7 @@ export {
     type CellMatrix,
     type ExportFormatter
 } from './clipboard.js'
-export { getSelection, Selection, selection, SELECTION } from './selection.svelte.js'
+export { getSelection, Selection, selection } from './selection.svelte.js'
 export type {
     CopyOptions,
     ExportCsvOptions,

@@ -1,4 +1,4 @@
-export { DATA_IMPORT, DataImport, dataImport, getDataImport } from './data-import.svelte.js'
+export { DataImport, dataImport, getDataImport } from './data-import.svelte.js'
 export type {
     DataImportOptions,
     ImportDedupe,

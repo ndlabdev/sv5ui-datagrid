@@ -4,7 +4,4 @@
  * features own, and have no meaning mounted on their own.
  */
 
-export { default as GridColumnMenu } from './GridColumnMenu.svelte'
 export { default as GridContextMenu } from './GridContextMenu.svelte'
-export { default as GridFilterCondition } from './GridFilterCondition.svelte'
-export { default as GridFilterPanel } from './GridFilterPanel.svelte'
