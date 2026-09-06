@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ShareTooLongError } from '../../core/grid/index.js'
-    import { Button, DropdownMenu, Input } from 'sv5ui'
+    import { Button, DropdownMenu, Input, useClipboard } from 'sv5ui'
 
     import { getSavedViews } from '../../features/saved-views/saved-views.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
@@ -17,7 +17,12 @@
     const t = $derived(grid.labels)
 
     let name = $state('')
-    let notice = $state('')
+
+    // Success and failure are two different lifetimes. `copied` says the link
+    // is on the clipboard and clears itself; a refusal has to stay up until
+    // the user does something about it, so only that lives in `problem`.
+    const clipboard = useClipboard()
+    let problem = $state('')
 
     const items = $derived(
         (views?.views ?? []).map((view) => ({
@@ -29,7 +34,7 @@
     function save() {
         if (!views?.save(name)) return
         name = ''
-        notice = ''
+        problem = ''
     }
 
     async function share() {
@@ -37,10 +42,10 @@
         try {
             const link = await views.shareLink()
             if (!link) return
-            await navigator.clipboard.writeText(link)
-            notice = t.viewShareCopied
+            await clipboard.copy(link)
+            problem = ''
         } catch (error) {
-            notice =
+            problem =
                 error instanceof ShareTooLongError
                     ? t.viewShareTooLong(error.length)
                     : String(error)
@@ -123,10 +128,10 @@
             onclick={() => void share()}
         />
 
-        {#if notice}
+        {#if problem || clipboard.copied}
             <span
                 class={slots.savedViewsLabel({ class: theme('savedViewsLabel') })}
-                aria-live="polite">{notice}</span
+                aria-live="polite">{problem || t.viewShareCopied}</span
             >
         {/if}
     </div>

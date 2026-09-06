@@ -1,4 +1,4 @@
-import RangeLayer from '../../components/grid/RangeLayer.svelte'
+import RangeLayer from './RangeLayer.svelte'
 import type { CellPosition } from '../../core/interaction/index.js'
 import { type GridState, isDataRow, isLoadingRow } from '../../core/grid/index.js'
 import {

@@ -1,8 +1,8 @@
 <script lang="ts">
     import { untrack } from 'svelte'
-    import { getVirtualization } from '../../features/virtualization/index.js'
-    import { getGridContext } from '../internal/context.js'
-    import { getServerRowModel } from '../../features/server-row-model/server-row-model.svelte.js'
+    import { getVirtualization } from '../virtualization/index.js'
+    import { getGridContext } from '../../components/internal/context.js'
+    import { getServerRowModel } from './server-row-model.svelte.js'
 
     // Contributed by `serverRowModel()`. It draws nothing: it exists because a
     // feature is built in `createDataGrid`, where there is no effect context,

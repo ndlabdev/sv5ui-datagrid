@@ -13,13 +13,13 @@
         opsFor,
         type FilterKind
     } from '../../features/advanced-filter/operators.js'
-    import { fromDateValue, toDateValue } from '../internal/editor-values.js'
+    import { fromDateValue, toDateValue } from './editor-values.js'
 
-    import FilterValueInput from '../internal/FilterValueInput.svelte'
+    import FilterValueInput from './FilterValueInput.svelte'
     import FilterBuilderGroup from './FilterBuilderGroup.svelte'
     import { datagridVariants } from '../datagrid.variants.js'
-    import { getGridContext } from '../internal/context.js'
-    import { getGridTheme } from '../internal/theme.js'
+    import { getGridContext } from './context.js'
+    import { getGridTheme } from './theme.js'
 
     const grid = getGridContext()
     const theme = getGridTheme()

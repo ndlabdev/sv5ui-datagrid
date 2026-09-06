@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createDataGrid } from '$lib/core/grid/index.js'
-    import { GroupPanel } from '$lib/components/chrome/index.js'
+    import { GroupPanel } from '$lib/components/panels/index.js'
     import { Grid } from '$lib/components/parts.js'
     import { filtering } from '$lib/features/filtering/index.js'
     import { grouping } from '$lib/features/grouping/index.js'

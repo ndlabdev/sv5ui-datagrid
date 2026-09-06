@@ -14,7 +14,7 @@
         FilterNode
     } from '../../features/advanced-filter/advanced-filter.types.js'
 
-    import FilterBuilderGroup from './FilterBuilderGroup.svelte'
+    import FilterBuilderGroup from '../internal/FilterBuilderGroup.svelte'
     import { datagridVariants } from '../datagrid.variants.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { getGridContext, getGridElement } from '../internal/context.js'
-    import { getRangeSelection } from '../../features/range-selection/range-selection.svelte.js'
+    import { getGridContext, getGridElement } from '../../components/internal/context.js'
+    import { getRangeSelection } from './range-selection.svelte.js'
 
     // Contributed by `rangeSelection()` rather than mounted by hand: it draws
     // nothing, and everything it does is a listener on the grid's own element.

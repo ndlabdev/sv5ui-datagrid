@@ -1,4 +1,4 @@
-import ServerRows from '../../components/grid/ServerRows.svelte'
+import ServerRows from './ServerRows.svelte'
 import { type GridState, LOADING_KEY, PIPELINE_ORDER } from '../../core/grid/index.js'
 import { type GridFeature, type RowNode } from '../../core/types/index.js'
 import { getFiltering, toFilterRequest } from '../../features/filtering/index.js'
