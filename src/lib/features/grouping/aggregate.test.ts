@@ -93,3 +93,12 @@ describe('aggregate', () => {
         expect(joined).toBe('2/3')
     })
 })
+
+describe('a column the size this grid is built for', () => {
+    it('takes a minimum and a maximum without spreading the column', () => {
+        const many = Array.from({ length: 200_000 }, (_, index) => index)
+
+        expect(aggregate('min', many, [])).toBe(0)
+        expect(aggregate('max', many, [])).toBe(199_999)
+    })
+})

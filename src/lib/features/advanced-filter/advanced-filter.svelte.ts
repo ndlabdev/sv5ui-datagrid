@@ -102,7 +102,8 @@ export class AdvancedFilter<TRow> {
     matches = (node: RowNode<TRow>): boolean => {
         const defs = this.#defsForModel()
         const read = gateReader(this.#grid, 'search')
-        return this.#matchesWith(node, defs, read, kindsFor([node], defs, read))
+        const sample = this.#grid.preWindowNodes
+        return this.#matchesWith(node, defs, read, kindsFor(sample, defs, read))
     }
 
     #refuseOnServer(): boolean {

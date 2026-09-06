@@ -36,13 +36,6 @@ export function findMatches<TRow>(
     columns: ColumnState<TRow>[],
     query: string,
     options: FindOptions & {
-        /**
-         * How a cell is read, and not optional. A find goes through the same
-         * gate the cell itself does: a column the grid is masking is one whose
-         * values the user is not being shown, and a search that matched one
-         * would point at a cell they cannot read and confirm what it says.
-         * `rawRead` is the way to say the raw value is what you meant.
-         */
         read: CellRead<TRow>
         isDataNode?: (node: RowNode<TRow>) => boolean
     }
@@ -83,17 +76,9 @@ export function replaceIn(
     return replaceInsensitive(text, query, replacement)
 }
 
-function replaceInsensitive(text: string, query: string, replacement: string): string {
-    const lower = text.toLowerCase()
-    const needle = query.toLowerCase()
+const REGEXP_SPECIAL = /[.*+?^${}()|[\]\\]/g
 
-    let out = ''
-    let at = 0
-    for (;;) {
-        const found = lower.indexOf(needle, at)
-        if (found === -1) break
-        out += text.slice(at, found) + replacement
-        at = found + needle.length
-    }
-    return out + text.slice(at)
+function replaceInsensitive(text: string, query: string, replacement: string): string {
+    const pattern = new RegExp(query.replace(REGEXP_SPECIAL, '\\$&'), 'gi')
+    return text.replace(pattern, () => replacement)
 }

@@ -26,9 +26,6 @@ describe('one condition', () => {
     })
 
     it('compares numbers as numbers, including numeric text', () => {
-        // The kind comes from the column, so a numeric string in a number
-        // column is a number. The feature works it out per column, from the
-        // declaration or from a sample of the data.
         const n = 'number' as const
         expect(matchesCondition(10, condition({ op: 'gt', value: 5 }), n)).toBe(true)
         expect(matchesCondition(10, condition({ op: 'lte', value: 10 }), n)).toBe(true)
@@ -88,9 +85,6 @@ describe('one condition', () => {
     })
 
     it('matches a list by the key the list was built with', () => {
-        // The same key a set filter's value list uses, so an entry the user
-        // picked out of that list is the entry a cell holding it answers to.
-        // A number and its text are two entries, not one.
         const s = 'set' as const
         expect(matchesCondition('a', condition({ op: 'in', values: ['a', 'b'] }), s)).toBe(true)
         expect(matchesCondition(2, condition({ op: 'in', values: [2] }), s)).toBe(true)
@@ -115,8 +109,6 @@ describe('one condition', () => {
     })
 
     it('offers no comparison a text column cannot make, and waits rather than hiding', () => {
-        // `gt` is not on a text column's list. Reaching it anyway is a
-        // half-built condition, and a half-built condition filters nothing.
         expect(matchesCondition('abc', condition({ op: 'gt', value: 5 }))).toBe(true)
         expect(matchesCondition('abc', condition({ op: 'equals', value: 'abc' }))).toBe(true)
     })
@@ -198,5 +190,19 @@ describe('isBlank', () => {
     it('counts null, undefined and empty text, and nothing else', () => {
         expect([null, undefined, ''].map(isBlank)).toEqual([true, true, true])
         expect([0, false, ' ', []].map(isBlank)).toEqual([false, false, false, false])
+    })
+})
+
+describe('a date condition the user did not type by hand', () => {
+    it('reads a Date target as the day it is locally, not the day it is in UTC', () => {
+        const day = new Date(2026, 2, 2)
+        expect(matchesCondition(day, condition({ op: 'equals', value: day }), 'date')).toBe(true)
+    })
+
+    it('reads an epoch number as a date rather than as its digits', () => {
+        const at = new Date(2026, 2, 2)
+        expect(matchesCondition(at, condition({ op: 'equals', value: at.getTime() }), 'date')).toBe(
+            true
+        )
     })
 })

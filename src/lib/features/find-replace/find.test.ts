@@ -117,3 +117,17 @@ describe('replaceIn', () => {
         expect(replaceIn(undefined, 'a', 'b')).toBeNull()
     })
 })
+
+describe('replacing without regard to case', () => {
+    it('does not drift on a character that changes length when lowercased', () => {
+        expect(replaceIn('\u0130stanbul office', 'office', 'branch')).toBe('\u0130stanbul branch')
+    })
+
+    it('treats the query as text, not as a pattern', () => {
+        expect(replaceIn('a.b.c', '.', '-')).toBe('a-b-c')
+    })
+
+    it('leaves a dollar sign in the replacement alone', () => {
+        expect(replaceIn('cost: x', 'x', '$&5')).toBe('cost: $&5')
+    })
+})

@@ -22,6 +22,15 @@ function distinctCount(values: unknown[]): number {
     return seen.size
 }
 
+function extreme(numbers: number[], lowest: boolean): number {
+    let best = numbers[0]!
+    for (let index = 1; index < numbers.length; index += 1) {
+        const value = numbers[index]!
+        if (lowest ? value < best : value > best) best = value
+    }
+    return best
+}
+
 function percentileOf(numbers: number[], fraction: number): number {
     const sorted = [...numbers].sort((left, right) => left - right)
     const position = (sorted.length - 1) * Math.min(1, Math.max(0, fraction))
@@ -66,9 +75,9 @@ function aggregateNumbers(
         case 'sum':
             return numbers.reduce((total, value) => total + value, 0)
         case 'min':
-            return Math.min(...numbers)
+            return extreme(numbers, true)
         case 'max':
-            return Math.max(...numbers)
+            return extreme(numbers, false)
         case 'avg':
             return numbers.reduce((total, value) => total + value, 0) / numbers.length
         case 'median':
