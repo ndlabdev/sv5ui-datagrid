@@ -1,7 +1,7 @@
 /**
  * The presentation layer's public surface, assembled from the folder barrels
- * below it. Five folders draw the grid — `grid`, `chrome`, `panels`, `menus`,
- * `cells` — and this file names the handful of them an app mounts itself.
+ * below it. Five folders draw the grid - `grid`, `chrome`, `panels`, `menus`,
+ * `cells` - and this file names the handful of them an app mounts itself.
  *
  * Only two names leave: `DataGrid`, and `Grid` holding every part. A panel is
  * a part like the toolbar's controls are, so it reaches an app the same way.

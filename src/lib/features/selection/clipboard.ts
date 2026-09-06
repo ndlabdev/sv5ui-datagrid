@@ -60,7 +60,7 @@ export function rowsToMatrix<TRow>(
         locale?: string
         /**
          * The gate a column's values leave through, asked once per column.
-         * Left out — which is what a call from outside the grid can do — the
+         * Left out - which is what a call from outside the grid can do - the
          * matrix carries the values as the data holds them.
          */
         read?: (column: ColumnState<TRow>) => CellValueReader<TRow> | undefined

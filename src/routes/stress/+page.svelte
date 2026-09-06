@@ -260,13 +260,13 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Stress — nhiều dòng, nhiều cột</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Stress - nhiều dòng, nhiều cột</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
                 39 cột với đủ kiểu hiển thị (tiền tệ, phần trăm, ngày, badge, progress, rating,
                 boolean) trên tối đa một triệu dòng. Ảo hoá cả hai chiều, nên số ô thực sự nằm trong
                 DOM không đổi theo lượng dữ liệu. Sắp xếp, lọc và cuộn đều chạy trên toàn bộ tập.
                 Quá một triệu dòng thì tổng chiều cao vượt mức trình duyệt chịu vẽ, nên thanh cuộn
-                được nén lại — dòng cuối vẫn tới được, chỉ là mỗi pixel cuộn đi xa hơn.
+                được nén lại - dòng cuối vẫn tới được, chỉ là mỗi pixel cuộn đi xa hơn.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -310,7 +310,7 @@
         <h2 class="font-medium text-on-surface">Cần soi</h2>
         <ul class="list-inside list-disc space-y-1 text-sm text-on-surface-variant">
             <li>Số dòng và cột được vẽ giữ nguyên dù chọn 100k hay 1 triệu.</li>
-            <li>Cuộn dọc và ngang cùng lúc — cột <code>#</code> ghim trái phải đứng yên.</li>
+            <li>Cuộn dọc và ngang cùng lúc - cột <code>#</code> ghim trái phải đứng yên.</li>
             <li>Sắp theo Total (số) và Customer (chuỗi) trên toàn bộ tập.</li>
             <li>Lọc nhanh chạy trên mọi cột đang hiện, không chỉ trang đang xem.</li>
             <li>Chọn hết rồi xem thanh trạng thái đếm đúng tổng.</li>

@@ -30,7 +30,7 @@ export interface RowReorderOptions<TRow> {
         from: number
         /** Its index in `data` after the move. */
         to: number
-        /** The reordered data array — the same one now on the grid. */
+        /** The reordered data array - the same one now on the grid. */
         data: TRow[]
     }) => void
 }

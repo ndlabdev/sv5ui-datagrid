@@ -311,7 +311,7 @@ describe('landing and touch', () => {
 
         // The grid drives its geometry from custom properties on ancestors of
         // the row. Moved to `<body>` the copy loses them, and the pinned grip
-        // and checkbox fall back to `auto` — their background then paints over
+        // and checkbox fall back to `auto` - their background then paints over
         // the copy's own edge, which shows up as a broken border.
         const offsets = (element: Element) =>
             [...element.children].slice(0, 2).map((cell) => getComputedStyle(cell).insetInlineStart)
@@ -321,7 +321,7 @@ describe('landing and touch', () => {
 
         // Those same pinned cells carry a square opaque background. Unclipped,
         // it spills past the rounded corners and eats the ring's arc on the
-        // left — the right corners stay clean, which is what gives it away.
+        // left - the right corners stay clean, which is what gives it away.
         expect(getComputedStyle(ghosts()[0]).overflow).toBe('hidden')
 
         pointer(handle, 'pointercancel', 120)

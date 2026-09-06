@@ -77,7 +77,7 @@ export interface CellValueScope<TRow> {
 /**
  * Reads one cell on its way out of the grid.
  *
- * Return the value untouched — the same reference — for a cell the feature
+ * Return the value untouched - the same reference - for a cell the feature
  * leaves alone. The grid compares by identity to tell a substituted cell from
  * a plain one, and a reader handing back a fresh `new Date(value)` every time
  * reads as having substituted every cell it saw.
@@ -132,8 +132,8 @@ export interface GridFeature<TRow> {
      * opens with.
      *
      * Asked per column rather than per value: the passes that read a whole
-     * column at a time — export, the clipboard, the quick filter's text, the
-     * set filter's list — ask once and then loop over the rows. The render
+     * column at a time - export, the clipboard, the quick filter's text, the
+     * set filter's list - ask once and then loop over the rows. The render
      * path asks per drawn cell, as `cellDecoration` does, so keep the answer
      * cheap and hand back the same reader each time; returning `undefined`
      * leaves that column read straight through.

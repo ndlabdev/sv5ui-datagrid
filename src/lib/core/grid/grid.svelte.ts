@@ -85,8 +85,8 @@ export class GridState<TRow> {
      * The features gating cell values. Empty is the case that costs nothing:
      * every read below checks the length and then behaves as it always did.
      *
-     * Nothing here is cached. A gate reads whatever it likes — the role the
-     * app is showing the grid as, a rule the user just changed — and asking it
+     * Nothing here is cached. A gate reads whatever it likes - the role the
+     * app is showing the grid as, a rule the user just changed - and asking it
      * again is how the answer stays current. There is no invalidation call for
      * a feature to forget, and forgetting one would mean showing what it was
      * asked to hide. The callers that read a whole column at a time ask once
@@ -140,7 +140,7 @@ export class GridState<TRow> {
         const stages = this.features.flatMap((feature) => feature.pipelineStage ?? [])
         if (stages.filter((stage) => stage.order === PIPELINE_ORDER.window).length > 1) {
             throw new Error(
-                'Only one window-order feature may be registered — use pagination() or virtualization(), not both'
+                'Only one window-order feature may be registered - use pagination() or virtualization(), not both'
             )
         }
         this.#pipeline = composePipeline(() => this.#baseNodes, stages, this)
@@ -216,8 +216,8 @@ export class GridState<TRow> {
      * undefined when nothing stands there.
      *
      * Hoist it out of a loop over rows. It is fixed for the column, which is
-     * why the passes that read a whole column at a time — export, the quick
-     * filter's text, the set filter's value list — ask once and then loop.
+     * why the passes that read a whole column at a time - export, the quick
+     * filter's text, the set filter's value list - ask once and then loop.
      */
     readerFor(
         columnId: string,

@@ -8,7 +8,7 @@ export type FormatOptions = Pick<
 >
 
 /** Building an Intl formatter costs far more than using one, and a renderer
- * runs per visible cell — so they are built once per configuration. */
+ * runs per visible cell - so they are built once per configuration. */
 const numberFormatters = new Map<string, Intl.NumberFormat>()
 const dateFormatters = new Map<string, Intl.DateTimeFormat>()
 
@@ -36,7 +36,7 @@ function dateFormatter(locale: string | undefined, options: Intl.DateTimeFormatO
     return cached(dateFormatters, key, () => new Intl.DateTimeFormat(locale, options))
 }
 
-export const DEFAULT_EMPTY_TEXT = '—'
+export const DEFAULT_EMPTY_TEXT = '-'
 
 // Blank lives with the other value predicates so sorting, filtering and the
 // renderers cannot drift apart on what counts as a hole.
@@ -128,7 +128,7 @@ export function clampToMax(value: unknown, max: number): number {
 }
 
 /** The types whose built-in rendering is text. The rest draw a widget, and a
- * widget has no formatted string to hand anyone — `formatCellText` says so by
+ * widget has no formatted string to hand anyone - `formatCellText` says so by
  * returning undefined, the way a grid with no formatter on the column does. */
 const TEXT_TYPES = new Set<ColumnType>([
     'text',
@@ -144,8 +144,8 @@ const TEXT_TYPES = new Set<ColumnType>([
  * show exactly what its own column would and decorate around it. One
  * definition: the renderer, the snippet and a formatted export all read it.
  *
- * `undefined` where the built-in rendering is a widget — boolean, badge, user,
- * progress, rating, link, actions — since there is no string to stand for it.
+ * `undefined` where the built-in rendering is a widget - boolean, badge, user,
+ * progress, rating, link, actions - since there is no string to stand for it.
  */
 export function formatCellText<TRow>(
     value: unknown,

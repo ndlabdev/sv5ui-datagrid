@@ -30,6 +30,7 @@ export const NUMBER_OPS: NumberFilterOp[] = [
 ]
 export const DATE_OPS: DateFilterOp[] = [
     'equals',
+    'notEqual',
     'before',
     'after',
     'between',
@@ -109,6 +110,7 @@ export const defaultLabels: DataGridLabels = {
     },
     dateOps: {
         equals: 'Equals',
+        notEqual: 'Does not equal',
         before: 'Before',
         after: 'After',
         between: 'Between',
@@ -126,7 +128,7 @@ export const defaultLabels: DataGridLabels = {
     rowsPerPage: 'Rows per page',
     pageSizeOption: (size) => `${size} / page`,
     pageRange: (from, to, total) =>
-        `${from.toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}`,
+        `${from.toLocaleString()}-${to.toLocaleString()} of ${total.toLocaleString()}`,
     totalRows: (total) => `${total.toLocaleString()} rows`,
     filteredRows: (filtered, total) =>
         `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`,

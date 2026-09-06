@@ -163,7 +163,7 @@
                     typeOptions: { currency: 'USD' },
                     editable: true,
                     editor: 'number',
-                    tooltip: ({ row }) => `${row.name} · ${row.dept}`
+                    tooltip: ({ row }) => `${row.name} | ${row.dept}`
                 },
                 {
                     id: 'share',
@@ -256,7 +256,7 @@
     const selectionState = getSelection(grid)!
     const editState = getEditing(grid)!
 
-    let lastEvent = $state('—')
+    let lastEvent = $state('-')
     for (const event of [
         'sortChanged',
         'filterChanged',
@@ -304,12 +304,12 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">QA — toàn bộ bản Free</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">QA - toàn bộ bản Free</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
-                Một lưới bật mọi tính năng Community: header group 2 tầng, ghim trái/phải, 13 kiểu
-                ô, sắp xếp nhiều cột, lọc mọi kiểu (2 điều kiện + phủ định + match case), chọn dòng,
-                sửa ô, ghim dòng, phân trang. Các công tắc bên dưới đổi trạng thái mà không dựng lại
-                lưới. Bàn phím: <Kbd value="F2" /> sửa, <Kbd value="Space" /> chọn,
+                Một lưới bật mọi tính năng nền: header group 2 tầng, ghim trái/phải, 13 kiểu ô, sắp
+                xếp nhiều cột, lọc mọi kiểu (2 điều kiện + phủ định + match case), chọn dòng, sửa ô,
+                ghim dòng, phân trang. Các công tắc bên dưới đổi trạng thái mà không dựng lại lưới.
+                Bàn phím: <Kbd value="F2" /> sửa, <Kbd value="Space" /> chọn,
                 <Kbd value="Alt" /> + <Kbd value="↓" /> mở menu cột.
             </p>
         </div>
@@ -373,9 +373,9 @@
             <p class="text-on-surface-variant">Lọc: {filterState.activeCount} cột</p>
             <p class="text-on-surface-variant">Chọn: {selectionState.count} dòng</p>
             <p class="text-on-surface-variant">
-                Đang sửa: {editState.active ? `${editState.active.columnId}` : '—'}
+                Đang sửa: {editState.active ? `${editState.active.columnId}` : '-'}
             </p>
-            <p class="text-on-surface-variant">Announcer: {grid.announcer.message || '—'}</p>
+            <p class="text-on-surface-variant">Announcer: {grid.announcer.message || '-'}</p>
         </Card>
         <Card class="space-y-1 p-3 text-sm lg:col-span-2">
             <h2 class="font-medium text-on-surface">Event gần nhất</h2>

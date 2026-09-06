@@ -17,7 +17,7 @@ import type { FormatRule } from '../lib/features/conditional-formatting/conditio
 import { serverRowModel } from '../lib/features/server-row-model/server-row-model.svelte.js'
 import type { DataSource } from '../lib/features/server-row-model/server-row-model.types.js'
 import { viVN } from '../lib/locales/vi-VN.js'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 
 interface Deal {
     id: number

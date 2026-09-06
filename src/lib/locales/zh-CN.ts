@@ -72,6 +72,7 @@ export const zhCN: DataGridLocalePack = {
         },
         dateOps: {
             equals: '等于',
+            notEqual: '不等于',
             before: '早于',
             after: '晚于',
             between: '介于',
@@ -89,7 +90,7 @@ export const zhCN: DataGridLocalePack = {
         rowsPerPage: '每页行数',
         pageSizeOption: (size) => `${size} 行/页`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('zh-CN')}–${to.toLocaleString('zh-CN')}，共 ${total.toLocaleString('zh-CN')} 行`,
+            `${from.toLocaleString('zh-CN')}-${to.toLocaleString('zh-CN')}，共 ${total.toLocaleString('zh-CN')} 行`,
         totalRows: (total) => `共 ${total.toLocaleString('zh-CN')} 行`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('zh-CN')} / ${total.toLocaleString('zh-CN')} 行`,

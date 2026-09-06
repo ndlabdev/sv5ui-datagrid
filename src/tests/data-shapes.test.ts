@@ -36,7 +36,7 @@ interface Cell {
 }
 
 const LOCALE = 'en-US'
-const EMPTY = '—'
+const EMPTY = '-'
 
 /** Local, so the day the cell draws does not depend on where this runs. */
 const JAN_10 = new Date(2024, 0, 10, 9, 30)

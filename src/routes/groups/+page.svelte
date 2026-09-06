@@ -225,7 +225,7 @@
                 bằng <code>headerGroupCell</code>.
             </p>
             <p class="text-sm text-on-surface">
-                Doanh thu: <strong>{revenueFolded ? 'gập' : 'mở'}</strong> · Nửa đầu:
+                Doanh thu: <strong>{revenueFolded ? 'gập' : 'mở'}</strong> | Nửa đầu:
                 <strong>{firstHalfFolded ? 'gập' : 'mở'}</strong>
             </p>
         </Card>

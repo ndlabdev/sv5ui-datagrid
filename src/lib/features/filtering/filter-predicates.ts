@@ -151,6 +151,10 @@ function datePredicate(
     switch (filter.op) {
         case 'equals':
             return (value) => toEpochDay(value) === target
+        // A blank day is not this day, the way a blank cell is not this word.
+        // `textPredicate` answers its own `notEqual` the same way.
+        case 'notEqual':
+            return (value) => isBlank(value) || toEpochDay(value) !== target
         case 'before':
             return (value) => toEpochDay(value) < target
         case 'after':

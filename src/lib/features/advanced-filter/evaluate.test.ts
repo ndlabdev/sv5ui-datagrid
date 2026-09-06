@@ -33,7 +33,7 @@ describe('one condition', () => {
         expect(matchesCondition(5, condition({ op: 'between', value: 1, to: 4 }))).toBe(false)
     })
 
-    it('compares dates by day, the way the free grid does', () => {
+    it('compares dates by day, the way a column filter does', () => {
         const day = '2026-03-02T00:00:00.000Z'
         expect(
             matchesCondition(new Date(day), condition({ op: 'before', value: '2026-04-01' }))

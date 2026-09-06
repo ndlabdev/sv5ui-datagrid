@@ -659,7 +659,7 @@ describe('range editing with Ctrl+Enter', () => {
         expect(grid.data.map((row) => row.n)).toEqual([77, 77, 30])
     })
 
-    it("leaves a single selected cell to Community's plain commit", () => {
+    it("leaves a single selected cell to the grid's plain commit", () => {
         const grid = createGrid()
         const state = getRangeSelection(grid)!
         state.startRange(0, 0)

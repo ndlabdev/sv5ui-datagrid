@@ -60,7 +60,7 @@ describe('server row model demo', () => {
 
         // A server model holds one page, so its row indexes run 0..n on every
         // page. Numbering them from the page offset left every lookup into
-        // `preWindowNodes` — Space, Ctrl+C, type-to-edit — pointing past the end.
+        // `preWindowNodes` - Space, Ctrl+C, type-to-edit - pointing past the end.
         await page.getByRole('gridcell', { name: 'Charlie #11' }).click()
         await userEvent.keyboard(' ')
         await expect.poll(state).toContain('1 selected')
@@ -82,7 +82,7 @@ describe('server row model demo', () => {
 
         const cell = document.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
         const box = cell.getBoundingClientRect()
-        // Off the checkbox, inside the cell — where a casual aim lands.
+        // Off the checkbox, inside the cell - where a casual aim lands.
         document
             .elementFromPoint(box.left + 2, box.top + 2)!
             .dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -107,8 +107,8 @@ describe('server row model demo', () => {
 
         await page.getByRole('button', { name: 'Go to page 2' }).click()
         await expect.element(page.getByRole('gridcell', { name: 'Charlie #11' })).toBeVisible()
-        // The header checkbox speaks for the rows the grid holds — one page
-        // here — so it must not throw away the pages it cannot see.
+        // The header checkbox speaks for the rows the grid holds - one page
+        // here - so it must not throw away the pages it cannot see.
         await page.getByRole('checkbox', { name: 'Select all rows' }).click()
         await expect.poll(state).toContain('12 selected')
 

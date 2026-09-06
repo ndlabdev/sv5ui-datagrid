@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
-import AllIcons from './AllIcons.svelte'
-import EveryIconGrid from './EveryIconGrid.svelte'
+import AllIcons from './fixtures/AllIcons.svelte'
+import EveryIconGrid from './fixtures/EveryIconGrid.svelte'
 import { datagridIcons } from '../lib/components/internal/icons.data.js'
 
 const ICON_API = /iconify|simplesvg|unisvg/i

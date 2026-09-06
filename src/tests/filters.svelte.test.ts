@@ -97,7 +97,7 @@ describe('column filters', () => {
         })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Open via the column menu, not the filter icon — the path that used to
+        // Open via the column menu, not the filter icon - the path that used to
         // leave the panel stranded at the top-left corner.
         await page.getByRole('button', { name: 'Name column menu' }).click()
         await page.getByRole('menuitem', { name: 'Filter...' }).click()
@@ -594,7 +594,7 @@ describe('popup layering', () => {
         await expect.element(listbox).toBeVisible()
 
         // The panel and the sv5ui popup layer used to share `z-50`, which left
-        // the winner to DOM order — and the panel is appended last, so it
+        // the winner to DOM order - and the panel is appended last, so it
         // covered its own operator list.
         for (const role of coveredPoints(listbox.element() as HTMLElement)) {
             expect(role).toBe('')

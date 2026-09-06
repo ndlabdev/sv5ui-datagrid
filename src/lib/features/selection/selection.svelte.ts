@@ -125,8 +125,8 @@ export class Selection<TRow> {
 
     /**
      * Adds the rows in view rather than replacing the selection with them. The
-     * header checkbox reports on what the grid holds — one page of a server
-     * model, or whatever a filter left — and must not throw away the rows it
+     * header checkbox reports on what the grid holds - one page of a server
+     * model, or whatever a filter left - and must not throw away the rows it
      * cannot see. `clear()` is what drops the lot.
      */
     selectAll = mutator((): void => {

@@ -27,7 +27,7 @@
     const statuses = ['paid', 'pending', 'refunded']
 
     /**
-     * The backend, generated on demand. Ten million rows never exist at once —
+     * The backend, generated on demand. Ten million rows never exist at once -
      * only the page asked for does, which is the point being measured: what
      * the grid costs is a function of the page, not of the set behind it.
      */
@@ -64,7 +64,7 @@
 
     /**
      * The filtered path, with no index behind it: this is what a table scan
-     * costs the server. The grid is not in it — it receives `pageSize` rows
+     * costs the server. The grid is not in it - it receives `pageSize` rows
      * either way, which is what the panel above the grid separates out.
      */
     function fetchScan(
@@ -234,7 +234,7 @@
 <Container class="space-y-6 py-10">
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Server row model — big data</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Server row model - big data</h1>
             <p class="text-sm text-on-surface-variant">
                 Backend sinh dòng theo yêu cầu, tối đa 10 triệu dòng, nhưng grid không bao giờ giữ
                 quá một trang. Số đo dưới đây tách phần của server ra khỏi phần của grid.
@@ -299,7 +299,7 @@
 
     <p class="text-xs text-on-surface-variant">
         Đổi backend size từ 100k lên 10M: <strong>grid → DOM</strong> không đổi, vì grid vẫn nhận
-        đúng <em>page size</em> dòng. Đổi page size mới là thứ làm nó tăng — 1000 dòng một trang là
+        đúng <em>page size</em> dòng. Đổi page size mới là thứ làm nó tăng - 1000 dòng một trang là
         1000 dòng trong DOM, và đó là lúc cần
         <Link href="/server/infinite">virtualization thay cho phân trang</Link>. Ô tìm kiếm chạy
         quét bảng không index phía "server", giới hạn {SCAN_CAP.toLocaleString()} dòng: cột

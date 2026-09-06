@@ -32,9 +32,9 @@ function keyKindOf(keys: unknown[]): KeyKind {
 
 /**
  * The comparator specialized to what the column holds. Each branch returns
- * exactly what `compareValues` would for those values — a column of numbers
+ * exactly what `compareValues` would for those values - a column of numbers
  * without blanks can only reach its subtraction, and one of non-empty strings
- * only its collator — so the ordering is the same and only the questions go.
+ * only its collator - so the ordering is the same and only the questions go.
  */
 function keyComparator(keys: unknown[], nullSign: number): IndexComparator {
     switch (keyKindOf(keys)) {

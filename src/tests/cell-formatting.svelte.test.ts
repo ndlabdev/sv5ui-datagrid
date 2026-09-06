@@ -10,7 +10,7 @@ import {
     type DataGridProps
 } from '$lib/index.js'
 import Renderers from '../routes/renderers/+page.svelte'
-import FormattedCells from './FormattedCells.svelte'
+import FormattedCells from './fixtures/FormattedCells.svelte'
 
 interface Row {
     id: number
@@ -65,7 +65,7 @@ describe('formatted, handed to a cell snippet', () => {
         expect(byId('money')?.formatted).toBe('$1,235')
         expect(byId('when')?.formatted).toBe('Aug 11, 2026')
         expect(byId('plain')?.formatted).toBe('hello')
-        expect(byId('empty')?.formatted).toBe('—')
+        expect(byId('empty')?.formatted).toBe('-')
         // A widget has no string standing for it.
         expect(byId('bar')?.formatted).toBeUndefined()
         expect(byId('flag')?.formatted).toBeUndefined()

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import * as api from '$lib/index.js'
 
 /**
- * The runtime surface, spelled out. Types are not in it — they cost nothing and
- * break nobody at runtime — so this list is what an app can actually call.
+ * The runtime surface, spelled out. Types are not in it - they cost nothing and
+ * break nobody at runtime - so this list is what an app can actually call.
  *
  * A symbol earns a place by being something an app does with the grid. If a
  * change adds a name here, the question to answer is what documented task

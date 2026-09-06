@@ -47,8 +47,8 @@ function cellOf(text: string): HTMLElement {
 
 afterEach(() => resetDataGridConfig())
 
-describe('theming — per-instance ui', () => {
-    it('adds slot classes without dropping the variant’s own', async () => {
+describe('theming - per-instance ui', () => {
+    it("adds slot classes without dropping the variant's own", async () => {
         renderGrid({ ui: { cell: 'font-mono', headerCell: 'uppercase' } })
         await expect.element(page.getByRole('grid')).toBeVisible()
 
@@ -101,7 +101,7 @@ describe('theming — per-instance ui', () => {
     })
 })
 
-describe('theming — global config', () => {
+describe('theming - global config', () => {
     it('applies config slots to every grid', async () => {
         defineDataGridConfig({ slots: { cell: 'tracking-wide' } })
         renderGrid()
@@ -157,7 +157,7 @@ describe('theming — global config', () => {
     })
 })
 
-describe('theming — data-driven callbacks', () => {
+describe('theming - data-driven callbacks', () => {
     it('applies rowClass per row', async () => {
         renderGrid({ rowClass: (node) => node.row.amount < 0 && 'row-negative' })
         await expect.element(page.getByRole('grid')).toBeVisible()

@@ -73,6 +73,7 @@ export const thTH: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'ตรงกับวันที่',
+            notEqual: 'ไม่เท่ากับ',
             before: 'ก่อนวันที่',
             after: 'หลังวันที่',
             between: 'อยู่ระหว่าง',
@@ -90,7 +91,7 @@ export const thTH: DataGridLocalePack = {
         rowsPerPage: 'จำนวนแถวต่อหน้า',
         pageSizeOption: (size) => `${size} แถว/หน้า`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('th-TH')}–${to.toLocaleString('th-TH')} จาก ${total.toLocaleString('th-TH')}`,
+            `${from.toLocaleString('th-TH')}-${to.toLocaleString('th-TH')} จาก ${total.toLocaleString('th-TH')}`,
         totalRows: (total) => `${total.toLocaleString('th-TH')} แถว`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('th-TH')} จาก ${total.toLocaleString('th-TH')} แถว`,

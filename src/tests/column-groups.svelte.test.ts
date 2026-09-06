@@ -5,7 +5,7 @@ import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
 import ColumnsDemo from '../routes/columns/+page.svelte'
 import GroupsDemo from '../routes/groups/+page.svelte'
-import GroupHeaderGrid from './GroupHeaderGrid.svelte'
+import GroupHeaderGrid from './fixtures/GroupHeaderGrid.svelte'
 import {
     columnOps,
     createDataGrid,

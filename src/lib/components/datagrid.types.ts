@@ -327,7 +327,7 @@ export type DataGridProps<TRow> = {
           getRowId: (row: TRow) => string
 
           /**
-           * Classes added to every row — the escape hatch for data-driven row
+           * Classes added to every row - the escape hatch for data-driven row
            * styling. Pass it to `createDataGrid` instead when you own the grid.
            */
           rowClass?: (node: RowNode<TRow>) => ClassNameValue

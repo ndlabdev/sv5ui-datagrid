@@ -3,7 +3,7 @@
  * holds resolved columns, the sizing maths behind their tracks, header group
  * assembly and the two span resolvers.
  *
- * Names are listed one by one, the way every barrel here is written — a
+ * Names are listed one by one, the way every barrel here is written - a
  * wholesale re-export would publish whatever the next file happens to add.
  * What of this reaches an app is decided one level up, in `core/index.ts`.
  */

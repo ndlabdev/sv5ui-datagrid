@@ -143,7 +143,7 @@ describe('formatting renderers', () => {
             makeGrid([{ id: 'salary', header: 'Salary', type: 'currency' }], blank)
         )
 
-        expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('—')
+        expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('-')
     })
 
     it('honours a custom emptyText', async () => {
@@ -179,7 +179,7 @@ describe('formatting renderers', () => {
             )
         )
 
-        expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('—')
+        expect(cellAt(screen.container, 0, 0).textContent?.trim()).toBe('-')
         expect(cellAt(screen.container, 0, 1).textContent?.trim()).toBe('n/a')
     })
 })

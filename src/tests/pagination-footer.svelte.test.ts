@@ -75,7 +75,7 @@ describe('footer layout', () => {
 
     it('states the row range once, not the page number twice', async () => {
         render(DataGrid as never, { grid: grid(12) } as never)
-        await expect.element(page.getByText('1–12 of 60')).toBeVisible()
+        await expect.element(page.getByText('1-12 of 60')).toBeVisible()
         // The range lives in the pagination footer; the status bar must not
         // repeat it as "page 1 of 5".
         expect(document.body.textContent).not.toMatch(/page \d+ of \d+/)

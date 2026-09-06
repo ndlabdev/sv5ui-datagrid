@@ -2,8 +2,8 @@
  * The kernel proper: the grid instance, the pipeline it composes, the event
  * bus features talk through, row identity and the snapshot shape.
  *
- * `GridState` leaves as a type. It is constructed in one place —
- * `createDataGrid` — and every other reader only ever annotates with it.
+ * `GridState` leaves as a type. It is constructed in one place -
+ * `createDataGrid` - and every other reader only ever annotates with it.
  */
 
 export { EventBus, type EventHandler } from './events.js'

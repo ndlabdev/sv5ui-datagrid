@@ -14,7 +14,7 @@ const datagridDefaults: { defaultVariants: { density: Density }; slots: DataGrid
  * It lives here rather than in sv5ui's config because sv5ui does not export
  * the reader its components use internally. When it does, this store becomes
  * the fallback and `defineConfig({ datagrid })` starts feeding the same
- * values — which is why the shape is identical.
+ * values - which is why the shape is identical.
  */
 export interface DataGridConfig {
     /** Defaults for variants that apply to a whole grid. */

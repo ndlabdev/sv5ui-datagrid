@@ -37,7 +37,7 @@ export interface GroupingOptions<TRow = unknown> {
 
     /**
      * Aggregation per column id, shown on the group row.
-     * Keyed by column id because Pro cannot extend the Community `ColumnDef`.
+     * Keyed by column id because a feature cannot add a field to `ColumnDef`.
      */
     aggregations?: Record<string, Aggregation<TRow>>
 

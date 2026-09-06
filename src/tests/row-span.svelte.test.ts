@@ -132,7 +132,7 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid: makeGrid({ pinned: true }) })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // The overhang covers every separator it crosses — including the one at
+        // The overhang covers every separator it crosses - including the one at
         // its own foot, which belongs to the next run and has to stay. It used
         // to swallow that line, leaving the runs welded together.
         const fill = cell(0, 1)!.firstElementChild as HTMLElement
@@ -223,7 +223,7 @@ describe('rowSpan', () => {
 
         // The pinned column is sticky at the edge; a spanning cell scrolling
         // under it must not paint over it. Getting this wrong needs a cycle
-        // broken — separator over pinned, span over separator, pinned over span.
+        // broken - separator over pinned, span over separator, pinned over span.
         const pinned = cell(0, 1)!.getBoundingClientRect()
         await expect
             .poll(() => ownerAt(pinned.x + pinned.width / 2, pinned.top + ROW_HEIGHT / 2))
@@ -298,7 +298,7 @@ describe('rowSpan', () => {
         cell(0, 1)!.focus()
         expect(document.activeElement).toBe(cell(0, 1))
 
-        // Down through the covered rows keeps the same cell focused — the
+        // Down through the covered rows keeps the same cell focused - the
         // covered ones are not in the DOM to receive it.
         await userEvent.keyboard('{ArrowDown}{ArrowDown}')
         expect(document.activeElement).toBe(cell(0, 1))

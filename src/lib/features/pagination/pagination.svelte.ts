@@ -48,7 +48,7 @@ export class Pagination<TRow> {
         return this.#grid.rowModel === 'server'
     }
 
-    /** Rows across every page — what the footer counts against. */
+    /** Rows across every page - what the footer counts against. */
     get total(): number {
         return this.rowCount ?? this.#grid.totalRows
     }
@@ -98,7 +98,7 @@ export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<T
                 setRowCount: state.setRowCount
             }
         },
-        // Page size is a preference; the page number is not — restoring page 7
+        // Page size is a preference; the page number is not - restoring page 7
         // of a list the user has since filtered lands them nowhere.
         serialize: (grid) => getPagination(grid)?.pageSize ?? undefined,
         hydrate: (slice, grid) => {

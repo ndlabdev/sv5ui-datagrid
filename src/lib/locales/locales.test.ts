@@ -154,7 +154,7 @@ describe('shipped languages', () => {
         const tags = packs.map((locale) => locale.tag)
         expect(new Set(tags).size).toBe(tags.length)
 
-        // Handed the whole set, each tag must still find its own pack — an
+        // Handed the whole set, each tag must still find its own pack - an
         // ordering or matching bug would show up as a neighbour winning.
         for (const locale of packs) {
             expect(resolveLocale(packs, locale.tag)?.tag).toBe(locale.tag)
@@ -228,8 +228,8 @@ describe('shipped languages', () => {
 })
 
 /**
- * Languages whose grammar marks number on a counted noun. The rest — CJK,
- * Thai, Vietnamese, Indonesian — have no such category, and a count of one
+ * Languages whose grammar marks number on a counted noun. The rest - CJK,
+ * Thai, Vietnamese, Indonesian - have no such category, and a count of one
  * reads the same as a count of many.
  */
 const INFLECTS_FOR_COUNT = ['en-US', 'de-DE', 'es-ES', 'fr-FR', 'pt-BR', 'ru-RU']

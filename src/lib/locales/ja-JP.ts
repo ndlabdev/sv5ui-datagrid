@@ -72,6 +72,7 @@ export const jaJP: DataGridLocalePack = {
         },
         dateOps: {
             equals: '同じ日',
+            notEqual: '等しくない',
             before: 'より前',
             after: 'より後',
             between: '範囲内',
@@ -89,7 +90,7 @@ export const jaJP: DataGridLocalePack = {
         rowsPerPage: '1ページの行数',
         pageSizeOption: (size) => `${size}件`,
         pageRange: (from, to, total) =>
-            `${total.toLocaleString('ja-JP')}件中 ${from.toLocaleString('ja-JP')}–${to.toLocaleString('ja-JP')}件`,
+            `${total.toLocaleString('ja-JP')}件中 ${from.toLocaleString('ja-JP')}-${to.toLocaleString('ja-JP')}件`,
         totalRows: (total) => `${total.toLocaleString('ja-JP')}行`,
         filteredRows: (filtered, total) =>
             `${total.toLocaleString('ja-JP')}行中 ${filtered.toLocaleString('ja-JP')}行`,

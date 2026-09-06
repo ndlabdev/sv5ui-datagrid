@@ -154,7 +154,7 @@
     )
 
     /**
-     * Hidden until hovered, so the label gets the cell — unless the column is
+     * Hidden until hovered, so the label gets the cell - unless the column is
      * filtered, or its panel is open. The panel is portalled out of the header
      * and takes focus with it, so `focus-within` cannot keep the trigger it is
      * anchored to on screen, and a panel opened from the column menu or from

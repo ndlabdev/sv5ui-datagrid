@@ -1,6 +1,6 @@
 /**
  * Compile-time only. Neither vitest project matches `*.test-d.ts`, so nothing
- * here runs — `npm run check` is what holds these shapes, and a regression
+ * here runs - `npm run check` is what holds these shapes, and a regression
  * shows up as a type error rather than a failing assertion. It lives outside
  * `src/lib` so it stays out of the published package.
  */

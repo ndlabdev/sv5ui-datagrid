@@ -15,7 +15,7 @@ import type { Component } from 'svelte'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { isLoadingRow } from '../lib/core/grid/index.js'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import {
     getServerRowModel,
     serverRowModel

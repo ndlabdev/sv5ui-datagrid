@@ -49,7 +49,7 @@ function valuesOf<T>(source: T[], fields: string[]): Record<string, unknown[]> {
 
 const store = buildStore(valuesOf(rows, FIELDS), rows.length)
 
-function throughCommunity(
+function throughPipeline(
     filter: Record<string, ColumnFilter>,
     quick: string,
     sort: SortState[]
@@ -126,9 +126,9 @@ const filters: [string, Record<string, ColumnFilter>][] = [
     ]
 ]
 
-describe('the worker query answers what the free grid answers', () => {
+describe('the worker query answers what the client pipeline answers', () => {
     it.each(filters)('%s', (_label, filter) => {
-        expect(throughWorker(filter, '', [])).toEqual(throughCommunity(filter, '', []))
+        expect(throughWorker(filter, '', [])).toEqual(throughPipeline(filter, '', []))
     })
 
     const sorts: [string, SortState[]][] = [
@@ -142,7 +142,7 @@ describe('the worker query answers what the free grid answers', () => {
     ]
 
     it.each(sorts)('sorts by %s the same way', (_label, sort) => {
-        expect(throughWorker({}, '', sort)).toEqual(throughCommunity({}, '', sort))
+        expect(throughWorker({}, '', sort)).toEqual(throughPipeline({}, '', sort))
     })
 
     it('filters and sorts in one pass the way the pipeline does', () => {
@@ -150,11 +150,11 @@ describe('the worker query answers what the free grid answers', () => {
             qty: { kind: 'number', op: 'gte', value: 0 }
         }
         const sort: SortState[] = [{ columnId: 'city', direction: 'asc' }]
-        expect(throughWorker(filter, '', sort)).toEqual(throughCommunity(filter, '', sort))
+        expect(throughWorker(filter, '', sort)).toEqual(throughPipeline(filter, '', sort))
     })
 
     it('matches the quick filter over text columns', () => {
-        expect(throughWorker({}, 'nang', [])).toEqual(throughCommunity({}, 'nang', []))
+        expect(throughWorker({}, 'nang', [])).toEqual(throughPipeline({}, 'nang', []))
     })
 })
 

@@ -69,7 +69,7 @@ function goToPage(grid: GridState<Order>, page: number): void {
     grid.data = pageOf(page)
 }
 
-describe('server row model — what each feature does with one page', () => {
+describe('server row model - what each feature does with one page', () => {
     it('selection: count spans pages but the rows do not', () => {
         const grid = serverGrid()
         const state = getSelection(grid)!

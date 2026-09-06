@@ -35,8 +35,8 @@
         column: ColumnState<TRow>
         rowMode?: boolean
         /** True for the first editable column of a row edit. It takes the caret
-         * — every editor mounts at once, and without this the last to run ends
-         * up with it — and it is the one field the row's ring already fences,
+         * - every editor mounts at once, and without this the last to run ends
+         * up with it - and it is the one field the row's ring already fences,
          * so it draws no divider of its own. */
         first?: boolean
     } = $props()
@@ -142,7 +142,7 @@
 
     /**
      * What a key means inside an editor, or null to leave it to the widget.
-     * `Ctrl`/`Cmd`+`Enter` is the way out of one that owns Enter for itself —
+     * `Ctrl`/`Cmd`+`Enter` is the way out of one that owns Enter for itself -
      * a textarea takes a newline, tags take a tag. `Tab` commits too, but only
      * by leaving; this one stays on the cell.
      */
@@ -204,7 +204,7 @@
     }
 
     // The calendar hands focus back to the cell, where Enter would never
-    // reach the editor. Only then — moving it while typing restarts entry.
+    // reach the editor. Only then - moving it while typing restarts entry.
     function setDate(next: { year: number; month: number; day: number } | undefined) {
         setValue(fromDateValue(next))
         requestAnimationFrame(() => {

@@ -88,7 +88,7 @@ describe('pinned row keyboard access', () => {
         const screen = await renderGrid(grid)
 
         // DOM focus only follows the model once focus is already inside the
-        // grid — the grid must never steal it from elsewhere on the page.
+        // grid - the grid must never steal it from elsewhere on the page.
         screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
         grid.focus.focusCell({ row: grid.totalRows - 1, col: 0 })
         grid.focus.moveBy(1, 0)
@@ -242,7 +242,7 @@ describe('server-side pagination', () => {
     it('reports the server total in the footer', async () => {
         const grid = serverGrid()
         await renderGrid(grid)
-        await expect.element(page.getByText('1–5 of 137')).toBeVisible()
+        await expect.element(page.getByText('1-5 of 137')).toBeVisible()
     })
 
     it('stays on the page whose cell was clicked', async () => {

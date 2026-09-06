@@ -80,7 +80,7 @@ describe('the grid is one tab stop', () => {
         await userEvent.keyboard(' ')
         await expect.poll(() => selectionState.count).toBe(people.length)
 
-        // And back off again — `Ctrl+A` alone would only ever select.
+        // And back off again - `Ctrl+A` alone would only ever select.
         await userEvent.keyboard(' ')
         await expect.poll(() => selectionState.count).toBe(0)
     })

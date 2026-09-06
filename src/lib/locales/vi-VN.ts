@@ -72,6 +72,7 @@ export const viVN: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'Đúng ngày',
+            notEqual: 'Khác',
             before: 'Trước ngày',
             after: 'Sau ngày',
             between: 'Trong khoảng',
@@ -89,7 +90,7 @@ export const viVN: DataGridLocalePack = {
         rowsPerPage: 'Số dòng mỗi trang',
         pageSizeOption: (size) => `${size} dòng/trang`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('vi-VN')}–${to.toLocaleString('vi-VN')} trên ${total.toLocaleString('vi-VN')}`,
+            `${from.toLocaleString('vi-VN')}-${to.toLocaleString('vi-VN')} trên ${total.toLocaleString('vi-VN')}`,
         totalRows: (total) => `${total.toLocaleString('vi-VN')} dòng`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('vi-VN')} / ${total.toLocaleString('vi-VN')} dòng`,

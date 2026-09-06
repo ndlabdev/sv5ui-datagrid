@@ -70,7 +70,7 @@ export interface GridSnapshot {
 
 /**
  * Restores from `localStorage` before the first client paint. SSR cannot read
- * it, so an SSR'd grid paints defaults and corrects after hydration — render
+ * it, so an SSR'd grid paints defaults and corrects after hydration - render
  * a persisted grid client-side to avoid the flash.
  */
 export interface PersistStateOptions {
@@ -122,7 +122,7 @@ export interface DataGridOptions<TRow> {
 
     /**
      * Where filtering, sorting and windowing happen. `'server'` passes those
-     * stages through untouched — `data` already holds what to show — while
+     * stages through untouched - `data` already holds what to show - while
      * the features stay registered as what a server model listens to.
      * @default 'client'
      */

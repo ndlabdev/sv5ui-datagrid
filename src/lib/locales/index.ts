@@ -2,7 +2,7 @@
  * Languages the grid ships with. Import the ones an app needs and hand them to
  * `createDataGrid({ locales: [...] })`; the grid picks from the page's own
  * language. Nothing else is configured, and a pack nobody imports is never
- * bundled — which is why there is no "all languages" export here.
+ * bundled - which is why there is no "all languages" export here.
  */
 export { deDE } from './de-DE.js'
 export { enUS } from './en-US.js'

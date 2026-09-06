@@ -107,10 +107,10 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Spanning — rowSpan & colSpan</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Spanning - rowSpan & colSpan</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
                 <code>rowSpan(ctx)</code> trả về số dòng ô này phủ; các ô bị phủ không render. Span tính
-                trên toàn bộ danh sách nên vẫn đúng khi cuộn — cuộn vào giữa một span, ô chủ nằm trên
+                trên toàn bộ danh sách nên vẫn đúng khi cuộn - cuộn vào giữa một span, ô chủ nằm trên
                 vùng hiển thị vẫn được vẽ đúng chỗ. Cột Region còn được ghim trái để kiểm tra span không
                 đè lên cột ghim.
             </p>
@@ -128,8 +128,8 @@
         <ul class="list-inside list-disc space-y-1 text-sm text-on-surface-variant">
             <li>Ô Region/Country cao bằng đúng số dòng nó phủ, không hở và không lệch.</li>
             <li>Đường kẻ ngang giữa các dòng bị span che, không xuyên qua ô.</li>
-            <li>Cuộn dọc vào giữa một span — ô vẫn liền mạch, không nhảy.</li>
-            <li>Cuộn ngang — cột Region ghim trái vẫn nằm trên các ô span khác.</li>
+            <li>Cuộn dọc vào giữa một span - ô vẫn liền mạch, không nhảy.</li>
+            <li>Cuộn ngang - cột Region ghim trái vẫn nằm trên các ô span khác.</li>
             <li>Sắp xếp theo Revenue làm span vỡ thành từng dòng, đúng như dữ liệu.</li>
             <li>Bàn phím: mũi tên xuống đi qua vùng bị phủ vẫn dừng ở ô chủ.</li>
         </ul>

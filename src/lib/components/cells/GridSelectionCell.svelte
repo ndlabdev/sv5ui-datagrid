@@ -17,8 +17,8 @@
     )
 
     // The checkbox is a fraction of the cell holding it, and a column of
-    // checkboxes is where a user aims casually. The span fills the cell —
-    // the negative margins take back its padding — and toggles from anywhere
+    // checkboxes is where a user aims casually. The span fills the cell -
+    // the negative margins take back its padding - and toggles from anywhere
     // the checkbox itself did not already handle. Only the body cell pads
     // vertically; the header sizes to the row and stretching is enough.
     const hitArea = '-mx-3 flex grow items-center justify-center self-stretch'

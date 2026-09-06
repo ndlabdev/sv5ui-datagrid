@@ -83,7 +83,7 @@ export class FocusModel<TRow> {
 
     /**
      * Navigable lines above the body: the leaf header row, and the filter row
-     * when one is drawn. Group header levels are not among them — nothing in
+     * when one is drawn. Group header levels are not among them - nothing in
      * them takes focus, so movement steps straight past.
      */
     get headerLines(): number {
@@ -106,7 +106,7 @@ export class FocusModel<TRow> {
         return nodes?.length ?? 0
     }
 
-    /** Header, pinned top, body, pinned bottom — flattened so movement is
+    /** Header, pinned top, body, pinned bottom - flattened so movement is
      * arithmetic rather than a special case per boundary. */
     #toLinear(position: CellPosition): number {
         const section = position.section ?? 'body'

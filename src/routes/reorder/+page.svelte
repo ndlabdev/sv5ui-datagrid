@@ -26,7 +26,7 @@
     const blurbs = [
         'Short note.',
         'A longer note that wraps onto a second line once the column is narrow enough to force it.',
-        'A much longer note again — auto row height measures whatever the cell actually renders, so three or four lines of prose are fine and the scrollbar still lands in the right place.'
+        'A much longer note again - auto row height measures whatever the cell actually renders, so three or four lines of prose are fine and the scrollbar still lands in the right place.'
     ]
 
     let tasks = $state.raw<Task[]>(
@@ -39,7 +39,7 @@
         }))
     )
 
-    let lastMove = $state('—')
+    let lastMove = $state('-')
 
     const columns: ColumnDef<Task>[] = [
         {
@@ -60,7 +60,7 @@
             minWidth: 220,
             cell: notesCell,
             // The cell already wraps, so the hover-truncation tooltip has
-            // nothing to add — turn it off rather than have both.
+            // nothing to add - turn it off rather than have both.
             tooltip: false
         },
         { id: 'owner', header: 'Owner', width: 130, filter: 'set' },

@@ -103,7 +103,7 @@ export class Policy<TRow> {
             `policy(): ${open.join(', ')} are masked but still sortable or filterable by the ` +
                 "grid's own sort and column filters, which read the real value. A hidden number " +
                 'is still rankable, and a filter narrowed enough is a search for it. Set ' +
-                'sortable: false and filter: false on those columns until Community can gate ' +
+                'sortable: false and filter: false on those columns until the grid can gate ' +
                 'both, or pass warnOnOpenDoors: false if the ranking is not a secret.'
         )
     }

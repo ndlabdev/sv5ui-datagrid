@@ -7,7 +7,7 @@ export const DEFAULT_ROW_HEIGHT = 40
 
 /**
  * How tall the scroll spacer is allowed to get. Browsers clamp an element's
- * height — Chromium at 2^25 px, others lower — and a spacer past the clamp is
+ * height - Chromium at 2^25 px, others lower - and a spacer past the clamp is
  * silently shortened, which strands every row beyond it: at 40px a million
  * rows want 40M px and the last 160k become unreachable.
  *
@@ -34,7 +34,7 @@ export class Virtualizer {
     scrollTop = $state(0)
     viewportHeight = $state(0)
     /**
-     * Anything inside the scroller that is not the spacer — the sticky header.
+     * Anything inside the scroller that is not the spacer - the sticky header.
      * It lengthens the scroll range without lengthening the rows, so the two
      * spaces only line up once it is counted on both sides.
      */
@@ -61,7 +61,7 @@ export class Virtualizer {
 
     /**
      * Content pixels per scrolled pixel. 1 for any list the browser can render
-     * at full height, which is every list until the millions — so a normal
+     * at full height, which is every list until the millions - so a normal
      * grid never takes a different path from this.
      */
     scale = $derived.by(() => {

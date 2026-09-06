@@ -592,7 +592,7 @@ describe('leaving a widget editor', () => {
         await expect.poll(() => isOpen(screen.container)).toBe(true)
 
         // A widget editor leaves focus on the cell, so a handler on the editor
-        // inside it never sees the key — the binding has to be on the grid.
+        // inside it never sees the key - the binding has to be on the grid.
         await userEvent.keyboard('{Escape}')
         await expect.poll(() => isOpen(screen.container)).toBe(false)
         expect(getEditing(grid)!.active).toBeNull()
@@ -639,7 +639,7 @@ describe('leaving a widget editor', () => {
 })
 
 describe('segmented editors in a narrow column', () => {
-    /** name, age, dept, active, rating, skills, joined — `joined` is the date. */
+    /** name, age, dept, active, rating, skills, joined - `joined` is the date. */
     const JOINED = 6
 
     it('grows past the cell rather than running its segments under the icon', async () => {

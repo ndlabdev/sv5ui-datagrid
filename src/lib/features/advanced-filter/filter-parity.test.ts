@@ -32,7 +32,7 @@ function surviving(grid: GridState<Row>): number[] {
     return grid.preWindowNodes.map((node) => node.row.id)
 }
 
-function throughCommunity(columnId: string, filter: ColumnFilter): number[] {
+function throughColumnFilter(columnId: string, filter: ColumnFilter): number[] {
     const grid = createDataGrid<Row>({
         columns,
         data: rows,
@@ -43,7 +43,7 @@ function throughCommunity(columnId: string, filter: ColumnFilter): number[] {
     return surviving(grid)
 }
 
-function throughPro(condition: Omit<FilterCondition, 'kind'>): number[] {
+function throughBuilder(condition: Omit<FilterCondition, 'kind'>): number[] {
     const grid = createDataGrid<Row>({
         columns,
         data: rows,
@@ -183,24 +183,24 @@ const cases: [string, string, ColumnFilter, Omit<FilterCondition, 'kind'>][] = [
     ]
 ]
 
-describe('Pro answers a single condition the way the free grid does', () => {
-    it.each(cases)('%s', (_label, columnId, community, pro) => {
-        expect(throughPro(pro)).toEqual(throughCommunity(columnId, community))
+describe('the builder answers a condition the way a column filter does', () => {
+    it.each(cases)('%s', (_label, columnId, columnFilter, condition) => {
+        expect(throughBuilder(condition)).toEqual(throughColumnFilter(columnId, columnFilter))
     })
 })
 
 describe('the one answer that differs, and why it is not copied', () => {
-    it('keeps a blank cell out of a negative test, where the free grid drops it', () => {
-        const community = throughCommunity('num', { kind: 'number', op: 'neq', value: 5 })
-        const pro = throughPro({ columnId: 'num', op: 'notEqual', value: 5 })
+    it('keeps a blank cell out of a negative test, where a column filter drops it', () => {
+        const plain = throughColumnFilter('num', { kind: 'number', op: 'neq', value: 5 })
+        const built = throughBuilder({ columnId: 'num', op: 'notEqual', value: 5 })
 
-        expect(community).toEqual([2, 3, 5])
-        expect(pro).toEqual([2, 3, 4, 5])
+        expect(plain).toEqual([2, 3, 5])
+        expect(built).toEqual([2, 3, 4, 5])
     })
 
-    it('answers a blank the same way the free grid answers one on text', () => {
+    it('answers a blank the same way a column filter answers one on text', () => {
         expect(
-            throughCommunity('text', { kind: 'text', op: 'notEqual', value: 'Gamma' })
+            throughColumnFilter('text', { kind: 'text', op: 'notEqual', value: 'Gamma' })
         ).toContain(4)
     })
 })

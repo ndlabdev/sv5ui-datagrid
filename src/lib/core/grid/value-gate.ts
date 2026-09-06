@@ -55,8 +55,8 @@ export function composeReaders<TRow>(
  * A short stable id for a reader, for the two passes that hold their results
  * per column: the quick filter's search text and the set filter's value list.
  *
- * Without it, a grid that swaps a reader — the policy changed, the user
- * changed — answers the next search out of text built for the reader before,
+ * Without it, a grid that swaps a reader - the policy changed, the user
+ * changed - answers the next search out of text built for the reader before,
  * which is the value it was meant to stop showing. Identity is the right test
  * because the reader table is derived: a reader stays the same object until
  * something it reads actually changes.

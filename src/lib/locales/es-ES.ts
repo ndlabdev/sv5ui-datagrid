@@ -81,6 +81,7 @@ export const esES: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'Es igual a',
+            notEqual: 'No es igual a',
             before: 'Antes de',
             after: 'Después de',
             between: 'Entre',
@@ -98,7 +99,7 @@ export const esES: DataGridLocalePack = {
         rowsPerPage: 'Filas por página',
         pageSizeOption: (size) => `${size} / página`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('es-ES')}–${to.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
+            `${from.toLocaleString('es-ES')}-${to.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
         totalRows: (total) => `${total.toLocaleString('es-ES')} ${total === 1 ? 'fila' : 'filas'}`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')} filas`,

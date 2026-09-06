@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import ImportWizard from '../lib/components/panels/ImportWizard.svelte'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import { dataImport, getDataImport } from '../lib/features/data-import/data-import.svelte.js'
 import { viVN } from '../lib/locales/vi-VN.js'
 

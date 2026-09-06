@@ -4,7 +4,7 @@
  *
  * `isBlank` is listed under `value.js`, which owns it. `format.js` re-exports
  * it for its own callers, and naming it twice here would make the re-export
- * ambiguous — one more reason these lists are spelled out rather than starred.
+ * ambiguous - one more reason these lists are spelled out rather than starred.
  */
 
 export {

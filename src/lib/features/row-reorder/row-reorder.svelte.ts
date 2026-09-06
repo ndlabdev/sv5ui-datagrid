@@ -62,7 +62,7 @@ export class RowReorder<TRow> {
 
     /**
      * Moves a row in the rendered order, rewriting `data` so it survives a
-     * re-render — hence translating the target back through the node dropped
+     * re-render - hence translating the target back through the node dropped
      * onto, since a sort makes rendered and data positions differ.
      */
     moveRow = mutator((id: string, toRenderedIndex: number): void => {

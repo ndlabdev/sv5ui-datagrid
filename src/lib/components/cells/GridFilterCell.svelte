@@ -64,8 +64,8 @@
 
     /**
      * What the field holds, for the widget that speaks numbers. A value that
-     * is not a number at all — a snapshot written by hand, a filter set by an
-     * app — reads as no value rather than as `NaN`, which the widget would
+     * is not a number at all - a snapshot written by hand, a filter set by an
+     * app - reads as no value rather than as `NaN`, which the widget would
      * draw and then hand back.
      */
     const numberValue = $derived.by(() => {
@@ -98,7 +98,7 @@
         )
     }
 
-    // Pushes what the field produced, and nothing else — the two halves the
+    // Pushes what the field produced, and nothing else - the two halves the
     // quick filter box is built from, for the same reason: one effect reading
     // both directions writes the field back over a filter set in code.
     $effect(() => {

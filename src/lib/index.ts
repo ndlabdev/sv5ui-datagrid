@@ -1,6 +1,6 @@
 /**
  * The public API, covered by semver and kept deliberately small. A symbol
- * earns a place by being something an app does with the grid — nothing is
+ * earns a place by being something an app does with the grid - nothing is
  * exported because it happens to exist.
  *
  * The three barrels below name their exports one by one rather than

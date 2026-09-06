@@ -26,7 +26,7 @@ const rows: Row[] = [
     { id: 2, name: 'plain', a: 'A2', b: 'B2', c: 'C2', d: 'D2' }
 ]
 
-// Row 1 spans column `a` (index 1) across three columns — covering 1, 2, 3 —
+// Row 1 spans column `a` (index 1) across three columns - covering 1, 2, 3 -
 // leaving column `d` (index 4) as the first cell after the span. Row 2 is normal.
 const columns: ColumnDef<Row>[] = [
     { id: 'name', header: 'Name' },

@@ -99,10 +99,10 @@ describe('pickColumns', () => {
 describe('rowsToMatrix with a formatter', () => {
     it('hands over the value, node and column and takes the text back', () => {
         const matrix = rowsToMatrix(nodes, columns, ({ value, node, column }) =>
-            column.id === 'score' ? `${node.row.name}:${value}` : String(value ?? '—')
+            column.id === 'score' ? `${node.row.name}:${value}` : String(value ?? '-')
         )
         expect(matrix[0]).toEqual(['Alice', 'plain', 'Alice:2'])
-        expect(matrix[2]).toEqual(['Carol\tTab', '—', 'Carol\tTab:6'])
+        expect(matrix[2]).toEqual(['Carol\tTab', '-', 'Carol\tTab:6'])
     })
 })
 

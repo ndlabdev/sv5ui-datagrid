@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Component } from 'svelte'
     import { Grid } from '$lib/components/parts.js'
-    import type { GridState } from '$lib/index.js'
+    import type { DataGridUi, GridState } from '$lib/index.js'
 
     /**
      * A part, inside a grid. Every chrome and panel component takes its grid
@@ -12,9 +12,12 @@
     let {
         grid,
         component: Part,
-        partProps = {}
+        partProps = {},
+        ui
     }: {
         grid: GridState<never>
+        /** The per-grid class overrides, which reach a part through the root. */
+        ui?: DataGridUi
         /** Omit it to mount nothing but the root, which is what a feature that
          * contributes its own component needs. */
         component?: Component<Record<string, unknown>>
@@ -22,7 +25,7 @@
     } = $props()
 </script>
 
-<Grid.Root {grid}>
+<Grid.Root {grid} {ui}>
     {#if Part}
         <Part {...partProps} />
     {/if}

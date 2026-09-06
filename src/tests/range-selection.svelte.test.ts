@@ -9,7 +9,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
@@ -275,7 +275,7 @@ describe('Ctrl+Enter over a range', () => {
         expect(grid.data[2]).toMatchObject({ q1: 50, q2: 60 })
     })
 
-    it('leaves Community to commit the one cell when nothing else is selected', async () => {
+    it('leaves the grid to commit the one cell when nothing else is selected', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
 

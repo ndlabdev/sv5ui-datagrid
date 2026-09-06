@@ -7,7 +7,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
@@ -72,7 +72,7 @@ async function renderGrid(grid: GridState<Person>) {
     return screen
 }
 
-describe('grouping through the Community kernel', () => {
+describe('grouping through the pipeline', () => {
     it('renders group rows the kernel treats as treegrid nodes', async () => {
         const grid = makeGrid({ by: ['dept'] })
         const screen = await renderGrid(grid)

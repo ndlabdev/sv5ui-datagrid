@@ -3,7 +3,7 @@
  *
  * The column itself is declared the ordinary way in `createDataGrid({ columns })`;
  * this only supplies the value behind it. That split is deliberate - adding a
- * column at runtime is a separate Community extension point, and a formula
+ * column at runtime is a separate extension point, and a formula
  * column is otherwise an ordinary column in every respect.
  */
 export interface FormulaColumn {

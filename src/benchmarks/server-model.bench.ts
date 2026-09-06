@@ -21,9 +21,9 @@ function serverGrid(pageSize: number, rowCount: number) {
 /**
  * What a page turn costs the grid under a server model: swap `data`, then read
  * the pipeline output the renderer will iterate. The size of the set behind it
- * is the variable being held up against the page size — one of them matters.
+ * is the variable being held up against the page size - one of them matters.
  */
-describe('server row model — a page turn', () => {
+describe('server row model - a page turn', () => {
     const page50of100k = serverGrid(50, 100_000)
     const page50of10m = serverGrid(50, 10_000_000)
     const page1000of10m = serverGrid(1000, 10_000_000)

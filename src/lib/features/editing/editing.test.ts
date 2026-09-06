@@ -48,7 +48,7 @@ function createGrid(options: EditingOptions = {}): GridState<Person> {
     })
 }
 
-describe('Editing — cell mode', () => {
+describe('Editing - cell mode', () => {
     it('seeds the draft on startEdit and commits a valid value', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -151,7 +151,7 @@ describe('Editing — cell mode', () => {
     })
 })
 
-describe('Editing — undo/redo', () => {
+describe('Editing - undo/redo', () => {
     it('undoes and redoes a committed edit', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -225,7 +225,7 @@ describe('Editing — undo/redo', () => {
     })
 })
 
-describe('Editing — applyEdits', () => {
+describe('Editing - applyEdits', () => {
     it('writes many cells across rows as one undo step', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -284,7 +284,7 @@ describe('Editing — applyEdits', () => {
     })
 })
 
-describe('Editing — row mode', () => {
+describe('Editing - row mode', () => {
     it('edits several cells of a row as one transaction and undo', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!

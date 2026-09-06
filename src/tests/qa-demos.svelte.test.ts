@@ -66,10 +66,10 @@ describe('i18n demo', () => {
         // The page compares its own object against `defaultLabels`, so a label
         // added to the library without a translation shows up here.
         await expect
-            .element(page.getByText(/vi-VN phủ đủ \d+ khoá — \d+ ngôn ngữ đóng sẵn\./))
+            .element(page.getByText(/vi-VN phủ đủ \d+ khoá - \d+ ngôn ngữ đóng sẵn\./))
             .toBeVisible()
         await expect.element(page.getByPlaceholder('Tìm kiếm...')).toBeVisible()
-        await expect.element(page.getByText('1–8 trên 60')).toBeVisible()
+        await expect.element(page.getByText('1-8 trên 60')).toBeVisible()
         await expect
             .element(page.getByRole('checkbox', { name: 'Chọn tất cả các dòng' }))
             .toBeVisible()
@@ -88,7 +88,7 @@ describe('i18n demo', () => {
         await expect.element(page.getByPlaceholder('Search...')).toBeVisible()
         // The footer belongs to the label set too, not to the Pagination
         // component's own wording.
-        await expect.element(page.getByText('1–8 of 60')).toBeVisible()
+        await expect.element(page.getByText('1-8 of 60')).toBeVisible()
     })
 
     it('reaches a language beyond the pair the demo started with', async () => {
@@ -99,7 +99,7 @@ describe('i18n demo', () => {
         await page.getByRole('option', { name: '日本語' }).click()
 
         await expect.element(page.getByPlaceholder('検索...')).toBeVisible()
-        await expect.element(page.getByText('60件中 1–8件')).toBeVisible()
+        await expect.element(page.getByText('60件中 1-8件')).toBeVisible()
         // The date column names no locale, so it follows the grid: Japanese
         // writes the year first where Vietnamese writes the day.
         await expect

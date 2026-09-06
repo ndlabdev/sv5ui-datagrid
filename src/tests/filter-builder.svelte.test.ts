@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import FilterBuilder from '../lib/components/panels/FilterBuilder.svelte'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import {
     advancedFilter,
     getAdvancedFilter
@@ -280,7 +280,7 @@ describe('the filter builder writes the tree', () => {
         expect(row().querySelector('input')?.type).toBe('number')
     })
 
-    it('gives a date column the same segmented picker the free grid uses', async () => {
+    it('gives a date column the same segmented picker a column filter uses', async () => {
         const grid = makeGrid()
         const screen = await render(TypedBuilder, inRoot(grid))
         const state = getAdvancedFilter(grid)!

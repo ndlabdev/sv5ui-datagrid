@@ -125,6 +125,11 @@ function dateHolds(value: unknown, condition: Extract<Condition, { kind: 'date' 
     switch (condition.op) {
         case 'equals':
             return cell === target
+        // A blank day is not this day. A server implementing this operator has
+        // to say so too, or a row with no date vanishes from a query that
+        // asked for every row except one day.
+        case 'notEqual':
+            return isBlank(value) || cell !== target
         case 'before':
             return cell < target
         case 'after':

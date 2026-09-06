@@ -1,6 +1,6 @@
 /**
  * The pointer half of row reordering: the gesture, not what a move means.
- * Kept out of Svelte state — the ghost moves every frame, and a rune would
+ * Kept out of Svelte state - the ghost moves every frame, and a rune would
  * re-render the rows behind it for nothing.
  */
 
@@ -30,7 +30,7 @@ export interface RowDragOptions {
     ghostClass: string
     /** Row the drag started on moved over this one. */
     onOver: (rowId: string) => void
-    /** Pointer travelled far enough — or rested long enough — to be a drag. */
+    /** Pointer travelled far enough - or rested long enough - to be a drag. */
     onStart: () => void
     /** Released over a valid target. */
     onCommit: () => void

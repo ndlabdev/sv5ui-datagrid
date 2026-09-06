@@ -125,7 +125,7 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Theming — §9</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Theming - §9</h1>
             <p class="text-sm text-on-surface-variant">
                 Ba tầng ghi đè, từ rộng tới hẹp: <code>defineDataGridConfig</code> cho cả app →
                 <code>ui</code> cho một grid →
@@ -163,7 +163,7 @@
         <div class="space-y-1">
             <h2 class="text-lg font-medium text-on-surface">2. App-wide config</h2>
             <p class="text-sm text-on-surface-variant">
-                <code>defineDataGridConfig</code> đặt mặc định cho mọi grid — ở đây là density
+                <code>defineDataGridConfig</code> đặt mặc định cho mọi grid - ở đây là density
                 <code>compact</code> và một status bar in đậm. Grid nào tự khai báo density thì giữ nguyên
                 lựa chọn của nó.
             </p>
@@ -184,7 +184,7 @@
             <p class="text-sm text-on-surface-variant">
                 Hàng <strong>overdue</strong> có nền đỏ nhạt (rowClass). Ô
                 <strong>Amount</strong>
-                và <strong>Due</strong> âm chuyển sang màu error (cellClass) — chú ý màu chữ mặc định
+                và <strong>Due</strong> âm chuyển sang màu error (cellClass) - chú ý màu chữ mặc định
                 bị thay hẳn chứ không cộng dồn.
             </p>
         </div>

@@ -81,6 +81,7 @@ export const ruRU: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'Равно',
+            notEqual: 'Не равно',
             before: 'До',
             after: 'После',
             between: 'Между',
@@ -98,7 +99,7 @@ export const ruRU: DataGridLocalePack = {
         rowsPerPage: 'Строк на странице',
         pageSizeOption: (size) => `${size} / стр.`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('ru-RU')}–${to.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')}`,
+            `${from.toLocaleString('ru-RU')}-${to.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')}`,
         totalRows: (total) => `${total.toLocaleString('ru-RU')} ${rows(total)}`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')} ${rows(total)}`,

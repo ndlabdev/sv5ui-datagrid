@@ -26,7 +26,7 @@ function createGrid() {
     })
 }
 
-describe('Filtering — a setter does not subscribe its caller', () => {
+describe('Filtering - a setter does not subscribe its caller', () => {
     it('settles after one run when an effect writes a column filter', () => {
         const cleanup = $effect.root(() => {
             const grid = createGrid()
@@ -74,7 +74,7 @@ describe('Filtering — a setter does not subscribe its caller', () => {
     })
 })
 
-describe('Filtering — what filterChanged reports', () => {
+describe('Filtering - what filterChanged reports', () => {
     it('carries the model as it stands after the write', () => {
         const grid = createGrid()
         const state = getFiltering(grid)!

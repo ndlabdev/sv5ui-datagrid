@@ -3,7 +3,7 @@ import { datagridVariants } from './datagrid.variants.js'
 
 const slots = datagridVariants()
 
-describe('headerControls — reachable without a pointer that hovers', () => {
+describe('headerControls - reachable without a pointer that hovers', () => {
     it('keeps the hover reveal for pointer devices', () => {
         const controls = slots.headerControls()
         expect(controls).toContain('opacity-0')
@@ -14,7 +14,7 @@ describe('headerControls — reachable without a pointer that hovers', () => {
 
     it('stays visible where hovering is impossible', () => {
         // Without this the filter and column-menu triggers are invisible on a
-        // touch device — and still tappable, so they swallow taps meant for the
+        // touch device - and still tappable, so they swallow taps meant for the
         // header. Tailwind emits arbitrary media variants last, which is what
         // lets this outrank the base `opacity-0`.
         expect(slots.headerControls()).toContain('[@media(hover:none)]:opacity-100')

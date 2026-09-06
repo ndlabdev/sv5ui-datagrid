@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Icon } from 'sv5ui'
-    import { registerDataGridIcons } from '../lib/components/internal/icons.js'
-    import { datagridIcons } from '../lib/components/internal/icons.data.js'
+    import { registerDataGridIcons } from '../../lib/components/internal/icons.js'
+    import { datagridIcons } from '../../lib/components/internal/icons.data.js'
 
     // Exactly what Grid.Root does.
     registerDataGridIcons()

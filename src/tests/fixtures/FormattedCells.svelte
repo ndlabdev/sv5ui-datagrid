@@ -39,7 +39,7 @@
     /** Hands the context out and prints what the snippet would print. */
     function report(ctx: DataGridCellContext<Row>): string {
         onCell(ctx)
-        return ctx.formatted ?? '—'
+        return ctx.formatted ?? '-'
     }
 
     const grid = createDataGrid<Row>({

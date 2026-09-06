@@ -46,7 +46,7 @@ export function rowColSpans<TRow>(
                 column
             }) ?? 1
 
-        // Grow the span up to the request, but never across a pin boundary —
+        // Grow the span up to the request, but never across a pin boundary -
         // pinned cells are individually sticky, so a span cannot straddle them.
         const section = pinSection(column)
         let n = 1

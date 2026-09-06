@@ -1,7 +1,7 @@
 import { type RowNode } from '../../core/types/index.js'
 
 /**
- * Operators a condition can use. They are Community's own operator names, so
+ * Operators a condition can use. They are the grid's own operator names, so
  * a `text` condition here means what a text column filter means there.
  *
  * `blank` / `notBlank` carry no value; `between` carries both `value` and

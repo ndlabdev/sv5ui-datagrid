@@ -80,6 +80,7 @@ export const ptBR: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'É igual a',
+            notEqual: 'É diferente de',
             before: 'Antes de',
             after: 'Depois de',
             between: 'Entre',
@@ -97,7 +98,7 @@ export const ptBR: DataGridLocalePack = {
         rowsPerPage: 'Linhas por página',
         pageSizeOption: (size) => `${size} / página`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('pt-BR')}–${to.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')}`,
+            `${from.toLocaleString('pt-BR')}-${to.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')}`,
         totalRows: (total) =>
             `${total.toLocaleString('pt-BR')} ${total === 1 ? 'linha' : 'linhas'}`,
         filteredRows: (filtered, total) =>

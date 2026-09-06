@@ -9,7 +9,7 @@
  * the same row, which is how a month-per-column table reads across.
  *
  * The share is a fraction: `0.34`, not `34`. Declare the column
- * `type: 'percent'` and Community formats it as `34%` on screen, in the
+ * `type: 'percent'` and the grid formats it as `34%` on screen, in the
  * clipboard and in every export.
  */
 export type ShowAs =

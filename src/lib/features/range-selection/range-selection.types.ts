@@ -17,7 +17,7 @@ export interface RangeSelectionOptions {
      * editable cell of the selection instead of only the cell being edited,
      * the way a spreadsheet does. Requires the `editing` feature, and takes
      * effect only while the edited cell is inside a selection of more than
-     * one cell - a lone cell keeps Community's plain commit.
+     * one cell - a lone cell keeps the grid's plain commit.
      * @default true
      */
     rangeEdit?: boolean
@@ -50,7 +50,7 @@ export interface CopyRangeOptions {
 
     /**
      * Copy what the grid is showing - the column's `type` applied - rather
-     * than the value behind it. Off by default, matching the Community
+     * than the value behind it. Off by default, matching the grid's own
      * `copySelection` default, so a paste into a spreadsheet keeps a number a
      * number. A column whose `type` draws a widget has no text of its own and
      * falls back to the raw value.

@@ -83,7 +83,7 @@ describe('a masked value must not come back out through', () => {
         expect(find.matches).toHaveLength(0)
     })
 
-    it("Pro's own advanced filter", () => {
+    it('the filter builder', () => {
         const grid = makeGrid([filtering(), advancedFilter<Person>()])
         getAdvancedFilter(grid)!.setModel({
             kind: 'group',

@@ -72,6 +72,7 @@ export const koKR: DataGridLocalePack = {
         },
         dateOps: {
             equals: '같은 날짜',
+            notEqual: '같지 않음',
             before: '이전',
             after: '이후',
             between: '사이',
@@ -89,7 +90,7 @@ export const koKR: DataGridLocalePack = {
         rowsPerPage: '페이지당 행 수',
         pageSizeOption: (size) => `${size}개씩`,
         pageRange: (from, to, total) =>
-            `${total.toLocaleString('ko-KR')}개 중 ${from.toLocaleString('ko-KR')}–${to.toLocaleString('ko-KR')}`,
+            `${total.toLocaleString('ko-KR')}개 중 ${from.toLocaleString('ko-KR')}-${to.toLocaleString('ko-KR')}`,
         totalRows: (total) => `${total.toLocaleString('ko-KR')}행`,
         filteredRows: (filtered, total) =>
             `${total.toLocaleString('ko-KR')}행 중 ${filtered.toLocaleString('ko-KR')}행`,

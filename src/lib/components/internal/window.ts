@@ -47,7 +47,7 @@ export function headerRowsOf<TRow>(grid: GridState<TRow>): number {
     return grid.columns.headerRowCount + (getFiltering(grid)?.floatingRow ? 1 : 0)
 }
 
-/** The rows `aria-rowindex` counts against — the server's total, if it said. */
+/** The rows `aria-rowindex` counts against - the server's total, if it said. */
 export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {
     const pagination = getPagination(grid)
     return pagination?.server ? pagination.total : grid.totalRows

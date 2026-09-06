@@ -32,7 +32,7 @@ import {
  * `Grid.ConditionalFormattingPanel` reads as a sentence rather than a part.
  *
  * It lives beside the barrel rather than in it because it is a composition of
- * three folders — structure, chrome and menus — and the barrel's job is to
+ * three folders - structure, chrome and menus - and the barrel's job is to
  * aggregate, not to build. The short keys are the API; the file names they
  * come from are not.
  */

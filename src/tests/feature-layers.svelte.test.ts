@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
-import FeatureLayers from './FeatureLayers.svelte'
+import FeatureLayers from './fixtures/FeatureLayers.svelte'
 
 /**
  * What `GridFeature.component` is for. Neither of the two things checked here

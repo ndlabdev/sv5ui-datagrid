@@ -12,8 +12,8 @@ import { toDisplayUnit } from './filter-units.js'
  *
  * The row holds one condition, in the column's own operator: a field for the
  * three that are typed, a choice for a boolean, a list of ticks for a set.
- * Everything it cannot hold that way — two conditions joined, a range, an
- * operator with no value at all — reads back as a summary and is handed to
+ * Everything it cannot hold that way - two conditions joined, a range, an
+ * operator with no value at all - reads back as a summary and is handed to
  * the panel, which is the whole of the difference between the two surfaces.
  */
 export type FloatingCell =

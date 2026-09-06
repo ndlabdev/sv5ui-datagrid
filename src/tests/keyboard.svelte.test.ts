@@ -14,7 +14,7 @@ import {
     type ColumnDef,
     type DataGridProps
 } from '$lib/index.js'
-import VirtualGrid from './VirtualGrid.svelte'
+import VirtualGrid from './fixtures/VirtualGrid.svelte'
 
 interface Person {
     id: number
@@ -226,7 +226,7 @@ describe('overlays', () => {
         })
 
         // A flat count left most of a tall grid blank, which reads as broken
-        // rather than busy — the very thing the loading state answers.
+        // rather than busy - the very thing the loading state answers.
         const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')!
         expect(body.querySelectorAll('[role="row"]')).toHaveLength(25)
     })
@@ -322,7 +322,7 @@ describe('keyboard navigation past pinned columns', () => {
         viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
 
         // The browser's own scroll-into-view stops at the viewport edge, which
-        // is where the pinned columns sit — a cell reached by keyboard used to
+        // is where the pinned columns sit - a cell reached by keyboard used to
         // park underneath one.
         for (let step = 0; step < 5; step++) {
             await userEvent.keyboard('{ArrowRight}')

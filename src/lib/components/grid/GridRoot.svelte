@@ -2,8 +2,8 @@
     import { registerDataGridIcons } from '../internal/icons.js'
 
     // At import, not at init: an instance script runs only once this component
-    // mounts, and anything the app drew before that — its own button carrying
-    // one of the grid's icons — would have found an empty store and fetched.
+    // mounts, and anything the app drew before that - its own button carrying
+    // one of the grid's icons - would have found an empty store and fetched.
     // The module runs as soon as the app imports the grid, before any render.
     // Same place sv5ui registers its own bundle, for the same reason.
     registerDataGridIcons()

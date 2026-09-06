@@ -93,7 +93,7 @@
 
     /**
      * The first editable column of a row edit: the one that takes the caret.
-     * Resolved once for the row being edited rather than per cell — asked per
+     * Resolved once for the row being edited rather than per cell - asked per
      * cell it walks the columns again for each of them, and `editable` is the
      * app's own predicate.
      */
@@ -211,7 +211,7 @@
 
     /**
      * What an editor changes about its cell: the cell stops clipping for the
-     * validation message, and gives up its own ring — an open editor draws
+     * validation message, and gives up its own ring - an open editor draws
      * one, and the two nested read as a mistake.
      */
     function editStateClasses(input: CellClassInput): string {
@@ -296,7 +296,7 @@
     /**
      * Enough skeleton rows to cover the area the real ones will. A flat count
      * leaves most of a tall grid blank, which reads as broken rather than
-     * busy — the complaint the loading state exists to answer.
+     * busy - the complaint the loading state exists to answer.
      */
     const skeletonRows = $derived(
         loadingRows ??

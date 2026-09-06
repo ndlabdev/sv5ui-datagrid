@@ -46,7 +46,7 @@
 
     /**
      * A hand-rolled standard-schema so the demo carries no dependency. Any
-     * zod / valibot / arktype schema drops in unchanged — the grid only ever
+     * zod / valibot / arktype schema drops in unchanged - the grid only ever
      * calls `~standard.validate`.
      */
     function rule(check: (value: unknown) => string | null): StandardSchemaV1 {
@@ -67,7 +67,7 @@
     const columns: ColumnDef<Task>[] = [
         { id: 'id', header: '#', width: 64, align: 'right', sortable: true },
 
-        // text — the default editor, so `editor` can be left out entirely.
+        // text - the default editor, so `editor` can be left out entirely.
         {
             id: 'title',
             header: 'Title',
@@ -78,7 +78,7 @@
             schema: rule((v) => (String(v).trim().length >= 3 ? null : 'At least 3 characters'))
         },
 
-        // number — `parse` turns the editor's raw output into the stored value,
+        // number - `parse` turns the editor's raw output into the stored value,
         // and runs before validation.
         {
             id: 'estimate',
@@ -97,7 +97,7 @@
             })
         },
 
-        // select — a short, fixed list.
+        // select - a short, fixed list.
         {
             id: 'priority',
             header: 'Priority',
@@ -114,7 +114,7 @@
             }
         },
 
-        // selectMenu — the searchable one, for a list too long to scan.
+        // selectMenu - the searchable one, for a list too long to scan.
         {
             id: 'assignee',
             header: 'Assignee',
@@ -126,14 +126,14 @@
                 options: people.map((p) => ({ label: p, value: p }))
             },
             // Imperative validation sees the whole row, so it can state a rule
-            // that spans columns — something a schema on one value cannot.
+            // that spans columns - something a schema on one value cannot.
             validate: (value, row) =>
                 row.priority === 'Critical' && !leads.includes(String(value))
                     ? 'Critical work goes to Ada or Grace'
                     : null
         },
 
-        // checkbox — commits the moment it changes.
+        // checkbox - commits the moment it changes.
         {
             id: 'done',
             header: 'Done',
@@ -144,7 +144,7 @@
             editor: 'checkbox'
         },
 
-        // date — typed segment by segment, committed on leaving.
+        // date - typed segment by segment, committed on leaving.
         {
             id: 'due',
             header: 'Due',
@@ -160,7 +160,7 @@
             })
         },
 
-        // time — the same segmented entry, on a clock.
+        // time - the same segmented entry, on a clock.
         {
             id: 'start',
             header: 'Start',
@@ -175,7 +175,7 @@
             }
         },
 
-        // textarea — multi-line, so Enter belongs to the widget.
+        // textarea - multi-line, so Enter belongs to the widget.
         {
             id: 'notes',
             header: 'Notes',
@@ -187,7 +187,7 @@
             )
         },
 
-        // rating — a widget, committing on change.
+        // rating - a widget, committing on change.
         {
             id: 'impact',
             header: 'Impact',
@@ -199,7 +199,7 @@
             editor: 'rating'
         },
 
-        // tags — an array value.
+        // tags - an array value.
         {
             id: 'labels',
             header: 'Labels',
@@ -230,7 +230,7 @@
 
     function short(value: unknown): string {
         const text = JSON.stringify(value) ?? 'null'
-        return text.length > 18 ? `${text.slice(0, 17)}…` : text
+        return text.length > 18 ? `${text.slice(0, 17)}...` : text
     }
 
     function push(line: string) {
@@ -245,7 +245,7 @@
 
     const rules: { column: string; how: string; rule: string }[] = [
         { column: 'Title', how: 'schema', rule: 'at least 3 characters' },
-        { column: 'Estimate', how: 'parse + schema', rule: 'rounded, then 1–40' },
+        { column: 'Estimate', how: 'parse + schema', rule: 'rounded, then 1-40' },
         { column: 'Assignee', how: 'validate', rule: 'Critical → chỉ Ada hoặc Grace' },
         { column: 'Due', how: 'schema', rule: 'a real date, not before 2026' },
         { column: 'Start', how: 'validate', rule: 'between 06:00 and 22:00' },
@@ -266,13 +266,13 @@
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">
-                Editors — every type, with validation
+                Editors - every type, with validation
             </h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
                 Cả 10 editor dựng sẵn, mỗi cột kèm một luật kiểm tra. Nhập sai thì ô không ghi: viền
                 đỏ, thông báo ngay dưới ô, giá trị cũ giữ nguyên cho tới khi hợp lệ.
-                <kbd>Enter</kbd> mở ô đang chọn — select xổ list sẵn, gõ thẳng một ký tự cũng mở ·
-                <kbd>Esc</kbd> huỷ · <kbd>Tab</kbd> ghi và sang phải ·
+                <kbd>Enter</kbd> mở ô đang chọn - select xổ list sẵn, gõ thẳng một ký tự cũng mở |
+                <kbd>Esc</kbd> huỷ | <kbd>Tab</kbd> ghi và sang phải |
                 <kbd>Ctrl</kbd>+<kbd>Enter</kbd> ghi mà đứng yên, kể cả ở ô mà <kbd>Enter</kbd>
                 thuộc về chính editor.
             </p>
@@ -336,15 +336,15 @@
         <Card class="space-y-2 p-4">
             <h2 class="font-medium text-on-surface">Cần soi</h2>
             <ul class="list-inside list-disc space-y-1 text-sm text-on-surface-variant">
-                <li>Nhập tiêu đề 1 ký tự — ô không ghi, thông báo hiện dưới ô.</li>
+                <li>Nhập tiêu đề 1 ký tự - ô không ghi, thông báo hiện dưới ô.</li>
                 <li>Estimate nhập 3.7 → <code>parse</code> làm tròn thành 4 rồi mới kiểm tra.</li>
-                <li>Estimate nhập 99 — bị chặn, giá trị cũ còn nguyên.</li>
+                <li>Estimate nhập 99 - bị chặn, giá trị cũ còn nguyên.</li>
                 <li>
-                    Dòng Critical, đổi Assignee sang người khác — <code>validate</code> đọc cả dòng nên
+                    Dòng Critical, đổi Assignee sang người khác - <code>validate</code> đọc cả dòng nên
                     chặn được luật liên cột.
                 </li>
                 <li>
-                    Notes và Labels giữ <kbd>Enter</kbd> cho riêng chúng — xuống dòng, thêm nhãn —
+                    Notes và Labels giữ <kbd>Enter</kbd> cho riêng chúng - xuống dòng, thêm nhãn -
                     nên ghi bằng <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.
                 </li>
                 <li>Sửa cả dòng: mỗi ô sai báo riêng, cả dòng không ghi tới khi sạch.</li>
@@ -356,7 +356,7 @@
                     {#each log as line, i (`${i}-${line}`)}
                         <li>{line}</li>
                     {:else}
-                        <li>—</li>
+                        <li>-</li>
                     {/each}
                 </ul>
             </div>

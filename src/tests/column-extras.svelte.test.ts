@@ -100,7 +100,7 @@ describe('ColumnDef.tooltip', () => {
 
     /**
      * What the tooltip is showing. It lives in a portal, and sv5ui opens it
-     * after its own 700ms delay — longer than a default poll waits.
+     * after its own 700ms delay - longer than a default poll waits.
      */
     const tooltipContent = () =>
         document.querySelector('[data-bits-floating-content-wrapper]')?.textContent?.trim()
@@ -168,7 +168,7 @@ describe('ColumnDef.tooltip', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         // bits-ui hands its trigger a tabindex of 0. Left alone, a page of rows
-        // would be a page of tab stops — the fault the checkbox column had.
+        // would be a page of tab stops - the fault the checkbox column had.
         const triggers = screen.container.querySelectorAll<HTMLElement>('[data-tooltip-trigger]')
         expect(triggers.length).toBeGreaterThan(0)
         for (const trigger of triggers) expect(trigger.tabIndex).toBe(-1)

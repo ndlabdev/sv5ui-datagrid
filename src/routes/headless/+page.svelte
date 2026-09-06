@@ -57,7 +57,7 @@
 
     const densities: Density[] = ['compact', 'standard', 'comfortable']
 
-    // Read reactively straight off the models — no wrapper component involved.
+    // Read reactively straight off the models - no wrapper component involved.
     const sortLabel = $derived(
         sort.sort.length === 0
             ? 'none'
@@ -70,7 +70,7 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Headless — build your own UI</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Headless - build your own UI</h1>
             <p class="text-sm text-on-surface-variant">
                 Không dùng <code>&lt;DataGrid&gt;</code>. Chỉ <code>createDataGrid</code> +
                 <code>Grid.Root / Viewport / Header / Body</code> + các accessor
@@ -118,7 +118,7 @@
     <!-- Your own footer -->
     <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-on-surface-variant">
         <span>
-            {page.total > 0 ? `${rangeStart}–${rangeEnd} / ${page.total}` : '0'} · sort: {sortLabel}
+            {page.total > 0 ? `${rangeStart}-${rangeEnd} / ${page.total}` : '0'} | sort: {sortLabel}
         </span>
         <div class="flex items-center gap-2">
             <Button
@@ -141,7 +141,7 @@
 
     <p class="text-xs text-on-surface-variant">
         Cùng một grid, hai giao diện: <code>&lt;DataGrid&gt;</code> là bản lắp sẵn của chính các
-        part này. Khi cần toàn quyền layout — toolbar riêng, phân trang riêng, nhúng vào app shell —
+        part này. Khi cần toàn quyền layout - toolbar riêng, phân trang riêng, nhúng vào app shell -
         bạn dựng từ <code>Grid.*</code> và điều khiển bằng API.
     </p>
 </Container>

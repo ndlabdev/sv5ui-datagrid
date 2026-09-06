@@ -131,7 +131,7 @@
             cell.focus()
             // Next frame, not now: measuring forces a style flush, and doing
             // that mid-effect mounts a popup the click that opened it is still
-            // propagating towards — which then reads as a click outside.
+            // propagating towards - which then reads as a click outside.
             if (byKeyboard) requestAnimationFrame(() => revealColumn(cell))
         }
     })

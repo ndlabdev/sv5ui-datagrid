@@ -75,7 +75,7 @@ export interface DataGridLabels {
     rowsPerPage: string
     /** One page-size choice, e.g. "25 / page". */
     pageSizeOption: (size: number) => string
-    /** The footer's "1–25 of 300" summary. */
+    /** The footer's "1-25 of 300" summary. */
     pageRange: (from: number, to: number, total: number) => string
     totalRows: (total: number) => string
     filteredRows: (filtered: number, total: number) => string

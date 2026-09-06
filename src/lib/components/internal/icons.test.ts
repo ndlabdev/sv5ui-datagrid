@@ -48,7 +48,7 @@ function sv5uiBundled(): Set<string> {
 
 describe('bundled icons', () => {
     it('leaves no sv5ui default for the network to answer', () => {
-        // Either bundle may hold it — sv5ui registers its own from `Icon.svelte`
+        // Either bundle may hold it - sv5ui registers its own from `Icon.svelte`
         // before the grid renders, so duplicating those would only add bytes.
         // What matters is that nothing falls through both.
         const ours = new Set(Object.keys(datagridIcons.icons).map((name) => `lucide:${name}`))

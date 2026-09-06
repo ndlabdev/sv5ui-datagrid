@@ -8,7 +8,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import { InGrid } from './in-root.js'
+import { InGrid } from './fixtures/in-root.js'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import DataGrid from '../lib/components/grid/DataGrid.svelte'

@@ -8,7 +8,7 @@ import {
     type ColumnDef,
     type GridState
 } from '$lib/index.js'
-import VirtualGrid from './VirtualGrid.svelte'
+import VirtualGrid from './fixtures/VirtualGrid.svelte'
 
 interface Row {
     id: number

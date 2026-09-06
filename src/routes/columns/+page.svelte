@@ -221,7 +221,7 @@
         { id: 2, label: 'Costs', q1: 74, q2: 80, q3: 88, note: '' },
         {
             id: 3,
-            label: 'Audited figures — quarterly totals restated',
+            label: 'Audited figures - quarterly totals restated',
             q1: null,
             q2: null,
             q3: null,
@@ -271,10 +271,10 @@
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Columns UX — Phase 3</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Columns UX - Phase 3</h1>
             <p class="text-sm text-on-surface-variant">
-                Resize (kéo mép / double-click autosize) · Reorder (kéo header) · Pin · Ẩn/hiện ·
-                Header groups thu gọn được · Column menu · <code>headerCell</code> (cột Salary) —
+                Resize (kéo mép / double-click autosize) | Reorder (kéo header) | Pin | Ẩn/hiện |
+                Header groups thu gọn được | Column menu | <code>headerCell</code> (cột Salary) -
                 tất cả điều khiển được bằng bàn phím.
                 <strong>Sắp xếp lại rồi F5</strong>: layout, sort, filter, page size và density đều
                 được giữ nguyên.
@@ -334,7 +334,7 @@
                 Pinned + column virtualization (100k px nội dung ngang)
             </h2>
             <p class="text-sm text-on-surface-variant">
-                Cột <em>#</em> và <em>Name</em> pin trái, <em>Dept</em> pin phải (sticky) — sống chung
+                Cột <em>#</em> và <em>Name</em> pin trái, <em>Dept</em> pin phải (sticky) - sống chung
                 với column windowing và 500 hàng ảo hoá.
             </p>
         </div>

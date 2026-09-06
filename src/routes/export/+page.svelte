@@ -155,7 +155,7 @@
 
     /**
      * The same pieces `exportCsv` uses, so what is shown is what lands in the
-     * file — minus the BOM, which is a byte and not a character.
+     * file - minus the BOM, which is a byte and not a character.
      */
     const preview = $derived.by(() => {
         const selected = selectionState.selectedNodes
@@ -176,7 +176,7 @@
                 Dữ liệu cố tình chứa dấu phẩy, chấm phẩy, ngoặc kép, xuống dòng, ô trống và một
                 chuỗi <code>=SUM(...)</code> mà bảng tính sẽ chạy như công thức. Khung xem trước
                 dựng bằng đúng các hàm mà <code>exportCsv</code> dùng, nên nó là nội dung thật của file
-                — trừ BOM UTF-8 vốn là byte chứ không phải ký tự.
+                - trừ BOM UTF-8 vốn là byte chứ không phải ký tự.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">

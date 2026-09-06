@@ -73,6 +73,7 @@ export const idID: DataGridLocalePack = {
         },
         dateOps: {
             equals: 'Sama dengan',
+            notEqual: 'Tidak sama dengan',
             before: 'Sebelum',
             after: 'Sesudah',
             between: 'Di antara',
@@ -90,7 +91,7 @@ export const idID: DataGridLocalePack = {
         rowsPerPage: 'Baris per halaman',
         pageSizeOption: (size) => `${size} / halaman`,
         pageRange: (from, to, total) =>
-            `${from.toLocaleString('id-ID')}–${to.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')}`,
+            `${from.toLocaleString('id-ID')}-${to.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')}`,
         totalRows: (total) => `${total.toLocaleString('id-ID')} baris`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')} baris`,

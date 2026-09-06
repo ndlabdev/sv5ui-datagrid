@@ -115,7 +115,7 @@ draws. If your own UI happens to use one of the same icons, it resolves
 locally too.
 
 `registerDataGridIcons` is exported for the one case the import does not
-cover — a grid behind a dynamic `import()`, where your own icons may render
+cover - a grid behind a dynamic `import()`, where your own icons may render
 before the grid's module is even fetched:
 
 ```svelte
@@ -128,13 +128,13 @@ before the grid's module is even fetched:
 
 It is idempotent.
 
-The set covers what the grid itself draws. Icons you hand it — `RowAction.icon`,
-a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet —
+The set covers what the grid itself draws. Icons you hand it - `RowAction.icon`,
+a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet -
 are yours to bundle, as is any icon of your own the grid never uses:
 
 ```ts
 import { addCollection } from '@iconify/svelte'
-addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path …/>' } } })
+addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path .../>' } } })
 ```
 
 `datagridIcons` is exported too, if you want to read the shape or merge it.
@@ -255,7 +255,7 @@ getSorting(grid)?.setSort([{ columnId: 'name', direction: 'asc' }])
 
 The accessor is the typed path: it narrows to the feature's own class, generic
 in `TRow`, with nothing optional about what it returns. `grid.api` is the flat
-alternative — every feature's methods in one bag, each one optional, because
+alternative - every feature's methods in one bag, each one optional, because
 the grid that has `setPage` is the one that registered `pagination()`:
 
 ```ts
@@ -303,7 +303,7 @@ const highlightNegative = (): GridFeature<Row> => ({
 features do not define it skips the work entirely.
 
 A class cannot name a value computed per cell, so the hook also takes `style`,
-a record keyed by CSS property — custom properties included, which is how a
+a record keyed by CSS property - custom properties included, which is how a
 feature reaches a pseudo-element:
 
 ```ts
@@ -346,7 +346,7 @@ given, so `'***'` on a `type: 'currency'` column parses as no number and the
 cell draws empty; `null` draws the column's empty text, and a mark of your own
 needs an untyped column or a `cell` snippet. Nothing leaks either way.
 
-Hand the value back unchanged — the same reference — for a cell you are
+Hand the value back unchanged - the same reference - for a cell you are
 leaving alone; the grid compares by identity. A cell whose value a reader
 substitutes is one the grid refuses to edit, since an editor opened on it
 would commit the substitute over the real data.
@@ -357,7 +357,7 @@ what it hides; a filter predicate decides which rows survive and stays raw for
 the same reason, so a narrowing filter plus a row count says something about
 what was hidden. Take `sortable` and `filter` off a column you mask. And the
 row object itself still reaches your own `cell` snippet, `cellClass` and
-`tooltip` — this is a gate on the grid's own output, not a security boundary:
+`tooltip` - this is a gate on the grid's own output, not a security boundary:
 data that must not reach the browser should not be sent to it.
 
 ## Columns
@@ -414,7 +414,7 @@ printed, so it never restates the column's own `typeOptions`:
 ```
 
 `formatted` is `undefined` where the built-in rendering is a widget rather than
-text — `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` —
+text - `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` -
 because there is no string standing for one. It is computed only if the snippet
 reads it. The snippet also receives `column`, so a renderer can reach its own
 `def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
@@ -422,7 +422,7 @@ it too.
 
 ### Tooltips
 
-`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` —
+`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` -
 the design system's, not the browser's `title`. A function takes its place when
 the text should say more; it receives the cell context, `formatted` included:
 
@@ -441,7 +441,7 @@ turns that off for a column that manages its own.
 
 Null, undefined and empty string all render as an em dash, whatever the
 column's `type` and whether it declares one at all. `typeOptions.emptyText`
-overrides the text per column — not to be confused with the `emptyText` prop on
+overrides the text per column - not to be confused with the `emptyText` prop on
 `<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
 snippet owns its own output, `formatted` included: blanks arrive there already
 turned into that text.
@@ -493,17 +493,17 @@ and
 `columnGroupToggled` the way every other column operation does.
 
 `headerGroupCell` draws the group header yourself, the way `headerCell` draws
-a leaf one. The snippet is handed the group cell — id, label, span, whether it
-is folded — and a `toggle`, and the grid's own control stays beside whatever
+a leaf one. The snippet is handed the group cell - id, label, span, whether it
+is folded - and a `toggle`, and the grid's own control stays beside whatever
 it draws:
 
 ````svelte
 {#snippet payHeader({ cell, toggle }: HeaderGroupContext)}
     <Badge label={`${cell.header} (${cell.span})`} onclick={toggle} />
 {/snippet}
-``` Folding is not hiding —
+``` Folding is not hiding -
 what the Column chooser put away stays away, and what a group folded comes
-back when it opens — and the state travels in a snapshot, keyed by group.
+back when it opens - and the state travels in a snapshot, keyed by group.
 
 A group is only offered a toggle when the state it would switch to leaves a
 column of it on screen. One whose children are all `'open'` would fold its own
@@ -691,7 +691,7 @@ handed, so where the two disagree, what the reader sees is yours:
 | A `percent` column holds the ratio, so 5% travels as `0.05`     | whatever the column stores           |
 
 `nulls` rides on every sort entry, written as the side blanks actually land on,
-so `ORDER BY … NULLS LAST` reproduces it without further thought. `quickFields`
+so `ORDER BY ... NULLS LAST` reproduces it without further thought. `quickFields`
 names the columns a bare query applies to, which is otherwise unguessable.
 
 Two things the request cannot carry, because they are functions: a column's

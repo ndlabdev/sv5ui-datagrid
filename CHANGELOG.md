@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `CellDecoration.style` — a feature decorating a cell can now write CSS
+- `CellDecoration.style` - a feature decorating a cell can now write CSS
   declarations onto it, not only class names. A class can say _which_ of a
   fixed set of looks a cell takes; it cannot say a value computed per cell,
   which is what a colour scale, a data bar or a per-user cursor tint is. The
@@ -62,8 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   several features decorating the same cell merge per property with the later
   one winning, the way classes already concatenated.
 
-    The grid writes its own layout — the grid column, the pinned offsets, the
-    editor's padding — as style _directives_, which outrank the attribute a
+    The grid writes its own layout - the grid column, the pinned offsets, the
+    editor's padding - as style _directives_, which outrank the attribute a
     decoration lands in. So a decoration cannot move a cell out of its column,
     unpin it, or escape the row: it can only paint. A value is also cut at the
     first `;`, so one entry stays one declaration and a colour read out of row
@@ -183,8 +183,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     rather than each caller remembering to.
 
     `headerGroupCell` draws a group header the way `headerCell` draws a leaf
-    one. The snippet is handed the group cell — id, label, span, whether it is
-    folded — and a `toggle`, and the grid's own control stays beside what it
+    one. The snippet is handed the group cell - id, label, span, whether it is
+    folded - and a `toggle`, and the grid's own control stays beside what it
     draws, so a badge or a count up there costs nothing. It draws into a box
     of its own that shrinks and clips: a group is at its narrowest exactly
     when it is folded, and what an app drew for the open state has to give way
@@ -445,7 +445,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a flat `find` over the defs it was handed, and a grid with header groups keeps
   groups at the top level and the real columns in their `children`, so every
   entry matched nothing and was dropped. A server-model grid built the way the
-  README shows — `toSortRequest(getSorting(grid)!.sort, grid.columns.defs)` —
+  README shows - `toSortRequest(getSorting(grid)!.sort, grid.columns.defs)` -
   sent an empty sort: the header arrow moved, `sortChanged` fired, the request
   went out, and the rows came back in the order they left, with no error or
   warning to say why.
@@ -455,7 +455,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     genuinely does not have is still dropped, as documented.
 
 - `ui.headerCell` typography reaches a sortable column's label. The classes were
-  on the cell — `uppercase` and `text-primary` both in its class list — but a
+  on the cell - `uppercase` and `text-primary` both in its class list - but a
   sortable column wraps its label in the `<button>` that toggles the sort, and a
   button refuses `text-transform` and `text-align` from its parent by user-agent
   rule. Tailwind's preflight resets `color` and `letter-spacing` on form
@@ -468,9 +468,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Twenty-eight symbols leave the package entry. Nothing in this repository —
+- Twenty-eight symbols leave the package entry. Nothing in this repository -
   no demo, no line of the README, no test importing through the package
-  entry — reached for any of them, and a 1.0 surface should carry what an app
+  entry - reached for any of them, and a 1.0 surface should carry what an app
   does with the grid rather than what happens to exist inside it. They are
   still there internally; only the public door closed.
 
@@ -488,17 +488,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     that `getGridContext` read; theming goes through the `ui` prop and
     `defineDataGridConfig`, which is what `datagridVariants` bypassed.
 
-    The formatters go with them — `formatCurrency`, `formatDate`,
+    The formatters go with them - `formatCurrency`, `formatDate`,
     `formatNumber`, `formatPercent`, `toDate`, `toNumber`, `isBlank` and
-    `FormatOptions` — now that a snippet is handed the formatted text instead
+    `FormatOptions` - now that a snippet is handed the formatted text instead
     of the tools to rebuild it. See `formatted` below.
 
 ### Changed
 
 - `tooltip: true` shows what the cell shows, through sv5ui's `Tooltip`. It
-  returned the raw value behind the cell — a currency column reading
+  returned the raw value behind the cell - a currency column reading
   `$204,000.00` had a tooltip saying `204000`, a date reading `Aug 11, 2026`
-  said `2026-08-11` — and it went out as a native `title`, which the design
+  said `2026-08-11` - and it went out as a native `title`, which the design
   system cannot style. A `tooltip` function is unchanged apart from receiving
   `formatted` alongside the raw `value`.
 
@@ -506,7 +506,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     it is taken out of the tab order: bits-ui hands its trigger a `tabindex` of
     0, and the grid is one tab stop. The `tooltipTrigger` slot is new and
     themeable. Mounting 50 rows of two tooltip columns measures 30.9ms against
-    11.2ms without, which is the price of a component per cell — `tooltip` is
+    11.2ms without, which is the price of a component per cell - `tooltip` is
     opt-in per column, so only the columns asking for one pay it.
 
     The automatic tooltip for clipped text is untouched: it stays a `title`,
@@ -520,7 +520,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   meant passing a `formatValue` callback that rebuilt formatting the grid had
   already done.
 
-    Off by default, and deliberately so — a spreadsheet wants a number it can
+    Off by default, and deliberately so - a spreadsheet wants a number it can
     sum and a date it can sort. An explicit `formatValue` still wins, and a
     column whose `type` draws a widget has no text of its own, so the raw value
     stands in rather than an empty column.
@@ -528,7 +528,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `cell` snippet receives `formatted`: the text the built-in renderer would
   have printed for that value. Declaring `type` and `cell` together is now how
   a column keeps its formatting and decorates around it, rather than the
-  snippet restating the column's own `typeOptions` — which is the shape AG Grid
+  snippet restating the column's own `typeOptions` - which is the shape AG Grid
   (`valueFormatted`) and MUI (`formattedValue`) both settled on. It is
   `undefined` where the built-in rendering is a widget rather than text, since
   no string stands for one, and it is computed only if the snippet reads it.
@@ -542,8 +542,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The entry file is three lines. Each area names its own exports —
-  `core/index.ts`, `components/index.ts`, `features/index.ts` — one by one
+- The entry file is three lines. Each area names its own exports -
+  `core/index.ts`, `components/index.ts`, `features/index.ts` - one by one
   rather than re-exporting modules wholesale, so nothing reaches an app
   because it happened to be added to a folder. Nothing moved for a consumer:
   the same names come from `@sv5ui/datagrid` as before.
@@ -552,8 +552,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A row pinned to the bottom draws its separator on the edge facing the rows,
   not on the one facing the grid's own border. Both pinned sections shared a
-  rule that put the hairline under every row, which suits the top section —
-  where the body is below — and left the bottom section with nothing between it
+  rule that put the hairline under every row, which suits the top section -
+  where the body is below - and left the bottom section with nothing between it
   and the rows above, plus a rule under its last row sitting on the viewport's
   bottom edge, where it read as a doubled line. The edge is now a `pinSide`
   variant of the `pinnedRow` slot; a `ui.pinnedRow` override still applies to
@@ -590,10 +590,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same flush, so a saved view, a deep link or a "clear all" button was a
   silent no-op wherever `<DataGrid toolbar />` was used. The box now pushes
   only what it produced, and mirrors a filter set from code instead of fighting
-  it — so the text in it matches the filter in force, which it did not before.
+  it - so the text in it matches the filter in force, which it did not before.
 - A grid on `rowModel: 'server'` stays on the page it is showing. Focusing a
   body cell turned to the page the focused row sits on, arithmetic that only
-  holds when the grid holds the whole dataset — a server model holds one page,
+  holds when the grid holds the whole dataset - a server model holds one page,
   so its rows are indexed 0..n whichever page they came from and every click
   past page 1 snapped back to page 1 and fetched it. Selecting, editing,
   opening a cell menu and arrowing down off the page were all caught by it.
@@ -607,7 +607,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `aria-rowcount` the grid reports. A client model, which holds the whole set,
   still offsets by the page.
 - A server model tells a screen reader where in the whole set the page sits.
-  `aria-rowcount` counted the rows the grid held — one page — and
+  `aria-rowcount` counted the rows the grid held - one page - and
   `aria-rowindex` counted from 1 within it, so every page read as "row 1 of
   10". The count is now the server's total and the index is offset by the
   page, which is what a client grid with pagination already reported.
@@ -621,15 +621,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a row `isRowSelectable` rules out stays inert wherever it is clicked.
 - The bundled icons register when the grid is imported rather than when a grid
   mounts. `Grid.Root` registered them from its instance script, so anything the
-  app drew first — its own button carrying `lucide:copy`, an icon the grid
-  already ships — found an empty store and fetched it, and the icon flickered
+  app drew first - its own button carrying `lucide:copy`, an icon the grid
+  already ships - found an empty store and fetched it, and the icon flickered
   in when the response landed. The call moves to the component's module script,
   which runs at import, before any render. This is where sv5ui registers its
   own bundle, for the same reason.
 
     Reproduced against a fresh SvelteKit app with the published tarball, built
     and served: the page asked for `?icons=copy,rocket` before, and only
-    `rocket` after — an icon of the app's own that the grid never bundles.
+    `rocket` after - an icon of the app's own that the grid never bundles.
 
 ## [0.3.0] - 2026-08-09
 
@@ -645,7 +645,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   roving tabindex and the focus model pulled focus back onto it, so the
   keystrokes went nowhere and only `Tab` could get into a field.
 - Opening a row edit puts the caret in its first editable field. Every editor
-  mounts at once, and the last one to run used to keep the focus — the eye
+  mounts at once, and the last one to run used to keep the focus - the eye
   started at the first field while the caret sat in the last.
 - A row edit no longer drops every select list open at once, which buried the
   rows beneath it. A cell edit still opens its list, which is what it is for.
@@ -655,13 +655,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   three inflect the participle too, so "1 filas seleccionadas" needed the whole
   phrase rather than the noun alone. Forms come from `Intl.PluralRules`, not a
   `count === 1` branch: French and Portuguese read zero as singular, and
-  Russian — already correct — needs three forms. The languages with no
+  Russian - already correct - needs three forms. The languages with no
   grammatical number are unchanged.
 - The bundled icon set no longer guesses which fallbacks sv5ui needs from it.
   A hand-written list had named `loader-2`, which nothing renders, while sv5ui
   asks for `loader-circle`; it also restated three pagination chevrons sv5ui
   already ships. sv5ui registers its own defaults before the grid renders, so
-  the generator now takes only what sv5ui leaves uncovered — today nothing.
+  the generator now takes only what sv5ui leaves uncovered - today nothing.
   35 icons ship instead of 39, and none of them is dead.
 
 ### Changed
@@ -669,7 +669,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A row edit draws one ring around the row rather than one per field. Each
   editor used to draw its own inset ring, so every seam between two fields read
   as a single doubled rule and the cells holding a widget editor drew no box at
-  all — a row of loose boxes rather than one surface. Fields are now separated
+  all - a row of loose boxes rather than one surface. Fields are now separated
   by a hairline, and a field shows a ring of its own only while it has focus.
   The `rowEditing`, `cellEditorInRow` and `cellEditorInRowDivider` slots are new
   and themeable.
@@ -695,7 +695,7 @@ them change behaviour, so this is a minor rather than a patch.
 ### Changed
 
 - `grid.api` has a type. It was `Record<string, unknown>`, so every member read
-  back as `unknown` and calling one was an error — including the README's own
+  back as `unknown` and calling one was an error - including the README's own
   server row model example. It is now `GridApi`: the kernel's `getState` and
   `setState` are always there, and each feature declares its own methods by
   augmenting the interface from its module, which is what a feature you write
@@ -719,7 +719,7 @@ than listed as a diff against a version nobody has.
 
 - Feature-module system. A feature is a plain object plugging into
   `pipelineStage`, `createState`, `createApi`, `keybindings`, `menuItems`,
-  `cellDecoration`, `serialize` and `hydrate` — the same hooks the built-in
+  `cellDecoration`, `serialize` and `hydrate` - the same hooks the built-in
   features use, so nothing the package ships needs privileged access.
 - Row pipeline of pure transforms over `RowNode[]`, ordered by declaration so a
   stage never has to know what else is registered.
@@ -753,8 +753,8 @@ than listed as a diff against a version nobody has.
 - Expansion model, row pinning to top and bottom, full-width rows.
 - Row reorder: a grip column, `Alt`+`ArrowUp`/`ArrowDown`, `isRowDraggable`, an
   `onReorder` callback and a `rowMoved` event. Dragging lifts a copy of the row
-  that follows the cursor and auto-scrolls at the edges — the grid's own
-  scroller when it has one, the page otherwise — so a row can be moved past
+  that follows the cursor and auto-scrolls at the edges - the grid's own
+  scroller when it has one, the page otherwise - so a row can be moved past
   what is on screen. Reordering rewrites `data`, so it is meant for an unsorted
   grid.
 
@@ -778,7 +778,7 @@ than listed as a diff against a version nobody has.
   a printable key on a focused cell opens the editor on that character, for
   the editors that can hold one.
 - `Enter` commits where the editor does not claim it, `Tab` commits and moves
-  on, and `Ctrl`/`Cmd`+`Enter` commits without leaving the cell — the way out
+  on, and `Ctrl`/`Cmd`+`Enter` commits without leaving the cell - the way out
   of a textarea or a tags field, which own `Enter` for a newline and a tag.
 - Client pagination, plus the server hooks `rowModel: 'server'` and
   `setRowCount`.
@@ -823,57 +823,57 @@ than listed as a diff against a version nobody has.
   locale of their own follow the grid and reformat with it.
 - A pack is `{ tag, labels, announcer }` with every key typed, so a language
   missing one fails the build. Labels can be functions, so a language states
-  its own grammar — Russian counts rows through `Intl.PluralRules`.
+  its own grammar - Russian counts rows through `Intl.PluralRules`.
 - `labels` and `announcer` override single strings on top of the chosen pack.
 
 ### Fixed
 
 Bugs found and closed before the first release.
 
-- **Security** — reject script-bearing `href`s in link cells; neutralize
+- **Security** - reject script-bearing `href`s in link cells; neutralize
   spreadsheet formulas in CSV export.
-- **Keyboard** — the grid is one tab stop. Every row's selection checkbox used
+- **Keyboard** - the grid is one tab stop. Every row's selection checkbox used
   to be tabbable, so leaving a hundred-row grid took a hundred presses; `Space`
   on the header cell now toggles select-all.
-- **Keyboard** — the density control is one tab stop answering the arrow keys,
+- **Keyboard** - the density control is one tab stop answering the arrow keys,
   and reports itself as a radio group rather than three independent toggles.
-- **Focus ring** — one treatment across header, body and full-width cells. The
+- **Focus ring** - one treatment across header, body and full-width cells. The
   header's floating controls covered its top and bottom edges and the row
   separator washed out its bottom, so the same ring came out a different weight
   on each side.
-- **Accessibility** — the filler above an ungrouped column no longer reports
+- **Accessibility** - the filler above an ungrouped column no longer reports
   itself as an unlabelled column header; keep the header filter and menu
   triggers reachable on touch devices that cannot hover.
-- **Header layout** — the filter and column-menu triggers float over the end of
+- **Header layout** - the filter and column-menu triggers float over the end of
   the header rather than sitting in its flow, where they reserved their width
   even while invisible and left a narrow column nothing to render its label in.
-- **Filter panel** — renders into `<body>`, so it is no longer clipped by the
+- **Filter panel** - renders into `<body>`, so it is no longer clipped by the
   header cell or trapped under the pinned headers; re-anchors to its trigger
   while the grid or page scrolls; sits one layer below the sv5ui popups, so it
   no longer covers its own operator list; and picking an operator no longer
   reads as a click outside and closes it.
-- **Filtering** — blank cells no longer match a numeric `between` filter.
-- **Autosize** — measures the whole header including its controls, rather than
+- **Filtering** - blank cells no longer match a numeric `between` filter.
+- **Autosize** - measures the whole header including its controls, rather than
   only its first child, which collapsed right-aligned columns to the minimum
   width. Repeating it is now a no-op: content that stretches to the cell is no
   longer measured as if it had that width, so autosizing twice stopped creeping
   the column wider.
-- **Cell overflow** — cells clip their content, so a wide badge or avatar no
+- **Cell overflow** - cells clip their content, so a wide badge or avatar no
   longer paints over the next column. An open editor still overflows, for its
   validation message.
-- **Header groups** — a restored snapshot can no longer interleave two groups
+- **Header groups** - a restored snapshot can no longer interleave two groups
   and repeat their labels over unrelated columns.
-- **Selection** — the checkbox is centred in its column; sv5ui reserves a label
+- **Selection** - the checkbox is centred in its column; sv5ui reserves a label
   slot whether or not anything visible goes in it.
-- **Persistence** — restores synchronously, so a client-rendered grid does not
+- **Persistence** - restores synchronously, so a client-rendered grid does not
   flash its default layout on reload.
-- **Pagination** — show the active page size in the footer select; stack the
+- **Pagination** - show the active page size in the footer select; stack the
   controls cleanly on narrow viewports; a shrinking dataset no longer strands
   the page.
-- **Editing** — report undo and redo as edits.
-- **Columns** — a long header on a sortable column truncates with an ellipsis
+- **Editing** - report undo and redo as edits.
+- **Columns** - a long header on a sortable column truncates with an ellipsis
   and gets the hover tooltip, as unsorted columns already did.
-- **RTL** — indent tree and group rows from the inline start, so nesting reads
+- **RTL** - indent tree and group rows from the inline start, so nesting reads
   correctly under `dir="rtl"`.
 
 ### Known limits
@@ -882,7 +882,7 @@ Measured rather than assumed, and stated here so nobody has to discover them
 in production. Numbers are Chromium at 39 columns; see the README for the
 full table.
 
-- **Quick filter is O(rows x visible columns) on the main thread** — about two
+- **Quick filter is O(rows x visible columns) on the main thread** - about two
   seconds at a million rows, which blocks the UI. Filter on fewer columns or
   use `rowModel: 'server'` until it is made incremental.
 - **Scrolling holds 60fps to roughly half a million rows** and falls to about

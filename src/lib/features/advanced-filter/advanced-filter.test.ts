@@ -45,7 +45,7 @@ const group = (children: FilterGroup['children'], join: 'and' | 'or' = 'and'): F
 })
 
 describe('the advanced filter feature', () => {
-    it('ignores a condition that has no value yet, the way the free grid does', () => {
+    it('ignores a condition that has no value yet, the way a column filter does', () => {
         const grid = createGrid()
         const state = getAdvancedFilter(grid)!
 

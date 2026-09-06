@@ -24,7 +24,7 @@ function createGrid(count: number, pageSize = 5) {
     })
 }
 
-describe('Pagination — a setter does not subscribe its caller', () => {
+describe('Pagination - a setter does not subscribe its caller', () => {
     it('turns the page while an effect drives the page size', () => {
         const cleanup = $effect.root(() => {
             const grid = createGrid(30)
@@ -93,7 +93,7 @@ describe('Pagination — a setter does not subscribe its caller', () => {
     })
 })
 
-describe('Pagination — what pageChanged reports', () => {
+describe('Pagination - what pageChanged reports', () => {
     it('announces the page the grid actually moved to', () => {
         const grid = createGrid(30)
         const state = getPagination(grid)!

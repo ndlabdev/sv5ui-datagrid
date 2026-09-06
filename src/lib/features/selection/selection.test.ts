@@ -138,7 +138,7 @@ describe('Selection', () => {
         const state = getSelection(grid)!
 
         // The header checkbox reports on the rows in view, so toggling it must
-        // add and remove those rows rather than replace the whole selection —
+        // add and remove those rows rather than replace the whole selection -
         // under a filter here, and one page of a server model in a real app.
         state.select('2')
         getFiltering(grid)!.setColumnFilter('dept', { kind: 'set', values: ['Core'] })

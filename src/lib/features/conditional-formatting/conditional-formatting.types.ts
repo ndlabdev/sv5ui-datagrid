@@ -2,7 +2,7 @@
  * What a rule paints when it matches: a class, inline declarations, or both.
  *
  * The style record is keyed by CSS property and goes onto the cell through
- * Community's `CellDecoration.style`, which the grid's own layout outranks:
+ * `CellDecoration.style`, which the grid's own layout outranks:
  * a rule can colour a cell but cannot move it out of its column.
  */
 export interface FormatPaint {
