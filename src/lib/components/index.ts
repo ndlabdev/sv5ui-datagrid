@@ -9,6 +9,17 @@
  */
 
 export { DataGrid } from './grid/index.js'
+export { RangeStatusBar } from './chrome/index.js'
+export {
+    CommandPalette,
+    ConditionalFormattingPanel,
+    FilterBuilder,
+    FindReplace,
+    GroupPanel,
+    ImportWizard,
+    SavedViews,
+    ToolPanel
+} from './panels/index.js'
 export { Grid, type GridParts } from './parts.js'
 export { datagridIcons, registerDataGridIcons } from './internal/index.js'
 

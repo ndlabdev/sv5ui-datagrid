@@ -55,7 +55,64 @@ const PUBLIC_API = [
     'rowsToMatrix',
     'toCsv',
     'toTsv',
-    'withHeaderRow'
+    'withHeaderRow',
+
+    // Panels and the one status bar that is not part of the frame
+    'CommandPalette',
+    'ConditionalFormattingPanel',
+    'FilterBuilder',
+    'FindReplace',
+    'GroupPanel',
+    'ImportWizard',
+    'RangeStatusBar',
+    'SavedViews',
+    'ToolPanel',
+    // Columns worked out from the data
+    'autoColumns',
+    // Rows a feature synthesized are not rows a pass over the data counts
+    'isDataRow',
+    'isLoadingRow',
+    'isDetailNode',
+    // A shared link that will not fit
+    'ShareTooLongError',
+    // The sixteen modules
+    'advancedFilter',
+    'commandPalette',
+    'conditionalFormatting',
+    'dataImport',
+    'findReplace',
+    'formula',
+    'grouping',
+    'masterDetail',
+    'policy',
+    'rangeSelection',
+    'savedViews',
+    'serverRowModel',
+    'showValuesAs',
+    'tree',
+    'workerDataSource',
+    // Their state accessors
+    'getAdvancedFilter',
+    'getCommandPalette',
+    'getConditionalFormatting',
+    'getDataImport',
+    'getFindReplace',
+    'getFormula',
+    'getGrouping',
+    'getMasterDetail',
+    'getPolicy',
+    'getRangeSelection',
+    'getSavedViews',
+    'getServerRowModel',
+    'getShowValuesAs',
+    'getTree',
+    // Aggregation, formulas and saved-view storage an app reaches for directly
+    'aggregate',
+    'totalsKindOf',
+    'FormulaError',
+    'isFormulaError',
+    'FUNCTION_NAMES',
+    'localStorageViews'
 ].sort()
 
 describe('public API', () => {
