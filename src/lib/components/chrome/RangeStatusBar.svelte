@@ -1,21 +1,26 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { aggregate } from '../../features/grouping/aggregate.js'
     import { getRangeSelection } from '../../features/range-selection/range-selection.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
+        grid: gridProp,
         format = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 }),
         class: className
     }: {
+        grid?: GridState<TRow>
         format?: (value: number) => string
         class?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const range = $derived(getRangeSelection(grid))
     const values = $derived(range?.selectedValues ?? [])

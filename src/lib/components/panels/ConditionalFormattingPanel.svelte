@@ -1,4 +1,5 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { type ColumnState, SELECTION_COLUMN_ID } from '../../core/types/index.js'
     import { Button, Input, Select } from 'sv5ui'
 
@@ -11,14 +12,16 @@
         sampleDataRows
     } from '../../features/conditional-formatting/stats.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
-    let { class: className }: { class?: string } = $props()
+    let { grid: gridProp, class: className }: { grid?: GridState<TRow>; class?: string } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const SAMPLE_ROWS = 50
 
@@ -54,7 +57,7 @@
 
     const sample = $derived(sampleDataRows(grid.preWindowNodes, SAMPLE_ROWS))
 
-    function readable(column: ColumnState<unknown>): boolean {
+    function readable(column: ColumnState<TRow>): boolean {
         return !needsNumbers || sample.length === 0 || hasNumbers(sample, column)
     }
 

@@ -1,19 +1,24 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { Alert, Button, Checkbox, FileUpload, Select } from 'sv5ui'
     import { getDataImport } from '../../features/data-import/data-import.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
+        grid: gridProp,
         class: className
     }: {
+        grid?: GridState<TRow>
         class?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const t = $derived(grid.labels)
     const importing = $derived(getDataImport(grid))
@@ -109,13 +114,6 @@
                 {/if}
             </div>
 
-            <!--
-                A plain table on purpose. sv5ui's `Table` carries sorting,
-                filtering, selection, pinning and column sizing; mounting it
-                to show five rows of a file would put a second table engine
-                in the bundle of a data grid, for a preview that is read and
-                thrown away.
-            -->
             <div class="overflow-x-auto rounded-md border border-outline-variant">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-surface-container text-on-surface-variant">

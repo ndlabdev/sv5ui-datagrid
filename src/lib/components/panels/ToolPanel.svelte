@@ -1,4 +1,5 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import {
         type ColumnState,
         type PinnedSide,
@@ -8,10 +9,10 @@
     import { getGrouping } from '../../features/grouping/grouping.svelte.js'
     import type { Aggregation } from '../../features/grouping/grouping.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
@@ -20,16 +21,20 @@
     const NO_AGGREGATION = 'none'
 
     let {
+        grid: gridProp,
         tabs = ['columns', 'group', 'values'],
         aggregations = ['sum', 'avg', 'count', 'min', 'max', 'median', 'distinctCount'],
         collapsed = $bindable(false),
         class: className
     }: {
+        grid?: GridState<TRow>
         tabs?: Tab[]
-        aggregations?: Aggregation<unknown>[]
+        aggregations?: Aggregation<TRow>[]
         collapsed?: boolean
         class?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const t = $derived(grid.labels)
     const grouping = $derived(getGrouping(grid))
@@ -65,7 +70,7 @@
               ? t.toolPanelGroup
               : t.toolPanelValues
 
-    function setHidden(column: ColumnState<unknown>, hidden: boolean) {
+    function setHidden(column: ColumnState<TRow>, hidden: boolean) {
         const setColumnHidden = grid.api.setColumnHidden as
             ((id: string, next: boolean) => void) | undefined
         setColumnHidden?.(column.id, hidden)
@@ -75,13 +80,13 @@
         for (const column of matching) setHidden(column, hidden)
     }
 
-    function pin(column: ColumnState<unknown>, side: PinnedSide | null) {
+    function pin(column: ColumnState<TRow>, side: PinnedSide | null) {
         const pinColumn = grid.api.pinColumn as
             ((id: string, next: PinnedSide | null) => void) | undefined
         pinColumn?.(column.id, column.pinned === side ? null : side)
     }
 
-    function move(column: ColumnState<unknown>, delta: number) {
+    function move(column: ColumnState<TRow>, delta: number) {
         const moveColumn = grid.api.moveColumn as ((id: string, to: number) => void) | undefined
         const at = grid.columns.visible.findIndex((candidate) => candidate.id === column.id)
         if (at < 0) return
@@ -96,11 +101,11 @@
     function setAggregation(columnId: string, next: string) {
         grouping?.setAggregation(
             columnId,
-            next === NO_AGGREGATION ? null : (next as Aggregation<unknown>)
+            next === NO_AGGREGATION ? null : (next as Aggregation<TRow>)
         )
     }
 
-    function actionsFor(column: ColumnState<unknown>) {
+    function actionsFor(column: ColumnState<TRow>) {
         const name = String(column.header ?? column.id)
         return [
             {

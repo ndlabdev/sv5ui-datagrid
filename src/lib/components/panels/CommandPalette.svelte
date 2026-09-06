@@ -1,26 +1,31 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { Command, type CommandGroup, Modal, useKbd } from 'sv5ui'
     import { getCommandPalette } from '../../features/command-palette/command-palette.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
+        grid: gridProp,
         hotkey = true,
         placeholder,
         emptyText,
         title
     }: {
+        grid?: GridState<TRow>
         hotkey?: boolean
         placeholder?: string
         emptyText?: string
 
         title?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const palette = $derived(getCommandPalette(grid))
     const t = $derived(grid.labels)

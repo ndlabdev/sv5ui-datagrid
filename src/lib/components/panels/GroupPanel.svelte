@@ -1,21 +1,26 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { Button, DropdownMenu, Icon } from 'sv5ui'
     import { getGrouping } from '../../features/grouping/grouping.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
+        grid: gridProp,
         placeholder,
         class: className
     }: {
+        grid?: GridState<TRow>
         placeholder?: string
         class?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const grouping = $derived(getGrouping(grid))
     const t = $derived(grid.labels)

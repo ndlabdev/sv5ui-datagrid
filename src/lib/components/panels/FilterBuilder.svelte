@@ -1,4 +1,5 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { SELECTION_COLUMN_ID } from '../../core/types/index.js'
     import { getAdvancedFilter } from '../../features/advanced-filter/advanced-filter.svelte.js'
     import {
@@ -16,14 +17,15 @@
 
     import FilterBuilderGroup from '../internal/FilterBuilderGroup.svelte'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
+        grid: gridProp,
         operators = [
             'contains',
             'notContains',
@@ -45,10 +47,13 @@
         debounce = 200,
         class: className
     }: {
+        grid?: GridState<TRow>
         operators?: AdvancedFilterOp[]
         debounce?: number
         class?: string
     } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const MAX_SET_VALUES = 200
 
@@ -143,6 +148,7 @@
         {/if}
 
         <FilterBuilderGroup
+            labels={grid.labels}
             group={filter.model}
             path={[]}
             {columnItems}

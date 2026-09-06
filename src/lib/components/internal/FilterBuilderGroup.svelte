@@ -16,18 +16,18 @@
     import { fromDateValue, toDateValue } from './editor-values.js'
 
     import FilterValueInput from './FilterValueInput.svelte'
+    import type { DataGridLabels } from '../../core/types/index.js'
     import FilterBuilderGroup from './FilterBuilderGroup.svelte'
     import { datagridVariants } from '../datagrid.variants.js'
-    import { getGridContext } from './context.js'
     import { getGridTheme } from './theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
     type Item = { label: string; value: string }
 
     let {
+        labels,
         group,
         path,
         columnItems,
@@ -39,6 +39,7 @@
         onAdd,
         addCondition
     }: {
+        labels: DataGridLabels
         group: FilterGroup
         path: number[]
         columnItems: Item[]
@@ -51,7 +52,7 @@
         addCondition: () => FilterCondition
     } = $props()
 
-    const t = $derived(grid.labels)
+    const t = $derived(labels)
     const fieldId = $props.id()
 
     function patch(index: number, condition: FilterCondition, change: Partial<FilterCondition>) {
@@ -129,6 +130,7 @@
     {#each group.children as child, index (index)}
         {#if child.kind === 'group'}
             <FilterBuilderGroup
+                {labels}
                 group={child}
                 path={[...path, index]}
                 {columnItems}

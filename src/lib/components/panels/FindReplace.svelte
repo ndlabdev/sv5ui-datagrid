@@ -1,16 +1,19 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { Button, Checkbox, Input, useKbd } from 'sv5ui'
 
     import { getFindReplace } from '../../features/find-replace/find-replace.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
-    let { class: className }: { class?: string } = $props()
+    let { grid: gridProp, class: className }: { grid?: GridState<TRow>; class?: string } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const find = $derived(getFindReplace(grid))
     const t = $derived(grid.labels)

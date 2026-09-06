@@ -1,26 +1,26 @@
-<script lang="ts">
+<script lang="ts" generics="TRow">
+    import { untrack } from 'svelte'
     import { ShareTooLongError } from '../../core/grid/index.js'
     import { Button, DropdownMenu, Input, useClipboard } from 'sv5ui'
 
     import { getSavedViews } from '../../features/saved-views/saved-views.svelte.js'
     import { datagridVariants } from '../datagrid.variants.js'
+    import type { GridState } from '$lib/index.js'
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const grid = getGridContext()
     const theme = getGridTheme()
     const slots = datagridVariants()
 
-    let { class: className }: { class?: string } = $props()
+    let { grid: gridProp, class: className }: { grid?: GridState<TRow>; class?: string } = $props()
+
+    const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
 
     const views = $derived(getSavedViews(grid))
     const t = $derived(grid.labels)
 
     let name = $state('')
 
-    // Success and failure are two different lifetimes. `copied` says the link
-    // is on the clipboard and clears itself; a refusal has to stay up until
-    // the user does something about it, so only that lives in `problem`.
     const clipboard = useClipboard()
     let problem = $state('')
 
