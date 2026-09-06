@@ -39,7 +39,9 @@ const SYMBOLIC = new Set(['eq', 'neq', 'gt', 'gte', 'lt', 'lte'])
  * a blanket exemption.
  */
 const LOANWORDS: Record<string, string[]> = {
-    'id-ID': ['openFilter']
+    'de-DE': ['rangeMin', 'rangeMax', 'filterTitle', 'filterBuilderOperator'],
+    'fr-FR': ['rangeMin', 'rangeMax', 'formatKindExpression'],
+    'id-ID': ['openFilter', 'rangeMin', 'filterTitle', 'filterBuilderOperator']
 }
 
 /** Plausible arguments for every label that is a function. */
@@ -61,7 +63,68 @@ const ARGS: Record<string, unknown[]> = {
     pageRange: [1, 25, 300],
     totalRows: [300],
     filteredRows: [12, 300],
-    selectedRows: [4]
+    selectedRows: [4],
+
+    // Grouping and aggregation
+    moveGroupEarlier: ['Region'],
+    moveGroupLater: ['Region'],
+    removeGroup: ['Region'],
+    groupFooter: ['North', 12],
+    grandTotal: [300],
+    groupLoaded: ['North', 12],
+    groupFooterLoaded: ['North', 12],
+    grandTotalLoaded: [300],
+
+    // Range selection
+    rangeCells: ['12'],
+    rangeShape: [3, 4],
+
+    // Command palette
+    commandShowColumn: ['Name'],
+    commandHideColumn: ['Name'],
+    commandUnpinColumn: ['Name'],
+    commandPinColumnLeft: ['Name'],
+    commandPinColumnRight: ['Name'],
+    commandGroupByColumn: ['Region'],
+    commandUngroupColumn: ['Region'],
+
+    // Find and replace
+    findCount: [2, 9],
+    findNoWritable: [9],
+    findReplaced: [4],
+    findCountLoaded: [2, 9],
+
+    // Saved views
+    viewShareTooLong: [2400],
+
+    // Conditional formatting
+    formatRuleName: ['Colour scale', 'Pay'],
+    formatRemoveRule: ['Colour scale: Pay'],
+    formatBadExpression: ['unexpected )'],
+
+    // Tool panel
+    toolPanelMoveUp: ['Name'],
+    toolPanelMoveDown: ['Name'],
+    toolPanelActions: ['Name'],
+
+    // Advanced filter
+    filterJoin: ['and'],
+    filterOp: ['contains'],
+
+    // Import wizard
+    importUnknownFormat: ['notes.rtf'],
+    importAddRows: [120],
+    importAddValid: [118],
+    importIssues: [2],
+    importNotNumber: ['Pay'],
+    importNotDate: ['Hired'],
+    importNotBoolean: ['Active'],
+    importInvalid: ['Email'],
+    importDuplicate: ['ada@example.com'],
+    importExisting: ['ada@example.com'],
+    importRowCount: [120],
+    importTooBig: ['people.xlsx', 8],
+    importMatched: [5, 7]
 }
 
 const ANNOUNCER_ARGS: Record<string, unknown[]> = {

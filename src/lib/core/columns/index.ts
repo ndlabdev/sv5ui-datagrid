@@ -36,3 +36,5 @@ export {
     parentGroupIdOf
 } from './header-groups.js'
 export { opensRowSpanGroup, rowSpansOf, type ColumnRowSpans } from './row-span.js'
+export { autoColumns, headerOf } from './auto-columns.js'
+export type { AutoColumnsOptions } from './auto-columns.types.js'

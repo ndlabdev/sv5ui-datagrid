@@ -68,3 +68,42 @@ export function nodeIndexById<TRow>(nodes: RowNode<TRow>[]): ReadonlyMap<string,
     for (let i = 0; i < nodes.length; i++) positions.set(nodes[i].id, i)
     return positions
 }
+
+/**
+ * Not every row in the pipeline came from the data. A group header, a group
+ * footer, a grand total and a placeholder waiting on a server all travel as
+ * `RowNode`s so that layout, focus and virtualization need no special case for
+ * them, and all four have to be excluded from the passes that read values: an
+ * aggregate must not count its own subtotal, a fill must not overwrite a group
+ * header, a find must not match a row that has not arrived yet.
+ *
+ * The marks live on the row object rather than on `meta` because they have to
+ * survive being copied into a synthetic row by a feature that never saw the
+ * node, and because `isLoadingRow` is asked about raw rows a data source
+ * returned, before any node exists.
+ */
+export const LOADING_KEY = '__dgLoading'
+
+export const SYNTHETIC_KEY = '__dgSynthetic'
+
+export function isLoadingRow(row: unknown): boolean {
+    return Boolean((row as Record<string, unknown> | null)?.[LOADING_KEY])
+}
+
+export function isSyntheticRow(row: unknown): boolean {
+    return Boolean((row as Record<string, unknown> | null)?.[SYNTHETIC_KEY])
+}
+
+/** Marks a copy, never the row it was handed: the caller's row is the data. */
+export function markSyntheticRow<TRow>(row: TRow): TRow {
+    return { ...(row as object), [SYNTHETIC_KEY]: true } as TRow
+}
+
+/**
+ * A node carrying real values from the data, which is what a feature reading
+ * cells means by "a row". A full-width row is excluded even when its row is
+ * real: it is drawn as one panel across the grid, so it has no cell to read.
+ */
+export function isDataRow<TRow>(node: RowNode<TRow>): boolean {
+    return node.meta?.fullWidth !== true && !isSyntheticRow(node.row) && !isLoadingRow(node.row)
+}

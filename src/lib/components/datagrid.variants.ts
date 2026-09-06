@@ -146,7 +146,114 @@ export const datagridVariants = tv({
             'fixed z-40 flex w-68 flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3 shadow-lg',
         filterChips: 'flex flex-wrap items-center gap-1.5',
         statusBar: 'flex items-center gap-2 text-xs text-on-surface-variant',
-        footer: 'flex flex-wrap items-center justify-end gap-x-3 gap-y-2'
+        footer: 'flex flex-wrap items-center justify-end gap-x-3 gap-y-2',
+
+        // Grouping, range selection, the tool panel, the filter builder, the
+        // import wizard, conditional formatting, saved views, find and replace
+        // and the command palette. Registered here rather than in a second
+        // table so an app overrides every slot the grid has in one `ui` prop.
+        groupPanel:
+            'flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-outline-variant px-3 py-2',
+        groupPanelLabel: 'text-xs font-medium text-on-surface-variant',
+        groupPanelChip:
+            'inline-flex items-center gap-1 rounded-md bg-surface-container py-0.5 pr-0.5 pl-2',
+        groupPanelChipLabel: 'text-xs font-medium text-on-surface',
+        groupPanelSeparator: 'size-3.5 text-on-surface-variant',
+        groupPanelEmpty: 'text-xs text-on-surface-variant',
+
+        rangeStatusBar:
+            'flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-on-surface-variant',
+        rangeStatusBarValue: 'text-on-surface',
+
+        rangeCell:
+            'relative bg-primary/10 before:pointer-events-none before:absolute before:inset-0 before:z-[2] before:border-primary/45',
+        rangeEdgeTop: 'before:border-t',
+        rangeEdgeBottom: 'before:border-b',
+        rangeEdgeStart: 'before:border-s',
+        rangeEdgeEnd: 'before:border-e',
+
+        fillHandle:
+            'after:absolute after:end-0 after:bottom-0 after:z-20 after:size-[7px] after:cursor-crosshair after:bg-primary after:content-[""]',
+
+        cutSource:
+            'relative before:pointer-events-none before:absolute before:inset-0 before:z-[3] before:border before:border-dashed before:border-primary',
+
+        moveTarget:
+            'relative bg-tertiary/10 before:pointer-events-none before:absolute before:inset-0 before:z-[3] before:border before:border-tertiary/60',
+
+        fillPreview:
+            'relative bg-primary/5 before:pointer-events-none before:absolute before:inset-0 before:z-[2] before:border-dashed before:border-primary/45',
+
+        toolPanel:
+            'flex w-full flex-col gap-3 rounded-lg border border-outline-variant bg-surface p-3 lg:w-72 lg:shrink-0',
+        toolPanelCollapsed:
+            'flex w-full flex-row items-center justify-between gap-2 rounded-lg border border-outline-variant bg-surface p-2 lg:w-auto lg:flex-col lg:justify-start',
+        toolPanelHeader: 'flex items-center justify-between gap-2',
+        toolPanelTitle: 'text-xs font-medium text-on-surface',
+        toolPanelTabs: 'flex items-center gap-1',
+        toolPanelBody: 'flex max-h-96 min-h-0 flex-col gap-1 overflow-y-auto lg:max-h-none',
+        toolPanelRow:
+            'flex items-center gap-1 rounded px-1 py-1 hover:bg-surface-container has-[input:checked]:bg-transparent',
+        toolPanelRowMuted: 'opacity-60',
+        toolPanelValueRow: 'flex flex-col gap-1 rounded px-1 py-1',
+        toolPanelRowLabel: 'grow truncate text-xs text-on-surface',
+        toolPanelPinMark: 'text-[10px] font-medium tracking-wide text-primary uppercase',
+        toolPanelHint: 'text-xs text-on-surface-variant',
+
+        filterBuilder:
+            'flex flex-col gap-2 rounded-lg border border-outline-variant bg-surface p-3',
+        filterBuilderGroup: 'flex flex-col gap-2 rounded-md border border-outline-variant/70 p-2',
+        filterBuilderGroupHeader: 'flex flex-wrap items-center gap-2',
+        filterBuilderRow: 'flex flex-wrap items-center gap-2',
+        filterBuilderColumnSelect: 'w-full shrink-0 sm:w-44',
+        filterBuilderOperatorSelect: 'w-full shrink-0 sm:w-48',
+        filterBuilderValueInput: 'w-full min-w-36 sm:w-auto sm:min-w-0 sm:grow',
+        filterBuilderValuePlaceholder: 'text-on-surface-variant',
+        filterBuilderHint: 'text-xs text-on-surface-variant',
+
+        importPanel: 'flex flex-col gap-3 rounded-lg border border-outline-variant bg-surface p-4',
+        importDropZone:
+            'flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-outline-variant px-4 py-10 text-center transition-colors',
+        importDropZoneActive: 'border-primary bg-primary-container/40',
+        importHint: 'text-xs text-on-surface-variant',
+        importMapRow: 'flex flex-col gap-1 rounded px-1 py-1',
+        importMapLabel: 'text-xs font-medium text-on-surface',
+        importMapSelect: 'w-full',
+        importIssueList: 'flex max-h-40 flex-col gap-1 overflow-y-auto',
+        importIssueRow: 'flex items-center justify-between gap-3 text-xs text-on-surface-variant',
+        importIssueCount: 'shrink-0 tabular-nums text-error',
+        importStagedCell: 'bg-tertiary/10',
+        importBadCell: 'bg-error/15 ring-1 ring-inset ring-error/60',
+
+        commandPalette: 'p-0 max-w-lg',
+
+        findPanel:
+            'flex flex-wrap items-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-3 py-2',
+        findCount: 'text-xs tabular-nums text-on-surface-variant',
+
+        findMatch: 'bg-tertiary/20',
+
+        findMatchCurrent: 'bg-tertiary/40 ring-1 ring-inset ring-tertiary',
+
+        formatHighlight: 'bg-tertiary/20',
+
+        formatPanel:
+            'flex flex-wrap items-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-3 py-2',
+        formatPanelLabel: 'text-xs font-medium text-on-surface-variant',
+        formatPanelEmpty: 'text-xs text-on-surface-variant',
+        formatPanelError: 'text-xs text-error',
+        formatRuleChip:
+            'inline-flex items-center gap-1 rounded-md bg-surface-container-high py-0.5 pr-0.5 pl-2',
+        formatRuleChipLabel: 'text-xs font-medium text-on-surface',
+        formatRuleChipInvalid: 'ring-1 ring-error',
+
+        savedViews:
+            'flex flex-wrap items-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-3 py-2',
+        savedViewsLabel: 'text-xs font-medium text-on-surface-variant',
+        savedViewsModified: 'text-xs text-warning',
+
+        watermark:
+            'pointer-events-none absolute right-2 bottom-2 z-30 rounded-md border border-outline-variant bg-surface/80 px-2 py-1 text-xs font-medium text-on-surface-variant backdrop-blur-sm select-none'
     },
     variants: {
         align: {
