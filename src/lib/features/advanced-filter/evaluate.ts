@@ -4,126 +4,16 @@ import type {
     FilterGroup,
     FilterNode
 } from './advanced-filter.types.js'
-import { isBlank, numericOrNull } from '../../core/utils/index.js'
+import { valuePredicateFor } from '../filtering/filter-predicates.js'
+import { isBlank } from '../../core/utils/index.js'
+import type { FilterKind } from './operators.js'
+import { toColumnFilter } from './to-column-filter.js'
 
 const PRESENCE = new Set<AdvancedFilterOp>(['blank', 'notBlank'])
-
-function asText(value: unknown, caseSensitive: boolean): string {
-    const text = value instanceof Date ? value.toISOString() : String(value ?? '')
-    return caseSensitive ? text : text.toLowerCase()
-}
-
-const MS_PER_DAY = 86_400_000
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-function localDay(date: Date): number {
-    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
-}
-
-function asDay(value: unknown): number | null {
-    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : localDay(value)
-    if (typeof value === 'number') return localDay(new Date(value))
-    if (typeof value !== 'string') return null
-
-    const text = value.trim()
-    if (DATE_ONLY.test(text)) return Date.parse(text) / MS_PER_DAY
-
-    const parsed = new Date(text)
-    return Number.isNaN(parsed.getTime()) ? null : localDay(parsed)
-}
-
-function compareText(cell: unknown, condition: FilterCondition): boolean {
-    const sensitive = condition.caseSensitive ?? false
-    const left = asText(cell, sensitive)
-    const right = asText(condition.value, sensitive)
-
-    switch (condition.op) {
-        case 'contains':
-            return left.includes(right)
-        case 'notContains':
-            return !left.includes(right)
-        case 'startsWith':
-            return left.startsWith(right)
-        case 'endsWith':
-            return left.endsWith(right)
-        case 'equals':
-            return left === right
-        case 'notEqual':
-            return left !== right
-        default:
-            return false
-    }
-}
-
-const NUMERIC_TESTS: Partial<Record<AdvancedFilterOp, (left: number, right: number) => boolean>> = {
-    equals: (left, right) => left === right,
-    notEqual: (left, right) => left !== right,
-    gt: (left, right) => left > right,
-    gte: (left, right) => left >= right,
-    lt: (left, right) => left < right,
-    lte: (left, right) => left <= right
-}
-
-function compareNumbers(cell: unknown, condition: FilterCondition): boolean | null {
-    const left = numericOrNull(cell)
-    const right = numericOrNull(condition.value)
-    if (left === null || right === null) return null
-
-    if (condition.op === 'between') {
-        const upper = numericOrNull(condition.to)
-        return upper === null ? null : left >= right && left <= upper
-    }
-
-    const test = NUMERIC_TESTS[condition.op]
-    return test ? test(left, right) : null
-}
-
-function compareDays(cell: unknown, condition: FilterCondition): boolean | null {
-    const left = asDay(cell)
-    const right = asDay(condition.value)
-    if (left === null || right === null) return null
-
-    switch (condition.op) {
-        case 'before':
-            return left < right
-        case 'after':
-            return left > right
-        case 'equals':
-            return left === right
-        case 'notEqual':
-            return left !== right
-        case 'between': {
-            const upper = asDay(condition.to)
-            return upper === null ? null : left >= right && left <= upper
-        }
-        default:
-            return null
-    }
-}
-
-function matchesIn(cell: unknown, condition: FilterCondition): boolean {
-    const sensitive = condition.caseSensitive ?? false
-    const values = condition.values ?? []
-
-    return values.some((value) =>
-        value instanceof Date || cell instanceof Date
-            ? asDay(value) === asDay(cell)
-            : value === cell || asText(value, sensitive) === asText(cell, sensitive)
-    )
-}
 
 function matchesPresence(cell: unknown, op: AdvancedFilterOp): boolean {
     const blank = isBlank(cell)
     return op === 'blank' ? blank : !blank
-}
-
-function matchesBoolean(cell: unknown, condition: FilterCondition): boolean | null {
-    const equality = condition.op === 'equals' || condition.op === 'notEqual'
-    if (!equality) return null
-    if (typeof cell !== 'boolean' && typeof condition.value !== 'boolean') return null
-
-    const same = cell === condition.value || asText(cell, false) === asText(condition.value, false)
-    return condition.op === 'notEqual' ? !same : same
 }
 
 export function isComplete(condition: FilterCondition): boolean {
@@ -133,26 +23,33 @@ export function isComplete(condition: FilterCondition): boolean {
     return condition.op === 'between' ? !isBlank(condition.to) : true
 }
 
-export function matchesCondition(cell: unknown, condition: FilterCondition): boolean {
+/**
+ * One condition against one cell, read as the column's kind says to read it.
+ *
+ * The kind comes from the column rather than from the value. It used to be
+ * guessed per cell, which made a column of numeric strings compare as numbers
+ * in one row and as text in the next depending on what the cell held.
+ */
+export function matchesCondition(
+    cell: unknown,
+    condition: FilterCondition,
+    kind: FilterKind = 'text'
+): boolean {
     if (!isComplete(condition)) return true
-
     if (PRESENCE.has(condition.op)) return matchesPresence(cell, condition.op)
-    if (condition.op === 'in') return matchesIn(cell, condition)
 
-    const asBoolean = matchesBoolean(cell, condition)
-    if (asBoolean !== null) return asBoolean
-
-    const asNumbers = compareNumbers(cell, condition)
-    if (asNumbers !== null) return asNumbers
-
-    const asDates = compareDays(cell, condition)
-    if (asDates !== null) return asDates
-
-    return compareText(cell, condition)
+    const filter = toColumnFilter(condition, kind)
+    return filter ? valuePredicateFor(filter)(cell) : true
 }
 
-export function matchesNode(node: FilterNode, read: (columnId: string) => unknown): boolean {
-    if (node.kind === 'condition') return matchesCondition(read(node.columnId), node)
+export function matchesNode(
+    node: FilterNode,
+    read: (columnId: string) => unknown,
+    kindOf: (columnId: string) => FilterKind = () => 'text'
+): boolean {
+    if (node.kind === 'condition') {
+        return matchesCondition(read(node.columnId), node, kindOf(node.columnId))
+    }
 
     const children = node.children
     if (children.length === 0) return true
@@ -160,8 +57,8 @@ export function matchesNode(node: FilterNode, read: (columnId: string) => unknow
     const join = node.join ?? 'and'
     const matched =
         join === 'and'
-            ? children.every((child) => matchesNode(child, read))
-            : children.some((child) => matchesNode(child, read))
+            ? children.every((child) => matchesNode(child, read, kindOf))
+            : children.some((child) => matchesNode(child, read, kindOf))
 
     return node.not === true ? !matched : matched
 }

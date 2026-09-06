@@ -26,11 +26,15 @@ describe('one condition', () => {
     })
 
     it('compares numbers as numbers, including numeric text', () => {
-        expect(matchesCondition(10, condition({ op: 'gt', value: 5 }))).toBe(true)
-        expect(matchesCondition(10, condition({ op: 'lte', value: 10 }))).toBe(true)
-        expect(matchesCondition('10', condition({ op: 'gte', value: '10' }))).toBe(true)
-        expect(matchesCondition(4, condition({ op: 'between', value: 1, to: 4 }))).toBe(true)
-        expect(matchesCondition(5, condition({ op: 'between', value: 1, to: 4 }))).toBe(false)
+        // The kind comes from the column, so a numeric string in a number
+        // column is a number. The feature works it out per column, from the
+        // declaration or from a sample of the data.
+        const n = 'number' as const
+        expect(matchesCondition(10, condition({ op: 'gt', value: 5 }), n)).toBe(true)
+        expect(matchesCondition(10, condition({ op: 'lte', value: 10 }), n)).toBe(true)
+        expect(matchesCondition('10', condition({ op: 'gte', value: '10' }), n)).toBe(true)
+        expect(matchesCondition(4, condition({ op: 'between', value: 1, to: 4 }), n)).toBe(true)
+        expect(matchesCondition(5, condition({ op: 'between', value: 1, to: 4 }), n)).toBe(false)
     })
 
     it('compares dates by day, the way a column filter does', () => {
@@ -53,13 +57,15 @@ describe('one condition', () => {
         expect(
             matchesCondition(
                 new Date(2026, 2, 2, 10, 30),
-                condition({ op: 'equals', value: '2026-03-02' })
+                condition({ op: 'equals', value: '2026-03-02' }),
+                'date'
             )
         ).toBe(true)
         expect(
             matchesCondition(
                 new Date(2026, 2, 2, 10, 30),
-                condition({ op: 'after', value: '2026-03-02' })
+                condition({ op: 'after', value: '2026-03-02' }),
+                'date'
             )
         ).toBe(false)
     })
@@ -68,7 +74,8 @@ describe('one condition', () => {
         expect(
             matchesCondition(
                 new Date(2026, 2, 31, 9, 0),
-                condition({ op: 'between', value: '2026-01-01', to: '2026-03-31' })
+                condition({ op: 'between', value: '2026-01-01', to: '2026-03-31' }),
+                'date'
             )
         ).toBe(true)
     })
@@ -80,18 +87,25 @@ describe('one condition', () => {
         expect(matchesCondition('x', condition({ op: 'notBlank' }))).toBe(true)
     })
 
-    it('matches a list, by value or by its text', () => {
-        expect(matchesCondition('a', condition({ op: 'in', values: ['a', 'b'] }))).toBe(true)
-        expect(matchesCondition(2, condition({ op: 'in', values: ['2'] }))).toBe(true)
-        expect(matchesCondition('c', condition({ op: 'in', values: ['a', 'b'] }))).toBe(false)
+    it('matches a list by the key the list was built with', () => {
+        // The same key a set filter's value list uses, so an entry the user
+        // picked out of that list is the entry a cell holding it answers to.
+        // A number and its text are two entries, not one.
+        const s = 'set' as const
+        expect(matchesCondition('a', condition({ op: 'in', values: ['a', 'b'] }), s)).toBe(true)
+        expect(matchesCondition(2, condition({ op: 'in', values: [2] }), s)).toBe(true)
+        expect(matchesCondition(2, condition({ op: 'in', values: ['2'] }), s)).toBe(false)
+        expect(matchesCondition('c', condition({ op: 'in', values: ['a', 'b'] }), s)).toBe(false)
     })
 
     it('waits rather than excluding, while a condition is still being filled in', () => {
-        expect(matchesCondition('a', condition({ op: 'in' }))).toBe(true)
-        expect(matchesCondition('a', condition({ op: 'in', values: [] }))).toBe(true)
+        expect(matchesCondition('a', condition({ op: 'in' }), 'set')).toBe(true)
+        expect(matchesCondition('a', condition({ op: 'in', values: [] }), 'set')).toBe(true)
         expect(matchesCondition('a', condition({ op: 'equals', value: '' }))).toBe(true)
-        expect(matchesCondition(5, condition({ op: 'between', value: 1 }))).toBe(true)
-        expect(matchesCondition(5, condition({ op: 'between', value: 1, to: 4 }))).toBe(false)
+        expect(matchesCondition(5, condition({ op: 'between', value: 1 }), 'number')).toBe(true)
+        expect(matchesCondition(5, condition({ op: 'between', value: 1, to: 4 }), 'number')).toBe(
+            false
+        )
     })
 
     it('treats booleans as booleans rather than as text', () => {
@@ -100,8 +114,10 @@ describe('one condition', () => {
         expect(matchesCondition(false, condition({ op: 'notEqual', value: true }))).toBe(true)
     })
 
-    it('falls back to text when the two sides are not comparable as numbers', () => {
-        expect(matchesCondition('abc', condition({ op: 'gt', value: 5 }))).toBe(false)
+    it('offers no comparison a text column cannot make, and waits rather than hiding', () => {
+        // `gt` is not on a text column's list. Reaching it anyway is a
+        // half-built condition, and a half-built condition filters nothing.
+        expect(matchesCondition('abc', condition({ op: 'gt', value: 5 }))).toBe(true)
         expect(matchesCondition('abc', condition({ op: 'equals', value: 'abc' }))).toBe(true)
     })
 })

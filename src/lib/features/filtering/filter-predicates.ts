@@ -110,6 +110,10 @@ function numberPredicate(
         filter.op
     ]
     if (!compare) return PASSES
+    // `neq` keeps a blank, the way `textPredicate` keeps one: a cell with no
+    // number in it is not the number being excluded. Every other comparator
+    // needs a real value, or `Number('')` would answer 0 to `lt 5`.
+    if (filter.op === 'neq') return (value) => isBlank(value) || compare(Number(value), target)
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 

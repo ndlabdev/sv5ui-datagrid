@@ -1,3 +1,5 @@
+import { kindsFor } from './kinds.js'
+import type { FilterKind } from './operators.js'
 import {
     type CellRead,
     gateReader,
@@ -81,19 +83,27 @@ export class AdvancedFilter<TRow> {
     #matchesWith(
         node: RowNode<TRow>,
         defs: Map<string, ColumnDef<TRow>>,
-        read: CellRead<TRow>
+        read: CellRead<TRow>,
+        kinds: Map<string, FilterKind>
     ): boolean {
         if (this.#alwaysKeep?.(node) === true) return true
         if (!isDataRow(node)) return true
 
-        return matchesNode(this.model, (columnId) => {
-            const def = defs.get(columnId)
-            return def ? read(node, def) : undefined
-        })
+        return matchesNode(
+            this.model,
+            (columnId) => {
+                const def = defs.get(columnId)
+                return def ? read(node, def) : undefined
+            },
+            (columnId) => kinds.get(columnId) ?? 'text'
+        )
     }
 
-    matches = (node: RowNode<TRow>): boolean =>
-        this.#matchesWith(node, this.#defsForModel(), gateReader(this.#grid, 'search'))
+    matches = (node: RowNode<TRow>): boolean => {
+        const defs = this.#defsForModel()
+        const read = gateReader(this.#grid, 'search')
+        return this.#matchesWith(node, defs, read, kindsFor([node], defs, read))
+    }
 
     #refuseOnServer(): boolean {
         if (this.#grid.rowModel !== 'server') return false
@@ -110,7 +120,8 @@ export class AdvancedFilter<TRow> {
 
         const defs = this.#defsForModel()
         const read = gateReader(this.#grid, 'search')
-        return nodes.filter((node) => this.#matchesWith(node, defs, read))
+        const kinds = kindsFor(nodes, defs, read)
+        return nodes.filter((node) => this.#matchesWith(node, defs, read, kinds))
     }
 }
 

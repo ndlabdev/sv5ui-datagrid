@@ -106,7 +106,9 @@ const comparisons: Record<string, (value: number, target: number) => boolean> = 
 function numberHolds(value: unknown, condition: Extract<Condition, { kind: 'number' }>): boolean {
     if (condition.op === 'blank') return isBlank(value)
     if (condition.op === 'notBlank') return !isBlank(value)
-    if (isBlank(value)) return false
+    // A blank is not the number being excluded. Every other comparator needs a
+    // real value, or `Number('')` would answer 0 to `lt 5`.
+    if (isBlank(value)) return condition.op === 'neq'
 
     const numeric = Number(value)
     const target = condition.value ?? Number.NaN

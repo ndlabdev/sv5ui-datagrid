@@ -57,7 +57,9 @@ describe('number predicates', () => {
     it('covers comparison ops and between boundaries', () => {
         expect(passes({ kind: 'number', op: 'eq', value: 5 }, 5)).toBe(true)
         expect(passes({ kind: 'number', op: 'neq', value: 5 }, 6)).toBe(true)
-        expect(passes({ kind: 'number', op: 'neq', value: 5 }, null)).toBe(false)
+        // A blank is not the number being excluded, the way it is not the
+        // word `notEqual` excludes on text. The two used to disagree.
+        expect(passes({ kind: 'number', op: 'neq', value: 5 }, null)).toBe(true)
         expect(passes({ kind: 'number', op: 'gt', value: 5 }, 6)).toBe(true)
         expect(passes({ kind: 'number', op: 'gte', value: 5 }, 5)).toBe(true)
         expect(passes({ kind: 'number', op: 'lt', value: 5 }, 4)).toBe(true)

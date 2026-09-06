@@ -1,6 +1,7 @@
 import { type FilterRequest, type SortState } from '../../core/types/index.js'
 import type { FilterNode } from '../advanced-filter/advanced-filter.types.js'
 import { matchesNode } from '../advanced-filter/evaluate.js'
+import type { FilterKind } from '../advanced-filter/operators.js'
 import {
     BOOLEAN_BLANK,
     columnOf,
@@ -15,7 +16,7 @@ import {
     type ColumnStore,
     type RowStore
 } from './columnar.js'
-import { predicateFor } from './predicates.js'
+import { valuePredicateFor } from '../filtering/filter-predicates.js'
 
 export interface WorkerQuery {
     filter: FilterRequest
@@ -43,7 +44,7 @@ const collator = new Intl.Collator(undefined, { numeric: true })
 
 function stringTest(
     store: ColumnStore,
-    filter: Parameters<typeof predicateFor>[0],
+    filter: Parameters<typeof valuePredicateFor>[0],
     accept: (value: unknown) => boolean
 ): RowTest {
     const dictionary = store.dictionary!
@@ -73,8 +74,8 @@ function dateTest(store: ColumnStore, accept: (value: unknown) => boolean): RowT
     }
 }
 
-function testFor(store: ColumnStore, filter: Parameters<typeof predicateFor>[0]): RowTest {
-    const accept = predicateFor(filter)
+function testFor(store: ColumnStore, filter: Parameters<typeof valuePredicateFor>[0]): RowTest {
+    const accept = valuePredicateFor(filter)
 
     if (store.kind === 'string') return stringTest(store, filter, accept)
 
@@ -164,14 +165,28 @@ function columnTests(
     return tests
 }
 
+const STORE_KINDS: Record<string, FilterKind> = {
+    string: 'text',
+    number: 'number',
+    date: 'date',
+    boolean: 'boolean'
+}
+
 function treeTest(store: RowStore, tree: FilterNode | null | undefined): RowTest | null {
     if (!tree || (tree.kind === 'group' && tree.children.length === 0)) return null
 
     return (index) =>
-        matchesNode(tree, (columnId) => {
-            const column = columnOf(store, columnId)
-            return column ? readStore(column, index) : undefined
-        })
+        matchesNode(
+            tree,
+            (columnId) => {
+                const column = columnOf(store, columnId)
+                return column ? readStore(column, index) : undefined
+            },
+            // The store already sorted each column into a kind when it was
+            // packed, which is the same question the main thread answers from
+            // the column definition.
+            (columnId) => STORE_KINDS[columnOf(store, columnId)?.kind ?? 'string']
+        )
 }
 
 function stringKeys(column: ColumnStore, rowCount: number, asDate: boolean): Float64Array {
