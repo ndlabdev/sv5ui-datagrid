@@ -1,13 +1,4 @@
-export {
-    buildMoveEdits,
-    buildPasteEdits,
-    buildRangeEdits,
-    movePairs,
-    toHtmlTable,
-    type CellRef,
-    type MoveCells,
-    type MovePair
-} from './range-clipboard.js'
+export { buildMoveEdits } from './range-clipboard.js'
 export {
     getRangeSelection,
     RANGE_SELECTION,
@@ -15,15 +6,4 @@ export {
     RangeSelection
 } from './range-selection.svelte.js'
 export type { CopyRangeOptions, RangeSelectionOptions } from './range-selection.types.js'
-export {
-    boundsOf,
-    cellsOf,
-    containsCell,
-    isInAnyRange,
-    rangeBetween,
-    rangeCols,
-    rangeRows,
-    rangeSize,
-    type CellPosition,
-    type CellRange
-} from './range.js'
+export type { CellRange } from './range.js'

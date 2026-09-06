@@ -1,5 +1,5 @@
 import { evaluate, type FormulaValue, isFormulaError, type Node } from '../formula/index.js'
-import { numericOrNull } from '../../core/utils/index.js'
+import { isBlank, numericOrNull } from '../../core/utils/index.js'
 import type {
     ColorScaleRule,
     DataBarRule,
@@ -102,7 +102,7 @@ function duplicatesPaint(
 ): Paint | undefined {
     if (stats?.kind !== 'keys') return undefined
     const { value } = context
-    if (value === null || value === undefined || value === '') return undefined
+    if (isBlank(value)) return undefined
     return stats.keys.has(String(value)) ? highlightPaint(rule, context.highlight) : undefined
 }
 

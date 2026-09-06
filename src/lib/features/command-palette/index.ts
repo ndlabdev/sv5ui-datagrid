@@ -1,10 +1,4 @@
 export {
-    buildCommands,
-    columnCommands,
-    groupingCommands,
-    rangeCommands
-} from './command-palette-commands.js'
-export {
     COMMAND_PALETTE,
     CommandPalette,
     commandPalette,

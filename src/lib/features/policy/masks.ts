@@ -1,3 +1,4 @@
+import { isBlank } from '../../core/utils/index.js'
 export type MaskKind = 'hide' | 'redact' | 'last4' | 'email' | 'initials'
 
 export const REDACTED = '••••'
@@ -10,10 +11,6 @@ const KEEP = 4
 
 function textOf(value: unknown): string {
     return value instanceof Date ? value.toISOString() : String(value)
-}
-
-export function isEmpty(value: unknown): boolean {
-    return value === null || value === undefined || value === ''
 }
 
 export function maskLast4(value: unknown): string {
@@ -41,7 +38,7 @@ export function maskInitials(value: unknown): string {
 
 export function applyMask(kind: MaskKind, value: unknown): unknown {
     if (kind === 'hide') return null
-    if (isEmpty(value)) return value
+    if (isBlank(value)) return value
 
     switch (kind) {
         case 'redact':

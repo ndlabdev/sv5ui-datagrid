@@ -2,6 +2,7 @@ import { type ColumnDef, type RowNode } from '../../core/types/index.js'
 import { type CellRead, markSyntheticRow, rawRead } from '../../core/grid/index.js'
 import { aggregateRowValues, buildFooterNode, groupPathId } from './totals-nodes.js'
 import type { Aggregation } from './grouping.types.js'
+import { isBlank } from '../../core/utils/index.js'
 
 export interface BuildGroupNodesOptions<TRow> {
     read?: CellRead<TRow>
@@ -29,7 +30,7 @@ function columnById<TRow>(columns: ColumnDef<TRow>[], id: string): ColumnDef<TRo
 
 function keyOf<TRow>(node: RowNode<TRow>, column: ColumnDef<TRow>, read: CellRead<TRow>): string {
     const value = read(node, column)
-    return value === null || value === undefined || value === '' ? '(blank)' : String(value)
+    return isBlank(value) ? '(blank)' : String(value)
 }
 
 function partition<TRow>(

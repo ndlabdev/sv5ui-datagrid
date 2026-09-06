@@ -1,3 +1,4 @@
+import type { CellPosition } from '../../core/interaction/index.js'
 import { type GridState, isDataRow, isLoadingRow } from '../../core/grid/index.js'
 import {
     type CellDecoration,
@@ -27,7 +28,6 @@ import {
     rangeCols,
     rangeRows,
     rangeSize,
-    type CellPosition,
     type CellRange
 } from './range.js'
 import type { CopyRangeOptions, RangeSelectionOptions } from './range-selection.types.js'

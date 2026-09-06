@@ -1,5 +1,6 @@
+import { isBlank } from '../../core/utils/index.js'
 import { describe, expect, it } from 'vitest'
-import { countConditions, isBlankValue, matchesCondition, matchesNode } from './evaluate.js'
+import { countConditions, matchesCondition, matchesNode } from './evaluate.js'
 import type { FilterCondition, FilterGroup } from './advanced-filter.types.js'
 
 const condition = (partial: Partial<FilterCondition>): FilterCondition => ({
@@ -177,9 +178,9 @@ describe('a tree of conditions', () => {
     })
 })
 
-describe('isBlankValue', () => {
+describe('isBlank', () => {
     it('counts null, undefined and empty text, and nothing else', () => {
-        expect([null, undefined, ''].map(isBlankValue)).toEqual([true, true, true])
-        expect([0, false, ' ', []].map(isBlankValue)).toEqual([false, false, false, false])
+        expect([null, undefined, ''].map(isBlank)).toEqual([true, true, true])
+        expect([0, false, ' ', []].map(isBlank)).toEqual([false, false, false, false])
     })
 })

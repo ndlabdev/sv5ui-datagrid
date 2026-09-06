@@ -1,3 +1,5 @@
+export { isBlank } from '../../core/utils/index.js'
+import { isBlank } from '../../core/utils/index.js'
 export type StoreKind = 'number' | 'date' | 'boolean' | 'string'
 
 export interface ColumnStore {
@@ -25,10 +27,6 @@ export const BOOLEAN_BLANK = 2
 export const MS_PER_DAY = 86_400_000
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-export function isBlank(value: unknown): boolean {
-    return value === null || value === undefined || value === ''
-}
 
 function localDay(date: Date): number {
     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY

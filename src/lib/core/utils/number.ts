@@ -1,3 +1,5 @@
+import { isBlank } from './value.js'
+
 /**
  * Coercion for the passes that do arithmetic over a column: aggregation, the
  * statistics a colour scale reads, a data bar's width, a range's sum.
@@ -14,7 +16,7 @@
  *   way nobody would look for.
  */
 function isNumericInput(value: unknown): boolean {
-    if (value === null || value === undefined || value === '') return false
+    if (isBlank(value)) return false
     if (typeof value === 'string') return value.trim() !== ''
     return typeof value !== 'object' || value instanceof Date
 }

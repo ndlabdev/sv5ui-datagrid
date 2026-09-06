@@ -13,10 +13,6 @@ export {
     cellRef,
     columnLetter,
     DEFAULT_STYLE,
-    escapeCellText,
-    escapeXml,
-    isFormulaCell,
-    sheetXml,
     toSerialDate,
     type CellValue,
     type SheetColumn,
@@ -35,10 +31,9 @@ export type {
 } from './styles.types.js'
 export {
     createWorkbook,
-    sanitizeSheetName,
     workbookEntries,
     XLSX_MIME,
     type WorkbookOptions,
     type WorkbookSheet
 } from './workbook.js'
-export { createZip, crc32, deflateEntries, zipEntry, type ZipEntry } from './zip.js'
+export { createZip, deflateEntries, zipEntry } from './zip.js'

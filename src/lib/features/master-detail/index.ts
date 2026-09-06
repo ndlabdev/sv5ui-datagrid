@@ -1,11 +1,4 @@
-export {
-    buildDetailNodes,
-    detailNodeId,
-    DETAIL_ID_PREFIX,
-    isDetailNode,
-    masterIdOf,
-    type BuildDetailOptions
-} from './detail-nodes.js'
+export { isDetailNode } from './detail-nodes.js'
 export {
     getMasterDetail,
     MASTER_DETAIL,

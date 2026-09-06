@@ -1,5 +1,6 @@
 import { type ColumnDef } from '../../core/types/index.js'
 import type { AdvancedFilterOp } from './advanced-filter.types.js'
+import { isBlank } from '../../core/utils/index.js'
 
 export type FilterKind = 'text' | 'number' | 'date' | 'boolean' | 'set'
 
@@ -73,7 +74,7 @@ export function distinctValues(
     const seen = new Set<string>()
     for (let index = 0; index < count && seen.size < limit; index++) {
         const value = read(index)
-        if (value === null || value === undefined || value === '') continue
+        if (isBlank(value)) continue
         seen.add(String(value))
     }
     return [...seen].sort()

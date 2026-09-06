@@ -1,6 +1,6 @@
 import { isDataRow, rawRead, type CellRead } from '../../core/grid/index.js'
 import { type ColumnState, type RowNode } from '../../core/types/index.js'
-import { numericOrNull } from '../../core/utils/index.js'
+import { isBlank, numericOrNull } from '../../core/utils/index.js'
 import type { FormatRule } from './conditional-formatting.types.js'
 
 export interface ScaleStats {
@@ -95,7 +95,7 @@ function keysOf<TRow>(
     if (column) {
         for (const node of nodes) {
             const value = read(node, column.def)
-            if (value === null || value === undefined || value === '') continue
+            if (isBlank(value)) continue
             const key = String(value)
             seen.set(key, (seen.get(key) ?? 0) + 1)
         }

@@ -4,13 +4,9 @@ import type {
     FilterGroup,
     FilterNode
 } from './advanced-filter.types.js'
-import { numericOrNull } from '../../core/utils/index.js'
+import { isBlank, numericOrNull } from '../../core/utils/index.js'
 
 const PRESENCE = new Set<AdvancedFilterOp>(['blank', 'notBlank'])
-
-export function isBlankValue(value: unknown): boolean {
-    return value === null || value === undefined || value === ''
-}
 
 function asText(value: unknown, caseSensitive: boolean): string {
     const text = value instanceof Date ? value.toISOString() : String(value ?? '')
@@ -117,7 +113,7 @@ function matchesIn(cell: unknown, condition: FilterCondition): boolean {
 }
 
 function matchesPresence(cell: unknown, op: AdvancedFilterOp): boolean {
-    const blank = isBlankValue(cell)
+    const blank = isBlank(cell)
     return op === 'blank' ? blank : !blank
 }
 
@@ -133,8 +129,8 @@ function matchesBoolean(cell: unknown, condition: FilterCondition): boolean | nu
 export function isComplete(condition: FilterCondition): boolean {
     if (PRESENCE.has(condition.op)) return true
     if (condition.op === 'in') return (condition.values?.length ?? 0) > 0
-    if (isBlankValue(condition.value)) return false
-    return condition.op === 'between' ? !isBlankValue(condition.to) : true
+    if (isBlank(condition.value)) return false
+    return condition.op === 'between' ? !isBlank(condition.to) : true
 }
 
 export function matchesCondition(cell: unknown, condition: FilterCondition): boolean {

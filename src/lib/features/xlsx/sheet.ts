@@ -1,4 +1,5 @@
 import { conditionalFormatXml, type XlsxCfRule } from './conditional-format.js'
+import { isBlank } from '../../core/utils/index.js'
 
 export interface XlsxFormula {
     formula: string
@@ -142,10 +143,6 @@ const dated = (value: CellValue): boolean =>
 
 const appliedStyle = (value: CellValue, style: StyleId, datetime: StyleId): StyleId =>
     dated(value) && style === DEFAULT_STYLE ? datetime : style
-
-function isBlank(value: CellValue): boolean {
-    return value === null || value === undefined || value === ''
-}
 
 function bodyXml(attributes: string, value: CellValue, reference: string): string {
     if (isFormulaCell(value)) return formulaXml(attributes, value, reference)

@@ -1,8 +1,11 @@
-export interface CellPosition {
-    row: number
-    col: number
-}
+import type { CellPosition } from '../../core/interaction/index.js'
 
+/**
+ * A range is a box over the body, named by the same `{ row, col }` the focus
+ * model uses, so the cell the user is on can be handed straight to
+ * `selectCellRange`. `section` rides along optional and unread: the body is
+ * the only section a range covers.
+ */
 export interface CellRange {
     top: number
     left: number
