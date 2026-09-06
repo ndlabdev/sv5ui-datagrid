@@ -18,6 +18,19 @@
         untrack(() => model?.start())
     })
 
+    // What the body draws while there is no answer yet, and if one never came.
+    $effect(() => {
+        if (!model) return
+        grid.status = {
+            loading: model.loading || !model.answered,
+            error: model.error,
+            onRetry: model.refresh
+        }
+        return () => {
+            grid.status = undefined
+        }
+    })
+
     $effect(() => {
         const range = virtualization?.virtualizer.range
         if (range) untrack(() => model?.ensureRange(range.start, range.end))

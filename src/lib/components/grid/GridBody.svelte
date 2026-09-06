@@ -49,15 +49,28 @@
 
     let {
         emptyText,
-        loading = false,
+        loading: loadingProp,
         loadingRows,
-        error = null,
-        onRetry,
+        error: errorProp,
+        onRetry: onRetryProp,
         fullWidthRow,
         class: className
     }: GridBodyProps<TRow> = $props()
 
     const grid = getGridContext<TRow>()
+
+    /** A feature may hand back anything it caught; the body draws a line. */
+    function errorText(value: unknown): string | undefined {
+        if (value === null || value === undefined) return undefined
+        return value instanceof Error ? value.message : String(value)
+    }
+
+    // A prop wins; a feature that owns the rows answers when there is none.
+    // Without the fallback a server grid says "no data" during its first
+    // request, which is the one moment it certainly does not know that.
+    const loading = $derived(loadingProp ?? grid.status?.loading ?? false)
+    const error = $derived(errorProp ?? errorText(grid.status?.error) ?? null)
+    const onRetry = $derived(onRetryProp ?? grid.status?.onRetry)
     const labels = $derived(grid.labels)
     const virtualization = getVirtualization(grid)
     const reorder = getRowReorder(grid)
@@ -729,7 +742,14 @@
         {#each Array.from({ length: skeletonRows }, (_, i) => i) as i (i)}
             <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
+                    <!--
+                        A cell, even while it is a placeholder. A `row` whose
+                        children are plain divs is a row a screen reader cannot
+                        read, and axe says so.
+                    -->
                     <div
+                        role="gridcell"
+                        aria-colindex={entry.index + 1}
                         class={cellClass[entry.column.align]}
                         style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
                     >

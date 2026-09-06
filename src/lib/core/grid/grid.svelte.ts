@@ -238,6 +238,17 @@ export class GridState<TRow> {
     }
 
     /**
+     * What a feature that owns the rows wants the body to draw instead of
+     * rows: it is fetching, it failed, and how to try again.
+     *
+     * The body cannot ask the feature directly. Naming `serverRowModel` there
+     * would put it in every bundle, registered or not, so the feature says it
+     * here and the body reads one field. A prop on `DataGrid` still wins: an
+     * application that says `loading` means it.
+     */
+    status = $state.raw<GridStatus | undefined>(undefined)
+
+    /**
      * One cell, as the given purpose is allowed to see it. The default is what
      * the cell draws, which is what every renderer, tooltip and `cell` snippet
      * asks for.
@@ -249,6 +260,13 @@ export class GridState<TRow> {
     ): unknown {
         return readCell(node, column.def, this.#readerFor(column, purpose))
     }
+}
+
+/** What the body draws when a feature is fetching the rows rather than holding them. */
+export interface GridStatus {
+    loading?: boolean
+    error?: unknown
+    onRetry?: () => void
 }
 
 export function createDataGrid<TRow>(options: DataGridOptions<TRow>): GridState<TRow> {

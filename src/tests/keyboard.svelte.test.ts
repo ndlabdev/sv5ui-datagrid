@@ -207,7 +207,13 @@ describe('overlays', () => {
 
         const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')
         expect(body).not.toBeNull()
-        expect(screen.container.querySelectorAll('[role="gridcell"]')).toHaveLength(0)
+
+        // The skeleton draws cells, because a `row` owing no `gridcell` is a
+        // row nothing can read. What it must not draw is data: every cell on
+        // screen while loading is empty of text.
+        const cells = [...screen.container.querySelectorAll('[role="gridcell"]')]
+        expect(cells).not.toHaveLength(0)
+        expect(cells.every((cell) => (cell.textContent ?? '').trim() === '')).toBe(true)
     })
 
     it('fills the grid with skeletons rather than a fixed few', async () => {

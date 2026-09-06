@@ -8,7 +8,7 @@
 
 export { EventBus, type EventHandler } from './events.js'
 export { createDataGrid } from './grid.svelte.js'
-export type { GridState } from './grid.svelte.js'
+export type { GridState, GridStatus } from './grid.svelte.js'
 export { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
 export {
     buildRowNodes,

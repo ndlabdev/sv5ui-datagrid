@@ -15,11 +15,15 @@
         partProps = {}
     }: {
         grid: GridState<never>
-        component: Component<Record<string, unknown>>
+        /** Omit it to mount nothing but the root, which is what a feature that
+         * contributes its own component needs. */
+        component?: Component<Record<string, unknown>>
         partProps?: Record<string, unknown>
     } = $props()
 </script>
 
 <Grid.Root {grid}>
-    <Part {...partProps} />
+    {#if Part}
+        <Part {...partProps} />
+    {/if}
 </Grid.Root>
