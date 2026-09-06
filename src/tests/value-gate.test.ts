@@ -414,7 +414,12 @@ describe('nothing reads past the gate', () => {
         'core/grid/value-gate.ts',
         // A predicate decides which rows survive; RFC EP5 §7 records why it
         // reads past the gate and what that costs.
-        'features/filtering/filter-predicates.ts'
+        'features/filtering/filter-predicates.ts',
+        // The worker loads a columnar copy to filter and sort off the main
+        // thread, which is the same two holes §7 already accepts and for the
+        // same reason: a gate per cell here would undo the pass. An app that
+        // needs the worker to see something else supplies `readValue`.
+        'features/worker-row-model/worker-row-model.ts'
     ])
 
     function sourceFiles(dir: string): string[] {

@@ -41,6 +41,14 @@ export default defineConfig(
         }
     },
     {
+        // Escaping control characters is what this module is for: they are
+        // legal in a cell and illegal in the XML the sheet is written as.
+        files: ['src/lib/features/xlsx/**'],
+        rules: {
+            'no-control-regex': 'off'
+        }
+    },
+    {
         files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 
         languageOptions: {

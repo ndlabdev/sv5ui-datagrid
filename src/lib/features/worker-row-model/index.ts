@@ -1,0 +1,6 @@
+export { buildStore, type ColumnStore, type RowStore, type StoreKind } from './columnar.js'
+export { createEngine } from './engine.js'
+export { predicateFor } from './predicates.js'
+export { runQuery, type QueryResult, type WorkerQuery } from './query.js'
+export { workerDataSource } from './worker-row-model.js'
+export type { WorkerDataSource, WorkerDataSourceOptions } from './worker-row-model.types.js'
