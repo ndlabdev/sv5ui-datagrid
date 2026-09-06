@@ -1,3 +1,4 @@
+import ServerRows from '../../components/grid/ServerRows.svelte'
 import { type GridState, LOADING_KEY, PIPELINE_ORDER } from '../../core/grid/index.js'
 import { type GridFeature, type RowNode } from '../../core/types/index.js'
 import { getFiltering, toFilterRequest } from '../../features/filtering/index.js'
@@ -34,6 +35,10 @@ export class ServerRowModel<TRow> {
     #grid: GridState<TRow>
     #source: DataSource<TRow>
     #options: ServerRowModelOptions<TRow>
+
+    /** Read by the layer the feature contributes, which owns the effects. */
+    readonly groupKeysOf: ServerRowModelOptions<TRow>['groupKeysOf']
+    readonly isChildOf: ServerRowModelOptions<TRow>['isChildOf']
     #blocks = createLoadedBlocks()
 
     #generation = 0
@@ -47,6 +52,8 @@ export class ServerRowModel<TRow> {
         this.#grid = grid
         this.#source = source
         this.#options = options
+        this.groupKeysOf = options.groupKeysOf
+        this.isChildOf = options.isChildOf
         this.mode = options.mode ?? 'paged'
         this.blockSize = options.blockSize ?? DEFAULT_BLOCK_SIZE
         this.maxBlocks = options.maxBlocks ?? DEFAULT_MAX_BLOCKS
@@ -275,6 +282,7 @@ export function serverRowModel<TRow>(
 ): GridFeature<TRow> {
     return {
         id: SERVER_ROW_MODEL,
+        component: ServerRows,
         createState: (grid) => new ServerRowModel(grid, source, options),
         createApi: (grid) => {
             const state = getServerRowModel(grid)!

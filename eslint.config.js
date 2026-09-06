@@ -29,6 +29,13 @@ export default defineConfig(
             eqeqeq: ['error', 'always'],
             'no-console': 'warn',
             'no-unused-vars': 'off',
+            // A leading underscore is how this codebase says a binding is
+            // deliberately unread: an `#each` that needs the index and not the
+            // item, a handler that takes an event it ignores.
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+            ],
             'quote-props': ['error', 'as-needed'],
             'max-params': ['warn', 4],
             complexity: ['warn', 10]

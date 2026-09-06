@@ -11,7 +11,7 @@
 
 <script lang="ts" generics="TRow">
     import { untrack } from 'svelte'
-    import { setGridContext } from '../internal/context.js'
+    import { setGridContext, setGridElement } from '../internal/context.js'
     import { setGridTheme } from '../internal/theme.js'
     import { getDataGridConfig } from '../datagrid.config.js'
     import type { GridRootProps } from '../datagrid.types.js'
@@ -22,6 +22,14 @@
 
     setGridContext(untrack(() => grid))
     setGridTheme(() => ui)
+
+    let root = $state<HTMLElement | null>(null)
+    setGridElement(() => root)
+
+    // A feature that needs an effect, a DOM listener or a layer says so with a
+    // component; nothing is imported here, so a feature left unregistered is
+    // code this file never mentions and the bundler never sees.
+    const layers = $derived(grid.features.filter((feature) => feature.component))
 
     // Written back once so toggle, snapshot and rendering read one value.
     untrack(() => {
@@ -38,7 +46,11 @@
     <GridStatePersistence {grid} options={persistState} />
 {/if}
 
-<div class={slots.root({ class: [config.slots.root, className, ui?.root] })}>
+<div bind:this={root} class={slots.root({ class: [config.slots.root, className, ui?.root] })}>
     <div aria-live="polite" class="sr-only">{grid.announcer.message}</div>
+    {#each layers as feature (feature.id)}
+        {@const Layer = feature.component!}
+        <Layer />
+    {/each}
     {@render children?.()}
 </div>

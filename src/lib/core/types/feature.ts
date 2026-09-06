@@ -1,3 +1,4 @@
+import type { Component } from 'svelte'
 import type { GridState } from '../grid/grid.svelte.js'
 import type { GridApi } from './api.js'
 import type { ColumnState } from './columns.js'
@@ -147,6 +148,22 @@ export interface GridFeature<TRow> {
      * commit the substitute over the real data.
      */
     cellValue?: (scope: CellValueScope<TRow>) => CellValueReader<TRow> | undefined
+    /**
+     * A component the grid mounts inside its root, for the work a feature can
+     * only do from inside the render tree: an effect, a listener on the grid's
+     * own element, a layer drawn over the rows.
+     *
+     * A feature is built by `createDataGrid`, where there is no effect context
+     * and no DOM, so anything of that kind had no home before this. Naming the
+     * component here rather than having the grid import it is what keeps the
+     * promise on the box: `DataGrid` never mentions these, so a feature nobody
+     * registered is a component nobody bundles.
+     *
+     * It is handed no props. The grid is in context, and so is the root
+     * element, which `getGridElement` answers for.
+     */
+    component?: Component
+
     /** The feature's JSON-safe slice of a snapshot; undefined stays out. */
     serialize?: (grid: GridState<TRow>) => unknown
     /** Restores what `serialize` produced; a feature added later starts fresh. */

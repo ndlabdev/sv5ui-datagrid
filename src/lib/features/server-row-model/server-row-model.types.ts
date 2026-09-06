@@ -1,5 +1,10 @@
 import type { FilterGroup } from '../advanced-filter/index.js'
-import { type FilterRequest, type RowMeta, type SortState } from '../../core/types/index.js'
+import {
+    type FilterRequest,
+    type RowMeta,
+    type RowNode,
+    type SortState
+} from '../../core/types/index.js'
 
 /**
  * What the grid asks the server for. Matches PLAN §3.3: one descriptor covers
@@ -94,6 +99,19 @@ export interface ServerRowModelOptions<TRow> {
      * from the server, so nothing is grouped locally.
      */
     getRowMeta?: (row: TRow) => RowMeta | undefined
+
+    /**
+     * The group keys identifying a group row, outermost first, for a server
+     * that fetches a group's children on demand. Given, expanding a group row
+     * asks the source for its children instead of assuming they are loaded.
+     */
+    groupKeysOf?: (node: RowNode<TRow>) => unknown[]
+
+    /**
+     * Which loaded rows belong to a group row, so collapsing it can drop them.
+     * Read only when `groupKeysOf` is given.
+     */
+    isChildOf?: (node: RowNode<TRow>) => (row: TRow) => boolean
 
     /** Called when a request rejects, for logging or a toast. */
     onError?: (error: unknown, request: GetRowsRequest) => void

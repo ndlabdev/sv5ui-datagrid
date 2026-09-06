@@ -8,7 +8,13 @@
  * do it by being named again in `components/index.ts`.
  */
 
-export { getGridContext, getGridOrNull, setGridContext } from './context.js'
+export {
+    getGridContext,
+    getGridElement,
+    getGridOrNull,
+    setGridContext,
+    setGridElement
+} from './context.js'
 export { fromDateValue, fromTimeValue, toDateValue, toTimeValue } from './editor-values.js'
 export { notTabbable } from './focus.js'
 export { registerDataGridIcons } from './icons.js'

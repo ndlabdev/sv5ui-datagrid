@@ -258,10 +258,7 @@ export const datagridSlots = {
     savedViews:
         'flex flex-wrap items-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-3 py-2',
     savedViewsLabel: 'text-xs font-medium text-on-surface-variant',
-    savedViewsModified: 'text-xs text-warning',
-
-    watermark:
-        'pointer-events-none absolute right-2 bottom-2 z-30 rounded-md border border-outline-variant bg-surface/80 px-2 py-1 text-xs font-medium text-on-surface-variant backdrop-blur-sm select-none'
+    savedViewsModified: 'text-xs text-warning'
 }
 
 export type DataGridSlots = keyof typeof datagridSlots

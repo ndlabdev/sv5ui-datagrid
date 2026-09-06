@@ -1,3 +1,4 @@
+import RangeLayer from '../../components/grid/RangeLayer.svelte'
 import type { CellPosition } from '../../core/interaction/index.js'
 import { type GridState, isDataRow, isLoadingRow } from '../../core/grid/index.js'
 import {
@@ -707,6 +708,7 @@ export function rangeSelection<TRow>(options: RangeSelectionOptions = {}): GridF
         },
         cellDecoration: ({ grid, rowIndex, colIndex }) =>
             getRangeSelection(grid)?.cellDecoration(rowIndex, colIndex),
+        component: RangeLayer,
         keybindings: createKeybindings<TRow>()
     }
 }
