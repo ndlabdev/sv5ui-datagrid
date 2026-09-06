@@ -102,3 +102,26 @@ describe('encodeSnapshot and decodeSnapshot', () => {
         await expect(decodeSnapshot(future)).resolves.toBeNull()
     })
 })
+
+describe('canonicalJson', () => {
+    it('spells a value with a toJSON the way JSON.stringify does', () => {
+        // A snapshot also travels through localStorage as plain
+        // `JSON.stringify`. Rebuilding a Date from its own entries gives
+        // `{}`, and the two paths would then disagree about the same slice.
+        const at = new Date('2026-03-14T00:00:00.000Z')
+        const snapshot = { version: SNAPSHOT_VERSION, features: { views: { at } } } as GridSnapshot
+
+        expect(canonicalJson(snapshot)).toContain('2026-03-14T00:00:00.000Z')
+    })
+
+    it('tells two snapshots apart when only such a value differs', () => {
+        const of = (iso: string) =>
+            ({
+                version: SNAPSHOT_VERSION,
+                features: { views: { at: new Date(iso) } }
+            }) as GridSnapshot
+
+        expect(sameSnapshot(of('2026-03-14'), of('2026-03-15'))).toBe(false)
+        expect(sameSnapshot(of('2026-03-14'), of('2026-03-14'))).toBe(true)
+    })
+})

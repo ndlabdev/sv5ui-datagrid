@@ -3,7 +3,6 @@ import type {
     CellValueReader,
     CellValueScope,
     ColumnDef,
-    ColumnState,
     GridFeature,
     RowNode
 } from '../types/index.js'
@@ -88,26 +87,32 @@ export function rawRead<TRow>(node: RowNode<TRow>, column: ColumnDef<TRow>): unk
  * columns: aggregation, export, a fill, a find, the statistics behind a colour
  * scale.
  *
- * `grid.getValue` needs the `ColumnState`, and looking that up per cell turns
- * a column scan into a map lookup per cell. Resolving each column once per
- * pass is the whole point of handing back a closure rather than exposing a
- * function that takes the grid: a caller is meant to build one of these, use
- * it for a pass, and drop it.
+ * What is cached is the composed reader, not the column. Composing is the
+ * expensive half: `readerFor` allocates a scope and asks every registered gate
+ * for its reader, and the answer is fixed for the column and the purpose, so a
+ * pass that asked per cell would do that work once per cell instead of once
+ * per column. Its own docstring says to hoist it out of the row loop; this is
+ * that hoist, for the callers whose loop is over cells rather than rows.
  *
  * A column the grid does not know falls through to the raw value rather than
  * to nothing, so a pass over a `ColumnDef` a feature made up itself still
- * reads. The `null` in the cache is what tells "looked up, not there" from
- * "not looked up yet".
+ * reads. The `null` entry is what tells "looked up, not there" from "not
+ * looked up yet".
  */
 export function gateReader<TRow>(grid: GridState<TRow>, purpose: CellValuePurpose): CellRead<TRow> {
-    const states = new Map<string, ColumnState<TRow> | null>()
+    interface Gate {
+        def: ColumnDef<TRow>
+        reader: CellValueReader<TRow> | undefined
+    }
+    const gates = new Map<string, Gate | null>()
 
     return (node, column) => {
-        let state = states.get(column.id)
-        if (state === undefined) {
-            state = grid.columns.get(column.id) ?? null
-            states.set(column.id, state)
+        let gate = gates.get(column.id)
+        if (gate === undefined) {
+            const state = grid.columns.get(column.id)
+            gate = state ? { def: state.def, reader: grid.readerFor(column.id, purpose) } : null
+            gates.set(column.id, gate)
         }
-        return state ? grid.getValue(node, state, purpose) : getCellValue(node.row, column)
+        return gate ? readCell(node, gate.def, gate.reader) : getCellValue(node.row, column)
     }
 }

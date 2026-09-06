@@ -1,4 +1,5 @@
 import type { ColumnDef, ColumnType, FilterType } from '../types/index.js'
+import { toDate } from '../utils/format.js'
 import { isBlank } from '../utils/value.js'
 
 import type { AutoColumnsOptions } from './auto-columns.types.js'
@@ -46,12 +47,24 @@ function valuesOf(rows: unknown[], key: string): unknown[] {
 
 type Shape = { type: ColumnType; filter: FilterType }
 
+/**
+ * The shape says which of the two date types a column is; `toDate` says
+ * whether it is a date at all. Shape alone types a column of `1234-56-78`
+ * part numbers as dates, and every cell in it then draws blank, because the
+ * renderer asks the same `toDate` and gets nothing.
+ */
+function isDay(value: unknown): boolean {
+    return typeof value === 'string' && DATE_ONLY.test(value) && toDate(value) !== null
+}
+
+function isStamp(value: unknown): boolean {
+    return typeof value === 'string' && DATE_TIME.test(value) && toDate(value) !== null
+}
+
 function dateShape(values: unknown[]): Shape | null {
     const dates = values.filter((value) => value instanceof Date).length
-    const stamps = values.filter(
-        (value) => typeof value === 'string' && DATE_TIME.test(value)
-    ).length
-    const days = values.filter((value) => typeof value === 'string' && DATE_ONLY.test(value)).length
+    const stamps = values.filter(isStamp).length
+    const days = values.filter(isDay).length
 
     if (dates + stamps + days < values.length) return null
     return { type: days === values.length ? 'date' : 'datetime', filter: 'date' }

@@ -10,9 +10,22 @@ import { base64UrlToBytes, bytesToBase64Url } from '../utils/base64.js'
 
 export const SHARE_LIMIT = 1800
 
+/**
+ * Key order out of the JSON, so the same state always encodes to the same
+ * link and `sameSnapshot` can compare two states by their text.
+ *
+ * `toJSON` is honoured first, for the reason `JSON.stringify` honours it: a
+ * `Date` rebuilt from its own entries is `{}`. A snapshot slice is meant to be
+ * JSON-safe, but the other path a snapshot takes is `localStorage`, which is
+ * plain `JSON.stringify`, and the two disagreeing about the same slice is
+ * worse than either rule on its own.
+ */
 function canonical(value: unknown): unknown {
     if (Array.isArray(value)) return value.map(canonical)
     if (value === null || typeof value !== 'object') return value
+
+    const toJson = (value as { toJSON?: () => unknown }).toJSON
+    if (typeof toJson === 'function') return canonical(toJson.call(value))
 
     const entries = Object.entries(value as Record<string, unknown>)
         .filter(([, item]) => item !== undefined)

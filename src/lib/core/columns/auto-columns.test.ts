@@ -128,6 +128,18 @@ describe('autoColumns', () => {
         expect(columns.region).toMatchObject({ type: 'badge', filter: 'set' })
     })
 
+    it('leaves a column of date-shaped codes as text, not as dates nobody can read', () => {
+        // Four digits, two, two: a part number, and every renderer would have
+        // drawn the column blank had the shape alone been enough.
+        const rows = [{ part: '1234-56-78' }, { part: '2400-99-01' }]
+        expect(autoColumns(rows)[0]).toMatchObject({ type: 'text' })
+    })
+
+    it('leaves a day that no calendar has out of the date guess', () => {
+        const rows = [{ due: '2026-02-30' }, { due: '2026-04-31' }]
+        expect(autoColumns(rows)[0]).not.toMatchObject({ type: 'date' })
+    })
+
     it('reads a Date object as a datetime, and an ISO stamp too', () => {
         const rows = [
             { at: new Date('2026-01-01T10:00:00Z'), stamp: '2026-01-01T10:00:00Z' },
