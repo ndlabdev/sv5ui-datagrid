@@ -314,8 +314,6 @@ describe('column menu + chooser + state round-trip', () => {
         await screen.getByRole('button', { name: 'Choose columns' }).click()
         const entries = page.getByRole('menuitemcheckbox').elements()
 
-        // The grid's own checkbox column carries no header and cannot be
-        // hidden, so it showed up as a blank row with a tick beside it.
         expect(entries).toHaveLength(flatColumns.length)
         expect(entries.every((entry) => entry.textContent?.trim())).toBe(true)
     })
@@ -337,8 +335,6 @@ describe('column menu + chooser + state round-trip', () => {
         await screen.getByRole('button', { name: 'Choose columns' }).click()
         const menu = document.querySelector<HTMLElement>('[role="menu"]')!
 
-        // Forty columns make a menu taller than the screen, which then has no
-        // way to reach its own end.
         await expect.poll(() => menu.scrollHeight > menu.clientHeight).toBe(true)
         expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight + 1)
     })
@@ -434,7 +430,6 @@ describe('header groups', () => {
 
 describe('header alignment', () => {
     it('keeps the label on the same side as the cell content', async () => {
-        /** Wide enough that the label has room to sit anywhere in the cell. */
         const wide: ColumnDef<Person>[] = [
             { id: 'name', header: 'Name', sortable: true, width: 240 },
             { id: 'age', header: 'Age', sortable: true, align: 'right', width: 240 }
@@ -450,7 +445,6 @@ describe('header alignment', () => {
 
         const headers = [...screen.container.querySelectorAll<HTMLElement>('[role="columnheader"]')]
 
-        /** Free space on each side of the label, which is where the align shows up. */
         function slack(headerText: string) {
             const cell = headers.find((header) => header.textContent?.includes(headerText))!
             const label = cell.querySelector('button')!

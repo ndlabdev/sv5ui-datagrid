@@ -10,7 +10,6 @@ import type { ColumnDef } from '../../core/types/index.js'
  */
 export function filterUnitScaleOf<TRow>(def: ColumnDef<TRow> | undefined): number {
     if (def?.type !== 'percent') return 1
-    // `wholePercent` already holds what it draws.
     return def.typeOptions?.wholePercent ? 1 : 100
 }
 

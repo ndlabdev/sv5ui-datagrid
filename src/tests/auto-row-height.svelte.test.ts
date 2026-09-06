@@ -18,7 +18,6 @@ interface Note {
 
 const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Note>>
 
-/** Row 2 wraps onto several lines; the rest are one line. */
 const notes: Note[] = [
     { id: 1, text: 'short' },
     { id: 2, text: 'a very long note that has to wrap over several lines in a narrow column' },
@@ -53,9 +52,7 @@ describe("getRowHeight: 'auto'", () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // No inline height: the content decides.
         expect(rowElement(screen.container, '1').style.height).toBe('')
-        // And the wrapping row really is taller than the one-liners.
         await expect
             .poll(() => rowElement(screen.container, '2').offsetHeight)
             .toBeGreaterThan(rowElement(screen.container, '1').offsetHeight)
@@ -72,7 +69,6 @@ describe("getRowHeight: 'auto'", () => {
             0
         )
 
-        // Starts at the 40px estimate, then settles on what was measured.
         await expect.poll(() => Math.round(virtualizer.totalHeight)).toBe(Math.round(rendered))
         expect(virtualizer.totalHeight).toBeGreaterThan(notes.length * 40)
     })
@@ -96,7 +92,6 @@ describe("getRowHeight: 'auto'", () => {
         await expect.poll(() => virtualizer.sizeOf(1)).toBeGreaterThan(40)
         const tall = virtualizer.sizeOf(1)
 
-        // Reverse the data: the tall row is now first and must stay tall.
         grid.data = [...notes].reverse()
         await expect.poll(() => virtualizer.sizeOf(2)).toBe(tall)
     })

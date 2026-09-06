@@ -101,8 +101,6 @@
 
     let savedModel = $state<string>('')
 
-    // A live flag, not a build-time one: turning it off takes the row out of
-    // the keyboard grid and out of the row numbering with it.
     let floatingRow = $state(true)
     $effect(() => {
         filteringState.floatingRow = floatingRow

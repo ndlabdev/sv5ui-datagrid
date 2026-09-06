@@ -6,7 +6,6 @@ import type { RowDragState, RowReorderOptions } from './row-reorder.types.js'
 export const ROW_REORDER = 'rowReorder'
 
 export class RowReorder<TRow> {
-    /** Set while a pointer drag is in flight; drives the drop indicator. */
     drag = $state.raw<RowDragState | null>(null)
 
     readonly handle: boolean
@@ -23,12 +22,9 @@ export class RowReorder<TRow> {
     }
 
     canDrag = (node: RowNode<TRow>): boolean => {
-        // A full-width row is a group header or a detail panel: it has no place
-        // of its own in `data` to move.
         return !node.meta?.fullWidth && this.#isRowDraggable(node.row)
     }
 
-    /** Position of a row within the rendered order, or -1. */
     #renderedIndexOf(id: string): number {
         return this.#grid.preWindowNodes.findIndex((node) => node.id === id)
     }
@@ -60,11 +56,6 @@ export class RowReorder<TRow> {
         this.moveRow(current.sourceId, current.targetIndex)
     }
 
-    /**
-     * Moves a row in the rendered order, rewriting `data` so it survives a
-     * re-render - hence translating the target back through the node dropped
-     * onto, since a sort makes rendered and data positions differ.
-     */
     moveRow = mutator((id: string, toRenderedIndex: number): void => {
         const nodes = this.#grid.preWindowNodes
         const from = this.#renderedIndexOf(id)
@@ -82,8 +73,6 @@ export class RowReorder<TRow> {
 
         const next = [...this.#grid.data]
         const [moved] = next.splice(dataFrom, 1)
-        // Re-read the anchor after the removal so the index still points at the
-        // row the user aimed at rather than at its neighbour.
         const anchor = next.findIndex((row) => this.#grid.getRowId(row) === anchorId)
         const dataTo = anchor < 0 ? next.length : bounded > from ? anchor + 1 : anchor
         next.splice(dataTo, 0, moved)
@@ -93,7 +82,6 @@ export class RowReorder<TRow> {
         this.#onReorder?.({ node, from: dataFrom, to: dataTo, data: next })
     })
 
-    /** Moves the row by one position, for the keyboard bindings. */
     nudge = mutator((id: string, delta: number): void => {
         const from = this.#renderedIndexOf(id)
         if (from < 0) return
@@ -110,8 +98,6 @@ function createKeybindings<TRow>(): Keybinding<TRow>[] {
         const node = activeNode(grid)
         if (node) getRowReorder(grid)?.nudge(node.id, delta)
     }
-    // Alt keeps the arrows free for navigation, and matches the modifier used
-    // for the column-reorder bindings.
     return [
         {
             key: 'Alt+ArrowUp',

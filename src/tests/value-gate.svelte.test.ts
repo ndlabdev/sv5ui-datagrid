@@ -47,18 +47,10 @@ function makeGrid(policy: GridFeature<Person>): GridState<Person> {
     })
 }
 
-/**
- * The gate reads reactive state, which is the case the caches have to survive:
- * the search text and the set filter's value list are both held per column,
- * and answering out of either after the gate changed is showing what the gate
- * was put there to hide.
- */
 describe('a gate that changes its mind', () => {
     it('takes the cells, the search and the value list with it', () => {
         const cleanup = $effect.root(() => {
             let hidden = $state(true)
-            // One reader, reused: a fresh closure per call would work too, and
-            // would throw away the caches keyed on it.
             const maskReader = () => MASK
             const grid = makeGrid({
                 id: 'policy',
@@ -77,7 +69,6 @@ describe('a gate that changes its mind', () => {
                 hidden = false
             })
 
-            // The same search, against text that has to have been built again.
             expect(grid.nodes.map((node) => node.row.name)).toEqual(['Ada'])
             expect(grid.getValue(grid.nodes[0]!, salary)).toBe(9000)
             expect(filter.distinctFor('salary')).toEqual([8000, 9000])
@@ -86,7 +77,6 @@ describe('a gate that changes its mind', () => {
     })
 })
 
-/** Downloads never leave the page: the blob is kept, the save is recorded. */
 let downloads: Blob[] = []
 let createObjectURL: typeof URL.createObjectURL
 let clickAnchor: typeof HTMLAnchorElement.prototype.click
@@ -114,8 +104,6 @@ afterEach(() => {
 
 describe('the file a gated grid writes', () => {
     it('carries the substitute through a column the grid does not show', async () => {
-        // A named column is exported out of `columns.all`, hidden or not, so
-        // the reader has to be found there too and not only among the visible.
         const grid = createDataGrid<Person>({
             columns: [...columns, { id: 'secret', header: 'Secret', hidden: true }],
             data: people.map((row) => ({ ...row })),
@@ -156,11 +144,6 @@ describe('the file a gated grid writes', () => {
 
 const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Person>>
 
-/**
- * The kernel tests read values back out of the grid. These read the DOM,
- * which is the only place that answers the question a user would ask: is the
- * number on my screen, and is it in the markup behind it.
- */
 describe('the cells a gated grid draws', () => {
     const seen: { cellClass: unknown[]; tooltip: unknown[] } = { cellClass: [], tooltip: [] }
 
@@ -225,10 +208,6 @@ describe('the cells a gated grid draws', () => {
     })
 })
 
-/**
- * A virtualized grid draws a window and redraws it on every scroll, so the
- * rows that arrive after the first paint have to come out gated too.
- */
 describe('a gated grid that virtualizes', () => {
     it('holds through a scroll into rows it had not drawn yet', async () => {
         const many = Array.from({ length: 2000 }, (_, i) => ({
@@ -262,17 +241,11 @@ describe('a gated grid that virtualizes', () => {
             .element(page.getByRole('gridcell', { name: 'Person 120', exact: true }))
             .toBeVisible()
 
-        // The window has moved onto rows drawn for the first time here.
         expect(screen.container.innerHTML).not.toContain('900119')
         expect(screen.container.innerHTML).toContain(MASK)
     })
 })
 
-/**
- * What a built-in renderer does with a substitute it cannot draw. Nothing
- * leaks either way, but a mark only appears where the renderer can show one,
- * so a gate on a typed column has to answer in that type.
- */
 describe('a substitute a typed column cannot draw', () => {
     function typedGrid(substitute: unknown): GridState<Person> {
         return createDataGrid<Person>({

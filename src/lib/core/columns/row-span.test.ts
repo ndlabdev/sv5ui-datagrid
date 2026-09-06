@@ -17,7 +17,6 @@ const entries: Entry[] = [
     { id: 5, region: 'EMEA', city: 'Paris' }
 ]
 
-/** How many rows from `index` repeat the region, counted only at a run's head. */
 function regionRun(rows: Entry[], index: number): number {
     if (index > 0 && rows[index - 1].region === rows[index].region) return 1
     let n = 1
@@ -45,7 +44,6 @@ describe('rowSpansOf', () => {
         const spans = rowSpansOf(grid, grid.preWindowNodes).get('region')!
 
         expect(spans.owner).toEqual([0, 0, 0, 3, 3])
-        // Only a run's head carries its length; a covered row counts as one.
         expect(spans.span).toEqual([3, 1, 1, 2, 1])
     })
 
@@ -59,7 +57,6 @@ describe('rowSpansOf', () => {
     })
 
     it('clamps a span that would run off the end of the list', () => {
-        // Asks for far more rows than exist.
         const grid = makeGrid(entries, () => 99)
         const spans = rowSpansOf(grid, grid.preWindowNodes).get('region')!
         expect(spans.span[0]).toBe(entries.length)
@@ -80,8 +77,6 @@ describe('rowSpansOf', () => {
         )
         const spans = rowSpansOf(grid, nodes).get('region')!
 
-        // A full-width row renders one cell across every column, so nothing can
-        // span into it: the run of three breaks after the first row.
         expect(spans.span[0]).toBe(1)
         expect(spans.owner[1]).toBe(1)
     })
@@ -91,8 +86,6 @@ describe('opensRowSpanGroup', () => {
     const columns = [{ id: 'region' }, { id: 'city' }, { id: 'sales' }, { id: 'note' }]
 
     it('does not open a group at the first visible column', () => {
-        // The viewport's own border draws that line; a second one beside it has
-        // no gap to read as two and the left edge looks twice as heavy.
         const spanning = new Map([['region', {}]])
         expect(opensRowSpanGroup(columns, 0, spanning)).toBe(false)
     })

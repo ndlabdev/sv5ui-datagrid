@@ -27,7 +27,6 @@ const columns: ColumnDef<Member>[] = [
 
 const FILE = 'Name,Email,Qty\nChi,chi@x.vn,3\nAn,broken,abc\n'
 
-// The wizard takes its grid from context, so it is mounted inside one.
 const TypedWizard = InGrid
 
 const inRoot = (grid: GridState<Member>) => ({ props: { grid, component: ImportWizard } })

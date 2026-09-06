@@ -37,7 +37,6 @@ describe('what one cell of the filter row offers', () => {
     })
 
     it('writes a percent column in the unit it draws', () => {
-        // 0.05 is stored; 5 is what the cell says, as the panel does.
         expect(
             floatingCellOf('number', { kind: 'number', op: 'gt', value: 0.05 }, 100)
         ).toMatchObject({ value: '5' })
@@ -52,7 +51,6 @@ describe('what one cell of the filter row offers', () => {
     })
 
     it('hands a set column back to the panel when it holds something else', () => {
-        // Not written by this grid, so nothing here may flatten it.
         expect(floatingCellOf('set', { kind: 'text', op: 'contains', value: 'a' })).toEqual({
             kind: 'summary'
         })
@@ -60,7 +58,6 @@ describe('what one cell of the filter row offers', () => {
 
     it('hands back to the panel everything one field cannot hold', () => {
         const summary = { kind: 'summary' }
-        // Two conditions joined.
         expect(
             floatingCellOf('number', {
                 kind: 'group',
@@ -71,11 +68,9 @@ describe('what one cell of the filter row offers', () => {
                 ]
             })
         ).toEqual(summary)
-        // A range needs two fields.
         expect(
             floatingCellOf('number', { kind: 'number', op: 'between', value: 1, to: 9 })
         ).toEqual(summary)
-        // And an operator with no value at all would read as unfiltered.
         expect(floatingCellOf('text', { kind: 'text', op: 'blank', value: '' })).toEqual(summary)
     })
 

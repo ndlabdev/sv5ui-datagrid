@@ -69,7 +69,6 @@ describe('pasteText', () => {
 
         expect(g.data[0]).toMatchObject({ name: 'Alicia', age: 31 })
         expect(g.data[1]).toMatchObject({ name: 'Bobby', age: 26 })
-        // `parse` ran, so ages are numbers, not the pasted strings.
         expect(typeof g.data[0].age).toBe('number')
     })
 
@@ -89,7 +88,6 @@ describe('pasteText', () => {
     it('skips cells on a non-editable column', () => {
         const g = grid()
         const edit = getEditing(g)!
-        // Carol (row 2) is inactive, so her dept column is not editable.
         g.focus.focusCell({ row: 2, col: 2 })
         edit.pasteText('Ops')
 

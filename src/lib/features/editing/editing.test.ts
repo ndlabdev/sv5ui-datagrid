@@ -278,7 +278,6 @@ describe('Editing - applyEdits', () => {
         const state = getEditing(grid)!
 
         expect(state.applyEdits([{ rowId: 'nope', changes: { name: 'X' } }])).toBe(false)
-        // `active` is not editable on this column set
         expect(state.applyEdits([{ rowId: '1', changes: { active: false } }])).toBe(false)
         expect(grid.data[0].active).toBe(true)
     })
@@ -372,12 +371,10 @@ describe('mode decides what a gesture opens', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!
 
-        // The same call a double-click, Enter and F2 all make.
         state.beginEdit('1', 'name')
 
         expect(state.rowEditId).toBe('1')
         expect(state.active).toBeNull()
-        // Every editable column of the row is drafted, not just the one aimed at.
         expect(Object.keys(state.drafts).sort()).toEqual(['age', 'dept', 'name'])
     })
 
@@ -385,7 +382,6 @@ describe('mode decides what a gesture opens', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!
 
-        // `startEdit` is the explicit request; the mode does not override it.
         state.startEdit('1', 'name')
 
         expect(state.active).toEqual({ rowId: '1', columnId: 'name' })
@@ -400,7 +396,6 @@ describe('mode decides what a gesture opens', () => {
 
         expect(state.rowEditId).toBe('1')
         expect(state.drafts.name).toBe('Z')
-        // The other columns keep the row's own values.
         expect(state.drafts.age).toBe(30)
     })
 

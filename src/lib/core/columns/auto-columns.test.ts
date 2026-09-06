@@ -129,8 +129,6 @@ describe('autoColumns', () => {
     })
 
     it('leaves a column of date-shaped codes as text, not as dates nobody can read', () => {
-        // Four digits, two, two: a part number, and every renderer would have
-        // drawn the column blank had the shape alone been enough.
         const rows = [{ part: '1234-56-78' }, { part: '2400-99-01' }]
         expect(autoColumns(rows)[0]).toMatchObject({ type: 'text' })
     })

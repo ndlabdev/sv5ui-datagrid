@@ -36,7 +36,6 @@ export class ServerRowModel<TRow> {
     #source: DataSource<TRow>
     #options: ServerRowModelOptions<TRow>
 
-    /** Read by the layer the feature contributes, which owns the effects. */
     readonly groupKeysOf: ServerRowModelOptions<TRow>['groupKeysOf']
     readonly isChildOf: ServerRowModelOptions<TRow>['isChildOf']
     #blocks = createLoadedBlocks()

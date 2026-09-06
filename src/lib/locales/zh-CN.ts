@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Simplified Chinese. */
 export const zhCN: DataGridLocalePack = {
     tag: 'zh-CN',
     labels: {

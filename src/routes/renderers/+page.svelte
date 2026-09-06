@@ -87,8 +87,6 @@
             align: 'right',
             width: 130,
             typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
-            // Says what the cell says - the formatted amount, not the number
-            // behind it - through the sv5ui tooltip.
             tooltip: true
         },
         {
@@ -98,8 +96,6 @@
             sortable: true,
             align: 'right',
             width: 150,
-            // `type` says what the value is and the snippet decorates it: the
-            // snippet reads `formatted` rather than restating typeOptions.
             type: 'currency',
             typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
             cell: budgetCell

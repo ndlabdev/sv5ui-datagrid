@@ -73,7 +73,6 @@ describe('toCsv', () => {
     })
 
     it('quotes against the delimiter in use, not against the comma', () => {
-        // A semicolon file: commas are ordinary text, semicolons are not.
         expect(toCsv([['a,b', 'c;d']], ';')).toBe('a,b;"c;d"')
         expect(toCsv([['a,b', 'c;d']])).toBe('"a,b",c;d')
         expect(toCsv([['x', 'y']], '\t')).toBe('x\ty')

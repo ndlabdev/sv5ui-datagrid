@@ -105,9 +105,6 @@ describe('encodeSnapshot and decodeSnapshot', () => {
 
 describe('canonicalJson', () => {
     it('spells a value with a toJSON the way JSON.stringify does', () => {
-        // A snapshot also travels through localStorage as plain
-        // `JSON.stringify`. Rebuilding a Date from its own entries gives
-        // `{}`, and the two paths would then disagree about the same slice.
         const at = new Date('2026-03-14T00:00:00.000Z')
         const snapshot = { version: SNAPSHOT_VERSION, features: { views: { at } } } as GridSnapshot
 

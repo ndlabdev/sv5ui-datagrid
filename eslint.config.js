@@ -27,6 +27,7 @@ export default defineConfig(
             quotes: ['error', 'single', { avoidEscape: true }],
             'comma-dangle': ['error', 'never'],
             eqeqeq: ['error', 'always'],
+            'no-empty': ['error', { allowEmptyCatch: true }],
             'no-console': 'warn',
             'no-unused-vars': 'off',
             // A leading underscore is how this codebase says a binding is

@@ -17,9 +17,7 @@ const datagridDefaults: { defaultVariants: { density: Density }; slots: DataGrid
  * values - which is why the shape is identical.
  */
 export interface DataGridConfig {
-    /** Defaults for variants that apply to a whole grid. */
     defaultVariants: { density: Density }
-    /** Classes appended to every grid's slots, before any per-instance `ui`. */
     slots: DataGridUi
 }
 

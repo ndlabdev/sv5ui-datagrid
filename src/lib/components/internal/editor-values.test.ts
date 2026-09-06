@@ -18,19 +18,11 @@ describe('fromDateValue', () => {
         expect(fromDateValue(undefined)).toBe('')
     })
 
-    /**
-     * A segmented field reports every keystroke, so a year on its way to 2026
-     * arrives as 2, then 20, then 202. Unpadded, those wrote `2-01-05` into a
-     * cell and into a filter: not a date any parser here reads back, and not
-     * one a server would either.
-     */
     it('pads a year still being typed rather than writing a broken date', () => {
         for (const year of [2, 20, 202, 2026]) {
             const written = fromDateValue({ year, month: 1, day: 5 })
             expect(written).toMatch(/^\d{4}-\d{2}-\d{2}$/)
             expect(parseDate(written).year).toBe(year)
-            // And back again, which is what a controlled picker does on every
-            // keystroke: it has to land on the same date it just reported.
             expect(toDateValue(written)?.toString()).toBe(written)
         }
     })

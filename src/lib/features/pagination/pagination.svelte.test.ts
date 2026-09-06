@@ -30,7 +30,6 @@ describe('Pagination - a setter does not subscribe its caller', () => {
             const grid = createGrid(30)
             const state = getPagination(grid)!
 
-            // The shape a select bound to page size takes in a real page.
             let choice = $state('5')
             let runs = 0
             $effect(() => {
@@ -43,8 +42,6 @@ describe('Pagination - a setter does not subscribe its caller', () => {
 
             flushSync(() => state.setPage(2))
 
-            // The effect read only `choice`, so writing the page leaves it alone
-            // and page 2 survives instead of being reset to 1.
             expect(runs).toBe(1)
             expect(state.page).toBe(2)
             expect(grid.nodes.map((node) => node.row.name)).toEqual([

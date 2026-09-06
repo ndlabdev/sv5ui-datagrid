@@ -4,9 +4,6 @@
     import { getGridContext } from '../../components/internal/context.js'
     import { getServerRowModel } from './server-row-model.svelte.js'
 
-    // Contributed by `serverRowModel()`. It draws nothing: it exists because a
-    // feature is built in `createDataGrid`, where there is no effect context,
-    // and fetching rows is all effects.
     const grid = getGridContext()
 
     const model = getServerRowModel(untrack(() => grid))
@@ -18,7 +15,6 @@
         untrack(() => model?.start())
     })
 
-    // What the body draws while there is no answer yet, and if one never came.
     $effect(() => {
         if (!model) return
         grid.status = {
@@ -28,9 +24,6 @@
         }
     })
 
-    // Cleared when the grid goes, and only then. Put on the effect above, the
-    // teardown would run on every change it reacts to, blanking the status and
-    // rewriting it in the same flush for no reason.
     $effect(() => () => {
         grid.status = undefined
     })

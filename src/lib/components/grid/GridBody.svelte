@@ -59,15 +59,11 @@
 
     const grid = getGridContext<TRow>()
 
-    /** A feature may hand back anything it caught; the body draws a line. */
     function errorText(value: unknown): string | undefined {
         if (value === null || value === undefined) return undefined
         return value instanceof Error ? value.message : String(value)
     }
 
-    // A prop wins; a feature that owns the rows answers when there is none.
-    // Without the fallback a server grid says "no data" during its first
-    // request, which is the one moment it certainly does not know that.
     const loading = $derived(loadingProp ?? grid.status?.loading ?? false)
     const error = $derived(errorProp ?? errorText(grid.status?.error) ?? null)
     const onRetry = $derived(onRetryProp ?? grid.status?.onRetry)
@@ -91,12 +87,6 @@
         return editing?.editableAt(node, column.def) ?? false
     }
 
-    /**
-     * The first editable column of a row edit: the one that takes the caret.
-     * Resolved once for the row being edited rather than per cell - asked per
-     * cell it walks the columns again for each of them, and `editable` is the
-     * app's own predicate.
-     */
     const rowEditOpensAt = $derived.by(() => {
         const rowId = editing?.rowEditId
         if (!rowId) return null
@@ -106,8 +96,6 @@
     })
 
     function startEdit(node: RowNode<TRow>, column: ColumnState<TRow>): void {
-        // `beginEdit`, not `startEdit`: the feature's `mode` decides whether a
-        // double-click opens the cell or the whole row.
         if (editing && isEditable(node, column)) editing.beginEdit(node.id, column.id)
     }
 
@@ -118,11 +106,9 @@
     const rowDraggingClass = $derived(slots.rowDragging({ class: theme('rowDragging') }))
     const rowEditingClass = $derived(slots.rowEditing({ class: theme('rowEditing') }))
 
-    /** Only pays for `twMerge` when the app actually returns classes. */
     function classOfRow(node: RowNode<TRow>): string {
         let base = selectionState?.isSelected(node.id) ? rowSelectedClass : rowClass
         if (reorder?.drag?.sourceId === node.id) base += ` ${rowDraggingClass}`
-        // The row rings itself so the fields inside do not each draw a box.
         if (editing?.rowEditId === node.id) base += ` ${rowEditingClass}`
         const custom = grid.rowClass?.(node)
         return custom ? twMerge(base, custom) : base
@@ -161,7 +147,6 @@
         slots.rowSpanEdgeStart({ class: theme('rowSpanEdgeStart') })
     )
 
-    /** Only the column opening a group draws the start edge, or it doubles. */
     function edgeClasses(colIndex: number): string {
         const columns = grid.columns.visible
         if (!rowSpans.has(columns[colIndex]?.id)) return ''
@@ -170,7 +155,6 @@
             : rowSpanEdgeClass
     }
 
-    /** No foot where the run ends with the data: the grid's edge is the line. */
     function fillClass(
         align: ColumnState<TRow>['align'],
         colIndex: number,
@@ -197,23 +181,12 @@
         rowSpanning?: boolean
     }
 
-    /**
-     * Raised over the separator and the spans, so it draws what it covers.
-     * A drawer's own cells are the exception: they carry nothing to draw, and
-     * raised they would cover the drawer standing over them, which is where
-     * that column's surface and its edges come from.
-     */
     function pinnedClasses(node: RowNode<TRow>, column: ColumnState<TRow>): string {
         const selected = selectionState?.isSelected(node.id)
         const raised = railGroupIdOf(column.id) ? '' : ` ${pinnedCellRaisedClass}`
         return `${pinnedCellClass}${raised}${selected ? ` ${pinnedCellSelectedClass}` : ''}`
     }
 
-    /**
-     * What an editor changes about its cell: the cell stops clipping for the
-     * validation message, and gives up its own ring - an open editor draws
-     * one, and the two nested read as a mistake.
-     */
     function editStateClasses(input: CellClassInput): string {
         if (input.editing) return cellEditingClass
         const editable = isEditable(input.node, input.column) ? ` ${editableClass}` : ''
@@ -226,13 +199,10 @@
         if (column.pinned) result += ` ${pinnedClasses(node, column)}`
         if (input.rowSpanning) result += ` ${cellRowSpanClass}`
         else {
-            // A run of one has no overhang to carry the column's edges.
             const edges = edgeClasses(colIndex)
             if (edges) result += ` ${edges}`
         }
         if (decoration?.class) result += ` ${decoration.class}`
-        // The strip covers the rows it folded away, but a pinned row group
-        // sits outside it, so the cells carry the drawer's surface as well.
         if (railGroupIdOf(column.id)) {
             result = twMerge(
                 result,
@@ -283,7 +253,6 @@
         return merged
     }
 
-    /** Later feature wins per property; a class only ever adds. */
     function mergeDecorations(base: CellDecoration | undefined, next: CellDecoration) {
         const style = base?.style || next.style ? { ...base?.style, ...next.style } : undefined
         return {
@@ -293,11 +262,6 @@
         }
     }
 
-    /**
-     * Enough skeleton rows to cover the area the real ones will. A flat count
-     * leaves most of a tall grid blank, which reads as broken rather than
-     * busy - the complaint the loading state exists to answer.
-     */
     const skeletonRows = $derived(
         loadingRows ??
             virtualization?.virtualizer.visibleCount() ??
@@ -306,9 +270,6 @@
     )
 
     const windowStart = $derived(windowStartOf(grid))
-    // Where the rows the grid holds sit in the whole set, which differs from
-    // `windowStart` only under a server model: it holds one page and indexes
-    // it from 0, while a screen reader is told the position in the set.
     const rowIndexOffset = $derived(rowIndexOffsetOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(headerRowsOf(grid))
@@ -318,10 +279,6 @@
     const railEdgeClass = $derived(slots.railEdge({ class: theme('railEdge') }))
     const railFocusClass = $derived(slots.railFocus({ class: theme('railFocus') }))
 
-    /**
-     * The caret shows on the whole drawer, head and length alike, because it
-     * stands on one thing. The header holds the cell it actually sits on.
-     */
     function railClassOf(rail: RailBand): string {
         let result = `${railClass} ${railEdgeClasses(grid, rail.index, { lead: railEdgeClass, trail: boundaryClass })}`
         if (grid.columns.visible[grid.focus.active.col]?.id === rail.id) {
@@ -330,7 +287,6 @@
         return result
     }
     const topRows = $derived(pinning?.topNodes.length ?? 0)
-    // Indent and expand toggles belong to the first column carrying data.
     const firstDataIndex = $derived(
         grid.columns.visible.findIndex((column) => !isSyntheticColumn(column.id))
     )
@@ -340,7 +296,6 @@
         return !active.section && active.row === row && active.col === col
     }
 
-    /** The covered cells are not rendered, so this one is their tab stop. */
     function isActiveInSpan(row: number, col: number, colSpan: number, rowSpan: number): boolean {
         const active = grid.focus.active
         if (active.section) return false
@@ -353,8 +308,6 @@
     }
 
     function spanColumn(colIndex: number, span: number): string | undefined {
-        // Windowing and row spans both leave holes that auto-placement
-        // would fill with the next cell.
         if (columnWindow.windowed || rowSpans.size > 0) return `${colIndex + 1} / span ${span}`
         return span > 1 ? `span ${span}` : undefined
     }
@@ -366,18 +319,14 @@
 
     function rowHeightOf(node: RowNode<TRow>, row: number): string | undefined {
         if (!virtualization) return undefined
-        // An auto row is measured, not sized, or it could never grow.
         if (virtualization.isAutoRow(node)) return undefined
         return `${virtualization.virtualizer.sizeOf(row)}px`
     }
 
-    /** Held across scrolls: resolving these walks the whole row list. */
     const rowSpans = $derived(rowSpansOf(grid, grid.preWindowNodes))
 
     interface VerticalSpan {
-        /** The row whose cell covers this one. */
         owner: number
-        /** Rows it covers, counted from the owner. */
         length: number
     }
 
@@ -388,7 +337,6 @@
         return { owner, length: spans.span[owner] ?? 1 }
     }
 
-    /** Measured sizes when virtualized, the density variable otherwise. */
     function spanHeight(owner: number, length: number): string {
         if (!virtualization) return `calc(var(--dg-row-h) * ${length})`
         let total = 0
@@ -396,10 +344,6 @@
         return `${total}px`
     }
 
-    /**
-     * Non-zero only for the row the window opens on: a span beginning above
-     * the rendered range is drawn there and pulled back up into place.
-     */
     function spanOffset(owner: number, row: number): string {
         if (owner >= row) return '0'
         if (!virtualization) return `calc(var(--dg-row-h) * -${row - owner})`
@@ -408,7 +352,6 @@
         return `-${total}px`
     }
 
-    /** Feeds an auto row's rendered height back into the scroll offsets. */
     function measureRow(element: HTMLElement, id: string | null) {
         if (!id || !virtualization) return
         const observer = new ResizeObserver(() =>
@@ -418,14 +361,12 @@
         return { destroy: () => observer.disconnect() }
     }
 
-    /** Tree and group indent. Logical, so it moves to the right edge in RTL. */
     function indentOf(node: RowNode<TRow>, colIndex: number): string | undefined {
         const level = node.meta?.level ?? 0
         if (colIndex !== firstDataIndex || level === 0) return undefined
         return `calc(0.75rem + ${level * 1.25}rem)`
     }
 
-    /** Columns saying nothing are left to the viewport's hover measure. */
     function tooltipOf(
         node: RowNode<TRow>,
         column: (typeof columnWindow.renderColumns)[number]['column'],
@@ -435,13 +376,10 @@
         if (tooltip === undefined || tooltip === false) return undefined
         const value = grid.getValue(node, column)
         const formatted = formatCellText(value, column.def, grid.locale)
-        // `true` means "say what the cell says", which is the formatted text
-        // and not the value behind it.
         if (tooltip === true) return isBlank(value) ? undefined : (formatted ?? String(value))
         return tooltip({ node, row: node.row, value, rowIndex, column, formatted })
     }
 
-    /** The edge the drop line sits on, so it shows where the row lands. */
     function dropEdgeOf(rowIndex: number): 'top' | 'bottom' | undefined {
         const drag = reorder?.drag
         if (!drag || drag.targetIndex !== rowIndex) return undefined
@@ -465,11 +403,7 @@
         <GridRowHandleCell {node} position={rowIndex + 1} />
     {:else if column.id === SELECTION_COLUMN_ID}
         <GridSelectionCell {node} />
-    {:else if railGroupIdOf(column.id)}
-        <!-- A folded group's strip. The rows it covered are not drawn, which
-             is the whole of what folding to a rail does; its name runs down
-             the strip once, over the body, rather than in every cell. -->
-    {:else}
+    {:else if railGroupIdOf(column.id)}{:else}
         {#if colIndex === firstDataIndex && node.meta?.expandable}
             <button
                 type="button"
@@ -497,8 +431,6 @@
                 value: cellValue,
                 rowIndex,
                 column,
-                // A getter: a snippet that never reads it never pays for it,
-                // and a renderer runs per visible cell.
                 get formatted() {
                     return formatCellText(cellValue, column.def, grid.locale)
                 }
@@ -507,8 +439,6 @@
             <GridCellValue def={column.def} row={node.row} value={grid.getValue(node, column)} />
         {:else}
             {@const value = grid.getValue(node, column)}
-            <!-- Inline rather than through GridCellValue, which would cost a
-                 component instance per cell on an untyped grid. -->
             {#if isBlank(value)}
                 <span class="text-on-surface-variant"
                     >{column.def.typeOptions?.emptyText ?? DEFAULT_EMPTY_TEXT}</span
@@ -565,10 +495,6 @@
                     {@const column = entry.column}
                     {@const colIndex = entry.index}
                     {@const vertical = verticalSpan(column, rowIndex)}
-                    <!-- A cell is drawn by its owner. The one exception is a
-                         span that began above the rendered window: its owner is
-                         off screen, so the window's first row draws it and
-                         pulls it back up. -->
                     {#if spans.owner[colIndex] === colIndex && (vertical.owner === rowIndex || rowIndex === windowStart)}
                         {@const colSpan = spans.span[colIndex]}
                         {@const spanRow = vertical.owner}
@@ -701,15 +627,7 @@
         ? `${virtualization.virtualizer.totalHeight}px`
         : undefined}
 >
-    <!-- Before the rows on purpose. The strip is positioned over them either
-         way, and after them it would take the last row's `:last-child` away,
-         which is the one thing hiding that row's separator from doubling up
-         with the grid's own bottom border. -->
     {#each rails as rail (rail.id)}
-        <!-- Hidden from the accessibility tree on purpose: a rowgroup holds
-             rows, and the group's own header cell above the strip is the
-             control a reader and a keyboard already have. This is the pointer
-             finding the same door on a target the length of the table. -->
         <div
             aria-hidden="true"
             data-dg-rail={rail.groupId}
@@ -742,11 +660,6 @@
         {#each Array.from({ length: skeletonRows }, (_, i) => i) as i (i)}
             <div role="row" class={rowClass} style:width={columnWindow.rowWidth}>
                 {#each columnWindow.renderColumns as entry (entry.column.id)}
-                    <!--
-                        A cell, even while it is a placeholder. A `row` whose
-                        children are plain divs is a row a screen reader cannot
-                        read, and axe says so.
-                    -->
                     <div
                         role="gridcell"
                         aria-colindex={entry.index + 1}

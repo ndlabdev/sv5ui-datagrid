@@ -22,16 +22,12 @@ describe('QA demo', () => {
         render(Qa as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // Two header levels, pinned columns on both edges, and the frozen id
-        // column all live together here. `Identity` renders as two cells: the
-        // pinned section and the scrolling one cannot share a group cell.
         await expect
             .element(page.getByRole('columnheader', { name: 'Identity' }).first())
             .toBeVisible()
         expect(
             document.querySelectorAll('[role="separator"][aria-label^="Resize"]').length
         ).toBeGreaterThan(0)
-        // `resizable: false` on the id column means no handle for it.
         expect(document.querySelector('[aria-label="Resize # column"]')).toBeNull()
 
         await expectNoViolations(document.body)
@@ -63,8 +59,6 @@ describe('i18n demo', () => {
         render(I18n as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // The page compares its own object against `defaultLabels`, so a label
-        // added to the library without a translation shows up here.
         await expect
             .element(page.getByText(/vi-VN phủ đủ \d+ khoá - \d+ ngôn ngữ đóng sẵn\./))
             .toBeVisible()
@@ -86,8 +80,6 @@ describe('i18n demo', () => {
         await page.getByRole('button', { name: 'Ngôn ngữ' }).click()
         await page.getByRole('option', { name: 'English' }).click()
         await expect.element(page.getByPlaceholder('Search...')).toBeVisible()
-        // The footer belongs to the label set too, not to the Pagination
-        // component's own wording.
         await expect.element(page.getByText('1-8 of 60')).toBeVisible()
     })
 
@@ -100,8 +92,6 @@ describe('i18n demo', () => {
 
         await expect.element(page.getByPlaceholder('検索...')).toBeVisible()
         await expect.element(page.getByText('60件中 1-8件')).toBeVisible()
-        // The date column names no locale, so it follows the grid: Japanese
-        // writes the year first where Vietnamese writes the day.
         await expect
             .poll(() => document.querySelector('[data-dg-cell="0:5"]')?.textContent)
             .toContain('2026/01/10')
@@ -115,13 +105,9 @@ describe('CSV export demo', () => {
 
         const csv = () => document.querySelector('pre')?.textContent ?? ''
         await expect.poll(csv).toContain('Mã,Khách hàng')
-        // A comma inside a value forces quoting under the default delimiter.
         await expect.poll(csv).toContain('"Có, dấu phẩy"')
-        // A quote inside a value is doubled.
         await expect.poll(csv).toContain('""Bé""')
-        // A formula-looking cell is prefixed so a spreadsheet keeps it as text.
         await expect.poll(csv).toContain("'=SUM(A1:A9)")
-        // Rows end with CRLF.
         expect(csv()).toContain('\r\n')
     })
 
@@ -133,7 +119,6 @@ describe('CSV export demo', () => {
         await page.getByRole('option', { name: 'Chấm phẩy  ;' }).click()
 
         const csv = () => document.querySelector('pre')?.textContent ?? ''
-        // Now the semicolon is what needs quoting, and the comma does not.
         await expect.poll(csv).toContain('"Có; dấu chấm phẩy"')
         expect(csv()).toContain('Có, dấu phẩy;')
     })
@@ -142,7 +127,6 @@ describe('CSV export demo', () => {
         render(Export as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // The column is hidden in the grid...
         expect(page.getByRole('columnheader', { name: 'Ghi chú nội bộ' }).elements()).toHaveLength(
             0
         )
@@ -150,7 +134,6 @@ describe('CSV export demo', () => {
         await page.getByRole('button', { name: 'Cột xuất' }).click()
         await page.getByRole('option', { name: 'Kèm cột ẩn (Ghi chú nội bộ)' }).click()
 
-        // ...and still reaches the file.
         await expect.poll(() => document.querySelector('pre')?.textContent).toContain('chỉ nội bộ')
     })
 })
@@ -163,8 +146,6 @@ describe('editors demo', () => {
         const headers = [...document.querySelectorAll('[role="columnheader"]')].map((cell) =>
             cell.textContent?.trim()
         )
-        // text, number, select, selectMenu, checkbox, date, time, textarea,
-        // rating, tags, and the custom colour editor.
         for (const header of ['Title', 'Estimate', 'Priority', 'Assignee', 'Done', 'Due']) {
             expect(
                 headers.some((text) => text?.startsWith(header)),
@@ -185,8 +166,6 @@ describe('editors demo', () => {
 
         await expect.element(page.getByRole('alert')).toHaveTextContent('At least 3 characters')
 
-        // The row keeps what it had: an invalid commit writes nothing, and the
-        // editor stays open on the value the user is still working on.
         await userEvent.keyboard('{Escape}')
         await expect.poll(() => title.textContent?.trim()).toBe(before)
     })

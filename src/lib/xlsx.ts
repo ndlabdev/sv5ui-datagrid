@@ -1,12 +1,3 @@
-/**
- * The workbook writer, on an entry of its own.
- *
- * It is a library rather than a feature: no grid is involved in
- * `createWorkbook`, and an app that only wants to write a spreadsheet should
- * not have to reach through a data grid to find one. Splitting the entry is
- * also what keeps it out of the main bundle for everybody who does not.
- */
-
 export {
     buildGridXlsx,
     buildGridXlsxAsync,

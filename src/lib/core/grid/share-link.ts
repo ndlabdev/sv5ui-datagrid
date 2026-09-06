@@ -1,25 +1,8 @@
-/**
- * A whole grid state in a URL: the snapshot, canonicalized, deflated where the
- * browser offers it, and spelled in base64url.
- *
- * Not to be confused with `snapshot.ts` next door, which builds and restores
- * the snapshot itself. This file only carries one.
- */
 import { SNAPSHOT_VERSION, type GridSnapshot } from '../types/index.js'
 import { base64UrlToBytes, bytesToBase64Url } from '../utils/base64.js'
 
 export const SHARE_LIMIT = 1800
 
-/**
- * Key order out of the JSON, so the same state always encodes to the same
- * link and `sameSnapshot` can compare two states by their text.
- *
- * `toJSON` is honoured first, for the reason `JSON.stringify` honours it: a
- * `Date` rebuilt from its own entries is `{}`. A snapshot slice is meant to be
- * JSON-safe, but the other path a snapshot takes is `localStorage`, which is
- * plain `JSON.stringify`, and the two disagreeing about the same slice is
- * worse than either rule on its own.
- */
 function canonical(value: unknown): unknown {
     if (Array.isArray(value)) return value.map(canonical)
     if (value === null || typeof value !== 'object') return value

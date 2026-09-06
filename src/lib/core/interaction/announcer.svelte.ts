@@ -2,7 +2,6 @@ import type { GridState } from '../grid/grid.svelte.js'
 import type { DataGridAnnouncerStrings } from '../types/index.js'
 import { plural } from './plural.js'
 
-/** English is what every app hears until it overrides these. */
 const rows = plural('en-US', { one: 'row', other: 'rows' })
 
 export const defaultAnnouncerStrings: DataGridAnnouncerStrings = {
@@ -32,7 +31,6 @@ export class Announcer<TRow> {
         this.message = message
     }
 
-    /** Read at announce time, so switching language reaches a mounted grid. */
     constructor(grid: GridState<TRow>, strings: () => DataGridAnnouncerStrings) {
         const locale = () => strings()
         grid.events.on('sortChanged', ({ sort }) => {
@@ -45,9 +43,6 @@ export class Announcer<TRow> {
             this.message = locale().sorted(header, first.direction)
         })
         grid.events.on('filterChanged', () => {
-            // A server model counts nothing itself: the rows it holds are one
-            // page, and the new total only arrives with the next response.
-            // `rowCountChanged` is that moment, and it announces there instead.
             if (grid.rowModel === 'server') return
             this.message = locale().filtered(grid.totalRows)
         })
@@ -72,8 +67,6 @@ export class Announcer<TRow> {
             this.message = locale().columnVisibility(headerOf(columnId), hidden)
         })
         grid.events.on('columnGroupToggled', ({ groupId, collapsed }) => {
-            // A group is not a column, so its name comes from the header
-            // levels rather than from a column lookup.
             const group = grid.columns.headerLevels
                 .flat()
                 .find((cell) => !cell.isPlaceholder && cell.id === groupId)

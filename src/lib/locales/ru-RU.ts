@@ -1,10 +1,6 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 import { plural } from '../core/interaction/plural.js'
 
-/**
- * Russian. Three forms (1 строка, 2 строки, 5 строк) and picking the wrong one
- * reads as broken.
- */
 const rows = plural('ru-RU', { one: 'строка', few: 'строки', other: 'строк' })
 
 export const ruRU: DataGridLocalePack = {

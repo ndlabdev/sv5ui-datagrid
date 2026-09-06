@@ -58,21 +58,36 @@ you use, and nothing else reaches your bundle.
 
 ## Features
 
-| Area                                                                         | What you get                                                                                                                          |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rows**                                                                     | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
-| **Columns**                                                                  | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
-| **Sorting**                                                                  | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
-| **Filtering**                                                                | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
-| **Selection**                                                                | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
-| **Editing**                                                                  | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
-| **Reordering**                                                               | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
-| **Persistence**                                                              | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
-| **Localization**                                                             | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
-| **Accessibility**                                                            | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
-| **Server**                                                                   | `rowModel: 'server'` with normalized filter and sort requests                                                                         |
-| Features are opt-in. A feature you do not register is never imported, so its |
-| code stays out of your bundle.                                               |
+| Area                    | What you get                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rows**                | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
+| **Columns**             | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
+| **Sorting**             | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
+| **Filtering**           | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
+| **Selection**           | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
+| **Editing**             | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
+| **Reordering**          | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
+| **Persistence**         | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
+| **Localization**        | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
+| **Accessibility**       | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Server**              | `rowModel: 'server'` with normalized filter and sort requests, paged or infinite blocks                                               |
+| **Grouping**            | Group by any number of columns, thirteen aggregators, group footers, a grand total, and values read as a share of one of them         |
+| **Structure**           | Tree data from `getChildren` or `getParentId`, and a detail panel under any row                                                       |
+| **Formulas**            | Calculated columns from an expression, 31 functions, a dependency graph that catches a cycle, and no `eval`                           |
+| **Ranges**              | Excel-style cell ranges, multiple selections, a fill handle that reads a series, cut and move, and a summary bar                      |
+| **Finding**             | Find and replace across the rows a filter left, whole-cell and case options                                                           |
+| **Conditions**          | Colour scales, data bars, duplicates, top N and expression rules, exported into the workbook as real Excel rules                      |
+| **Filter builder**      | Nested `(A AND B) OR C`, operators per column type, alongside the column filters rather than instead of them                          |
+| **Import**              | CSV, TSV, XLSX and clipboard, type guessing, column mapping, validation, and rows staged in the grid to fix in place                  |
+| **Export**              | CSV, and XLSX written without a dependency, on its own entry at `@sv5ui/datagrid/xlsx`                                                |
+| **Views**               | Named views in `localStorage` or storage of your own, and a link that carries the whole state                                         |
+| **Policy**              | Column, row and cell masking applied at render, export, clipboard, search, facet and edit                                             |
+| **Off the main thread** | A worker row model that filters and sorts a columnar copy, with a main-thread fallback                                                |
+| **Command palette**     | `Ctrl/Cmd+K` over the commands the registered features offer                                                                          |
+
+Features are opt-in. A feature you do not register is never imported, so its
+code stays out of your bundle, and `src/tests/bundle-shape.test.ts` builds a
+real entry to prove it.
 
 ## Installation
 
@@ -219,6 +234,28 @@ registered.
 | `rowPinning()`     | Rows pinned to the top or bottom                |
 | `rowReorder()`     | Drag grip and keyboard reorder                  |
 
+| Feature                   | Adds                                                           |
+| ------------------------- | -------------------------------------------------------------- |
+| `grouping()`              | Group by N columns, thirteen aggregators, footers, grand total |
+| `tree()`                  | Nested or flat parent/child data                               |
+| `masterDetail()`          | A detail panel under a row                                     |
+| `showValuesAs()`          | A number read as a share of a total, a parent or a row         |
+| `formula()`               | Calculated columns from an expression                          |
+| `advancedFilter()`        | A nested condition tree beside the column filters              |
+| `rangeSelection()`        | Cell ranges, fill handle, cut and move, clipboard              |
+| `findReplace()`           | Find and replace across the rows a filter left                 |
+| `conditionalFormatting()` | Colour scales, data bars, duplicates, top N, expressions       |
+| `dataImport()`            | CSV, TSV, XLSX and clipboard, staged in the grid               |
+| `savedViews()`            | Named views and a link that carries the whole state            |
+| `policy()`                | Masking at render, export, clipboard, search, facet and edit   |
+| `serverRowModel()`        | Paged or infinite blocks fetched from a source                 |
+| `workerDataSource()`      | The same, filtered and sorted off the main thread              |
+| `commandPalette()`        | `Ctrl/Cmd+K` over what the registered features offer           |
+
+The workbook writer is not a feature: `buildGridXlsx` and `createWorkbook` are
+functions, on their own entry at `@sv5ui/datagrid/xlsx`, because writing a
+spreadsheet involves no grid.
+
 Call a factory inside the `features` array, as above, and `TRow` is inferred
 from the array's own type. A factory held in a variable first has nothing to
 infer from and resolves to `GridFeature<unknown>`, so spell the argument out
@@ -288,6 +325,7 @@ available to yours.
 | `menuItems`      | column and context menu entries                                  |
 | `cellDecoration` | per-cell classes, inline style and `aria-selected`               |
 | `cellValue`      | stands between a cell's value and every way it leaves the grid   |
+| `component`      | a component the grid mounts in its root, for effects and the DOM |
 | `serialize`      | the feature's slice of a state snapshot                          |
 | `hydrate`        | restores what `serialize` produced                               |
 

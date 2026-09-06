@@ -47,7 +47,7 @@ export interface DataImportOptions<TRow> {
      * report twice is one click the second time. A key of `null` remembers
      * nothing.
      *
-     * @default `dg-pro-import:${grid.id}`
+     * @default `dg-import:${grid.id}`
      */
     rememberAs?: string | null
 

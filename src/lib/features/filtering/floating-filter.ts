@@ -7,15 +7,6 @@ import type {
 import { emptyCondition, isPresenceOp } from './filter-draft.js'
 import { toDisplayUnit } from './filter-units.js'
 
-/**
- * What one cell of the filter row can offer for a column.
- *
- * The row holds one condition, in the column's own operator: a field for the
- * three that are typed, a choice for a boolean, a list of ticks for a set.
- * Everything it cannot hold that way - two conditions joined, a range, an
- * operator with no value at all - reads back as a summary and is handed to
- * the panel, which is the whole of the difference between the two surfaces.
- */
 export type FloatingCell =
     | { kind: 'none' }
     | { kind: 'input'; op: string; value: string; caseSensitive: boolean }
@@ -23,7 +14,6 @@ export type FloatingCell =
     | { kind: 'set'; values: SetFilterValue[] }
     | { kind: 'summary' }
 
-/** A condition the row can put in one field. */
 function simple(filter: ColumnFilter, scale: number): FloatingCell | null {
     if (filter.kind === 'text') {
         return {
@@ -44,26 +34,16 @@ function simple(filter: ColumnFilter, scale: number): FloatingCell | null {
     return null
 }
 
-/** The choice a boolean column offers, or none when it has no filter. */
 function booleanCell(entry: ColumnFilterEntry | undefined): FloatingCell {
     if (entry?.kind !== 'boolean') return { kind: 'boolean', value: '' }
     return { kind: 'boolean', value: entry.value ? 'true' : 'false' }
 }
 
-/** The values a set column has ticked, and the panel for anything else. */
 function setCell(entry: ColumnFilterEntry | undefined): FloatingCell {
-    // One condition still, however many values are ticked. Anything else on a
-    // set column was not written by this grid, so the panel keeps it.
     if (entry === undefined) return { kind: 'set', values: [] }
     return entry.kind === 'set' ? { kind: 'set', values: entry.values } : { kind: 'summary' }
 }
 
-/**
- * True for what one field cannot hold, so the panel keeps it: a range that
- * needs two bounds, and an operator with no value at all, which an empty field
- * would report as no filter. Two conditions joined is the other such case, and
- * is tested where it also narrows the type.
- */
 function panelOnly(filter: ColumnFilter): boolean {
     return 'op' in filter && (filter.op === 'between' || isPresenceOp(filter.op))
 }

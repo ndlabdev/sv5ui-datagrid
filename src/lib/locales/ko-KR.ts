@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Korean. */
 export const koKR: DataGridLocalePack = {
     tag: 'ko-KR',
     labels: {

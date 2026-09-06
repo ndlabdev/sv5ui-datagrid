@@ -2,11 +2,9 @@ import type { DataGridLocalePack } from '../core/types/index.js'
 import { plural } from '../core/interaction/plural.js'
 
 const rows = plural('fr-FR', { one: 'ligne', other: 'lignes' })
-// Le participe s'accorde en nombre, pas seulement le nom.
 const selectedRows = plural('fr-FR', { one: 'ligne sélectionnée', other: 'lignes sélectionnées' })
 const copiedRows = plural('fr-FR', { one: 'ligne copiée', other: 'lignes copiées' })
 
-/** French. */
 export const frFR: DataGridLocalePack = {
     tag: 'fr-FR',
     labels: {

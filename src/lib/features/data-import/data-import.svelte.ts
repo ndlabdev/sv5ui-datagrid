@@ -150,9 +150,7 @@ export class DataImport<TRow> {
     #memoryKey(): string | null {
         const asked = this.#options.rememberAs
         if (asked === null) return null
-        return (
-            asked ?? `dg-pro-import:${this.#grid.columns.all.map((column) => column.id).join(',')}`
-        )
+        return asked ?? `dg-import:${this.#grid.columns.all.map((column) => column.id).join(',')}`
     }
 
     #remembered(): Record<string, string> {

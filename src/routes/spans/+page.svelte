@@ -37,8 +37,6 @@
         USA: ['New York', 'Austin', 'Seattle']
     }
 
-    // Rows arrive grouped, the way a report does: region, then country, then a
-    // row per city. That ordering is what makes the spans meaningful.
     const entries: Entry[] = []
     let id = 0
     for (let cycle = 0; cycle < 40; cycle++) {
@@ -59,10 +57,7 @@
         }
     }
 
-    /** How many rows from `index` share the same value of `key`. */
     function runLength(index: number, key: 'region' | 'country'): number {
-        // A run only starts where the value changes; inside one, the cell is
-        // covered and its span is never asked for.
         if (index > 0 && entries[index - 1][key] === entries[index][key]) return 1
         let n = 1
         while (index + n < entries.length && entries[index + n][key] === entries[index][key]) n++

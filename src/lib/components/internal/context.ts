@@ -1,16 +1,6 @@
 import { getContext, setContext } from 'svelte'
 import type { GridState } from '../../core/grid/index.js'
 
-/**
- * How anything drawn inside a grid finds it.
- *
- * A component in `features/` reaches in here, which is the one place the
- * layers run the other way. It is deliberate and it is safe: this module
- * imports nothing but Svelte and a type, so there is no cycle, and a feature
- * that ships a component is a feature that has stepped into the render tree
- * on purpose. Nothing else in `features/` may import from `components/`.
- */
-
 const GRID_CONTEXT_KEY = Symbol('sv5ui-datagrid')
 
 export function setGridContext<TRow>(grid: GridState<TRow>): void {

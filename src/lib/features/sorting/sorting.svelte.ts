@@ -17,9 +17,7 @@ const DEFAULT_CYCLE: SortCycle = ['asc', 'desc', null]
 
 export interface SortingOptions {
     initial?: SortState[]
-    /** Where blanks land. Null, undefined and `''` all count. @default 'first' */
     nulls?: SortNulls
-    /** Order a header click cycles through. @default ['asc', 'desc', null] */
     cycle?: SortCycle
 }
 
@@ -39,12 +37,10 @@ export class Sorting<TRow> {
         this.#grid = grid
         this.sort = options.initial ?? []
         this.nulls = options.nulls ?? 'first'
-        // A cycle needs at least one direction to be usable; fall back otherwise.
         this.cycle =
             options.cycle?.some((state) => state !== null) === true ? options.cycle : DEFAULT_CYCLE
     }
 
-    /** The state a column moves to on the next click, per the configured cycle. */
     #nextState(current: SortDirection | null): SortDirection | null {
         const index = this.cycle.indexOf(current)
         return this.cycle[(index + 1) % this.cycle.length]
@@ -124,8 +120,6 @@ export function sorting<TRow>(options: SortingOptions = {}): GridFeature<TRow> {
             order: PIPELINE_ORDER.sort,
             transform: (nodes, grid) => {
                 const state = getSorting(grid)
-                // Server mode: the rows arrived sorted, and re-sorting the page
-                // in isolation would reorder it against the rest of the set.
                 if (!state || grid.rowModel === 'server') return nodes
                 return sortNodes(
                     nodes,

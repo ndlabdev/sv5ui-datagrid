@@ -24,13 +24,10 @@
     const grid = getGridOrNull()
     const labels = $derived(grid?.labels ?? defaultLabels)
 
-    /** Inherits the grid's language unless `typeOptions.locale` says otherwise. */
     const options = $derived({ locale: grid?.locale, ...def.typeOptions })
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))
 
-    // The same function a `cell` snippet reads through `formatted`, so the two
-    // cannot drift. Blank is handled there; this branch only runs when not.
     const text = $derived(formatCellText(value, def, grid?.locale) ?? String(value ?? ''))
 
     const actions = $derived<RowAction<TRow>[]>(

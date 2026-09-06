@@ -15,7 +15,6 @@
         bonus: number
     }
 
-    /** A group header the app draws itself, toggle and all. */
     const columns: ColumnDef<Row>[] = [
         { id: 'id', header: '#', width: 70 },
         {

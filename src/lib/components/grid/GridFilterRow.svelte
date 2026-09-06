@@ -39,11 +39,6 @@
         return row === FILTER_ROW && col === index
     }
 
-    /**
-     * A field swallows the arrow keys, which is what a caret is for, so the
-     * row hands back the one movement the grid still owns: leaving it. Left
-     * and right stay with the caret; a popup that is open keeps everything.
-     */
     function onkeydown(event: KeyboardEvent): void {
         if (popupOpen()) return
         if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
@@ -52,29 +47,14 @@
         grid.focus.moveBy(event.key === 'ArrowUp' ? -1 : 1, 0)
     }
 
-    /**
-     * What a cell hands focus on to. In document order, so a date cell gives
-     * it to the first segment rather than to the calendar button standing
-     * after the segments.
-     */
     const FIELD = 'input, [role="spinbutton"], [role="combobox"], button'
 
-    /**
-     * Focus arriving on the cell itself came from the grid rather than from a
-     * click in the field, so it is passed on to the field: a row you can reach
-     * but not type into is not a filter row.
-     */
     function onfocus(event: FocusEvent): void {
         const cell = event.currentTarget as HTMLElement
         if (event.target !== cell) return
         cell.querySelector<HTMLElement>(FIELD)?.focus()
     }
 
-    /**
-     * The row can be switched off while the caret is standing in it. Nothing
-     * else would move that caret, and a grid whose only tab stop is a row it
-     * no longer draws cannot be tabbed into at all.
-     */
     $effect(() => {
         if (filteringState?.floatingRow) return
         const { row, col } = grid.focus.active

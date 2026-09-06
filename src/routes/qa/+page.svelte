@@ -51,8 +51,6 @@
     const lastNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Võ', 'Đặng', 'Hồ', 'Bùi']
     const depts = ['Core', 'Platform', 'Growth', 'Data', 'Infra', 'Design']
     const countries = ['VN', 'US', 'DE', 'JP', 'SG']
-    // Deliberately awkward values: blanks, a very long string, punctuation that
-    // a CSV has to quote, and text that a formula-happy spreadsheet would run.
     const notes = [
         '',
         'Ngắn.',
@@ -98,7 +96,6 @@
                     align: 'right',
                     pinned: 'left',
                     sortable: true,
-                    // Frozen on purpose: the handle must not appear on this one.
                     resizable: false,
                     meta: { role: 'key' }
                 },
@@ -179,7 +176,6 @@
                     header: 'Progress',
                     width: 150,
                     type: 'progress',
-                    // The bar speaks for itself; no hover tooltip wanted.
                     tooltip: false
                 },
                 { id: 'rating', header: 'Rating', width: 130, type: 'rating', sortable: true }
@@ -250,7 +246,6 @@
         rowClass: (node) => !node.row.active && 'text-on-surface-variant'
     })
 
-    // ── Live state, so a wrong model is visible without opening devtools ──
     const sortState = getSorting(grid)!
     const filterState = getFiltering(grid)!
     const selectionState = getSelection(grid)!

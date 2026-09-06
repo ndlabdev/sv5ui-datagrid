@@ -8,12 +8,6 @@ interface Row {
     base: number
 }
 
-/**
- * A group's own `collapsed` is state the first paint has to get right: it is
- * settled before anything mounts, so the server owes the same markup the
- * client would draw, and a fold worked out on the client alone would show the
- * detail columns for a frame and then take them away.
- */
 describe('server render', () => {
     const columns: ColumnDef<Row>[] = [
         { id: 'id', header: '#', width: 70 },

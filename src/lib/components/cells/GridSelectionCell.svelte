@@ -16,11 +16,6 @@
             selectionState.isRowSelectable(node.row)
     )
 
-    // The checkbox is a fraction of the cell holding it, and a column of
-    // checkboxes is where a user aims casually. The span fills the cell -
-    // the negative margins take back its padding - and toggles from anywhere
-    // the checkbox itself did not already handle. Only the body cell pads
-    // vertically; the header sizes to the row and stretching is enough.
     const hitArea = '-mx-3 flex grow items-center justify-center self-stretch'
     const rowHitArea = `${hitArea} -my-(--dg-cell-py)`
 
@@ -31,7 +26,6 @@
         setTimeout(() => (shift = false), 0)
     }
 
-    /** True once the checkbox has taken the click, directly or via its label. */
     function onControl(event: MouseEvent): boolean {
         return Boolean((event.target as HTMLElement | null)?.closest('[role="checkbox"], label'))
     }
@@ -55,9 +49,6 @@
 
 {#if selectionState}
     {#if node}
-        <!-- The span is a hit area, not a control: the checkbox inside it keeps
-             the role and the name, and the keyboard reaches it through the
-             cell's roving tabindex and the Space keybinding. -->
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <span
@@ -75,10 +66,6 @@
             />
         </span>
     {:else if selectionState.mode === 'multiple'}
-        <!-- Out of the tab order like every other control in the grid: the
-             cells carry the roving tabindex, and Space on the focused cell is
-             what toggles. Tabbable checkboxes made a thousand-row grid a
-             thousand tab stops. -->
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <span use:notTabbable onclick={onHeaderCellClick} class="{hitArea} cursor-pointer">

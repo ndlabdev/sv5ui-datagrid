@@ -57,7 +57,6 @@
         maximumFractionDigits: 0
     })
 
-    // A hand-rolled standard-schema - any zod/valibot/arktype schema works the same way.
     function schema(check: (value: unknown) => string | null): StandardSchemaV1 {
         return {
             '~standard': {

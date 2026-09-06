@@ -182,9 +182,6 @@ function treeTest(store: RowStore, tree: FilterNode | null | undefined): RowTest
                 const column = columnOf(store, columnId)
                 return column ? readStore(column, index) : undefined
             },
-            // The store already sorted each column into a kind when it was
-            // packed, which is the same question the main thread answers from
-            // the column definition.
             (columnId) => STORE_KINDS[columnOf(store, columnId)?.kind ?? 'string']
         )
 }

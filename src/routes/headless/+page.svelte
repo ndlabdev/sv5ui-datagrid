@@ -39,8 +39,6 @@
         { id: 'points', header: 'Points', sortable: true, align: 'right', width: 100 }
     ]
 
-    // No <DataGrid>: create the grid, then compose the parts and drive every
-    // surface through createDataGrid's api and the getX accessors.
     const grid = createDataGrid<Task>({
         columns,
         data: tasks,
@@ -57,7 +55,6 @@
 
     const densities: Density[] = ['compact', 'standard', 'comfortable']
 
-    // Read reactively straight off the models - no wrapper component involved.
     const sortLabel = $derived(
         sort.sort.length === 0
             ? 'none'
@@ -84,7 +81,6 @@
         </div>
     </div>
 
-    <!-- Your own toolbar -->
     <div class="flex flex-wrap items-center gap-2">
         <Input class="min-w-56" placeholder="Tìm task..." icon="lucide:search" bind:value={query} />
         <Button
@@ -107,7 +103,6 @@
         </div>
     </div>
 
-    <!-- The grid, from the compound parts -->
     <Grid.Root {grid}>
         <Grid.Viewport>
             <Grid.Header />
@@ -115,7 +110,6 @@
         </Grid.Viewport>
     </Grid.Root>
 
-    <!-- Your own footer -->
     <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-on-surface-variant">
         <span>
             {page.total > 0 ? `${rangeStart}-${rangeEnd} / ${page.total}` : '0'} | sort: {sortLabel}

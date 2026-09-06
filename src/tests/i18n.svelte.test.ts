@@ -47,8 +47,6 @@ const inRoot = (grid: GridState<Person>, component: unknown) => ({
     props: { grid, component }
 })
 
-// The language belongs to the grid now, not to a global the tests had to put
-// back afterwards. Two grids on one page may disagree, and nothing resets.
 function makeGrid(by: string[] = [], locale?: string): GridState<Person> {
     return createDataGrid<Person>({
         columns,
@@ -178,9 +176,6 @@ describe('the chrome speaks the language its grid was given', () => {
 
 describe('reading the wording from inside an effect', () => {
     it('settles instead of re-running, which is how a language picker binds', async () => {
-        // `grid.labels` is derived from the pack and the overrides. An effect
-        // that reads it must settle after one pass, or a picker bound to it
-        // would loop the moment it drew the words it had just chosen.
         const grid = makeGrid([], 'vi-VN')
         let runs = 0
         let seen = ''
@@ -235,8 +230,6 @@ describe('the chrome takes classes from config and ui', () => {
     })
 
     it('lets ui beat a default rather than sit next to it', async () => {
-        // `ui` belongs to the grid, not to the part: it is set once on the
-        // root and every part inside reads it.
         const screen = await render(InGrid, {
             props: { grid: makeGrid(), component: GroupPanel, ui: { groupPanel: 'px-8' } }
         })

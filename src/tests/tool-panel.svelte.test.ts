@@ -38,7 +38,6 @@ const data: Sale[] = [
     { id: 2, region: 'South', rep: 'Bob', total: 20 }
 ]
 
-// The panel takes its grid from context, so it is mounted inside one.
 const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Sale>) => ({ props: { grid, component: ToolPanel } })

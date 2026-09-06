@@ -191,10 +191,6 @@ describe('the builder answers a condition the way a column filter does', () => {
 
 describe('a blank cell in a negative test', () => {
     it('passes on both sides, which it did not before they were one', () => {
-        // A column filter used to drop a blank from `neq` on a number while
-        // keeping it on text. There is one comparison now, so a cell with no
-        // number in it is not the number being excluded, the same way a cell
-        // with no word in it is not the word.
         const plain = throughColumnFilter('num', { kind: 'number', op: 'neq', value: 5 })
         const built = throughBuilder({ columnId: 'num', op: 'notEqual', value: 5 })
 

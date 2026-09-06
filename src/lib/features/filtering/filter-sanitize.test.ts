@@ -118,8 +118,6 @@ describe('sanitizeFilterModel', () => {
 })
 
 describe('hydrating a malformed filter snapshot', () => {
-    // One case per row of the table measured on 1.3.0, where six of the seven
-    // threw while the pipeline was reading them.
     const cases: [string, string, unknown][] = [
         [
             'a number operator spelled as the text one',
@@ -190,9 +188,6 @@ describe('hydrating a malformed filter snapshot', () => {
 })
 
 describe('a broken condition set through the public API', () => {
-    // `applyFilterModel` does not sanitize: it is typed, and an app calling it
-    // has said what the model is. The predicate layer is what keeps a model
-    // that lied from reaching the pipeline as a throw.
     const conditions: [string, string, ColumnFilter][] = [
         ['an operator from another kind', 'total', { kind: 'number', op: 'equals' } as never],
         ['a text operator from another kind', 'name', { kind: 'text', op: 'eq' } as never],

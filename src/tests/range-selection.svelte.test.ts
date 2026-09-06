@@ -44,7 +44,6 @@ function makeData(): Cell[] {
 }
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Cell>>
-// The part takes its grid from context, so it is mounted inside one.
 const TypedStatus = InGrid
 
 const inRoot = (grid: GridState<Cell>) => ({ props: { grid, component: RangeStatusBar } })
@@ -518,8 +517,6 @@ describe('the fill handle', () => {
         const screen = await renderGrid(grid)
         await selectQ1Rows(screen.container)
 
-        // The layer draws nothing of its own now: it listens on the grid's
-        // root and writes the suppression onto it, so that is what to read.
         const layer = screen.container.querySelector<HTMLElement>('[data-dg-range-layer]')!
         expect(layer.style.userSelect).toBe('')
 

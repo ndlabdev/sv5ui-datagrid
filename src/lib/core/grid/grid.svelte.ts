@@ -38,42 +38,26 @@ export class GridState<TRow> {
     readonly events = new EventBus<GridEventMap>()
     readonly features: readonly GridFeature<TRow>[]
     readonly state: Record<string, unknown> = {}
-    /** Cast because the kernel's own members are filled in the constructor,
-     * after the features have had their turn. */
     readonly api: GridApi = {} as GridApi
     readonly getRowId: (row: TRow) => string
     readonly rowClass?: (node: RowNode<TRow>) => ClassNameValue
-    /** Undefined until the presentation layer fills it from the theme config. */
     readonly configuredDensity: Density | undefined
     readonly rowModel: RowModel
     readonly focus: FocusModel<TRow>
     readonly announcer: Announcer<TRow>
 
-    /**
-     * BCP-47 tag in force; undefined follows the page. Assign to switch
-     * language in place, keeping the sort, filter and selection.
-     */
     locale = $state<string | undefined>(undefined)
 
-    // Set in the constructor, before anything below is ever read.
     #locales: DataGridLocalePack[] = []
     #labelOverrides: DataGridLabelsInput | undefined = undefined
     #announcerOverrides: Partial<DataGridAnnouncerStrings> | undefined = undefined
 
-    /** The pack answering for `locale`, or none when English will do. */
     #pack = $derived(resolveLocale(this.#locales, this.locale))
 
-    /**
-     * Every string the grid's own UI renders: English, with the chosen pack
-     * over it, with this app's own overrides over that. Layered rather than
-     * swapped, so a string the pack does not carry is the English one rather
-     * than nothing at all.
-     */
     labels: DataGridLabels = $derived(
         mergeLabels(this.#labelOverrides, mergeLabels(this.#pack?.labels, defaultLabels))
     )
 
-    /** Every string it announces, layered the same way. */
     announcerStrings: DataGridAnnouncerStrings = $derived({
         ...defaultAnnouncerStrings,
         ...this.#pack?.announcer,
@@ -81,24 +65,12 @@ export class GridState<TRow> {
     })
     readonly expansion: ExpansionModel
 
-    /**
-     * The features gating cell values. Empty is the case that costs nothing:
-     * every read below checks the length and then behaves as it always did.
-     *
-     * Nothing here is cached. A gate reads whatever it likes - the role the
-     * app is showing the grid as, a rule the user just changed - and asking it
-     * again is how the answer stays current. There is no invalidation call for
-     * a feature to forget, and forgetting one would mean showing what it was
-     * asked to hide. The callers that read a whole column at a time ask once
-     * and loop, which is where the calls would otherwise multiply.
-     */
     #valueGates: readonly GridFeature<TRow>[] = []
 
     #baseNodes = $derived.by(() => buildRowNodes(this.data, this.getRowId))
     #baseById = $derived.by(() => nodesById(this.#baseNodes))
     #pipeline: Pipeline<TRow>
 
-    /** Kept apart so the constructor stays one thing: wiring the pipeline. */
     #applyLocale(options: DataGridOptions<TRow>): void {
         this.#locales = options.locales ?? []
         this.#labelOverrides = options.labels
@@ -125,7 +97,6 @@ export class GridState<TRow> {
         for (const feature of this.features) {
             if (feature.createApi) Object.assign(this.api, feature.createApi(this))
         }
-        // Assigned last so a feature cannot shadow the kernel's own API.
         Object.assign(this.api, {
             getState: () => this.getState(),
             setState: (snapshot: GridSnapshot) => this.setState(snapshot)
@@ -166,13 +137,10 @@ export class GridState<TRow> {
         return this.state[id] as TState | undefined
     }
 
-    /** Resolves a row against the unfiltered source: a filtered-out row is
-     * still one an edit may address. */
     nodeById(id: string): RowNode<TRow> | undefined {
         return this.#baseById.get(id)
     }
 
-    /** A JSON-serializable snapshot of everything the user can rearrange. */
     getState(): GridSnapshot {
         const snapshot: GridSnapshot = { version: SNAPSHOT_VERSION }
 
@@ -190,7 +158,6 @@ export class GridState<TRow> {
         return snapshot
     }
 
-    /** Restores a snapshot produced by `getState`. */
     setState(snapshot: GridSnapshot): void {
         const columns = resolveColumnSnapshot(
             snapshot.columns,
@@ -211,14 +178,6 @@ export class GridState<TRow> {
         }
     }
 
-    /**
-     * The reader standing in front of one column for one purpose, or
-     * undefined when nothing stands there.
-     *
-     * Hoist it out of a loop over rows. It is fixed for the column, which is
-     * why the passes that read a whole column at a time - export, the quick
-     * filter's text, the set filter's value list - ask once and then loop.
-     */
     readerFor(
         columnId: string,
         purpose: CellValuePurpose = 'render'
@@ -228,7 +187,6 @@ export class GridState<TRow> {
         return column ? this.#readerFor(column, purpose) : undefined
     }
 
-    /** The same, for a caller already holding the column. */
     #readerFor(
         column: ColumnState<TRow>,
         purpose: CellValuePurpose
@@ -237,22 +195,8 @@ export class GridState<TRow> {
         return composeReaders(this.#valueGates, { grid: this, column, purpose })
     }
 
-    /**
-     * What a feature that owns the rows wants the body to draw instead of
-     * rows: it is fetching, it failed, and how to try again.
-     *
-     * The body cannot ask the feature directly. Naming `serverRowModel` there
-     * would put it in every bundle, registered or not, so the feature says it
-     * here and the body reads one field. A prop on `DataGrid` still wins: an
-     * application that says `loading` means it.
-     */
     status = $state.raw<GridStatus | undefined>(undefined)
 
-    /**
-     * One cell, as the given purpose is allowed to see it. The default is what
-     * the cell draws, which is what every renderer, tooltip and `cell` snippet
-     * asks for.
-     */
     getValue(
         node: RowNode<TRow>,
         column: ColumnState<TRow>,

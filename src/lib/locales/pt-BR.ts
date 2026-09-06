@@ -2,11 +2,9 @@ import type { DataGridLocalePack } from '../core/types/index.js'
 import { plural } from '../core/interaction/plural.js'
 
 const rows = plural('pt-BR', { one: 'linha', other: 'linhas' })
-// O particípio concorda em número, não apenas o substantivo.
 const selectedRows = plural('pt-BR', { one: 'linha selecionada', other: 'linhas selecionadas' })
 const copiedRows = plural('pt-BR', { one: 'linha copiada', other: 'linhas copiadas' })
 
-/** Brazilian Portuguese. */
 export const ptBR: DataGridLocalePack = {
     tag: 'pt-BR',
     labels: {

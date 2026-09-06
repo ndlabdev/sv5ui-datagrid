@@ -58,7 +58,7 @@
     const countries = ['VN', 'US', 'DE', 'JP', 'SG', 'AU', 'BR', 'FR']
     const cities = ['Hanoi', 'Austin', 'Berlin', 'Osaka', 'Singapore', 'Sydney', 'Rio', 'Lyon']
     const statuses = ['Open', 'Won', 'Lost', 'Pending']
-    const tiers = ['Free', 'Pro', 'Enterprise']
+    const tiers = ['Basic', 'Plus', 'Enterprise']
     const owners = ['Ada', 'Linus', 'Grace', 'Alan', 'Margaret', 'Edsger']
     const channels = ['Direct', 'Partner', 'Web', 'Referral']
     const regions = ['APAC', 'EMEA', 'AMER']
@@ -68,11 +68,6 @@
     const stages = ['Discovery', 'Trial', 'Negotiation', 'Closed']
     const priorities = ['P1', 'P2', 'P3']
 
-    /**
-     * Built as a plain loop over preallocated storage: at a million rows the
-     * difference between this and `Array.from` is seconds, and the point of
-     * the page is to measure the grid rather than the generator.
-     */
     function build(count: number): Record_[] {
         const rows = new Array<Record_>(count)
         for (let i = 0; i < count; i++) {
@@ -228,8 +223,6 @@
 
     async function load() {
         loading = true
-        // Building a million rows holds the main thread, so the skeleton only
-        // reaches the screen if the browser is given a frame first.
         await nextFrame()
 
         const count = Number(size)

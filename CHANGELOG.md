@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The largest release the grid has had. Sixteen feature modules, nine parts to
+draw them with, and a second entry point for writing spreadsheets. Everything
+here is opt-in the way the nine before it were: a feature you do not register
+is code your bundle never sees, and there is now a test that builds a real
+entry to prove it.
+
+[Upgrading from 1.x](MIGRATING.md) is two behaviour changes and one type; the
+rest is additive.
+
+### Added
+
+- **Grouping.** `grouping()` groups by any number of columns and aggregates
+  with thirteen functions, including `percentile` and `weightedAvg`. Group
+  footers, a grand total, and a `Grid.GroupPanel` to drive it.
+- **Show values as.** `showValuesAs()` reads a number as a share of the grand
+  total, of its parent group, or of its row. It replaces the value, so sorting,
+  copying and exporting all agree with what is on screen.
+- **Tree data and master/detail.** `tree()` takes either nested children or a
+  parent id, and lifts an orphan to the root rather than dropping it.
+  `masterDetail()` opens a panel under any row.
+- **Calculated columns.** `formula()` compiles an expression to a tree and
+  walks it - no `eval` - with 31 functions and a dependency graph that refuses
+  a cycle. The expression is a string, so it survives a saved view and a link.
+- **A filter builder.** `advancedFilter()` holds a nested `(A AND B) OR C`,
+  with the operators each column type can answer, and narrows what the column
+  filters already narrowed rather than replacing them. `Grid.FilterBuilder`
+  draws it.
+- **Cell ranges.** `rangeSelection()` brings Excel-style ranges: several at
+  once with Ctrl, a fill handle that reads a series out of numbers, dates or
+  text, writing a whole range with `Ctrl+Enter`, cut and move, a clipboard that
+  carries both plain text and HTML, and `Grid.RangeStatusBar`.
+- **Find and replace.** `findReplace()` searches the rows a filter left,
+  honours case and whole-cell, and counts what it can write apart from what it
+  found.
+- **Conditional formatting.** `conditionalFormatting()` paints colour scales,
+  data bars, duplicates, top N and expression rules. Colours mix through
+  `color-mix`, so a theme token works, and the rules export into a workbook as
+  Excel's own.
+- **An import wizard.** `dataImport()` reads CSV, TSV, XLSX and the clipboard,
+  guesses types across locales, remembers a column mapping per grid, validates
+  through each column's schema, and stages the rows in the grid itself so they
+  can be fixed in place before they are committed.
+- **Saved views and shareable links.** `savedViews()` keeps named views in
+  `localStorage` or storage of your own, and packs a whole grid state into a
+  URL.
+- **Value masking.** `policy()` masks a column, a row or a cell with `hide`,
+  `redact`, `last4`, `email`, `initials` or a function of your own, and applies
+  it at render, export, clipboard, search, facet and edit.
+- **A server row model.** `serverRowModel()` fetches in pages or in blocks as
+  the viewport moves, with placeholders and a `fetchAll` for exporting the
+  whole set.
+- **A worker row model.** `workerDataSource()` loads a columnar copy into a
+  worker, filters and sorts on indices, and falls back to the main thread for a
+  column a worker cannot see.
+- **A command palette.** `commandPalette()` gathers what the registered
+  features offer behind `Ctrl/Cmd+K`.
+- **XLSX, without a dependency.** `@sv5ui/datagrid/xlsx` writes a real workbook:
+  several sheets, styles, Excel's own conditional formatting rules, formula
+  cells, and 200k rows for 26 MB of heap because it writes in chunks.
+- **`GridFeature.component`**, a component the grid mounts inside its root, for
+  the work a feature can only do from inside the render tree: an effect, a
+  listener on the grid's element, a layer over the rows. Nothing imports it, so
+  a feature nobody registered is a component nobody bundles.
+- **`GridState.status`**, which a feature that owns the rows sets so the body
+  can draw a fetch in progress without naming the feature.
+- `notEqual` on a date column, in `DateFilterOp` and in all twelve languages.
+- `autoColumns`, which reads a `ColumnDef[]` off the data.
+- 147 more label keys (67 to 214) and 66 more slots (73 to 139), in all twelve
+  languages, and seventeen demo routes.
+
+### Changed
+
+- **Breaking.** `DataGridLabels` gains 147 required members. An application
+  passing its own complete table as `mergeLabels`' base no longer compiles;
+  `DataGridLabelsInput`, which is what an application normally hands the grid,
+  is unaffected.
+- **Breaking.** `neq` on a number column now keeps a blank cell, the way
+  `notEqual` on a text column always has. A cell with no number in it is not
+  the number being excluded. The two disagreed because one guard was applied to
+  every numeric comparator at once.
+- A row of skeletons drawn while loading now gives its cells `role="gridcell"`.
+  A `row` owning none is a row a screen reader cannot read. A test counting
+  gridcells during a load will see them now.
+- The footer's page range reads `1-25 of 300` in every language. It was an en
+  dash, which is not a character a keyboard has.
+
+### Fixed
+
+- A server grid no longer says "no data" while its first request is still out.
+- `gateReader` composes a column's readers once per pass rather than once per
+  cell: 15,000 compositions became three over 5,000 rows and three columns.
+- A snapshot carrying a `Date` survives a share link. The canonical form
+  rebuilt every object from its entries, which turns a `Date` into `{}`, so a
+  link and `localStorage` disagreed about the same slice.
+- `autoColumns` no longer reads a column of `1234-56-78` part numbers as dates,
+  which typed the column `date` and then drew every cell blank.
+- Aggregating `min` or `max` walks the column instead of spreading it into an
+  argument list, which has an engine limit a grid this size can reach.
+- Replacing without regard to case no longer corrupts text around a character
+  that changes length when lowercased.
+
 ## [1.3.1] - 2026-09-03
 
 ### Fixed
@@ -898,7 +999,7 @@ full table.
 - **Row reorder rewrites `data`**, so an active sort re-sorts it immediately:
   clear the sort before offering the grip.
 - **Server row model covers filter, sort and paging.** Grouping, tree data and
-  infinite scroll belong to `@sv5ui/datagrid-pro`.
+  infinite scroll are not in this release.
 
 ### Development
 

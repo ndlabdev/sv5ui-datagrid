@@ -14,7 +14,6 @@ import {
     type DataGridProps,
     type GridState
 } from '$lib/index.js'
-// Not public: a rail is the grid's own column, and nothing an app mounts.
 import { railColumnId } from '$lib/core/types/index.js'
 
 interface Row {
@@ -34,7 +33,6 @@ const rows: Row[] = Array.from({ length: 60 }, (_, i) => ({
     plan: i * 3
 }))
 
-/** A group that folds to a strip rather than to a summary column. */
 function railColumns(): ColumnDef<Row>[] {
     return [
         { id: 'id', header: '#', width: 80 },
@@ -88,7 +86,6 @@ describe('a group folded to a rail', () => {
 
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
 
-        // One narrow column where two stood, and no data in it.
         await expect
             .poll(() => grid.columns.visible.map((column) => column.id))
             .toEqual(['id', RAIL, 'plan'])
@@ -106,8 +103,6 @@ describe('a group folded to a rail', () => {
         expect(name.textContent?.trim()).toBe('Doanh thu')
         expect(getComputedStyle(name).writingMode).toBe('vertical-rl')
 
-        // It starts at the top of the drawer, which is the top of the grid,
-        // and it is only as long as its own text.
         const box = name.getBoundingClientRect()
         const drawer = head(screen.container)!.getBoundingClientRect()
         expect(box.top - drawer.top).toBeLessThan(40)
@@ -121,11 +116,8 @@ describe('a group folded to a rail', () => {
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => strip(screen.container)).not.toBeNull()
 
-        // The group's own cell keeps the control and nothing else: 44px of
-        // header would clip the name, and the strip already carries it.
         const groupCell = screen.container.querySelector('[role="columnheader"][aria-expanded]')!
         expect(groupCell.querySelector('[data-dg-truncate]')).toBeNull()
-        // The column is still named for a reader, out of sight.
         const railHeader = screen.container.querySelector('[data-dg-cell="-1:1"]')!
         expect(railHeader.querySelector('.sr-only')?.textContent).toBe('Doanh thu')
     })
@@ -136,8 +128,6 @@ describe('a group folded to a rail', () => {
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => strip(screen.container)).not.toBeNull()
 
-        // A drawer that starts at the first row reads as a hole in the header
-        // above it, so the header carries the head of the same band.
         const drawer = strip(screen.container)!.getBoundingClientRect()
         const top = head(screen.container)!.getBoundingClientRect()
         const header = screen.container.querySelector('[role="rowgroup"]')!.getBoundingClientRect()
@@ -149,11 +139,6 @@ describe('a group folded to a rail', () => {
         expect(top.left).toBeCloseTo(drawer.left, 0)
         expect(top.width).toBeCloseTo(drawer.width, 0)
 
-        // And nothing of the header's own is drawn across it: the rule under
-        // each level of headers, and the one along the header's foot, both
-        // stop at the drawer rather than striking through it. The rules are
-        // pseudo-elements, which no hit test can see, so what is measured is
-        // the order they paint in.
         const headZ = Number(getComputedStyle(head(screen.container)!).zIndex)
         for (const row of screen.container.querySelectorAll('[role="rowgroup"] [role="row"]')) {
             const ruleZ = Number(getComputedStyle(row, '::after').zIndex)
@@ -176,8 +161,6 @@ describe('a group folded to a rail', () => {
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => head(screen.container)).not.toBeNull()
 
-        // The head covers the cell the caret stands on, so the drawer shows
-        // the caret for it. A pointer gets none of it.
         const marks = () =>
             [head(screen.container)!, strip(screen.container)!].map(
                 (piece) => getComputedStyle(piece).boxShadow
@@ -189,7 +172,6 @@ describe('a group folded to a rail', () => {
         leaf.focus()
         await userEvent.keyboard('{ArrowUp}')
 
-        // Both pieces, or the caret would land on a drawer cut in half.
         await expect.poll(() => marks()[0]).not.toBe('none')
         const [top, length] = marks()
         expect(length).toBe(top)
@@ -201,9 +183,6 @@ describe('a group folded to a rail', () => {
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => strip(screen.container)).not.toBeNull()
 
-        // The last row hides its own separator because the grid's border is
-        // already that line, and the rule for it reads `:last-child`. Drawing
-        // the strip after the rows takes that away and the two lines stack.
         const all = [...screen.container.querySelectorAll('[data-dg-row-id]')]
         const last = all[all.length - 1]!
         expect(getComputedStyle(last, '::after').display).toBe('none')
@@ -224,8 +203,6 @@ describe('a group folded to a rail', () => {
             label(screen.container)!.getBoundingClientRect().top -
             viewport.getBoundingClientRect().top
 
-        // The name rides in the header, which is what holds it in view: the
-        // rows go by under it and it does not move at all.
         const before = offset()
         viewport.scrollTop = 900
         await new Promise((resolve) => requestAnimationFrame(resolve))
@@ -237,12 +214,9 @@ describe('a group folded to a rail', () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
 
-        // No child declares `columnGroupShow`; a summary fold would refuse.
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Doanh', 'Chỉ'])
 
-        // No toggle in the header to unfold it with: the drawer is the
-        // control now, over its whole length.
         expect(screen.container.querySelector('[data-dg-header-cell="0:1"] button')).toBeNull()
         strip(screen.container)!.click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Q1', 'Q2', 'Chỉ'])
@@ -261,7 +235,6 @@ describe('a group folded to a rail', () => {
         await userEvent.keyboard('{Enter}')
         await expect.poll(() => grid.columns.isCollapsed('revenue')).toBe(true)
 
-        // The group still has a cell over the strip, so Enter brings it back.
         await userEvent.keyboard('{Enter}')
         await expect.poll(() => grid.columns.isCollapsed('revenue')).toBe(false)
     })
@@ -271,7 +244,6 @@ describe('a group folded to a rail', () => {
         await renderGrid(grid)
         grid.columns.toggleGroup('revenue')
 
-        // A rail holds no data, so it is not a column an export writes.
         const { rowsToMatrix } = await import('$lib/index.js')
         const matrix = rowsToMatrix(grid.nodes.slice(0, 1), grid.columns.visible)
         expect(matrix[0]).toEqual(['1', '0'])
@@ -285,23 +257,17 @@ describe('a group folded to a rail', () => {
 
         const el = strip(screen.container)!
         const style = getComputedStyle(el)
-        // A surface of its own, and warm to the pointer.
         expect(style.cursor).toBe('pointer')
         expect(style.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
 
-        // One line down its leading edge, not two. The column before it
-        // already draws that edge, so a border of the strip's own lands on
-        // the same pixel and reads as a thick smudge.
         const lines = (edge: 'Left' | 'Right', ...cells: Element[]) =>
             cells.filter((cell) => getComputedStyle(cell)[`border${edge}Width`] !== '0px').length
         const before = screen.container.querySelector('[data-dg-cell="-1:0"]')!
         const railHeader = screen.container.querySelector('[data-dg-cell="-1:1"]')!
         expect(lines('Right', before) + lines('Left', railHeader, el)).toBe(1)
 
-        // The way back is drawn, not only implied: an arrow over the name.
         const inner = head(screen.container)!.firstElementChild!
         expect(inner.children).toHaveLength(2)
-        // The name starts clear of the grid's own edge rather than on it.
         const name = label(screen.container)!.getBoundingClientRect()
         expect(name.top - head(screen.container)!.getBoundingClientRect().top).toBeGreaterThan(8)
     })
@@ -347,14 +313,12 @@ describe('the header groups demo', () => {
 
         await page.getByRole('button', { name: 'Collapse Kế hoạch' }).click()
 
-        // Both its columns are gone, and one strip stands where they were.
         await expect.poll(() => leafHeaders()).not.toContain('Chỉ')
         expect(leafHeaders()).not.toContain('Chênh')
         const name = label(screen.container)!
         expect(name.textContent?.trim()).toBe('Kế hoạch')
         expect(getComputedStyle(name).writingMode).toBe('vertical-rl')
 
-        // The revenue group beside it still folds the other way, to a column.
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect.poll(() => leafHeaders()).toContain('Cả')
     })

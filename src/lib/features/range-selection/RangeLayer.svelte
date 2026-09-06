@@ -2,8 +2,6 @@
     import { getGridContext, getGridElement } from '../../components/internal/context.js'
     import { getRangeSelection } from './range-selection.svelte.js'
 
-    // Contributed by `rangeSelection()` rather than mounted by hand: it draws
-    // nothing, and everything it does is a listener on the grid's own element.
     const grid = getGridContext()
     const element = getGridElement()
 
@@ -141,9 +139,6 @@
         }
     })
 
-    // A drag that selects cells must not also select text. Written onto the
-    // root rather than carried by a class, because the element belongs to
-    // `GridRoot` and this component draws nothing of its own.
     $effect(() => {
         const root = element()
         if (!root) return

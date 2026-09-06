@@ -1,8 +1,3 @@
-/**
- * Every feature module, its options, its state accessor and the type of the
- * state it hands back. Listed one by one for the reason `core/index.ts` gives.
- */
-
 export { columnOps, getColumnOps } from './column-ops/index.js'
 export type { ColumnOps, ColumnOpsOptions } from './column-ops/index.js'
 
@@ -55,14 +50,6 @@ export type {
     Virtualization,
     VirtualizationOptions
 } from './virtualization/index.js'
-
-/**
- * The sixteen modules that used to be a second package. Same rule as above:
- * the factory, the accessor, the state it hands back and the options it takes.
- *
- * Five states are spelled `...State` because a component of the same name
- * draws them, and one name cannot mean both.
- */
 
 export {
     advancedFilter,

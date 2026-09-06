@@ -47,12 +47,6 @@ function valuesOf(rows: unknown[], key: string): unknown[] {
 
 type Shape = { type: ColumnType; filter: FilterType }
 
-/**
- * The shape says which of the two date types a column is; `toDate` says
- * whether it is a date at all. Shape alone types a column of `1234-56-78`
- * part numbers as dates, and every cell in it then draws blank, because the
- * renderer asks the same `toDate` and gets nothing.
- */
 function isDay(value: unknown): boolean {
     return typeof value === 'string' && DATE_ONLY.test(value) && toDate(value) !== null
 }

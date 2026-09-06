@@ -8,22 +8,6 @@ import type {
     TextFilterOp
 } from '../../core/types/index.js'
 
-/**
- * A snapshot is not a `FilterModel` just because it was cast to one. Share
- * links, `localStorage` and anything handed back to `setState` have all been
- * outside the grid, and a filter whose operator or value does not match its
- * kind reaches the predicate builders as a shape they never check. That threw
- * inside the pipeline's `$derived`, which takes down the render pass rather
- * than one column.
- *
- * So the boundary drops what it cannot read. A condition that fails to
- * sanitize is left out; a column left with nothing is left out; a model with
- * no readable column filters nothing, which is what an empty model already
- * does. That shows more rows than the snapshot asked for, deliberately: it is
- * the honest reading of a filter nobody can reconstruct, and the alternative
- * measured here was a grid that would not render at all.
- */
-
 const TEXT_OPS = new Set<string>([
     'contains',
     'notContains',
@@ -69,8 +53,6 @@ function isSetValue(value: unknown): value is SetFilterValue {
 function sanitizeText(raw: Record<string, unknown>): ColumnFilter | null {
     const op = opOf(raw, TEXT_OPS)
     if (op === null) return null
-    // The presence operators carry no value, and the editor writes them with
-    // an empty one, so both spellings have to hydrate.
     if (PRESENCE_OPS.has(op)) return { kind: 'text', op: op as TextFilterOp, value: '' }
     if (typeof raw.value !== 'string') return null
     const filter: Extract<ColumnFilter, { kind: 'text' }> = {
@@ -109,8 +91,6 @@ function sanitizeDate(raw: Record<string, unknown>): ColumnFilter | null {
 function sanitizeSet(raw: Record<string, unknown>): ColumnFilter | null {
     if (!Array.isArray(raw.values)) return null
     const values = raw.values.filter(isSetValue)
-    // The editor never builds an empty selection, so an empty one here is the
-    // remains of a broken list rather than a request to match nothing.
     return values.length > 0 ? { kind: 'set', values } : null
 }
 

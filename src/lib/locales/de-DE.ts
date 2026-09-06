@@ -3,7 +3,6 @@ import { plural } from '../core/interaction/plural.js'
 
 const rows = plural('de-DE', { one: 'Zeile', other: 'Zeilen' })
 
-/** German. */
 export const deDE: DataGridLocalePack = {
     tag: 'de-DE',
     labels: {

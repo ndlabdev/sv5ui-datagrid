@@ -52,7 +52,6 @@
 
     const rows = makeRows(24)
 
-    /** Mọi lưới ở đây đều cần nút gập, nên gom lại một chỗ. */
     function gridOf(columns: ColumnDef<Row>[], data: Row[] = rows, extra: unknown[] = []) {
         return createDataGrid<Row>({
             data,
@@ -64,7 +63,6 @@
 
     const num = { align: 'right', minWidth: 70 } as const
 
-    // 1. Bốn tầng nhóm, tầng nào cũng có bản tóm tắt của riêng nó.
     const deep: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         { id: 'region', header: 'Vùng', flex: 2, minWidth: 110 },
@@ -103,7 +101,6 @@
         }
     ])
 
-    // 2. Một dải nằm trong lòng một nhóm lớn hơn.
     const railInside: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         {
@@ -126,7 +123,6 @@
         { id: 'q2', header: 'Q2', ...num }
     ])
 
-    // 3. Hai dải đứng cạnh nhau, mỗi dải một cửa.
     const twoRails: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         { id: 'region', header: 'Vùng', flex: 2, minWidth: 110 },
@@ -152,9 +148,6 @@
         { id: 'q4', header: 'Q4', ...num }
     ])
 
-    // 4. Dải của nhóm ghim, ở cả hai mép, với phần giữa đủ rộng để phải cuộn.
-    // Cột chữ để ở cuối phần cuộn: cột bị cắt dở ở mép luôn là cột chữ, đọc
-    // được từ bên trái, chứ không phải một cột số căn phải trông như ô rỗng.
     const pinnedRails: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right', pinned: 'left' },
         {
@@ -180,7 +173,6 @@
         }
     ])
 
-    // 5. Dải chạy qua cả hàng ghim trên và hàng ghim dưới.
     const withPinnedRows: GridState<Row> = gridOf(
         [
             { id: 'id', header: '#', width: 56, align: 'right' },
@@ -205,7 +197,6 @@
         ]
     )
 
-    // 6. Dải khi cả hàng lẫn cột đều được ảo hoá.
     const manyRows = makeRows(400)
     const virtualRail: GridState<Row> = gridOf(
         [
@@ -223,8 +214,6 @@
             { id: 'q2', header: 'Q2', width: 150, align: 'right' },
             { id: 'q3', header: 'Q3', width: 150, align: 'right' },
             { id: 'q4', header: 'Q4', width: 150, align: 'right' },
-            // Chữ ở cuối, vì đây là lưới phải cuộn ngang: cột bị cắt dở ở mép
-            // phải đọc được từ bên trái.
             { id: 'rep', header: 'Phụ trách', width: 260 },
             { id: 'region', header: 'Vùng', width: 260 }
         ],
@@ -232,7 +221,6 @@
         [virtualization<Row>({ rowHeight: 40, columns: true })]
     )
 
-    // 7. Nhóm mà không cột nào chịu nhường chỗ: gập là mất sạch, nên không gập.
     const cannotFold: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         {
@@ -253,7 +241,6 @@
         }
     ])
 
-    // 8. Gập sẵn từ lúc khai, và một vòng lưu rồi khôi phục.
     const preFolded: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         { id: 'region', header: 'Vùng', flex: 2, minWidth: 110 },
@@ -280,7 +267,6 @@
     ])
     let saved = $state<GridSnapshot | null>(null)
 
-    // 9. Cũng chừng ấy thứ, đọc từ phải sang trái.
     const rtl: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         { id: 'region', header: 'Vùng', flex: 2, minWidth: 110 },
@@ -296,7 +282,6 @@
         { id: 'q1', header: 'Q1', ...num }
     ])
 
-    // 10. Dữ liệu rời khỏi lưới trong lúc đang gập.
     const exporting: GridState<Row> = gridOf([
         { id: 'id', header: '#', width: 56, align: 'right' },
         { id: 'rep', header: 'Phụ trách', flex: 2, minWidth: 120 },
@@ -326,7 +311,6 @@
         exported = `${exporting.columns.visible.map((column) => column.id).join(' | ')}  =>  ${matrix[0]?.join(' | ')}`
     }
 
-    /** Nhóm nào đang gập, đọc thẳng từ lưới chứ không giữ bản sao. */
     function folded(grid: GridState<Row>, ...ids: string[]): string {
         const shut = ids.filter((id) => grid.columns.isCollapsed(id))
         return shut.length === 0 ? 'đang mở hết' : `đang gập: ${shut.join(', ')}`

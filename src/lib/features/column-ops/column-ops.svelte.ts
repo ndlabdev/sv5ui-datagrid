@@ -62,7 +62,6 @@ export class ColumnOps<TRow> {
         return { start: indices[0], end: indices[indices.length - 1] + 1 }
     }
 
-    /** True when both the feature and the column itself allow resizing. */
     canResizeColumn = (id: string): boolean => {
         return this.canResize && this.#grid.columns.get(id)?.resizable !== false
     }
@@ -117,8 +116,6 @@ export class ColumnOps<TRow> {
         }
         if (contentWidth <= 0) return null
 
-        // Measuring at the current width feeds back on itself, so a repeat
-        // click would creep the column wider.
         const target = Math.ceil(contentWidth + padding) + 2
         const current = this.currentWidth(id)
         return Math.abs(target - current) <= AUTOSIZE_EPSILON ? null : target
@@ -188,12 +185,6 @@ export class ColumnOps<TRow> {
         this.#grid.events.emit('columnVisibilityChanged', { columnId: id, hidden })
     })
 
-    /**
-     * Folds or unfolds a header group. The model settles whether the group may
-     * take that state at all; this is the door that says so to everyone else,
-     * which is why the header's toggle and the column menu both come through
-     * here rather than calling the model and staying quiet.
-     */
     setGroupCollapsed = mutator((groupId: string, collapsed: boolean): void => {
         if (!this.#grid.columns.setGroupCollapsed(groupId, collapsed)) return
         this.#grid.events.emit('columnGroupToggled', { groupId, collapsed })
@@ -270,13 +261,8 @@ function createKeybindings<TRow>(): Keybinding<TRow>[] {
     ]
 }
 
-/** Below this, an autosize would only be re-stating the width already set. */
 const AUTOSIZE_EPSILON = 3
 
-/**
- * What a body cell needs to show in full. Content that stretches to the cell
- * measures as the current width, so it contributes nothing.
- */
 function bodyContentWidth(cell: HTMLElement, range: Range): number {
     const available = cell.clientWidth
     let stretched = false
@@ -289,12 +275,9 @@ function bodyContentWidth(cell: HTMLElement, range: Range): number {
 
     range.selectNodeContents(cell)
     const measured = range.getBoundingClientRect().width
-    // A stretched wrapper around real text still reports the cell width; the
-    // text inside is what has to fit.
     return stretched ? Math.min(measured, textWidth(cell, range)) : measured
 }
 
-/** The width of the cell's text alone, ignoring boxes drawn around it. */
 function textWidth(cell: HTMLElement, range: Range): number {
     let width = 0
     const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT)
@@ -309,10 +292,6 @@ function textWidth(cell: HTMLElement, range: Range): number {
     return width
 }
 
-/**
- * The label plus the controls beside it. Measuring the label alone sized the
- * column down until the controls squeezed the text away.
- */
 function headerContentWidth(cell: HTMLElement): number {
     const style = getComputedStyle(cell)
     const gap = parseFloat(style.columnGap) || 0
@@ -321,8 +300,6 @@ function headerContentWidth(cell: HTMLElement): number {
 
     for (const child of cell.children) {
         const element = child as HTMLElement
-        // Spacers only push the controls to the edge; the resize handle and
-        // any popup are positioned out of flow. Neither claims real width.
         if (element.dataset.dgSpacer !== undefined) continue
         if (getComputedStyle(element).position === 'absolute') continue
         width += Math.ceil(Math.max(element.scrollWidth, element.getBoundingClientRect().width))

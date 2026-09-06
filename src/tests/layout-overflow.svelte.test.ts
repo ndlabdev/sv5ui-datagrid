@@ -64,10 +64,7 @@ describe('cells stay inside their column', () => {
         )
 
         const badgeCell = cellAt(screen.container, 0, 0)
-        // The content really is wider than the column...
         expect(badgeCell.scrollWidth).toBeGreaterThan(badgeCell.clientWidth)
-        // ...so the cell has to keep it in. Overflowing it lands on the
-        // neighbour, which is what the badge used to do.
         expect(getComputedStyle(badgeCell).overflow).toBe('hidden')
 
         const neighbour = cellAt(screen.container, 0, 1)
@@ -108,7 +105,6 @@ describe('autosize fits the whole header', () => {
         ops.autoSizeColumn('dept')
         await expect.poll(() => ops.currentWidth('dept')).toBeLessThan(300)
 
-        // The label keeps a real width rather than collapsing behind the icons.
         const label = cellAt(screen.container, -1, 0).querySelector<HTMLElement>(
             '[data-dg-truncate]'
         )!
@@ -132,8 +128,6 @@ describe('autosize fits the whole header', () => {
         const ops = getColumnOps(grid)!
 
         ops.autoSizeColumn('bonus')
-        // The old measurement read the zero-width spacer and collapsed the
-        // column to its minimum.
         await expect.poll(() => ops.currentWidth('bonus')).toBeGreaterThan(120)
     })
 })
@@ -162,7 +156,6 @@ describe('a restored layout cannot break a header group', () => {
         })
         const screen = await mount(grid)
 
-        // The shape a stale snapshot can hold: Identity, Pay, Identity.
         grid.setState({ version: 1, columns: { order: ['id', 'bonus', 'note'] } })
         await expect
             .poll(() => grid.columns.visible.map((column) => column.id))
@@ -171,7 +164,6 @@ describe('a restored layout cannot break a header group', () => {
         const groupCells = [
             ...screen.container.querySelectorAll('[role="row"] [role="columnheader"]')
         ].filter((cell) => !cell.hasAttribute('data-dg-cell'))
-        // One cell per group, not a label repeated over unrelated columns.
         expect(groupCells.map((cell) => cell.textContent?.trim())).toEqual(['Identity', 'Pay'])
     })
 })

@@ -1,8 +1,3 @@
-/**
- * bits-ui renders popup content into a portal on the body rather than inside
- * the control that opened it, so a click on an option lands outside that
- * control and a keypress in it never reaches the grid.
- */
 const PORTAL_SELECTOR = '[data-bits-floating-content-wrapper]'
 
 export function isInPortal(target: EventTarget | null): boolean {

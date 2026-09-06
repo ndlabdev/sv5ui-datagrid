@@ -30,7 +30,6 @@ export function makeBenchNodes(count: number): RowNode<BenchRow>[] {
     return buildRowNodes(makeBenchRows(count), (row) => String(row.id))
 }
 
-/** One row of a backend generated on demand: its size costs nothing unasked. */
 export function serverRowAt(index: number): BenchRow {
     return {
         id: index + 1,

@@ -1,13 +1,3 @@
-/**
- * Plumbing the components share and nothing else does: the context the grid
- * is passed down through, the theme slots resolved once per grid, portalling,
- * the drag gesture, and the windowing arithmetic the header and body must
- * agree on.
- *
- * Only the two icon exports cross the boundary into the public API, and they
- * do it by being named again in `components/index.ts`.
- */
-
 export {
     getGridContext,
     getGridElement,

@@ -39,14 +39,6 @@ function makeGrid(withRange: boolean): GridState<Sale> {
     })
 }
 
-/**
- * What registering a feature is worth, driven through the DOM.
- *
- * The layer that reads these gestures used to be a component an application
- * wrapped the grid in, and this test used to be about remembering to. It is
- * about the feature list now: register `rangeSelection()` and dragging selects
- * cells, leave it out and the same drag does nothing.
- */
 describe('a grid assembled from the public surface', () => {
     async function drag(container: Element): Promise<void> {
         const from = container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!

@@ -54,7 +54,6 @@ describe('theming - per-instance ui', () => {
 
         const cell = cellOf('Alice')
         expect(cell.className).toContain('font-mono')
-        // The variant's own layout classes survive the merge.
         expect(cell.className).toContain('items-center')
 
         const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
@@ -62,8 +61,6 @@ describe('theming - per-instance ui', () => {
     })
 
     it('reaches the label of a sortable column, not just its cell', async () => {
-        // A grid instance, because `features` belongs to `createDataGrid` and
-        // not to the component's own props.
         const grid = createDataGrid<Row>({
             columns: [{ id: 'name', header: 'Name', sortable: true }],
             data: rows,
@@ -79,14 +76,10 @@ describe('theming - per-instance ui', () => {
         )
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // Read off the computed style, not the class list: the class was on the
-        // cell all along, and the <button> a sortable column wraps its label in
-        // refuses `text-transform` from its parent by user-agent rule.
         const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
         const label = header.querySelector<HTMLElement>('[data-dg-truncate]')!
         expect(getComputedStyle(header).textTransform).toBe('uppercase')
         expect(getComputedStyle(label).textTransform).toBe('uppercase')
-        // The two that always worked, so a regression here is visible too.
         expect(getComputedStyle(label).letterSpacing).toBe(getComputedStyle(header).letterSpacing)
         expect(getComputedStyle(label).color).toBe(getComputedStyle(header).color)
     })
@@ -180,10 +173,8 @@ describe('theming - data-driven callbacks', () => {
         await expect.element(page.getByRole('grid')).toBeVisible()
 
         expect(cellOf('-40').className).toContain('text-error')
-        // The default cell colour loses to the callback rather than fighting it.
         expect(cellOf('-40').className).not.toContain('text-on-surface')
         expect(cellOf('120').className).not.toContain('text-error')
-        // A column without the callback is untouched.
         expect(cellOf('Alice').className).not.toContain('text-error')
     })
 })

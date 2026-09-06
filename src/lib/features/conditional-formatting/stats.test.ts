@@ -25,7 +25,6 @@ const rows: Row[] = [
     { id: 4, value: 5, email: '' }
 ]
 
-/** The statistics walk nodes now, so that a masked column reads as masked. */
 const nodesOf = <T>(list: readonly T[]) =>
     list.map((row, index) => ({ id: String(index), row, index }))
 

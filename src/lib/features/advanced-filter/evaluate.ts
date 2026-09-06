@@ -23,13 +23,6 @@ export function isComplete(condition: FilterCondition): boolean {
     return condition.op === 'between' ? !isBlank(condition.to) : true
 }
 
-/**
- * One condition against one cell, read as the column's kind says to read it.
- *
- * The kind comes from the column rather than from the value. It used to be
- * guessed per cell, which made a column of numeric strings compare as numbers
- * in one row and as text in the next depending on what the cell held.
- */
 export function matchesCondition(
     cell: unknown,
     condition: FilterCondition,

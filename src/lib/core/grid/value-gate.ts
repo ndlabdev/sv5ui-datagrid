@@ -9,15 +9,6 @@ import type {
 import { getCellValue } from '../utils/value.js'
 import type { GridState } from './grid.svelte.js'
 
-/**
- * A cell's value on its way out of the grid.
- *
- * Everything the grid draws, writes or searches reads through here, so a
- * feature standing between the data and the user has one place to stand.
- * `getCellValue` stays the raw accessor underneath, and is what a caller
- * outside this file gets when it deliberately wants the value behind a gate.
- */
-
 /** Reads one cell, through the reader when the column has one. */
 export function readCell<TRow>(
     node: RowNode<TRow>,
@@ -51,16 +42,6 @@ export function composeReaders<TRow>(
     return composed
 }
 
-/**
- * A short stable id for a reader, for the two passes that hold their results
- * per column: the quick filter's search text and the set filter's value list.
- *
- * Without it, a grid that swaps a reader - the policy changed, the user
- * changed - answers the next search out of text built for the reader before,
- * which is the value it was meant to stop showing. Identity is the right test
- * because the reader table is derived: a reader stays the same object until
- * something it reads actually changes.
- */
 const readerIds = new WeakMap<object, number>()
 let lastReaderId = 0
 

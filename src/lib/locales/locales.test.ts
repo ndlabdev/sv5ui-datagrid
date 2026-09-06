@@ -12,11 +12,6 @@ import * as locales from './index.js'
 
 const packs = Object.values(locales) as DataGridLocalePack[]
 
-/**
- * A pack says what it has and English answers for the rest, so the type does
- * not promise a shipped pack is complete. These do: every pack here is, and
- * the tests below read one as complete only after saying so.
- */
 function announcerOf(pack: DataGridLocalePack): DataGridAnnouncerStrings {
     for (const key of Object.keys(defaultAnnouncerStrings)) {
         expect(
@@ -27,24 +22,14 @@ function announcerOf(pack: DataGridLocalePack): DataGridAnnouncerStrings {
     return pack.announcer as DataGridAnnouncerStrings
 }
 
-/**
- * Operators shown as maths rather than words: every language keeps them, so a
- * pack matching English here is right, not a hole.
- */
 const SYMBOLIC = new Set(['eq', 'neq', 'gt', 'gte', 'lt', 'lte'])
 
-/**
- * Words a language genuinely borrows from English. Matching English here is
- * the correct translation, so they are named rather than left to slip through
- * a blanket exemption.
- */
 const LOANWORDS: Record<string, string[]> = {
     'de-DE': ['rangeMin', 'rangeMax', 'filterTitle', 'filterBuilderOperator'],
     'fr-FR': ['rangeMin', 'rangeMax', 'formatKindExpression'],
     'id-ID': ['openFilter', 'rangeMin', 'filterTitle', 'filterBuilderOperator']
 }
 
-/** Plausible arguments for every label that is a function. */
 const ARGS: Record<string, unknown[]> = {
     removeFilter: ['Name'],
     columnMenu: ['Name'],
@@ -65,7 +50,6 @@ const ARGS: Record<string, unknown[]> = {
     filteredRows: [12, 300],
     selectedRows: [4],
 
-    // Grouping and aggregation
     moveGroupEarlier: ['Region'],
     moveGroupLater: ['Region'],
     removeGroup: ['Region'],
@@ -75,11 +59,9 @@ const ARGS: Record<string, unknown[]> = {
     groupFooterLoaded: ['North', 12],
     grandTotalLoaded: [300],
 
-    // Range selection
     rangeCells: ['12'],
     rangeShape: [3, 4],
 
-    // Command palette
     commandShowColumn: ['Name'],
     commandHideColumn: ['Name'],
     commandUnpinColumn: ['Name'],
@@ -88,30 +70,24 @@ const ARGS: Record<string, unknown[]> = {
     commandGroupByColumn: ['Region'],
     commandUngroupColumn: ['Region'],
 
-    // Find and replace
     findCount: [2, 9],
     findNoWritable: [9],
     findReplaced: [4],
     findCountLoaded: [2, 9],
 
-    // Saved views
     viewShareTooLong: [2400],
 
-    // Conditional formatting
     formatRuleName: ['Colour scale', 'Pay'],
     formatRemoveRule: ['Colour scale: Pay'],
     formatBadExpression: ['unexpected )'],
 
-    // Tool panel
     toolPanelMoveUp: ['Name'],
     toolPanelMoveDown: ['Name'],
     toolPanelActions: ['Name'],
 
-    // Advanced filter
     filterJoin: ['and'],
     filterOp: ['contains'],
 
-    // Import wizard
     importUnknownFormat: ['notes.rtf'],
     importAddRows: [120],
     importAddValid: [118],
@@ -154,8 +130,6 @@ describe('shipped languages', () => {
         const tags = packs.map((locale) => locale.tag)
         expect(new Set(tags).size).toBe(tags.length)
 
-        // Handed the whole set, each tag must still find its own pack - an
-        // ordering or matching bug would show up as a neighbour winning.
         for (const locale of packs) {
             expect(resolveLocale(packs, locale.tag)?.tag).toBe(locale.tag)
         }
@@ -227,11 +201,6 @@ describe('shipped languages', () => {
     })
 })
 
-/**
- * Languages whose grammar marks number on a counted noun. The rest - CJK,
- * Thai, Vietnamese, Indonesian - have no such category, and a count of one
- * reads the same as a count of many.
- */
 const INFLECTS_FOR_COUNT = ['en-US', 'de-DE', 'es-ES', 'fr-FR', 'pt-BR', 'ru-RU']
 
 describe('counted announcements', () => {
@@ -244,7 +213,6 @@ describe('counted announcements', () => {
             const announcer = announcerOf(locale)
             for (const key of counting) {
                 const speak = announcer[key]
-                // "1 rows selected" is the shape this guards against.
                 expect(speak(1), `${locale.tag} ${key}`).not.toBe(
                     speak(4).replace(/(?<![\d])4(?![\d])/, '1')
                 )
@@ -266,16 +234,12 @@ describe('counted announcements', () => {
         const fr = packs.find((pack) => pack.tag === 'fr-FR')!
         const en = packs.find((pack) => pack.tag === 'en-US')!
 
-        // French reads zero as singular; English does not. `count === 1` would
-        // get one of these two wrong whichever way it was written.
         expect(announcerOf(fr).selected(0)).toContain('ligne sélectionnée')
         expect(announcerOf(en).selected(0)).toContain('rows')
     })
 
     it('uses the three forms Russian needs, not two', () => {
         const ru = packs.find((pack) => pack.tag === 'ru-RU')!
-        // Anchored: 'строк' is a prefix of 'строки', so `toContain` would pass
-        // on the wrong form.
         const speak = announcerOf(ru).selected
         expect(speak(1)).toMatch(/строка$/)
         expect(speak(3)).toMatch(/строки$/)
@@ -290,8 +254,6 @@ describe('a pack that says less than the grid asks', () => {
             data: [],
             getRowId: (row) => row.id,
             locale: 'sv-SE',
-            // A pack written against an older grid, or a small one written by
-            // hand: it never has to be complete to be usable.
             locales: [{ tag: 'sv-SE', labels: { search: 'Sök...' }, announcer: {} }]
         })
 

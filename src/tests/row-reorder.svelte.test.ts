@@ -52,7 +52,6 @@ async function mount(grid: GridState<Task>) {
 const order = (grid: GridState<Task>) => grid.data.map((task) => task.name)
 
 interface PointerAt {
-    /** Defaults to the grip column, which is where a drag starts. */
     clientX?: number
     pointerType?: string
 }
@@ -74,10 +73,8 @@ function pointer(target: Element, type: string, clientY: number, at: PointerAt =
     )
 }
 
-/** The floating copy of a row, marked so nothing else can be mistaken for it. */
 const ghosts = () => document.querySelectorAll('[data-dg-ghost]')
 
-/** The copy flies to its landing spot after a drop; wait for it to clear. */
 const settled = () => expect.poll(() => ghosts().length).toBe(0)
 
 function handleOf(container: Element, position: number): HTMLElement {
@@ -109,10 +106,7 @@ describe('row reorder', () => {
         const overTarget = rect.top + rect.height / 2
 
         pointer(handle, 'pointerdown', 10)
-        // Past the threshold, so the press counts as a drag rather than a tap.
         pointer(handle, 'pointermove', overTarget)
-        // The target is resolved in an animation frame, together with the
-        // auto-scroll, so the drop needs one to land on.
         await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
         pointer(handle, 'pointerup', overTarget)
 
@@ -156,7 +150,6 @@ describe('row reorder', () => {
         getRowReorder(grid)!.moveRow('1', 2)
         expect(order(grid)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta'])
 
-        // Its neighbours still move, including past the locked row.
         getRowReorder(grid)!.moveRow('3', 0)
         expect(order(grid)).toEqual(['Charlie', 'Alpha', 'Bravo', 'Delta'])
     })
@@ -165,7 +158,6 @@ describe('row reorder', () => {
         const grid = makeGrid([rowReorder(), sorting()])
         await mount(grid)
 
-        // Descending: Delta, Charlie, Bravo, Alpha.
         ;(grid.api.setSort as (sort: SortState[]) => void)([
             { columnId: 'name', direction: 'desc' }
         ])
@@ -173,11 +165,8 @@ describe('row reorder', () => {
             .poll(() => grid.nodes.map((node) => node.row.name))
             .toEqual(['Delta', 'Charlie', 'Bravo', 'Alpha'])
 
-        // Move Delta (rendered first) to where Bravo sits.
         getRowReorder(grid)!.moveRow('4', 2)
-        // Dropped where Bravo was, so it lands after Bravo in `data`.
         expect(order(grid)).toEqual(['Alpha', 'Bravo', 'Delta', 'Charlie'])
-        // What renders is still the sort's business, not the drop's.
         expect(grid.nodes.map((node) => node.row.name)).toEqual([
             'Delta',
             'Charlie',
@@ -207,7 +196,6 @@ describe('the drag gesture', () => {
         const grid = makeGrid([rowReorder()])
         const { handle } = await pressGrip(grid)
 
-        // Two pixels: under the threshold, so no ghost and no drag state.
         pointer(handle, 'pointermove', 12)
         expect(getRowReorder(grid)!.drag).toBeNull()
         expect(ghosts()).toHaveLength(0)
@@ -224,11 +212,8 @@ describe('the drag gesture', () => {
         await expect.poll(() => ghosts().length).toBe(1)
 
         const ghost = ghosts()[0] as HTMLElement
-        // A copy, not the row itself: it must not answer hit tests or be read.
         expect(ghost.hasAttribute('data-dg-row-id')).toBe(false)
         expect(ghost.style.pointerEvents).toBe('none')
-        // The row is a CSS grid whose tracks come from an ancestor variable;
-        // without carrying the resolved template the copy collapses.
         expect(ghost.style.gridTemplateColumns).not.toBe('')
 
         const source = screen.container.querySelector<HTMLElement>('[data-dg-row-id="1"]')!
@@ -255,7 +240,6 @@ describe('the drag gesture', () => {
     })
 
     it('scrolls the viewport when the cursor reaches its edge', async () => {
-        // Enough rows to scroll, and a short viewport to scroll within.
         const grid = createDataGrid<Task>({
             columns,
             data: Array.from({ length: 60 }, (_, i) => ({ id: i + 1, name: `Task ${i + 1}` })),
@@ -270,8 +254,6 @@ describe('the drag gesture', () => {
 
         const handle = handleOf(screen.container, 1)
         pointer(handle, 'pointerdown', 10)
-        // Hold the cursor just inside the bottom edge; the list has to come to
-        // the cursor, otherwise only the rows already on screen are reachable.
         pointer(handle, 'pointermove', viewport.getBoundingClientRect().bottom - 4)
 
         await expect.poll(() => viewport.scrollTop).toBeGreaterThan(0)
@@ -293,7 +275,6 @@ describe('landing and touch', () => {
         await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
         pointer(handle, 'pointerup', overTarget)
 
-        // The data moves at once; the copy is still in the air, animating.
         expect(order(grid)).toEqual(['Bravo', 'Charlie', 'Alpha', 'Delta'])
         await expect.poll(() => ghosts()[0]?.getAnimations().length ?? 0).toBeGreaterThan(0)
         await settled()
@@ -309,19 +290,12 @@ describe('landing and touch', () => {
         pointer(handle, 'pointermove', 120)
         await expect.poll(() => ghosts().length).toBe(1)
 
-        // The grid drives its geometry from custom properties on ancestors of
-        // the row. Moved to `<body>` the copy loses them, and the pinned grip
-        // and checkbox fall back to `auto` - their background then paints over
-        // the copy's own edge, which shows up as a broken border.
         const offsets = (element: Element) =>
             [...element.children].slice(0, 2).map((cell) => getComputedStyle(cell).insetInlineStart)
 
         expect(offsets(ghosts()[0])).toEqual(offsets(row))
         expect(offsets(ghosts()[0])).not.toContain('auto')
 
-        // Those same pinned cells carry a square opaque background. Unclipped,
-        // it spills past the rounded corners and eats the ring's arc on the
-        // left - the right corners stay clean, which is what gives it away.
         expect(getComputedStyle(ghosts()[0]).overflow).toBe('hidden')
 
         pointer(handle, 'pointercancel', 120)
@@ -336,12 +310,9 @@ describe('landing and touch', () => {
         const before = row.getBoundingClientRect()
 
         pointer(handle, 'pointerdown', 10)
-        // Down *and* 300px across.
         pointer(handle, 'pointermove', 120, { clientX: 320 })
         await expect.poll(() => ghosts().length).toBe(1)
 
-        // Pinned to the column it came from, the copy sits flush on the list
-        // and is indistinguishable from the row beneath it.
         const ghost = (ghosts()[0] as HTMLElement).getBoundingClientRect()
         expect(Math.round(ghost.left - before.left)).toBe(300)
         expect(Math.round(ghost.top - before.top)).toBe(110)
@@ -355,8 +326,6 @@ describe('landing and touch', () => {
         const screen = await mount(grid)
         const handle = handleOf(screen.container, 1)
 
-        // A swipe: the finger leaves before the hold is up, so the gesture
-        // stays the browser's and the list just scrolls.
         pointer(handle, 'pointerdown', 10, { pointerType: 'touch' })
         pointer(handle, 'pointermove', 60, { pointerType: 'touch' })
         expect(getRowReorder(grid)!.drag).toBeNull()
@@ -364,7 +333,6 @@ describe('landing and touch', () => {
         pointer(handle, 'pointerup', 60, { pointerType: 'touch' })
         expect(order(grid)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta'])
 
-        // A hold: stay put long enough and the row comes up.
         pointer(handle, 'pointerdown', 10, { pointerType: 'touch' })
         await expect.poll(() => ghosts().length, { timeout: 2000 }).toBe(1)
         expect(getRowReorder(grid)!.drag?.sourceId).toBe('1')
@@ -373,8 +341,6 @@ describe('landing and touch', () => {
     })
 
     it('scrolls the page when the grid has no scroller of its own', async () => {
-        // No height cap, so the grid is as tall as its rows and the window is
-        // what has to move for a row to reach a position further down.
         const grid = createDataGrid<Task>({
             columns,
             data: Array.from({ length: 80 }, (_, i) => ({ id: i + 1, name: `Task ${i + 1}` })),

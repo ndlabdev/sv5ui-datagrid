@@ -65,8 +65,6 @@ export const defaultLabels: DataGridLabels = {
     expandGroup: (group) => `Expand ${group}`,
 
     filterColumn: (column) => `Filter ${column}`,
-    // The first condition keeps the unsuffixed name it has always had, so a
-    // second one can appear without renaming the first.
     filterOperator: (ordinal) => (ordinal > 1 ? `Filter operator ${ordinal}` : 'Filter operator'),
     filterValue: (ordinal) => (ordinal > 1 ? `Filter value ${ordinal}` : 'Filter value'),
     filterRowValue: (column) => `${column} filter value`,

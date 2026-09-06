@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Thai. */
 export const thTH: DataGridLocalePack = {
     tag: 'th-TH',
     labels: {

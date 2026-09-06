@@ -61,7 +61,6 @@ const data: Sale[] = [
     }
 ]
 
-// The panel takes its grid from context, so it is mounted inside one.
 const TypedBuilder = InGrid
 
 const inRoot = (grid: GridState<Sale>, partProps?: { debounce?: number }) => ({

@@ -89,7 +89,6 @@ describe('ColumnDef.resizable', () => {
 })
 
 describe('ColumnDef.tooltip', () => {
-    /** The sv5ui tooltip wraps the cell in a trigger; this is that trigger. */
     function triggerIn(container: Element, row: number, col: number): HTMLElement {
         const trigger = cellAt(container, row, col).querySelector<HTMLElement>(
             '[data-tooltip-trigger]'
@@ -98,10 +97,6 @@ describe('ColumnDef.tooltip', () => {
         return trigger
     }
 
-    /**
-     * What the tooltip is showing. It lives in a portal, and sv5ui opens it
-     * after its own 700ms delay - longer than a default poll waits.
-     */
     const tooltipContent = () =>
         document.querySelector('[data-bits-floating-content-wrapper]')?.textContent?.trim()
 
@@ -125,7 +120,6 @@ describe('ColumnDef.tooltip', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Not the raw 91 behind it, and not through a native title.
         expect(cellAt(screen.container, 0, 0).title).toBe('')
         expect(await openTooltip(triggerIn(screen.container, 0, 0))).toBe('$91.00')
     })
@@ -167,8 +161,6 @@ describe('ColumnDef.tooltip', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // bits-ui hands its trigger a tabindex of 0. Left alone, a page of rows
-        // would be a page of tab stops - the fault the checkbox column had.
         const triggers = screen.container.querySelectorAll<HTMLElement>('[data-tooltip-trigger]')
         expect(triggers.length).toBeGreaterThan(0)
         for (const trigger of triggers) expect(trigger.tabIndex).toBe(-1)
@@ -183,7 +175,6 @@ describe('ColumnDef.tooltip', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         expect(cellAt(screen.container, 0, 0).hasAttribute('data-dg-manual-tooltip')).toBe(true)
-        // The column that said nothing is still the hover measure's business.
         expect(cellAt(screen.container, 0, 1).hasAttribute('data-dg-manual-tooltip')).toBe(false)
     })
 })
@@ -203,7 +194,6 @@ describe('tooltip on the playground', () => {
         const screen = await render(Renderers as never)
         await expect.element(screen.getByRole('grid').first()).toBeVisible()
 
-        // Found by the trigger rather than by a column index the demo may move.
         const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')!
         const salary = trigger.closest<HTMLElement>('[data-dg-cell]')!
         expect(trigger.tabIndex).toBe(-1)

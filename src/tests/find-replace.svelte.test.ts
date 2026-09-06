@@ -32,7 +32,6 @@ const columns: ColumnDef<Row>[] = [
 ]
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Row>>
-// The part takes its grid from context, so it is mounted inside one.
 const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Row>) => ({ props: { grid, component: FindReplace } })

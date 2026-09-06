@@ -28,8 +28,6 @@ export class RowPinning<TRow> {
         return this.#isRowPinned?.(node.row) ?? null
     }
 
-    /** With no predicate and no overrides nothing can pin, so the scans below
-     * are skipped entirely. */
     get #possible(): boolean {
         return this.#isRowPinned !== null || Object.keys(this.pinnedOverrides).length > 0
     }

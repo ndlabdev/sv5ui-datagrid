@@ -44,11 +44,6 @@
         labels: i % 2 === 0 ? ['api'] : ['ui', 'polish']
     }))
 
-    /**
-     * A hand-rolled standard-schema so the demo carries no dependency. Any
-     * zod / valibot / arktype schema drops in unchanged - the grid only ever
-     * calls `~standard.validate`.
-     */
     function rule(check: (value: unknown) => string | null): StandardSchemaV1 {
         return {
             '~standard': {
@@ -67,7 +62,6 @@
     const columns: ColumnDef<Task>[] = [
         { id: 'id', header: '#', width: 64, align: 'right', sortable: true },
 
-        // text - the default editor, so `editor` can be left out entirely.
         {
             id: 'title',
             header: 'Title',
@@ -78,8 +72,6 @@
             schema: rule((v) => (String(v).trim().length >= 3 ? null : 'At least 3 characters'))
         },
 
-        // number - `parse` turns the editor's raw output into the stored value,
-        // and runs before validation.
         {
             id: 'estimate',
             header: 'Estimate',
@@ -97,7 +89,6 @@
             })
         },
 
-        // select - a short, fixed list.
         {
             id: 'priority',
             header: 'Priority',
@@ -114,7 +105,6 @@
             }
         },
 
-        // selectMenu - the searchable one, for a list too long to scan.
         {
             id: 'assignee',
             header: 'Assignee',
@@ -125,15 +115,12 @@
                 type: 'selectMenu',
                 options: people.map((p) => ({ label: p, value: p }))
             },
-            // Imperative validation sees the whole row, so it can state a rule
-            // that spans columns - something a schema on one value cannot.
             validate: (value, row) =>
                 row.priority === 'Critical' && !leads.includes(String(value))
                     ? 'Critical work goes to Ada or Grace'
                     : null
         },
 
-        // checkbox - commits the moment it changes.
         {
             id: 'done',
             header: 'Done',
@@ -144,7 +131,6 @@
             editor: 'checkbox'
         },
 
-        // date - typed segment by segment, committed on leaving.
         {
             id: 'due',
             header: 'Due',
@@ -160,7 +146,6 @@
             })
         },
 
-        // time - the same segmented entry, on a clock.
         {
             id: 'start',
             header: 'Start',
@@ -175,7 +160,6 @@
             }
         },
 
-        // textarea - multi-line, so Enter belongs to the widget.
         {
             id: 'notes',
             header: 'Notes',
@@ -187,7 +171,6 @@
             )
         },
 
-        // rating - a widget, committing on change.
         {
             id: 'impact',
             header: 'Impact',
@@ -199,7 +182,6 @@
             editor: 'rating'
         },
 
-        // tags - an array value.
         {
             id: 'labels',
             header: 'Labels',
@@ -237,7 +219,6 @@
         log = [line, ...log].slice(0, 8)
     }
 
-    /** Row mode is decided when the feature is built, so this opens one by hand. */
     function editFocusedRow() {
         const node = grid.preWindowNodes[grid.focus.active.row]
         if (node) editingState.startRowEdit(node.id)

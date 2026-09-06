@@ -30,7 +30,6 @@ const entries: Entry[] = Array.from({ length: 60 }, (_, i) => ({
     revenue: 1000 + i
 }))
 
-/** Length of the run of equal regions starting here; 1 inside a run. */
 function regionRun(index: number): number {
     if (index > 0 && entries[index - 1].region === entries[index].region) return 1
     let n = 1
@@ -66,7 +65,6 @@ function makeGrid(options: { pinned?: boolean; virtual?: boolean } = {}): GridSt
 const cell = (row: number, col: number) =>
     document.querySelector<HTMLElement>(`[data-dg-cell="${row}:${col}"]`)
 
-/** The cell a point belongs to, so layering is read off the rendered page. */
 function ownerAt(x: number, y: number): string {
     return (
         document.elementFromPoint(x, y)?.closest('[data-dg-cell]')?.getAttribute('data-dg-cell') ??
@@ -79,16 +77,13 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid: makeGrid() })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Rows 0-2 share a region, so only row 0 renders that column.
         expect(cell(0, 1)).not.toBeNull()
         expect(cell(1, 1)).toBeNull()
         expect(cell(2, 1)).toBeNull()
-        // The next run starts its own cell.
         expect(cell(3, 1)).not.toBeNull()
 
         expect(cell(0, 1)!.getAttribute('aria-rowspan')).toBe('3')
         expect(cell(3, 1)!.getAttribute('aria-rowspan')).toBe('2')
-        // A run of one carries no attribute at all.
         expect(cell(5, 1)!.getAttribute('aria-rowspan')).toBeNull()
     })
 
@@ -99,8 +94,6 @@ describe('rowSpan', () => {
         const fill = cell(0, 1)!.firstElementChild as HTMLElement
         expect(Math.round(fill.getBoundingClientRect().height)).toBe(3 * ROW_HEIGHT)
 
-        // The cell itself keeps its row's height: growing it would grow the
-        // row's grid track and stretch every sibling with it.
         expect(Math.round(cell(0, 1)!.getBoundingClientRect().height)).toBe(ROW_HEIGHT)
         expect(Math.round(cell(0, 2)!.getBoundingClientRect().height)).toBe(ROW_HEIGHT)
         expect(Math.round(cell(0, 0)!.getBoundingClientRect().height)).toBe(ROW_HEIGHT)
@@ -110,8 +103,6 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid: makeGrid() })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Row 1 has no region cell. Without explicit placement the city cell
-        // would slide left into the hole the span left behind.
         const spanned = cell(1, 2)!.getBoundingClientRect()
         const normal = cell(0, 2)!.getBoundingClientRect()
         expect(Math.round(spanned.x)).toBe(Math.round(normal.x))
@@ -122,8 +113,6 @@ describe('rowSpan', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         const box = cell(0, 1)!.getBoundingClientRect()
-        // The seam between the first two rows, inside the span: it must read as
-        // the spanning cell, not as the separator painted over it.
         expect(ownerAt(box.x + 20, box.bottom)).toBe('0:1')
         expect(ownerAt(box.x + 20, box.bottom + ROW_HEIGHT)).toBe('0:1')
     })
@@ -132,16 +121,11 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid: makeGrid({ pinned: true }) })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // The overhang covers every separator it crosses - including the one at
-        // its own foot, which belongs to the next run and has to stay. It used
-        // to swallow that line, leaving the runs welded together.
         const fill = cell(0, 1)!.firstElementChild as HTMLElement
         const edge = getComputedStyle(fill, '::after')
         expect(edge.display).not.toBe('none')
         expect(edge.height).toBe('1px')
 
-        // Inside the run there is no line: the covered rows render no cell of
-        // their own, and the overhang paints over the row's own separator.
         const box = cell(0, 1)!.getBoundingClientRect()
         expect(ownerAt(box.x + 20, box.bottom + ROW_HEIGHT)).toBe('0:1')
     })
@@ -150,27 +134,19 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid: makeGrid() })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Merging rows takes the horizontal lines away; without a vertical one
-        // the block has no edge left and reads as a hole in the table.
         const fill = cell(0, 1)!.firstElementChild as HTMLElement
         const spanning = getComputedStyle(fill)
         expect(spanning.borderInlineEndWidth).toBe('1px')
-        // The column opens the spanning group, so it draws the near edge too.
         expect(spanning.borderInlineStartWidth).toBe('1px')
 
-        // A run of one has no overhang, so its cell carries the same edges and
-        // the line does not break where the runs are short.
         const single = getComputedStyle(cell(5, 1)!)
         expect(single.borderInlineEndWidth).toBe('1px')
         expect(single.borderInlineStartWidth).toBe('1px')
 
-        // A column that spans nothing is left alone.
         expect(getComputedStyle(cell(0, 2)!).borderInlineEndWidth).toBe('0px')
     })
 
     it('draws no start edge on the first visible column', async () => {
-        // Nothing precedes it but the viewport's own border, and a second line
-        // hard against that one just makes the grid's left edge look doubled.
         const grid = createDataGrid<Entry>({
             columns: [
                 {
@@ -190,12 +166,10 @@ describe('rowSpan', () => {
         const fill = cell(0, 0)!.firstElementChild as HTMLElement
         const spanning = getComputedStyle(fill)
         expect(spanning.borderInlineStartWidth).toBe('0px')
-        // The far edge still closes the block against the column beside it.
         expect(spanning.borderInlineEndWidth).toBe('1px')
     })
 
     it('draws no foot on a run that ends with the data', async () => {
-        // A single row of its own, spanned to the end of a short list.
         const grid = createDataGrid<Entry>({
             columns: [
                 { id: 'region', header: 'Region', width: 140, rowSpan: () => 3 },
@@ -207,7 +181,6 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Nothing follows it, so the grid's own edge is the line.
         const fill = cell(0, 0)!.firstElementChild as HTMLElement
         expect(getComputedStyle(fill, '::after').display).toBe('none')
     })
@@ -221,9 +194,6 @@ describe('rowSpan', () => {
         viewport.dispatchEvent(new Event('scroll', { bubbles: true }))
         await expect.poll(() => Math.round(viewport.scrollLeft)).toBeGreaterThan(0)
 
-        // The pinned column is sticky at the edge; a spanning cell scrolling
-        // under it must not paint over it. Getting this wrong needs a cycle
-        // broken - separator over pinned, span over separator, pinned over span.
         const pinned = cell(0, 1)!.getBoundingClientRect()
         await expect
             .poll(() => ownerAt(pinned.x + pinned.width / 2, pinned.top + ROW_HEIGHT / 2))
@@ -232,26 +202,18 @@ describe('rowSpan', () => {
 
     it('draws a span whose owner is above the scrolled window', async () => {
         const grid = makeGrid()
-        // A fixed height is what makes the viewport window its rows at all.
         const screen = await render(TypedDataGrid, { grid, class: 'h-[400px]' })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         const viewport = screen.container.querySelector<HTMLElement>('[role="grid"]')!
-        /** The lowest row index rendered in a column, -1 for none. */
         const firstRowOf = (col: number) =>
             Math.min(
                 ...[...document.querySelectorAll(`[data-dg-cell$=":${col}"]`)]
                     .map((element) => Number(element.getAttribute('data-dg-cell')!.split(':')[0]))
                     .filter((row) => row >= 0)
             )
-        // Read from the city column: it spans nothing, so its first cell is
-        // where the window truly opens. Asking the spanning column would give
-        // the owner's index instead, which is the very thing under test.
         const firstBodyRow = () => firstRowOf(2)
 
-        // Overscan and the sticky header both move where the window opens,
-        // so it is observed rather than predicted. Regions repeat every six
-        // rows, putting the run heads at offsets 0, 3 and 5.
         const scrollTo = async (row: number) => {
             viewport.scrollTop = row * ROW_HEIGHT
             viewport.dispatchEvent(new Event('scroll', { bubbles: true }))
@@ -265,8 +227,6 @@ describe('rowSpan', () => {
         }
         expect([1, 2, 4], 'never landed inside a run').toContain(start % 6)
 
-        // Sampling straight down the column is what proves an owner above the
-        // window was still drawn: a missing one leaves a gap.
         const box = viewport.getBoundingClientRect()
         const gaps: number[] = []
         for (let y = box.top + 60; y < box.bottom - 4; y += ROW_HEIGHT / 2) {
@@ -274,8 +234,6 @@ describe('rowSpan', () => {
         }
         expect(gaps).toEqual([])
 
-        // The run's own cell is on screen even though its first row is not:
-        // the spanning column reaches further up than any other.
         const head = firstRowOf(1)
         expect(head).toBeLessThan(start)
 
@@ -298,12 +256,9 @@ describe('rowSpan', () => {
         cell(0, 1)!.focus()
         expect(document.activeElement).toBe(cell(0, 1))
 
-        // Down through the covered rows keeps the same cell focused - the
-        // covered ones are not in the DOM to receive it.
         await userEvent.keyboard('{ArrowDown}{ArrowDown}')
         expect(document.activeElement).toBe(cell(0, 1))
 
-        // Leaving the run moves on to the next spanning cell.
         await userEvent.keyboard('{ArrowDown}')
         await expect.poll(() => document.activeElement).toBe(cell(3, 1))
     })
@@ -329,8 +284,6 @@ describe('rowSpan', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // No cell is skipped and none grows a spanning edge: the table keeps
-        // the borders it has always drawn.
         expect(cell(1, 0)).not.toBeNull()
         expect(cell(0, 0)!.getAttribute('aria-rowspan')).toBeNull()
         expect(getComputedStyle(cell(0, 0)!).borderInlineEndWidth).toBe('0px')

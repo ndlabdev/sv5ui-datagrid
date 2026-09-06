@@ -41,8 +41,6 @@ const columns: ColumnDef<Row>[] = [
 
 const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Row>>
 const TypedProGrid = DataGrid as unknown as Component<DataGridProps<Row>>
-// `serverRowModel()` contributes the component that does the fetching, so a
-// grid root is all a test has to put on screen.
 const TypedRoot = InGrid
 
 function makeRow(index: number): Row {
@@ -423,8 +421,6 @@ describe('server-side group expand', () => {
                     groupBy: ['region'],
                     getRowMeta: (row) =>
                         row.level === 0 ? { level: 0, expandable: true } : { level: 1 },
-                    // Both used to be props on the component; they are options
-                    // now, beside the rest of the model's configuration.
                     groupKeysOf: (node) => [node.row.region],
                     isChildOf: () => (row) => row.level === 1
                 })

@@ -32,12 +32,6 @@ export function columnMap<TRow>(
     return new Map(columns.map((column) => [column.id, column]))
 }
 
-/**
- * Every statistic here reads through `read` rather than off the row, so a
- * colour scale or a data bar over a column the grid is masking is drawn from
- * what the user is being shown. Read raw, a bar would hand back the exact
- * number the mask exists to hide, one pixel width at a time.
- */
 function eachNumber<TRow>(
     nodes: readonly RowNode<TRow>[],
     column: ColumnState<TRow> | undefined,

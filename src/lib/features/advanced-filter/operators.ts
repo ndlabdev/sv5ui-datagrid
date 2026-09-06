@@ -33,7 +33,6 @@ export function isFilterable<TRow>(def: ColumnDef<TRow> | undefined): boolean {
     return !UNREADABLE.has(def.type ?? 'text')
 }
 
-/** True when the column says what it holds, rather than leaving it to be read. */
 export function declaresKind<TRow>(def: ColumnDef<TRow> | undefined): boolean {
     if (!def) return false
     const declared = def.filter
@@ -54,15 +53,6 @@ export function kindOf<TRow>(def: ColumnDef<TRow> | undefined): FilterKind {
     return BY_COLUMN_TYPE[def.type ?? 'text'] ?? 'text'
 }
 
-/**
- * The kind of a column that declares none, read off the data once.
- *
- * A `{ id: 'total' }` holding numbers is an ordinary way to write a column,
- * and comparing it as text would answer that 80 is greater than 100. The old
- * evaluator guessed this per cell, which made one column answer as a number
- * in one row and as text in the next; guessing per column costs a sample and
- * gives the whole column one answer.
- */
 export function inferKind(values: readonly unknown[]): FilterKind {
     const present = values.filter((value) => !isBlank(value))
     if (present.length === 0) return 'text'

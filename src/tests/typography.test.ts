@@ -30,19 +30,10 @@ function walk(dir: string, out: string[] = []): string[] {
 const files = [
     ...walk(path.join(ROOT, 'src')),
     path.join(ROOT, 'README.md'),
-    path.join(ROOT, 'CHANGELOG.md')
+    path.join(ROOT, 'CHANGELOG.md'),
+    path.join(ROOT, 'MIGRATING.md')
 ]
 
-/**
- * Files whose strings are a language rather than prose, and the two marks a
- * language would be wrong without: French marks elision with a curly
- * apostrophe, and `N'est pas vide` is both bad French and a broken string
- * literal. Russian punctuates with an em dash where English would use a
- * colon.
- *
- * Nothing else is exempt, comments included, and not the en dash either: a
- * page range reads `1-25` in every language that ships here.
- */
 const LANGUAGE_DATA = ['src/lib/locales/', 'src/lib/core/interaction/labels.ts']
 
 const LANGUAGE_MARKS = new Set(['\u2019', '\u2014'])

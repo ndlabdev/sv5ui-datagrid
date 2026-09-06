@@ -25,48 +25,16 @@ export const datagridSlots = {
         'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 overflow-hidden px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
     groupCell:
         'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 overflow-hidden px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
-    /** What a `headerGroupCell` snippet draws into: shrinkable, and clipped. */
     groupContent: 'flex min-w-0 items-center gap-1 overflow-hidden',
-    /**
-     * The strip a railed group folds down to, running the body's height.
-     * A closed drawer rather than a gap: its own surface, edged on both
-     * sides, and warm to the pointer, since clicking anywhere down it is
-     * what opens the group again.
-     */
     rail: 'absolute inset-y-0 z-[7] cursor-pointer bg-surface-container-high',
-    /**
-     * The drawer's head, over the header rows. Above the lines the header
-     * draws between its levels and along its foot, because a drawer with
-     * the header's rules struck across it is not one thing but three.
-     */
     railHead:
         'absolute top-0 -bottom-px z-[17] flex cursor-pointer items-start justify-center bg-surface-container-high',
-    /**
-     * The caret stands on the group cell under the head, which the head
-     * covers, so the drawer shows the caret itself. Not a ring: the
-     * drawer is two elements meeting, and a box around each of them is
-     * two boxes rather than one drawer. A bar down the leading edge and
-     * a wash over the surface both carry through the seam. Tied to
-     * focus inside the grid, so it goes out with the grid's focus
-     * rather than sitting on a page nobody is on.
-     */
     railFocus:
         'group-has-[:focus-visible]/grid:bg-primary/10 group-has-[:focus-visible]/grid:shadow-[inset_2px_0_0_0_var(--color-primary)]',
-    /**
-     * Every cell over a folded group's strip, header included, so the
-     * drawer is one band from the top of the header to the last row
-     * rather than a patch that starts where the rows do.
-     */
     railSurface: 'bg-surface-container-high focus-visible:ring-0',
-    /**
-     * What the strip holds, held in the middle of what is on screen: the
-     * way back, and the name of what is folded.
-     */
     railInner: 'flex flex-col items-center gap-2 py-3 text-on-surface-variant',
-    /** The group's name, turned to read up the strip. */
     railLabel:
         'max-h-[50vh] truncate text-xs font-medium tracking-wide [writing-mode:vertical-rl] [rotate:180deg]',
-    /** Room kept at the trailing edge for the fold toggle to sit in. */
     groupCellFoldable: 'pe-8',
     groupToggle: 'absolute inset-y-0.5 end-1 flex items-center',
     sortButton:
@@ -108,11 +76,6 @@ export const datagridSlots = {
     toggleButton:
         'me-1 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
     cellEditor: 'relative flex h-full min-h-(--dg-row-h) w-full min-w-0 items-center',
-    // z-7, not higher: above the row's own separator, which is at 6 and
-    // would otherwise paint its grey line along the bottom of the ring and
-    // leave three edges looking one weight and the fourth another. Below
-    // the pinned cells at 8, which have to stay over anything scrolling
-    // under them, an open editor included.
     cellEditorFlat: 'z-[7] bg-surface ring-2 ring-inset ring-primary',
     cellEditorInRow:
         'bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent focus-within:z-[7] focus-within:bg-primary/8 focus-within:after:bg-primary',
@@ -137,12 +100,6 @@ export const datagridSlots = {
     rowEditing:
         'after:pointer-events-none after:absolute after:inset-0 after:z-[8] after:ring-2 after:ring-inset after:ring-primary',
     groupBoundary: 'border-e border-outline-variant',
-    /**
-     * A drawer draws both of its own edges, so it is framed the same on
-     * both sides wherever it stands, including in the middle of a group
-     * where the grid draws no line of its own. The cells beside it give
-     * theirs up for the same reason.
-     */
     railEdge: 'border-s border-outline-variant',
     headerDivider: 'border-e border-outline-variant',
     filterRow:
@@ -157,10 +114,6 @@ export const datagridSlots = {
     statusBar: 'flex items-center gap-2 text-xs text-on-surface-variant',
     footer: 'flex flex-wrap items-center justify-end gap-x-3 gap-y-2',
 
-    // Grouping, range selection, the tool panel, the filter builder, the
-    // import wizard, conditional formatting, saved views, find and replace
-    // and the command palette. Registered here rather than in a second
-    // table so an app overrides every slot the grid has in one `ui` prop.
     groupPanel:
         'flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-outline-variant px-3 py-2',
     groupPanelLabel: 'text-xs font-medium text-on-surface-variant',

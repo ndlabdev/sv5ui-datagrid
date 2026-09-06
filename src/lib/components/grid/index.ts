@@ -1,9 +1,3 @@
-/**
- * The grid itself: the all-in-one `DataGrid`, the four structural parts an
- * app composes when it wants the chrome elsewhere, and the persistence bridge
- * `Root` mounts for `persistState`.
- */
-
 export { default as DataGrid } from './DataGrid.svelte'
 export { default as GridBody } from './GridBody.svelte'
 export { default as GridFilterRow } from './GridFilterRow.svelte'

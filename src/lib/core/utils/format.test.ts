@@ -31,17 +31,12 @@ describe('coercion', () => {
     })
 
     it('reads a plain date as the day it spells, not as UTC midnight', () => {
-        // Wherever the clock is behind Greenwich, `new Date('2026-03-14')`
-        // lands on the 13th, and the cell drew a day the value does not say.
         const date = toDate('2026-03-14')!
         expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2026, 2, 14])
         expect(formatDate('2026-03-14', { locale: 'en-US' })).toBe('Mar 14, 2026')
     })
 
     it('keeps a year under a hundred out of the 1900s', () => {
-        // `new Date(y, m, d)` reads 0-99 as 1900 + y. A date field reporting a
-        // year mid-keystroke says 2 before it says 2026, and the field was
-        // handed 1902 back and jumped to it.
         const date = toDate('0002-01-05')!
         expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2, 0, 5])
         expect(toDate('0099-12-31')?.getFullYear()).toBe(99)

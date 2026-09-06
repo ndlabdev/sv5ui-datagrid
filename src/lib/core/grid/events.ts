@@ -3,8 +3,6 @@ export type EventHandler<TPayload> = (payload: TPayload) => void
 export class EventBus<TMap> {
     #handlers = new Map<keyof TMap, Set<EventHandler<never>>>()
 
-    /** Dispatch runs over a snapshot so mid-dispatch (un)subscribes cannot
-     * change the round in flight. Cached, because a batch emits per cell. */
     #dispatch = new Map<keyof TMap, EventHandler<never>[]>()
 
     on<K extends keyof TMap>(event: K, handler: EventHandler<TMap[K]>): () => void {

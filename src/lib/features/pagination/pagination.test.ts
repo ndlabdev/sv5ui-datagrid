@@ -46,7 +46,6 @@ describe('Pagination - page clamping', () => {
         state.setPage(6)
         expect(state.page).toBe(6)
 
-        // No filter or sort event fires here - the data prop simply got smaller.
         grid.data = makePeople(8)
 
         expect(state.pageCount).toBe(2)

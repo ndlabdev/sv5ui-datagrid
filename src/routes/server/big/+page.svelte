@@ -26,11 +26,6 @@
     const regions = ['North', 'South', 'East', 'West', 'Central']
     const statuses = ['paid', 'pending', 'refunded']
 
-    /**
-     * The backend, generated on demand. Ten million rows never exist at once -
-     * only the page asked for does, which is the point being measured: what
-     * the grid costs is a function of the page, not of the set behind it.
-     */
     function rowAt(index: number): Order {
         return {
             id: index + 1,
@@ -41,7 +36,6 @@
         }
     }
 
-    /** How far a filtered fetch will read before giving up, as an index would. */
     const SCAN_CAP = 250_000
 
     interface Fetched {
@@ -51,7 +45,6 @@
         scanned: number
     }
 
-    /** The unfiltered path: a slice, which is all a real backend would do. */
     function fetchSlice(page: number, pageSize: number, total: number, descending: boolean) {
         const rows: Order[] = []
         const start = (page - 1) * pageSize
@@ -62,11 +55,6 @@
         return rows
     }
 
-    /**
-     * The filtered path, with no index behind it: this is what a table scan
-     * costs the server. The grid is not in it - it receives `pageSize` rows
-     * either way, which is what the panel above the grid separates out.
-     */
     function fetchScan(
         request: { page: number; pageSize: number; total: number },
         descending: boolean,
@@ -179,8 +167,6 @@
         if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
         if (ticket !== inFlight) return
 
-        // From handing the page over to the rows being in the DOM: the only
-        // part of the round trip the grid is responsible for.
         const started = performance.now()
         grid.data = result.rows
         paginationState.setRowCount(result.total)
@@ -210,8 +196,6 @@
         }
     }
 
-    // The controls drive the grid, never the other way round: reading the
-    // pagination state here would tie the effect to the row count `load` sets.
     $effect(() => {
         const size = Number(pageSizeChoice)
         untrack(() => {

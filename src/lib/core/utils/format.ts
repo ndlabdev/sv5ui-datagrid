@@ -7,13 +7,9 @@ export type FormatOptions = Pick<
     'locale' | 'numberFormat' | 'currency' | 'wholePercent' | 'dateFormat'
 >
 
-/** Building an Intl formatter costs far more than using one, and a renderer
- * runs per visible cell - so they are built once per configuration. */
 const numberFormatters = new Map<string, Intl.NumberFormat>()
 const dateFormatters = new Map<string, Intl.DateTimeFormat>()
 
-/** Configurations come from column definitions, so the set is normally tiny.
- * The cap only guards an app that builds options per row. */
 const FORMATTER_CACHE_LIMIT = 64
 
 function cached<T>(cache: Map<string, T>, key: string, create: () => T): T {
@@ -38,8 +34,6 @@ function dateFormatter(locale: string | undefined, options: Intl.DateTimeFormatO
 
 export const DEFAULT_EMPTY_TEXT = '-'
 
-// Blank lives with the other value predicates so sorting, filtering and the
-// renderers cannot drift apart on what counts as a hole.
 export { isBlank } from './value.js'
 
 /** Numbers arrive as numbers, strings from CSV, or Date/ISO for dates. */
@@ -52,21 +46,12 @@ export function toNumber(value: unknown): number | null {
     return null
 }
 
-/** `2026-03-14`, with nothing in it to say which clock it belongs to. */
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/
 
-/**
- * A plain date names a calendar day, not an instant: `new Date` reads one as
- * UTC midnight, which draws as the day before west of Greenwich.
- */
 function plainDate(parts: RegExpExecArray): Date | null {
     const [year, month, day] = [Number(parts[1]), Number(parts[2]), Number(parts[3])]
     const date = new Date(year, month - 1, day)
-    // `new Date(y, m, d)` reads a year under 100 as 1900 + y, so a date field
-    // reporting a year still being typed came back as 1902 for 0002, and the
-    // field jumped to it.
     if (year < 100) date.setFullYear(year, month - 1, day)
-    // `new Date` would roll 2026-02-30 forward into March.
     const spelled = date.getMonth() === month - 1 && date.getDate() === day
     return spelled ? date : null
 }
@@ -127,9 +112,6 @@ export function clampToMax(value: unknown, max: number): number {
     return Math.min(Math.max(parsed, 0), max)
 }
 
-/** The types whose built-in rendering is text. The rest draw a widget, and a
- * widget has no formatted string to hand anyone - `formatCellText` says so by
- * returning undefined, the way a grid with no formatter on the column does. */
 const TEXT_TYPES = new Set<ColumnType>([
     'text',
     'number',

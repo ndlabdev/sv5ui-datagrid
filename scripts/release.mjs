@@ -356,6 +356,3 @@ try {
 }
 
 console.log(`\n\x1b[32m${pkg().name}@${version} published.\x1b[0m\n`)
-console.log('Consumers install a tarball, not the registry. To update the Pro repo:')
-console.log('  cd ../sv5ui-datagrid-pro && pnpm sync:community')
-console.log(`  then point devDependencies at vendor/sv5ui-datagrid-${version}.tgz\n`)

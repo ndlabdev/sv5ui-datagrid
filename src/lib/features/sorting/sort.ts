@@ -3,16 +3,8 @@ import { isBlank, sortValueGetter, toDate } from '../../core/utils/index.js'
 
 export type { SortNulls } from '../../core/types/index.js'
 
-/** Compares two rows by their position, so the keys can be read by index. */
 type IndexComparator = (a: number, b: number) => number
 
-/**
- * What a column's values turned out to be, from one pass over the keys.
- *
- * `compareValues` asks four questions of every pair it is given, and for a
- * column that is all numbers or all text the answer is the same every time.
- * Asking once per column instead of once per comparison is worth a scan.
- */
 type KeyKind = 'number' | 'string' | 'mixed'
 
 function keyKindOf(keys: unknown[]): KeyKind {
@@ -20,8 +12,6 @@ function keyKindOf(keys: unknown[]): KeyKind {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i]
         const type = typeof key
-        // Blanks, dates and booleans all take the general path: they are the
-        // cases `compareValues` exists for.
         if (type !== 'number' && type !== 'string') return 'mixed'
         if (key === '') return 'mixed'
         if (kind === null) kind = type
@@ -30,12 +20,6 @@ function keyKindOf(keys: unknown[]): KeyKind {
     return kind ?? 'mixed'
 }
 
-/**
- * The comparator specialized to what the column holds. Each branch returns
- * exactly what `compareValues` would for those values - a column of numbers
- * without blanks can only reach its subtraction, and one of non-empty strings
- * only its collator - so the ordering is the same and only the questions go.
- */
 function keyComparator(keys: unknown[], nullSign: number): IndexComparator {
     switch (keyKindOf(keys)) {
         case 'number':
@@ -62,21 +46,12 @@ export function sortNodes<TRow>(
         if (!column) return []
 
         const factor = entry.direction === 'asc' ? 1 : -1
-        // A comparator of the app's own compares whole rows, so there is no
-        // key to read ahead: it stays on the rows themselves.
         if (column.sortFn) {
             const compare = column.sortFn
             return [(a: number, b: number) => compare(nodes[a].row, nodes[b].row) * factor]
         }
 
-        // Read once per row rather than twice per comparison. Sorting 100k
-        // rows makes on the order of 1.7M comparisons, and what sits behind a
-        // column is the app's `accessor`, called every one of those times.
         const valueOf = sortValueGetter(column)
-        // A date column draws every form of a date as a date, so it orders
-        // them as dates: a Date object against an ISO string would otherwise
-        // fall through to comparing text and put June before January. Reading
-        // it here also leaves the keys numeric, so they take the fast path.
         const asDate = column.type === 'date' || column.type === 'datetime'
         const keys = new Array<unknown>(count)
         for (let i = 0; i < count; i++) {
@@ -89,9 +64,6 @@ export function sortNodes<TRow>(
     })
     if (comparators.length === 0) return nodes
 
-    // Positions are sorted rather than nodes, so a comparison is two array
-    // reads. `Array.prototype.sort` is stable, and the positions start in
-    // order, so rows the sort cannot separate keep the order they arrived in.
     const order = new Array<number>(count)
     for (let i = 0; i < count; i++) order[i] = i
 

@@ -2,11 +2,9 @@ import type { DataGridLocalePack } from '../core/types/index.js'
 import { plural } from '../core/interaction/plural.js'
 
 const rows = plural('es-ES', { one: 'fila', other: 'filas' })
-// El participio concuerda con el número, no solo el sustantivo.
 const selectedRows = plural('es-ES', { one: 'fila seleccionada', other: 'filas seleccionadas' })
 const copiedRows = plural('es-ES', { one: 'fila copiada', other: 'filas copiadas' })
 
-/** Spanish. */
 export const esES: DataGridLocalePack = {
     tag: 'es-ES',
     labels: {

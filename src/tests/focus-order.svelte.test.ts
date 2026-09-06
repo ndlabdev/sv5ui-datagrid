@@ -43,7 +43,6 @@ function makeGrid(): GridState<Person> {
     })
 }
 
-/** Everything the browser would stop on inside the grid. */
 function tabbablesInGrid(container: Element): number {
     return container.querySelectorAll(
         '[role="grid"] a[href], [role="grid"] button:not([tabindex="-1"]):not(:disabled),' +
@@ -57,8 +56,6 @@ describe('the grid is one tab stop', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Twelve rows, so a tabbable checkbox each would be thirteen stops to
-        // walk past on the way out of the grid.
         expect(tabbablesInGrid(screen.container)).toBe(1)
 
         const checkboxes = screen.container.querySelectorAll('[role="grid"] [role="checkbox"]')
@@ -80,7 +77,6 @@ describe('the grid is one tab stop', () => {
         await userEvent.keyboard(' ')
         await expect.poll(() => selectionState.count).toBe(people.length)
 
-        // And back off again - `Ctrl+A` alone would only ever select.
         await userEvent.keyboard(' ')
         await expect.poll(() => selectionState.count).toBe(0)
     })
@@ -94,7 +90,6 @@ describe('density toggle', () => {
 
         const radios = [...screen.container.querySelectorAll('[role="radio"]')]
         expect(radios).toHaveLength(3)
-        // Only the checked one is tabbable; the arrows move between them.
         expect(radios.filter((radio) => radio.getAttribute('tabindex') === '0')).toHaveLength(1)
 
         const checked = radios.find((radio) => radio.getAttribute('tabindex') === '0')!
@@ -116,8 +111,6 @@ describe('header focus ring', () => {
         const cell = screen.container.querySelector<HTMLElement>('[data-dg-cell="-1:1"]')!
         const controls = cell.querySelector<HTMLElement>('[data-dg-noreorder]')!
 
-        // Opaque and stretched edge to edge, the controls painted over the top
-        // and bottom of the focus ring and left the outline broken.
         const cellRect = cell.getBoundingClientRect()
         const controlsRect = controls.getBoundingClientRect()
         expect(controlsRect.top).toBeGreaterThan(cellRect.top)

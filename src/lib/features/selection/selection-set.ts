@@ -52,12 +52,10 @@ export function withoutIds(set: ReadonlySet<string>, ids: Iterable<string>): Rea
     return next
 }
 
-/** A set for membership tests, rebuilt whole by the derived that owns it. */
 export function selectableIdsOf<TRow>(nodes: RowNode<TRow>[]): ReadonlySet<string> {
     return new Set(nodes.map((node) => node.id))
 }
 
-/** Counts the selection, not the rows: it is normally far the smaller set. */
 export function selectAllStateOf(
     set: ReadonlySet<string>,
     selectableIds: ReadonlySet<string>

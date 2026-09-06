@@ -41,8 +41,6 @@ describe('page-size select', () => {
     })
 
     it('labels a page size that is not in the offered list', async () => {
-        // A grid created with pageSize 12 must not render a blank select just
-        // because 12 is missing from the default [10, 25, 50, 100].
         render(DataGrid as never, { grid: grid(12) } as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
         expect(sizeTrigger().textContent).toContain('12')
@@ -57,8 +55,6 @@ describe('footer layout', () => {
         const footer = document
             .querySelector<HTMLElement>('[aria-label="Rows per page"]')!
             .closest('.flex-col')
-        // The column-by-default, row-at-`sm` shape is what keeps the controls
-        // off a single crowded line on a phone.
         expect(footer?.className).toContain('flex-col')
         expect(footer?.className).toContain('sm:flex-row')
     })
@@ -66,8 +62,6 @@ describe('footer layout', () => {
     it('constrains the page-size select instead of letting it stretch', async () => {
         render(DataGrid as never, { grid: grid(12) } as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
-        // A select that fills the footer is what made it look broken. The
-        // trigger still fills its root, but the root is now a fixed width.
         const root = sizeTrigger().closest('.w-32')
         expect(root).not.toBeNull()
         expect(root!.getBoundingClientRect().width).toBeLessThan(200)
@@ -76,8 +70,6 @@ describe('footer layout', () => {
     it('states the row range once, not the page number twice', async () => {
         render(DataGrid as never, { grid: grid(12) } as never)
         await expect.element(page.getByText('1-12 of 60')).toBeVisible()
-        // The range lives in the pagination footer; the status bar must not
-        // repeat it as "page 1 of 5".
         expect(document.body.textContent).not.toMatch(/page \d+ of \d+/)
     })
 })

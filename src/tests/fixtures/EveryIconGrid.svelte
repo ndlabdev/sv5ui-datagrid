@@ -25,9 +25,6 @@
         skills: string[]
     }
 
-    // Every cell type and editor that reaches for an sv5ui default: `rating`
-    // pulls the star, a `link` opening a new tab pulls the external arrow, and
-    // the widget editors pull their own chevrons and check.
     const columns: ColumnDef<Row>[] = [
         { id: 'name', header: 'Name', width: 160, editable: true, filter: 'text', sortable: true },
         { id: 'score', header: 'Score', width: 120, type: 'progress', editable: true },

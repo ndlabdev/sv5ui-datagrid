@@ -1,11 +1,3 @@
-/**
- * The controls that sit in the grid's own frame: the toolbar, the footer, the
- * status bars and the handful of buttons they hold. Each is small, each has a
- * place it belongs, and `DataGrid` arranges them for an app that does not want
- * to. A surface an app puts wherever it likes is a panel, not chrome, and
- * lives next door.
- */
-
 export { default as GridColumnChooser } from './GridColumnChooser.svelte'
 export { default as GridDensityToggle } from './GridDensityToggle.svelte'
 export { default as GridExportMenu } from './GridExportMenu.svelte'

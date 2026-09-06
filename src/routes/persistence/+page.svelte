@@ -48,8 +48,6 @@
 
     const STORAGE_KEY = 'datagrid-persistence-demo'
 
-    // A migrate hook upgrades snapshots an older build wrote. Returning
-    // undefined discards an unreadable one and falls back to the defaults.
     const persistState: PersistStateOptions = {
         key: STORAGE_KEY,
         migrate: (stored) => (stored.version === 1 ? stored : undefined)
@@ -65,10 +63,8 @@
     const sort = getSorting(grid)!
     const ops = getColumnOps(grid)!
 
-    // Live snapshot - the exact shape written to localStorage on every change.
     let snapshot = $state<GridSnapshot>(grid.getState())
     $effect(() => {
-        // Touch the reactive surfaces the snapshot is built from.
         void grid.columns.orderIds
         void grid.columns.widthOverrides
         void grid.columns.hiddenOverrides

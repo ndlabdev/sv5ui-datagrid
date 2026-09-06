@@ -1,11 +1,6 @@
 <script lang="ts" module>
     import { registerDataGridIcons } from '../internal/icons.js'
 
-    // At import, not at init: an instance script runs only once this component
-    // mounts, and anything the app drew before that - its own button carrying
-    // one of the grid's icons - would have found an empty store and fetched.
-    // The module runs as soon as the app imports the grid, before any render.
-    // Same place sv5ui registers its own bundle, for the same reason.
     registerDataGridIcons()
 </script>
 
@@ -26,12 +21,8 @@
     let root = $state<HTMLElement | null>(null)
     setGridElement(() => root)
 
-    // A feature that needs an effect, a DOM listener or a layer says so with a
-    // component; nothing is imported here, so a feature left unregistered is
-    // code this file never mentions and the bundler never sees.
     const layers = $derived(grid.features.filter((feature) => feature.component))
 
-    // Written back once so toggle, snapshot and rendering read one value.
     untrack(() => {
         if (grid.configuredDensity === undefined) {
             grid.density = getDataGridConfig().defaultVariants.density

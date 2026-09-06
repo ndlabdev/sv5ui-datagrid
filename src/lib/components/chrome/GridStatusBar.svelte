@@ -16,7 +16,6 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    // Server mode holds one page, so the total comes from the server.
     const total = $derived(pagination?.server ? pagination.total : grid.sourceNodes.length)
     const filtered = $derived(
         pagination?.server

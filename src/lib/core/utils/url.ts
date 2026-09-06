@@ -1,8 +1,5 @@
-/** A `link` column turns row data into an `href`, so only schemes that
- * navigate are allowed through - `javascript:` and `data:` are not. */
 const NAVIGABLE_PROTOCOLS = new Set(['http', 'https', 'mailto', 'tel', 'sms', 'ftp'])
 
-/** A url is relative once one of these appears before any `:`. */
 const PATH_START = /[/?#]/
 
 /**

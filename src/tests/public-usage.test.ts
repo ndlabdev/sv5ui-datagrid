@@ -148,9 +148,6 @@ describe('the jobs the docs describe, done from outside the package', () => {
         })
 
     it('takes a label override per grid, and leaves the next grid alone', () => {
-        // It used to be one global table with a reset. A grid carries its own
-        // wording now, so two grids on a page can disagree and neither has to
-        // put anything back.
         const renamed = createDataGrid<Sale>({
             columns,
             data: sales,

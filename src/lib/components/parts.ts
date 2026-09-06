@@ -52,7 +52,6 @@ export interface GridParts {
     FilterChips: typeof GridFilterChips
     StatusBar: typeof GridStatusBar
 
-    /** The panels, on the same namespace for the same reason. */
     GroupPanel: typeof GroupPanel
     FilterBuilder: typeof FilterBuilder
     FindReplace: typeof FindReplace

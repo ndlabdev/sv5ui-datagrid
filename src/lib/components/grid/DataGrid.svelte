@@ -75,10 +75,6 @@
             })
     )
 
-    // A grid built elsewhere still answers the prop: the row is a line the
-    // focus model and the row numbering below it both have to know about, so
-    // the flag lives on the feature rather than in the markup. Set before the
-    // header renders, so the first paint counts its rows correctly.
     untrack(() => {
         if (floatingFilters && externalGrid) {
             const state = getFiltering(grid)

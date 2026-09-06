@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Vietnamese. Number and date formatting follow the same tag through `Intl`. */
 export const viVN: DataGridLocalePack = {
     tag: 'vi-VN',
     labels: {

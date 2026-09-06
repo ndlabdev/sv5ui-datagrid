@@ -44,7 +44,6 @@ const columns: ColumnDef<Deal>[] = [
 ]
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Deal>>
-// `serverRowModel()` contributes its own component, so a root is enough.
 const TypedServerRows = InGrid
 
 const inRoot = (grid: GridState<Deal>) => ({ props: { grid } })

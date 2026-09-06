@@ -106,9 +106,6 @@
             id: 'performance',
             header: 'Performance',
             children: [
-                // The summary the group folds down to, and the four it folds
-                // away. `Compensation` above declares neither, so it is a
-                // group with nothing to fold and no toggle.
                 {
                     id: 'ytd',
                     header: 'YTD',
@@ -164,8 +161,6 @@
 
     const savedLayout = useLocalStorage<GridSnapshot | null>('datagrid-columns-layout', null)
 
-    // A preset is just a snapshot narrowed to its columns: setState leaves sort,
-    // filter and density alone when the snapshot carries none of them.
     function saveLayout() {
         const { version, columns } = grid.getState()
         savedLayout.current = { version, columns }
@@ -206,7 +201,6 @@
         ]
     })
 
-    // ── Column spanning ──────────────────────────────────────────────────
     interface Line {
         id: number
         label: string
@@ -230,8 +224,6 @@
         { id: 4, label: 'Net', q1: 46, q2: 58, q3: 63, note: '' }
     ]
 
-    // The banner row spans its label across every quarter column; data rows
-    // keep one cell per column.
     const spanColumns: ColumnDef<Line>[] = [
         {
             id: 'label',
@@ -261,8 +253,6 @@
     {money.format(Number(value))}
 {/snippet}
 
-<!-- The sort control, filter icon, column menu and resize handle stay: a
-     headerCell snippet draws the label, not the whole header cell. -->
 {#snippet moneyHeader({ header }: HeaderContext<Employee>)}
     <span class="truncate" data-dg-truncate>{header}</span>
     <span class="text-[10px] font-normal text-on-surface-variant/70">USD</span>

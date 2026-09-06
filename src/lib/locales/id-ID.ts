@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Indonesian. */
 export const idID: DataGridLocalePack = {
     tag: 'id-ID',
     labels: {

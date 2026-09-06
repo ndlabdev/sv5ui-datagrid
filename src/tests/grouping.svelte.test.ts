@@ -39,7 +39,6 @@ const columns: ColumnDef<Person>[] = [
 ]
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Person>>
-// The part takes its grid from context, so it is mounted inside one.
 const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Person>) => ({ props: { grid, component: GroupPanel } })

@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../core/types/index.js'
 
-/** Japanese. */
 export const jaJP: DataGridLocalePack = {
     tag: 'ja-JP',
     labels: {

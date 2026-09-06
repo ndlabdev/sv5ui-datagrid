@@ -53,7 +53,6 @@ export class Selection<TRow> {
         )
     )
 
-    // Rebuilt only when the selectable set changes, not when the selection does.
     #selectableIds = $derived.by(() => selectableIdsOf(this.selectableNodes))
 
     allState: SelectAllState = $derived.by(() =>
@@ -68,8 +67,6 @@ export class Selection<TRow> {
         return this.selectedIds.has(id)
     }
 
-    // Selection addresses the rows the user can actually see, so this indexes
-    // the post-filter set rather than the grid's unfiltered source map.
     #byId = $derived.by(() => nodesById(this.#grid.preWindowNodes))
 
     #nodeOf(id: string): RowNode<TRow> | undefined {
@@ -123,12 +120,6 @@ export class Selection<TRow> {
         this.#commit(withRange(this.selectedIds, orderedIds, this.#anchorId, id))
     })
 
-    /**
-     * Adds the rows in view rather than replacing the selection with them. The
-     * header checkbox reports on what the grid holds - one page of a server
-     * model, or whatever a filter left - and must not throw away the rows it
-     * cannot see. `clear()` is what drops the lot.
-     */
     selectAll = mutator((): void => {
         if (this.mode === 'single') return
         this.#commit(withIds(this.selectedIds, this.#selectableIds))
@@ -183,8 +174,6 @@ export class Selection<TRow> {
         const nodes =
             options.allRows || selected.length === 0 ? this.#grid.preWindowNodes : selected
         if (nodes.length === 0) return
-        // Named columns are resolved against every column, not just the visible
-        // ones, so a file can carry a key the grid does not show.
         const source = options.columns ? this.#grid.columns.all : this.#grid.columns.visible
         const columns = pickColumns(source, options.columns)
         if (columns.length === 0) return
@@ -210,7 +199,6 @@ function onBodyRow<TRow>(grid: GridState<TRow>): boolean {
     return grid.focus.active.row >= 0 && getSelection(grid) !== undefined
 }
 
-/** The checkbox is out of the tab order, so Space on the cell reaches it. */
 function onSelectAllCell<TRow>(grid: GridState<TRow>): boolean {
     if (grid.focus.active.row !== HEADER_ROW) return false
     const column = grid.columns.visible[grid.focus.active.col]
@@ -293,10 +281,8 @@ declare module '../../core/types/api.js' {
         selectAll?: () => void
         clearSelection?: () => void
         isRowSelected?: (id: string) => boolean
-        /** Untyped rows: `getSelection(grid)` is the path that knows `TRow`. */
         getSelectedRows?: () => unknown[]
         copySelection?: (options?: CopyOptions) => Promise<void>
-        /** `formatValue` is row-typed, so it belongs on the accessor path. */
         exportCsv?: (options?: Omit<ExportCsvOptions, 'formatValue'>) => void
     }
 }

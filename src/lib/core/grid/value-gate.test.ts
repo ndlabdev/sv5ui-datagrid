@@ -94,9 +94,6 @@ describe('gateReader', () => {
     }
 
     it('composes once per column however many cells the pass reads', () => {
-        // The whole reason the helper hands back a closure. Composing asks
-        // every gate for a reader, and asking per cell is what this stops:
-        // 15,000 compositions for the same 15,000 reads before the cache.
         let composed = 0
         const grid = wideGrid({
             id: 'counter',
@@ -129,8 +126,6 @@ describe('gateReader', () => {
         const read = gateReader(grid, 'export')
         const [first] = grid.nodes
 
-        // A def a feature made up itself still reads rather than answering
-        // undefined, and the miss is cached like any other lookup.
         expect(read(first!, { id: 'c' })).toBe(-0)
         expect(read(first!, { id: 'nope' })).toBeUndefined()
     })

@@ -32,8 +32,6 @@ describe('Filtering - a setter does not subscribe its caller', () => {
             const grid = createGrid()
             const state = getFiltering(grid)!
 
-            // `setColumnFilter` stores a fresh object each call, so an emit that
-            // read the model back would re-trigger this effect without end.
             let query = $state('a')
             let runs = 0
             $effect(() => {

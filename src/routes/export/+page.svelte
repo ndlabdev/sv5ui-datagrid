@@ -27,8 +27,6 @@
         internal: string
     }
 
-    // Every awkward case a CSV has to survive, on purpose:
-    // a comma, a semicolon, a quote, a newline, a leading `=`, and a blank.
     const sales: Sale[] = [
         {
             id: 1,
@@ -102,7 +100,6 @@
             typeOptions: { currency: 'VND', locale: 'vi-VN' }
         },
         { id: 'signed', header: 'Ngày ký', width: 130, sortable: true, type: 'date' },
-        // Hidden in the grid, still exportable by naming it explicitly.
         { id: 'internal', header: 'Ghi chú nội bộ', width: 160, hidden: true }
     ]
 
@@ -153,10 +150,6 @@
             : undefined
     })
 
-    /**
-     * The same pieces `exportCsv` uses, so what is shown is what lands in the
-     * file - minus the BOM, which is a byte and not a character.
-     */
     const preview = $derived.by(() => {
         const selected = selectionState.selectedNodes
         const nodes = allRows || selected.length === 0 ? grid.preWindowNodes : selected

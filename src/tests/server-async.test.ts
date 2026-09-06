@@ -12,14 +12,6 @@ import {
     sorting
 } from '$lib/index.js'
 
-/**
- * What an app can rely on while it is fetching.
- *
- * A server row model is a conversation: the grid says what changed, the app
- * goes away and comes back with rows. Everything here is about what has to be
- * true at the moment the app is told, and what has to survive the answer
- * arriving late.
- */
 interface Row {
     id: string
     name: string
@@ -57,8 +49,6 @@ describe('what is true when the grid asks for rows', () => {
         })
         getFiltering(grid)!.setQuickFilter('row 1')
 
-        // An app reading pagination.page in its handler must not fetch page 5
-        // of a result set the filter has just reshaped.
         expect(pageWhenAsked).toBe(1)
     })
 
@@ -104,7 +94,6 @@ describe('a total that arrives after the user has moved on', () => {
         const page = getPagination(grid)!
         page.setPage(10)
 
-        // The filter the user just typed left 12 rows, not 100.
         page.setRowCount(12)
         expect(page.pageCount).toBe(2)
         expect(page.page).toBe(2)
@@ -131,7 +120,6 @@ describe('a total that arrives after the user has moved on', () => {
 })
 
 describe('a page that lands after the user has left it', () => {
-    /** The guard every server app needs, and the reason the README shows it. */
     async function loadWith(grid: GridState<Row>, delays: number[]): Promise<string[]> {
         let inFlight = 0
         const page = getPagination(grid)!
@@ -150,8 +138,6 @@ describe('a page that lands after the user has left it', () => {
 
     it('is dropped when a later one has already answered', async () => {
         const grid = serverGrid()
-        // Page 1 answers slowest, page 3 fastest: without the ticket the grid
-        // ends up showing page 1 while the footer says page 3.
         const shown = await loadWith(grid, [30, 20, 1])
         expect(shown[0]).toBe('21')
     })
@@ -193,7 +179,6 @@ describe('a selection outlives the rows it was made on', () => {
 })
 
 describe('exporting what the grid does not hold', () => {
-    /** The toolbar's own logic, which is the part that can lie. */
     function menuLabel(rowModel: 'client' | 'server', onExportAll?: () => void): string {
         const grid = createDataGrid<Row>({
             columns,
@@ -209,7 +194,6 @@ describe('exporting what the grid does not hold', () => {
     it('writes only the rows it is holding', () => {
         const grid = serverGrid()
         getPagination(grid)!.setRowCount(1_000_000)
-        // What exportCsv({ allRows: true }) reaches for.
         expect(grid.preWindowNodes).toHaveLength(10)
         expect(getPagination(grid)!.total).toBe(1_000_000)
     })

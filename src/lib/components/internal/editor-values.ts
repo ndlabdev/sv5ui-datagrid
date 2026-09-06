@@ -5,13 +5,8 @@ import { toDate } from '../../core/utils/index.js'
 export function toDateValue(value: unknown): DateValue | undefined {
     if (value === null || value === undefined || value === '') return undefined
 
-    // Not `String(value).slice(0, 10)`: a Date object reads as "Wed Jan 10"
-    // that way, which parses as nothing, and the editor opened empty over a
-    // cell that was showing a date.
     const date = toDate(value)
     if (!date) return undefined
-    // Four digits of year, as `parseDate` requires: a year still being typed
-    // is a real year to the field reporting it, and one it has to get back.
     const pad = (part: number, width = 2) => String(part).padStart(width, '0')
     try {
         return parseDate(

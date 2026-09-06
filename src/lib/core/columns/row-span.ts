@@ -48,7 +48,6 @@ export function opensRowSpanGroup(
     return previous !== undefined && !spanning.has(previous.id)
 }
 
-/** A full-width row draws one cell, so nothing can span out of it. */
 function requestedSpan<TRow>(
     grid: GridState<TRow>,
     column: ColumnState<TRow>,
@@ -79,8 +78,6 @@ function columnRowSpans<TRow>(
     let i = 0
     while (i < count) {
         const requested = requestedSpan(grid, column, nodes[i], i)
-        // Grown up to the request, but never into a full-width row or past the
-        // end of the list.
         let n = 1
         while (n < requested && i + n < count && !nodes[i + n].meta?.fullWidth) n++
 

@@ -30,7 +30,6 @@
 
     const packs = [enUS, viVN, zhCN, jaJP, koKR, frFR, deDE, esES, ptBR, ruRU, idID, thTH]
 
-    /** Each language names itself, the way a language picker should read. */
     const languages = [
         { value: 'en-US', label: 'English' },
         { value: 'vi-VN', label: 'Tiếng Việt' },
@@ -86,8 +85,6 @@
             sortable: true,
             filter: 'number',
             type: 'currency',
-            // No `locale` here on purpose: the column inherits the grid's, so
-            // the amounts reformat when the language changes.
             typeOptions: { currency: 'VND' },
             editable: true,
             editor: 'number'
@@ -110,9 +107,6 @@
         }
     ]
 
-    // The packs handed in are the whole configuration: the grid takes the
-    // page's language from here. Assigning `grid.locale` switches it in place -
-    // the sort, filter and selection on screen all survive.
     const grid: GridState<Order> = createDataGrid<Order>({
         data: orders,
         columns,

@@ -37,7 +37,6 @@ const deals: Deal[] = [
     { id: 2, owner: 'Bob', status: 'overdue', amount: 400 }
 ]
 
-// The panel takes its grid from context, so it is mounted inside one.
 const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Deal>) => ({
@@ -55,13 +54,10 @@ function makeGrid(rules: FormatRule[] = [], locale?: string): GridState<Deal> {
     })
 }
 
-// A pack answers only for what it overrides, so English fills the rest in.
-// The panel reads a complete table; a test comparing against one should too.
 const vi = mergeLabels(viVN.labels)
 
 const panelOf = (container: Element) => container.querySelector('[data-dg-format-panel]')!
 
-// `serverRowModel()` contributes its own component, so a root is enough.
 const TypedRoot = InGrid
 
 async function offeredColumns(container: Element): Promise<string[]> {
@@ -310,9 +306,6 @@ describe('the panel speaks the configured language', () => {
             /Owner|Status|Amount/g,
             ''
         )
-        // The table is the whole grid's now, not one feature's, so the
-        // functions in it take anything from one argument to three. Feed each
-        // enough and ignore the ones that want a shape rather than a value.
         const english = Object.values(defaultLabels)
             .map((label) => {
                 if (typeof label !== 'function') return label

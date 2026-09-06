@@ -1,6 +1,5 @@
 import type { EditTransaction } from '../../core/types/index.js'
 
-/** One undoable edit. Lists, so a row edit or a paste undoes in one step. */
 export interface UndoCommand {
     before: EditTransaction[]
     after: EditTransaction[]
@@ -8,7 +7,6 @@ export interface UndoCommand {
 
 export interface UndoState {
     stack: UndoCommand[]
-    /** Index one past the last applied command. */
     cursor: number
 }
 

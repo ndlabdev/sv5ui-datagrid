@@ -8,7 +8,6 @@ export const PAGINATION = 'pagination'
 export interface PaginationOptions {
     pageSize?: number
     page?: number
-    /** The server's total under `rowModel: 'server'`; set via `setRowCount`. */
     rowCount?: number
 }
 
@@ -19,8 +18,6 @@ export class Pagination<TRow> {
     #page = $state(1)
     #grid: GridState<TRow>
 
-    /** Clamped on read: rows can disappear without going through `setPage`,
-     * and a page past the end would strand the user on empty rows. */
     get page(): number {
         return Math.min(this.#page, this.pageCount)
     }
@@ -43,12 +40,10 @@ export class Pagination<TRow> {
         })
     }
 
-    /** True when the server owns paging and `data` is a single page. */
     get server(): boolean {
         return this.#grid.rowModel === 'server'
     }
 
-    /** Rows across every page - what the footer counts against. */
     get total(): number {
         return this.rowCount ?? this.#grid.totalRows
     }
@@ -73,12 +68,9 @@ export class Pagination<TRow> {
         this.#emit(1)
     })
 
-    /** The page clamps on read, so this only stores and announces. */
     setRowCount = mutator((rowCount: number | null): void => {
         const before = this.total
         this.rowCount = rowCount
-        // Every fetch sets the count again; only a different total is news,
-        // and it is the one moment a server model knows how many rows it has.
         if (this.server && this.total !== before) {
             this.#grid.events.emit('rowCountChanged', { total: this.total })
         }
@@ -98,8 +90,6 @@ export function pagination<TRow>(options: PaginationOptions = {}): GridFeature<T
                 setRowCount: state.setRowCount
             }
         },
-        // Page size is a preference; the page number is not - restoring page 7
-        // of a list the user has since filtered lands them nowhere.
         serialize: (grid) => getPagination(grid)?.pageSize ?? undefined,
         hydrate: (slice, grid) => {
             if (typeof slice === 'number') getPagination(grid)?.setPageSize(slice)
@@ -123,7 +113,6 @@ declare module '../../core/types/api.js' {
     interface GridApi {
         setPage?: (page: number) => void
         setPageSize?: (pageSize: number | null) => void
-        /** The server's total under `rowModel: 'server'`. */
         setRowCount?: (rowCount: number | null) => void
     }
 }

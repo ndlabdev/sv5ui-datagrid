@@ -1,8 +1,3 @@
-/**
- * What the grid says and where it is looking: the live region, the expansion
- * and focus models, the built-in English strings and the locale resolver.
- */
-
 export { Announcer, defaultAnnouncerStrings } from './announcer.svelte.js'
 export { ExpansionModel } from './expansion.svelte.js'
 export {

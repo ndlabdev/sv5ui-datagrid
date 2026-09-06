@@ -18,7 +18,6 @@ describe('inlineStyle', () => {
         expect(inlineStyle({ color: '   ' })).toBeUndefined()
     })
 
-    // Guards the one thing row data could do here: open a second declaration.
     it('keeps a value from becoming two declarations', () => {
         expect(inlineStyle({ color: 'red;position:fixed' })).toBe('color:red;')
     })

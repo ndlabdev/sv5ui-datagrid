@@ -110,9 +110,6 @@ describe('toStyleString', () => {
 })
 
 describe('a track the browser could not parse', () => {
-    // Every one of these produced `NaNpx`, which makes grid-template-columns
-    // invalid at computed-value time: the declaration is dropped, the columns
-    // fold into one track and the cells stack down the page.
     it('never writes a non-finite width, whichever way it arrived', () => {
         const fromOverride = buildColumnCssVars([createColumnState({ id: 'a' })], null, null, {
             a: Number.NaN

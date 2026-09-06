@@ -14,7 +14,6 @@ import { toDisplayUnit, toModelUnit } from './filter-units.js'
 /** How many conditions one column's filter may hold. */
 export const MAX_CONDITIONS = 2
 
-/** Operators that test presence, so their value inputs are hidden. */
 const PRESENCE_OPS = new Set(['blank', 'notBlank'])
 
 export function isPresenceOp(op: string): boolean {
@@ -58,7 +57,6 @@ export function emptyDraft(type: FilterType): FilterDraft {
 
 const numToStr = (value: number | undefined): string => (value !== undefined ? String(value) : '')
 
-// sv5ui Input type="number" binds a number, so drafts may hold non-strings.
 const str = (value: unknown): string => (value === null || value === undefined ? '' : String(value))
 
 function conditionDraft(type: FilterType, filter: ColumnFilter, scale: number): ConditionDraft {

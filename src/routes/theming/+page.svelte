@@ -28,7 +28,6 @@
         id: i + 1,
         client: `${clients[i % clients.length]} #${100 + i}`,
         status: statuses[i % statuses.length],
-        // Credit notes are negative, so the cellClass demo has something to catch.
         amount: (i % 7 === 0 ? -1 : 1) * (250 + ((i * 137) % 4000)),
         dueInDays: ((i * 13) % 45) - 15
     }))
@@ -52,7 +51,6 @@
             filter: 'number',
             align: 'right',
             type: 'currency',
-            // Data-driven cell styling: a credit note reads as a credit note.
             cellClass: (ctx) => (Number(ctx.value) < 0 ? 'text-error font-medium' : undefined)
         },
         {
@@ -69,12 +67,10 @@
         columns,
         data: invoices,
         getRowId: (invoice) => String(invoice.id),
-        // Row-level styling reads the whole row, not one cell.
         rowClass: (node) => node.row.status === 'overdue' && 'bg-error-container/30',
         features: [filtering(), sorting(), columnOps(), pagination({ pageSize: 12 })]
     })
 
-    // ── Per-instance `ui` ────────────────────────────────────────────────
     const presets = {
         none: undefined,
         compactMono: {
@@ -97,7 +93,6 @@
     let preset = $state<PresetName>('none')
     const ui = $derived(presets[preset])
 
-    // ── App-wide config ──────────────────────────────────────────────────
     let configOn = $state(false)
 
     function toggleConfig() {
@@ -110,7 +105,6 @@
         } else {
             resetDataGridConfig()
         }
-        // The config is read when a grid mounts, so show the effect immediately.
         grid.density = configOn ? 'compact' : 'standard'
     }
 

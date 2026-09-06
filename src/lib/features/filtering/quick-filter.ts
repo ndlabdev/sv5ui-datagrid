@@ -2,19 +2,10 @@ import type { CellValueReader, ColumnDef, RowNode } from '../../core/types/index
 import { readCell, readerToken } from '../../core/grid/index.js'
 import { formatCellText, isBlank } from '../../core/utils/index.js'
 
-/**
- * A row's cells as the grid draws them, lowercased and joined, held against
- * the row object.
- *
- * An edit replaces the row rather than writing through it, so a changed row
- * misses the cache by identity and nothing has to invalidate anything.
- */
 const searchTexts = new WeakMap<object, { signature: string; text: string }>()
 
-/** Separates cells, so a query cannot match across two of them. */
 const CELL_BREAK = ' '
 
-/** A column and the gate its values leave through, resolved once. */
 interface SearchColumn<TRow> {
     def: ColumnDef<TRow>
     reader: CellValueReader<TRow> | undefined
@@ -32,8 +23,6 @@ function searchTextOf<TRow>(
 
         const raw = String(value)
         text += raw.toLowerCase() + CELL_BREAK
-        // Both forms: a column drawing 1,234.5 answers to that and to the
-        // 1234.5 behind it, and one drawing 5% answers to 5% and to 0.05.
         const drawn = formatCellText(value, def, locale)
         if (drawn !== undefined && drawn !== raw) text += drawn.toLowerCase() + CELL_BREAK
     }
@@ -45,9 +34,7 @@ export function quickFilterNodes<TRow>(
     columns: ColumnDef<TRow>[],
     query: string,
     options: {
-        /** The language the cells are drawn in, so the text matches them. */
         locale?: string
-        /** The gate a column's values leave through, asked once per column. */
         read?: (def: ColumnDef<TRow>) => CellValueReader<TRow> | undefined
     } = {}
 ): RowNode<TRow>[] {
@@ -56,14 +43,8 @@ export function quickFilterNodes<TRow>(
 
     const { locale, read } = options
 
-    // Asked once per column rather than once per cell: which gate stands in
-    // front of a column is fixed for the whole pass.
     const targets: SearchColumn<TRow>[] = columns.map((def) => ({ def, reader: read?.(def) }))
 
-    // What the text was built from: a column added, hidden or reordered, a
-    // change of language, or a gate swapped for another, and it is built
-    // again. Leaving the gate out of this is how a search finds the value the
-    // gate was put there to stop showing.
     const signature =
         locale +
         CELL_BREAK +

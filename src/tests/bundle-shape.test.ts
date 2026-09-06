@@ -6,17 +6,6 @@ import { describe, expect, it } from 'vitest'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { build } from 'vite'
 
-/**
- * The promise on the box: a feature nobody registered is code nobody ships.
- *
- * It is one sentence in the README and it stopped being obvious the day the
- * package went from nine feature modules to twenty-five. Every barrel here
- * re-exports rather than runs, and `sideEffects` names only CSS, but neither
- * is worth anything unless something bundles the thing and looks.
- *
- * The markers are strings that exist in exactly one module each, so a hit is
- * that module reaching the output rather than a coincidence of minification.
- */
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 const MARKERS: Record<string, string> = {
@@ -34,8 +23,6 @@ async function bundle(source: string): Promise<string> {
     const output = (await build({
         root: ROOT,
         logLevel: 'error',
-        // No project config: `vite.config.ts` mounts SvelteKit, and a route
-        // tree is not what is being weighed here.
         configFile: false,
         plugins: [svelte()],
         resolve: { alias: { $lib: path.join(ROOT, 'src/lib') } },
@@ -73,8 +60,6 @@ describe('what a grid drags in', () => {
     }, 120_000)
 
     it('brings one in when the entry does name it', async () => {
-        // The other half of the claim: the markers are reachable, so the test
-        // above is measuring tree shaking rather than a typo.
         const code = await bundle(
             `import { formula } from '$lib/index.js'
              export const feature = formula({})`
