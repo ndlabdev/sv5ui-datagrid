@@ -6,7 +6,6 @@ import {
     type GridState
 } from '$lib/index.js'
 import axe from 'axe-core'
-import type { Component } from 'svelte'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
@@ -18,7 +17,7 @@ import type { FormatRule } from '../lib/features/conditional-formatting/conditio
 import { serverRowModel } from '../lib/features/server-row-model/server-row-model.svelte.js'
 import type { DataSource } from '../lib/features/server-row-model/server-row-model.types.js'
 import { viVN } from '../lib/locales/vi-VN.js'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 
 interface Deal {
     id: number
@@ -39,7 +38,7 @@ const deals: Deal[] = [
 ]
 
 // The panel takes its grid from context, so it is mounted inside one.
-const TypedPanel = InRoot as unknown as Component<Record<string, unknown>>
+const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Deal>) => ({
     props: { grid, component: ConditionalFormattingPanel }
@@ -63,7 +62,7 @@ const vi = mergeLabels(viVN.labels)
 const panelOf = (container: Element) => container.querySelector('[data-dg-format-panel]')!
 
 // `serverRowModel()` contributes its own component, so a root is enough.
-const TypedRoot = InRoot as unknown as Component<Record<string, unknown>>
+const TypedRoot = InGrid
 
 async function offeredColumns(container: Element): Promise<string[]> {
     const trigger = [...container.querySelectorAll('button[aria-label]')].find(

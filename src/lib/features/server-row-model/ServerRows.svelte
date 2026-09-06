@@ -26,9 +26,13 @@
             error: model.error,
             onRetry: model.refresh
         }
-        return () => {
-            grid.status = undefined
-        }
+    })
+
+    // Cleared when the grid goes, and only then. Put on the effect above, the
+    // teardown would run on every change it reacts to, blanking the status and
+    // rewriting it in the same flush for no reason.
+    $effect(() => () => {
+        grid.status = undefined
     })
 
     $effect(() => {

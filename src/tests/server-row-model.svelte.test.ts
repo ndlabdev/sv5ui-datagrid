@@ -15,7 +15,7 @@ import type { Component } from 'svelte'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { isLoadingRow } from '../lib/core/grid/index.js'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import {
     getServerRowModel,
     serverRowModel
@@ -43,7 +43,7 @@ const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Row>>
 const TypedProGrid = DataGrid as unknown as Component<DataGridProps<Row>>
 // `serverRowModel()` contributes the component that does the fetching, so a
 // grid root is all a test has to put on screen.
-const TypedRoot = InRoot as unknown as Component<Record<string, unknown>>
+const TypedRoot = InGrid
 
 function makeRow(index: number): Row {
     return { id: index + 1, name: `Row ${index + 1}`, region: `R${index % 4}` }

@@ -57,16 +57,7 @@ const PUBLIC_API = [
     'toTsv',
     'withHeaderRow',
 
-    // Panels and the one status bar that is not part of the frame
-    'CommandPalette',
-    'ConditionalFormattingPanel',
-    'FilterBuilder',
-    'FindReplace',
-    'GroupPanel',
-    'ImportWizard',
-    'RangeStatusBar',
-    'SavedViews',
-    'ToolPanel',
+    // The panels reach an app through `Grid.*`, with the rest of the parts.
     // Columns worked out from the data
     'autoColumns',
     // Rows a feature synthesized are not rows a pass over the data counts

@@ -8,7 +8,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import DataGrid from '../lib/components/grid/DataGrid.svelte'
@@ -45,7 +45,7 @@ const columns: ColumnDef<Deal>[] = [
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Deal>>
 // `serverRowModel()` contributes its own component, so a root is enough.
-const TypedServerRows = InRoot as unknown as Component<Record<string, unknown>>
+const TypedServerRows = InGrid
 
 const inRoot = (grid: GridState<Deal>) => ({ props: { grid } })
 

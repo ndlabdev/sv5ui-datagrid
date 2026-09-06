@@ -9,7 +9,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
@@ -33,7 +33,7 @@ const columns: ColumnDef<Row>[] = [
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Row>>
 // The part takes its grid from context, so it is mounted inside one.
-const TypedPanel = InRoot as unknown as Component<Record<string, unknown>>
+const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Row>) => ({ props: { grid, component: FindReplace } })
 

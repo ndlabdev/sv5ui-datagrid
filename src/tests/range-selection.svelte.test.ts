@@ -9,7 +9,7 @@ import {
 } from '$lib/index.js'
 import axe from 'axe-core'
 import type { Component } from 'svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
@@ -45,7 +45,7 @@ function makeData(): Cell[] {
 
 const TypedGrid = DataGrid as unknown as Component<DataGridProps<Cell>>
 // The part takes its grid from context, so it is mounted inside one.
-const TypedStatus = InRoot as unknown as Component<Record<string, unknown>>
+const TypedStatus = InGrid
 
 const inRoot = (grid: GridState<Cell>) => ({ props: { grid, component: RangeStatusBar } })
 

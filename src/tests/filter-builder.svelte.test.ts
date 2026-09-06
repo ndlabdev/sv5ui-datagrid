@@ -1,11 +1,10 @@
 import { createDataGrid, sorting, type ColumnDef, type GridState } from '$lib/index.js'
 import axe from 'axe-core'
-import type { Component } from 'svelte'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import FilterBuilder from '../lib/components/panels/FilterBuilder.svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import {
     advancedFilter,
     getAdvancedFilter
@@ -63,7 +62,7 @@ const data: Sale[] = [
 ]
 
 // The panel takes its grid from context, so it is mounted inside one.
-const TypedBuilder = InRoot as unknown as Component<Record<string, unknown>>
+const TypedBuilder = InGrid
 
 const inRoot = (grid: GridState<Sale>, partProps?: { debounce?: number }) => ({
     props: { grid, component: FilterBuilder, partProps }

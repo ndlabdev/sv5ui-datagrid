@@ -19,7 +19,7 @@ export { isDataRow } from './grid/index.js'
 export { ShareTooLongError } from './grid/index.js'
 
 // Models an app reaches through the grid instance, never constructs itself.
-export type { GridState } from './grid/index.js'
+export type { GridState, GridStatus } from './grid/index.js'
 export type { EventBus, EventHandler } from './grid/index.js'
 export type { ColumnModel } from './columns/index.js'
 export type { Announcer, ExpansionModel } from './interaction/index.js'

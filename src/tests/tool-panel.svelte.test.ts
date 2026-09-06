@@ -11,12 +11,11 @@ import {
     type GridState
 } from '$lib/index.js'
 import axe from 'axe-core'
-import type { Component } from 'svelte'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import ToolPanel from '../lib/components/panels/ToolPanel.svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import { getGrouping, grouping } from '../lib/features/grouping/grouping.svelte.js'
 import { getRangeSelection, rangeSelection } from '../lib/features/range-selection/index.js'
 import { serverRowModel } from '../lib/features/server-row-model/index.js'
@@ -40,7 +39,7 @@ const data: Sale[] = [
 ]
 
 // The panel takes its grid from context, so it is mounted inside one.
-const TypedPanel = InRoot as unknown as Component<Record<string, unknown>>
+const TypedPanel = InGrid
 
 const inRoot = (grid: GridState<Sale>) => ({ props: { grid, component: ToolPanel } })
 

@@ -1,11 +1,10 @@
 import { createDataGrid, filtering, sorting, type ColumnDef, type GridState } from '$lib/index.js'
 import axe from 'axe-core'
-import type { Component } from 'svelte'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import ImportWizard from '../lib/components/panels/ImportWizard.svelte'
-import InRoot from './InRoot.svelte'
+import { InGrid } from './in-root.js'
 import { dataImport, getDataImport } from '../lib/features/data-import/data-import.svelte.js'
 import { viVN } from '../lib/locales/vi-VN.js'
 
@@ -29,7 +28,7 @@ const columns: ColumnDef<Member>[] = [
 const FILE = 'Name,Email,Qty\nChi,chi@x.vn,3\nAn,broken,abc\n'
 
 // The wizard takes its grid from context, so it is mounted inside one.
-const TypedWizard = InRoot as unknown as Component<Record<string, unknown>>
+const TypedWizard = InGrid
 
 const inRoot = (grid: GridState<Member>) => ({ props: { grid, component: ImportWizard } })
 
