@@ -1,4 +1,4 @@
-export interface ArchiveEntry {
+interface ArchiveEntry {
     name: string
     method: number
     offset: number
@@ -6,13 +6,13 @@ export interface ArchiveEntry {
     size: number
 }
 
-export interface UnzipLimits {
+interface UnzipLimits {
     maxEntrySize?: number
     maxTotalSize?: number
 }
 
-export const DEFAULT_MAX_ENTRY = 64 * 1024 * 1024
-export const DEFAULT_MAX_TOTAL = 256 * 1024 * 1024
+const DEFAULT_MAX_ENTRY = 64 * 1024 * 1024
+const DEFAULT_MAX_TOTAL = 256 * 1024 * 1024
 
 const EOCD = 0x06054b50
 const CENTRAL = 0x02014b50

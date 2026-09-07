@@ -11,12 +11,12 @@ export interface ImportProblem {
     message: string
 }
 
-export interface StagedRows<TRow> {
+interface StagedRows<TRow> {
     rows: TRow[]
     problems: ImportProblem[]
 }
 
-export interface StageOptions<TRow> {
+interface StageOptions<TRow> {
     newRow?: (index: number) => Partial<TRow>
     messageFor?: (kind: ProblemKind, column: ColumnDef<TRow>) => string | undefined
     decimal?: DecimalMark

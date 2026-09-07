@@ -1,4 +1,4 @@
-export interface SeenGroups {
+interface SeenGroups {
     has: (id: string) => boolean
     add: (id: string) => void
 }

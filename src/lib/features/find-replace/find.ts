@@ -1,7 +1,7 @@
 import type { CellRead } from '../../core/grid/index.js'
 import { type ColumnState, type RowNode } from '../../core/types/index.js'
 
-export interface FindOptions {
+interface FindOptions {
     caseSensitive?: boolean
 
     wholeCell?: boolean

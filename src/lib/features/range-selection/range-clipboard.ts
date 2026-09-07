@@ -1,7 +1,7 @@
 import { type EditTransaction } from '../../core/types/index.js'
 import { type CellRange, containsCell, rangeRows } from './range.js'
 
-export type CellRef = { rowId: string; columnId: string } | null
+type CellRef = { rowId: string; columnId: string } | null
 
 export function buildPasteEdits(
     range: CellRange,
@@ -89,7 +89,7 @@ export function toHtmlTable(matrix: string[][]): string {
     return `<table>${rows.join('')}</table>`
 }
 
-export interface MovePair {
+interface MovePair {
     from: { row: number; col: number }
     to: { row: number; col: number }
 }
@@ -107,7 +107,7 @@ export function movePairs(source: CellRange, toRow: number, toCol: number): Move
     return pairs
 }
 
-export interface MoveCells {
+interface MoveCells {
     canRead: (row: number, col: number) => boolean
     read: (row: number, col: number) => unknown
     resolve: (row: number, col: number) => CellRef

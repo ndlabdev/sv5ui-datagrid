@@ -1,7 +1,7 @@
 import { columnOf, readStore, type RowStore } from './columnar.js'
 import type { GroupDescriptor } from './protocol.js'
 
-export interface GroupLevel {
+interface GroupLevel {
     indices: number[]
     groups?: GroupDescriptor[]
     rowCount: number
@@ -39,7 +39,7 @@ function narrow(
     return kept
 }
 
-export interface GroupWindow {
+interface GroupWindow {
     groupBy: string[]
     groupKeys: unknown[]
     startRow: number

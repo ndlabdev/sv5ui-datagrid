@@ -1,18 +1,14 @@
 export {
+    DEFAULT_FORMAT_COLORS,
+    type XlsxCfRule,
+    type XlsxFormatColors
+} from './features/xlsx/conditional-format.js'
+export {
     buildGridXlsx,
     buildGridXlsxAsync,
     downloadGridXlsx,
     type ExportXlsxOptions
 } from './features/xlsx/export.js'
-
-export {
-    createWorkbook,
-    createWorkbookAsync,
-    XLSX_MIME,
-    type WorkbookOptions,
-    type WorkbookSheet
-} from './features/xlsx/workbook.js'
-
 export {
     cellRef,
     columnLetter,
@@ -24,9 +20,7 @@ export {
     type StyleId,
     type XlsxFormula
 } from './features/xlsx/sheet.js'
-
 export { BUILT_IN_STYLES, StyleTable } from './features/xlsx/styles.js'
-
 export type {
     XlsxAlignment,
     XlsxBorder,
@@ -35,9 +29,10 @@ export type {
     XlsxFont,
     XlsxStyle
 } from './features/xlsx/styles.types.js'
-
 export {
-    DEFAULT_FORMAT_COLORS,
-    type XlsxCfRule,
-    type XlsxFormatColors
-} from './features/xlsx/conditional-format.js'
+    createWorkbook,
+    createWorkbookAsync,
+    XLSX_MIME,
+    type WorkbookOptions,
+    type WorkbookSheet
+} from './features/xlsx/workbook.js'

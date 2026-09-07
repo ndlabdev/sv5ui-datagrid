@@ -21,7 +21,7 @@ export interface FormatPaint {
 }
 
 /** Fields every rule carries. */
-export interface FormatRuleBase {
+interface FormatRuleBase {
     /**
      * Stable id, so a rule can be removed or replaced by name. Generated from
      * the rule's position when omitted, which is enough for a static list and

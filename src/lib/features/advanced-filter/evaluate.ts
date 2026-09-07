@@ -16,7 +16,7 @@ function matchesPresence(cell: unknown, op: AdvancedFilterOp): boolean {
     return op === 'blank' ? blank : !blank
 }
 
-export function isComplete(condition: FilterCondition): boolean {
+function isComplete(condition: FilterCondition): boolean {
     if (PRESENCE.has(condition.op)) return true
     if (condition.op === 'in') return (condition.values?.length ?? 0) > 0
     if (isBlank(condition.value)) return false
@@ -131,7 +131,7 @@ export function sanitizeModel(input: unknown): FilterGroup | null {
     return node?.kind === 'group' ? node : null
 }
 
-export function columnIdsOf(node: FilterNode, into: Set<string> = new Set()): Set<string> {
+function columnIdsOf(node: FilterNode, into: Set<string> = new Set()): Set<string> {
     if (node.kind === 'condition') into.add(node.columnId)
     else for (const child of node.children) columnIdsOf(child, into)
     return into

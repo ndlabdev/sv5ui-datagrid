@@ -1,4 +1,4 @@
-export interface LoadedBlocks {
+interface LoadedBlocks {
     has(block: number): boolean
     add(block: number): void
     remove(block: number): void

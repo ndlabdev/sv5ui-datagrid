@@ -19,7 +19,7 @@ export interface ThresholdStats {
     value: number | null
 }
 
-export interface ExpressionStats {
+interface ExpressionStats {
     kind: 'expression'
     cache: Map<string, boolean>
 }

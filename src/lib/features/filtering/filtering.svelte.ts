@@ -6,7 +6,7 @@ import { compileColumnFilters } from './filter-predicates.js'
 import { sanitizeFilterModel } from './filter-sanitize.js'
 import { quickFilterNodes } from './quick-filter.js'
 
-export const FILTERING = 'filtering'
+const FILTERING = 'filtering'
 
 export interface FilteringOptions {
     initialQuick?: string

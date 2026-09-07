@@ -14,9 +14,9 @@ import {
 } from './compiled.js'
 import type { FormulaColumn, FormulaOptions } from './formula.types.js'
 
-export const FORMULA = 'formula'
+const FORMULA = 'formula'
 
-export const FORMULA_ORDER = 50
+const FORMULA_ORDER = 50
 
 const COMPUTED = Object.freeze({})
 

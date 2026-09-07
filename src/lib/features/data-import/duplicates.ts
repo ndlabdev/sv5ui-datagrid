@@ -11,7 +11,7 @@ export interface DuplicateOptions {
     against: DuplicateScope
 }
 
-export interface DuplicateMessages {
+interface DuplicateMessages {
     inFile: (key: string) => string
     inGrid: (key: string) => string
 }
@@ -38,7 +38,7 @@ export function duplicateKey(row: unknown, columns: string[]): string | null {
     return parts.join(KEY_SEPARATOR)
 }
 
-export function keyLabel(row: unknown, columns: string[]): string {
+function keyLabel(row: unknown, columns: string[]): string {
     return columns
         .map((columnId) => String((row as Record<string, unknown>)[columnId] ?? ''))
         .filter((piece) => piece !== '')

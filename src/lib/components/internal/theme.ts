@@ -1,11 +1,10 @@
 import { getContext, setContext } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
-import { getDataGridConfig } from '../datagrid.config.js'
-import type { DataGridSlots, DataGridUi } from '../datagrid.variants.js'
+import { getDataGridConfig, type DataGridSlots, type DataGridUi } from '../../core/theme/index.js'
 
 const THEME_CONTEXT_KEY = Symbol('sv5ui-datagrid-theme')
 
-export type GridTheme = (slot: DataGridSlots) => ClassNameValue
+type GridTheme = (slot: DataGridSlots) => ClassNameValue
 
 export function setGridTheme(ui: () => DataGridUi | undefined): void {
     setContext(THEME_CONTEXT_KEY, ui)

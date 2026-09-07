@@ -37,7 +37,7 @@ export function aggregateRowValues<TRow>(
     return values
 }
 
-export interface BuildFooterNodeOptions<TRow> {
+interface BuildFooterNodeOptions<TRow> {
     read?: CellRead<TRow>
     columns: ColumnDef<TRow>[]
 
@@ -66,7 +66,7 @@ export function buildFooterNode<TRow>(
     }
 }
 
-export interface BuildGrandTotalNodeOptions<TRow> {
+interface BuildGrandTotalNodeOptions<TRow> {
     read?: CellRead<TRow>
 
     columns: ColumnDef<TRow>[]

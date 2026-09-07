@@ -123,7 +123,7 @@ export function continueSeries(source: unknown[], count: number): unknown[] {
     return Array.from({ length: count }, (_, index) => series(index))
 }
 
-export type FillAxis = 'down' | 'up' | 'right' | 'left'
+type FillAxis = 'down' | 'up' | 'right' | 'left'
 
 export interface FillTarget {
     axis: FillAxis
@@ -157,7 +157,7 @@ function span(from: number, to: number, reversed: boolean): number[] {
     return reversed ? values.reverse() : values
 }
 
-export interface FillCellsOptions {
+interface FillCellsOptions {
     read: (row: number, col: number) => unknown
 
     isDataRow?: (row: number) => boolean

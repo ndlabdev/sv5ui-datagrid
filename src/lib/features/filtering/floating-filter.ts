@@ -7,7 +7,7 @@ import type {
 import { emptyCondition, isPresenceOp } from './filter-draft.js'
 import { toDisplayUnit } from './filter-units.js'
 
-export type FloatingCell =
+type FloatingCell =
     | { kind: 'none' }
     | { kind: 'input'; op: string; value: string; caseSensitive: boolean }
     | { kind: 'boolean'; value: '' | 'true' | 'false' }

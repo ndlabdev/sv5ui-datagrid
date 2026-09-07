@@ -5,7 +5,7 @@ import { SvelteMap } from 'svelte/reactivity'
 import type { GridFeature, RowNode } from '../../core/types/index.js'
 import type { VirtualizationOptions } from './virtualization.types.js'
 
-export const VIRTUALIZATION = 'virtualization'
+const VIRTUALIZATION = 'virtualization'
 
 export class Virtualization<TRow> {
     readonly virtualizer: Virtualizer

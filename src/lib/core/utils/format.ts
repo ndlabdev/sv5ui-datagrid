@@ -1,7 +1,7 @@
 import type { ColumnDef, ColumnType, ColumnTypeOptions } from '../types/index.js'
 import { isBlank } from './value.js'
 
-export type FormatOptions = Pick<
+type FormatOptions = Pick<
     ColumnTypeOptions<never>,
     'locale' | 'numberFormat' | 'currency' | 'wholePercent' | 'dateFormat'
 >
@@ -142,4 +142,10 @@ export function formatCellText<TRow>(
         default:
             return String(value)
     }
+}
+
+export const MS_PER_DAY = 86_400_000
+
+export function localDay(date: Date): number {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
 }

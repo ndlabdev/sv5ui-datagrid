@@ -7,7 +7,6 @@ import {
     columnOf,
     dictionaryTimesOf,
     textOf,
-    MS_PER_DAY,
     dictionaryDaysOf,
     isBlank,
     loweredOf,
@@ -16,6 +15,7 @@ import {
     type ColumnStore,
     type RowStore
 } from './columnar.js'
+import { MS_PER_DAY } from '../../core/utils/index.js'
 import { valuePredicateFor } from '../filtering/filter-predicates.js'
 
 export interface WorkerQuery {

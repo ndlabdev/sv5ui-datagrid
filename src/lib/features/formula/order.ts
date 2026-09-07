@@ -1,4 +1,4 @@
-export interface OrderResult {
+interface OrderResult {
     order: string[]
     cyclic: Set<string>
 }

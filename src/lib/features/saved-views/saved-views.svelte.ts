@@ -9,7 +9,7 @@ import type { SavedView, SavedViewsOptions, SavedViewStorage } from './saved-vie
 import { readShareParam, withShareParam } from './share-param.js'
 import { DEFAULT_VIEWS_KEY, localStorageViews, mergeViews } from './storage.js'
 
-export const SAVED_VIEWS = 'savedViews'
+const SAVED_VIEWS = 'savedViews'
 
 function newId(): string {
     return `view-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`

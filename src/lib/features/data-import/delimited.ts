@@ -1,11 +1,11 @@
-export interface DelimitedOptions {
+interface DelimitedOptions {
     delimiter?: string
     maxRows?: number
     maxCells?: number
 }
 
-export const DEFAULT_MAX_ROWS = 200_000
-export const DEFAULT_MAX_CELLS = 4_000_000
+const DEFAULT_MAX_ROWS = 200_000
+const DEFAULT_MAX_CELLS = 4_000_000
 
 const BOM = '﻿'
 

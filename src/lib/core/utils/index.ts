@@ -2,16 +2,12 @@ export {
     clampToMax,
     DEFAULT_EMPTY_TEXT,
     formatCellText,
-    formatCurrency,
-    formatDate,
-    formatNumber,
-    formatPercent,
+    localDay,
+    MS_PER_DAY,
     toDate,
-    toNumber,
-    type FormatOptions
+    toNumber
 } from './format.js'
-export { base64UrlToBytes, bytesToBase64Url } from './base64.js'
-export { emptyIdSet, idSetOf, idSetWith, idSetWithout } from './id-set.js'
+export { idSetWith, idSetWithout } from './id-set.js'
 export { clamp } from './math.js'
 export { numericOrNull } from './number.js'
 export { isInPortal, popupOpen } from './popup.js'
@@ -20,4 +16,4 @@ export { mutator } from './reactivity.js'
 export { inlineDelta, inlineOffset, isRtl, scrollStart, setScrollStart } from './scroll.js'
 export { inlineStyle } from './style.js'
 export { safeHref } from './url.js'
-export { getCellValue, isBlank, isNullish, sortValueGetter } from './value.js'
+export { getCellValue, isBlank, setKeyOf, sortValueGetter } from './value.js'

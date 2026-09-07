@@ -11,7 +11,7 @@ export interface ParseFailure {
     at: number
 }
 
-export interface Compiled {
+interface Compiled {
     expression: string
     onError: 'code' | 'blank'
     node: Node | null
@@ -31,7 +31,7 @@ function failureOf(error: unknown): ParseFailure {
     return { message: String(error), at: 0 }
 }
 
-export function compile(entry: string | FormulaColumn): Compiled {
+function compile(entry: string | FormulaColumn): Compiled {
     const column = normalize(entry)
     const onError = column.onError ?? 'code'
 

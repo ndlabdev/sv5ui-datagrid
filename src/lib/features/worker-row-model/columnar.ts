@@ -1,6 +1,6 @@
 export { isBlank } from '../../core/utils/index.js'
-import { isBlank } from '../../core/utils/index.js'
-export type StoreKind = 'number' | 'date' | 'boolean' | 'string'
+import { isBlank, localDay, MS_PER_DAY } from '../../core/utils/index.js'
+type StoreKind = 'number' | 'date' | 'boolean' | 'string'
 
 export interface ColumnStore {
     kind: StoreKind
@@ -24,13 +24,7 @@ export interface RowStore {
 
 export const BOOLEAN_BLANK = 2
 
-export const MS_PER_DAY = 86_400_000
-
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-function localDay(date: Date): number {
-    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
-}
+export const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 
 export function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
@@ -44,14 +38,7 @@ export function toEpochDay(value: unknown): number {
     return Number.isNaN(parsed.getTime()) ? Number.NaN : localDay(parsed)
 }
 
-export function setKeyOf(value: unknown): string | number | boolean | null {
-    if (isBlank(value)) return null
-    if (typeof value === 'number' || typeof value === 'boolean') return value
-    if (value instanceof Date) return value.toISOString()
-    return String(value)
-}
-
-export function kindOfValues(read: (index: number) => unknown, rowCount: number): StoreKind {
+function kindOfValues(read: (index: number) => unknown, rowCount: number): StoreKind {
     for (let index = 0; index < rowCount; index++) {
         const value = read(index)
         if (isBlank(value)) continue
@@ -115,7 +102,7 @@ function stringColumn(read: (index: number) => unknown, rowCount: number): Colum
     return { kind: 'string', codes, dictionary }
 }
 
-export function buildColumn(read: (index: number) => unknown, rowCount: number): ColumnStore {
+function buildColumn(read: (index: number) => unknown, rowCount: number): ColumnStore {
     switch (kindOfValues(read, rowCount)) {
         case 'number':
             return numberColumn(read, rowCount)

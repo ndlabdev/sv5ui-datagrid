@@ -1,4 +1,4 @@
-export type TokenKind = 'number' | 'string' | 'name' | 'operator' | 'punct' | 'end'
+type TokenKind = 'number' | 'string' | 'name' | 'operator' | 'punct' | 'end'
 
 export interface Token {
     kind: TokenKind

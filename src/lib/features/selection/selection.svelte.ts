@@ -28,7 +28,7 @@ import type {
     ToggleModifiers
 } from './selection.types.js'
 
-export const SELECTION = 'selection'
+const SELECTION = 'selection'
 
 export class Selection<TRow> {
     selectedIds = $state.raw<ReadonlySet<string>>(emptySelection())

@@ -40,12 +40,12 @@ export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {
     return pagination?.server ? pagination.total : grid.totalRows
 }
 
-export interface ColumnEntry<TRow> {
+interface ColumnEntry<TRow> {
     column: ColumnState<TRow>
     index: number
 }
 
-export interface ColumnWindow<TRow> {
+interface ColumnWindow<TRow> {
     windowed: boolean
     renderColumns: ColumnEntry<TRow>[]
     rowWidth: string | undefined

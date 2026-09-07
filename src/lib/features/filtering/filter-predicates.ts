@@ -9,7 +9,7 @@ import type {
     PresenceFilterOp,
     RowNode
 } from '../../core/types/index.js'
-import { getCellValue, isBlank } from '../../core/utils/index.js'
+import { getCellValue, isBlank, localDay, MS_PER_DAY } from '../../core/utils/index.js'
 import { setKeyOf } from './distinct-values.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
@@ -101,13 +101,7 @@ function numberPredicate(
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 
-const MS_PER_DAY = 86_400_000
-
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-function localDay(date: Date): number {
-    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
-}
 
 function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
@@ -241,7 +235,7 @@ function describeText(
     return `${op} "${filter.value}"`
 }
 
-export type FilterValueFormat = (value: unknown) => string
+type FilterValueFormat = (value: unknown) => string
 
 const plainValue: FilterValueFormat = (value) => String(value)
 

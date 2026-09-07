@@ -1,9 +1,9 @@
 import { type ColumnDef } from '../../core/types/index.js'
 import type { SourceValue } from './mapping.js'
 
-export type CoerceKind = 'text' | 'number' | 'date' | 'boolean'
+type CoerceKind = 'text' | 'number' | 'date' | 'boolean'
 
-export interface Coerced {
+interface Coerced {
     value: unknown
     problem: 'number' | 'date' | 'boolean' | null
 }

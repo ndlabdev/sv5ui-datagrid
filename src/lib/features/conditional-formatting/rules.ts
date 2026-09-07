@@ -10,14 +10,12 @@ export interface RuleParseError {
     at: number
 }
 
-export interface CompiledRule {
+interface CompiledRule {
     node: Node | null
     error: RuleParseError | null
 }
 
 export type CompiledRules = ReadonlyMap<string, CompiledRule>
-
-export const NO_RULES: readonly FormatRule[] = []
 
 export const NO_COMPILED: CompiledRules = new Map<string, CompiledRule>()
 

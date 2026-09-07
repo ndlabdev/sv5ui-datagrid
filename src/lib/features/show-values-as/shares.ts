@@ -4,7 +4,7 @@ import { type CellRead, isDataRow, isLoadingRow, rawRead } from '../../core/grid
 import { totalsKindOf } from '../grouping/index.js'
 import type { ShowAs } from './show-values-as.types.js'
 
-export interface ShareOptions<TRow> {
+interface ShareOptions<TRow> {
     shown: Record<string, ShowAs>
     columns: ColumnDef<TRow>[]
     read?: CellRead<TRow>

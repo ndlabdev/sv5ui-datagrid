@@ -1,5 +1,5 @@
-import { tv, type VariantProps } from 'tailwind-variants'
-import { datagridSlots, type DataGridSlots, type DataGridUi } from '../core/theme/index.js'
+import { tv } from 'tailwind-variants'
+import { datagridSlots } from '../core/theme/index.js'
 
 export const datagridVariants = tv({
     slots: datagridSlots,
@@ -39,7 +39,3 @@ export const datagridVariants = tv({
         density: 'standard'
     }
 })
-
-export type DataGridVariantProps = VariantProps<typeof datagridVariants>
-
-export type { DataGridSlots, DataGridUi }

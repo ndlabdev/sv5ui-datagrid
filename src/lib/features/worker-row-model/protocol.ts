@@ -1,20 +1,20 @@
 import type { WorkerQuery } from './query.js'
 
-export interface LoadBeginMessage {
+interface LoadBeginMessage {
     type: 'load'
     fields: string[]
     textFields: string[]
     rowCount: number
 }
 
-export interface LoadChunkMessage {
+interface LoadChunkMessage {
     type: 'chunk'
     from: number
     values: Record<string, unknown[]>
     texts: Record<string, unknown[]>
 }
 
-export interface LoadEndMessage {
+interface LoadEndMessage {
     type: 'loaded'
 }
 
@@ -41,7 +41,7 @@ export interface ResultMessage {
     groups?: GroupDescriptor[]
 }
 
-export interface FailureMessage {
+interface FailureMessage {
     type: 'failure'
     id: number
     message: string

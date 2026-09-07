@@ -1,15 +1,10 @@
 import type { CellValueReader, ColumnDef, RowNode, SetFilterValue } from '../../core/types/index.js'
 import { readCell, readerToken } from '../../core/grid/index.js'
-import { isBlank } from '../../core/utils/index.js'
+import { setKeyOf } from '../../core/utils/index.js'
+
+export { setKeyOf }
 
 export const DISTINCT_VALUES_CAP = 200
-
-export function setKeyOf(value: unknown): SetFilterValue {
-    if (isBlank(value)) return null
-    if (typeof value === 'number' || typeof value === 'boolean') return value
-    if (value instanceof Date) return value.toISOString()
-    return String(value)
-}
 
 const cache = new WeakMap<object, Map<string, SetFilterValue[]>>()
 

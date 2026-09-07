@@ -1,6 +1,6 @@
 import { readArchive } from './unzip.js'
 
-export interface SheetCell {
+interface SheetCell {
     value: string | number | boolean | Date | null
 }
 
@@ -32,7 +32,7 @@ export function unescapeXml(text: string): string {
     })
 }
 
-export function refuseDoctype(xml: string, what: string): void {
+function refuseDoctype(xml: string, what: string): void {
     if (/<!DOCTYPE|<!ENTITY/i.test(xml)) {
         throw new Error(
             `${what} carries a DOCTYPE or ENTITY declaration. Those are how a small file expands ` +
@@ -173,12 +173,12 @@ function readRow(body: string, strings: string[], dateStyles: Set<number>): Shee
     return cells
 }
 
-export interface SheetLimits {
+interface SheetLimits {
     dateStyles?: Set<number>
     maxRows?: number
 }
 
-export const DEFAULT_SHEET_MAX_ROWS = 200_000
+const DEFAULT_SHEET_MAX_ROWS = 200_000
 
 export function readSheet(
     xml: string,

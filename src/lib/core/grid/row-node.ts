@@ -47,7 +47,7 @@ export function nodeIndexById<TRow>(nodes: RowNode<TRow>[]): ReadonlyMap<string,
 
 export const LOADING_KEY = '__dgLoading'
 
-export const SYNTHETIC_KEY = '__dgSynthetic'
+const SYNTHETIC_KEY = '__dgSynthetic'
 
 export function isLoadingRow(row: unknown): boolean {
     return Boolean((row as Record<string, unknown> | null)?.[LOADING_KEY])

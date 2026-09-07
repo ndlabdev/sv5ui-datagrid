@@ -9,7 +9,7 @@ import {
 import { applyMask, idSet } from './masks.js'
 import type { PolicyContext, PolicyOptions, PolicyRule } from './policy.types.js'
 
-export const POLICY = 'policy'
+const POLICY = 'policy'
 
 const EVERY_PURPOSE: CellValuePurpose[] = [
     'render',

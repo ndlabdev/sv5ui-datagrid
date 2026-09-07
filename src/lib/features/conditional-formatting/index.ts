@@ -14,5 +14,4 @@ export type {
     TopNRule
 } from './conditional-formatting.types.js'
 export { paintOf } from './paint.js'
-export { ruleId } from './rules.js'
-export { columnMap, computeStats, hasNumbers, NUMERIC_KINDS, sampleDataRows } from './stats.js'
+export { columnMap, computeStats, hasNumbers, sampleDataRows } from './stats.js'

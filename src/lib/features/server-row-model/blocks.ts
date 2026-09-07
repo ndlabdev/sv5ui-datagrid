@@ -1,4 +1,4 @@
-export interface BlockRange {
+interface BlockRange {
     start: number
 
     end: number

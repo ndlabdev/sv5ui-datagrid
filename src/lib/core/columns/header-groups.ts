@@ -187,7 +187,7 @@ export function buildHeaderLevels<TRow>(
     return levels
 }
 
-export interface CollapseContext<TRow> {
+interface CollapseContext<TRow> {
     paths: Map<string, ColumnDef<TRow>[]>
     leaves: Map<string, ColumnDef<TRow>>
     leafIdsByGroup: Map<string, string[]>
@@ -239,7 +239,7 @@ export function withRailPaths<TRow>(
     return paths
 }
 
-export interface OrderedSlot<TRow> {
+interface OrderedSlot<TRow> {
     def: ColumnDef<TRow>
     pinFrom: ColumnDef<TRow>
     rail: boolean

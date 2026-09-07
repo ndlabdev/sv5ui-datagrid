@@ -1,8 +1,4 @@
 export {
-    dataColumns,
-    DEFAULT_CSV_DELIMITER,
-    downloadCsv,
-    neutralizeFormula,
     pickColumns,
     rowsToMatrix,
     toCsv,
@@ -11,11 +7,10 @@ export {
     type CellMatrix,
     type ExportFormatter
 } from './clipboard.js'
-export { getSelection, Selection, selection } from './selection.svelte.js'
+export { getSelection, selection, Selection } from './selection.svelte.js'
 export type {
     CopyOptions,
     ExportCsvOptions,
     SelectAllState,
-    SelectionOptions,
-    ToggleModifiers
+    SelectionOptions
 } from './selection.types.js'

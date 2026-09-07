@@ -3,7 +3,7 @@ import { type GridFeature, type RowNode } from '../../core/types/index.js'
 import { buildDetailNodes, isDetailNode, masterIdOf } from './detail-nodes.js'
 import type { MasterDetailOptions } from './master-detail.types.js'
 
-export const MASTER_DETAIL = 'masterDetail'
+const MASTER_DETAIL = 'masterDetail'
 
 export class MasterDetail<TRow> {
     readonly single: boolean

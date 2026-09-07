@@ -3,7 +3,7 @@ import type { GridFeature } from '../../core/types/index.js'
 import { mutator } from '../../core/utils/index.js'
 import { paginateNodes } from './paginate.js'
 
-export const PAGINATION = 'pagination'
+const PAGINATION = 'pagination'
 
 export interface PaginationOptions {
     pageSize?: number

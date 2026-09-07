@@ -18,12 +18,12 @@ export class FormulaError {
     }
 }
 
-export const MAX_TEXT_LENGTH = 32_767
+const MAX_TEXT_LENGTH = 32_767
 
 export const isFormulaError = (value: unknown): value is FormulaError =>
     value instanceof FormulaError
 
-export interface EvaluateContext {
+interface EvaluateContext {
     column: (id: string) => unknown
 }
 

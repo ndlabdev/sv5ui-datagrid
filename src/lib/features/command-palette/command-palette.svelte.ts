@@ -3,7 +3,7 @@ import { type GridFeature } from '../../core/types/index.js'
 import { buildCommands } from './command-palette-commands.js'
 import type { CommandPaletteOptions, GridCommand } from './command-palette.types.js'
 
-export const COMMAND_PALETTE = 'commandPalette'
+const COMMAND_PALETTE = 'commandPalette'
 
 export class CommandPalette<TRow> {
     open = $state(false)

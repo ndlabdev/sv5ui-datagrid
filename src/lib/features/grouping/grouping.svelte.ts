@@ -11,7 +11,7 @@ import { buildGrandTotalNode, totalsKindOf } from './totals-nodes.js'
 import { createSeenGroups } from './seen-groups.js'
 import type { Aggregation, GroupingOptions } from './grouping.types.js'
 
-export const GROUPING = 'grouping'
+const GROUPING = 'grouping'
 
 const defaultLabel = (key: string, count: number): string => `${key} (${count})`
 

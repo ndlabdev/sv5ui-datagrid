@@ -15,7 +15,7 @@ import type {
     ServerRowModelOptions
 } from './server-row-model.types.js'
 
-export const SERVER_ROW_MODEL = 'serverRowModel'
+const SERVER_ROW_MODEL = 'serverRowModel'
 
 const DEFAULT_BLOCK_SIZE = 100
 const DEFAULT_MAX_BLOCKS = 20

@@ -11,7 +11,7 @@ export interface VirtualRange {
     end: number
 }
 
-export interface VirtualizerOptions {
+interface VirtualizerOptions {
     getCount: () => number
     rowHeight?: number
     overscan?: number

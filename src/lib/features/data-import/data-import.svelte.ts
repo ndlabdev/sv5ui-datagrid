@@ -20,9 +20,9 @@ import {
 import { readXlsx } from './xlsx-read.js'
 import type { DataImportOptions, ImportFormat, ImportStep } from './data-import.types.js'
 
-export const DATA_IMPORT = 'dataImport'
+const DATA_IMPORT = 'dataImport'
 
-export const DEFAULT_MAX_BYTES = 32 * 1024 * 1024
+const DEFAULT_MAX_BYTES = 32 * 1024 * 1024
 
 const BY_EXTENSION: Record<string, ImportFormat> = {
     csv: 'csv',

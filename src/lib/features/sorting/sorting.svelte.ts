@@ -5,7 +5,7 @@ import { mutator } from '../../core/utils/index.js'
 import { sortNodes, type SortNulls } from './sort.js'
 import { sanitizeSortState } from './sort-model.js'
 
-export const SORTING = 'sorting'
+const SORTING = 'sorting'
 
 /**
  * What a header click walks through. `null` drops the column; a cycle without

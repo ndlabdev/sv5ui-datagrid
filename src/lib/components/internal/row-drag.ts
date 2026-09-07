@@ -12,7 +12,7 @@ const GHOST_Z_INDEX = '45'
 
 const SETTLE_MS = 160
 
-export interface RowDragOptions {
+interface RowDragOptions {
     ghostClass: string
     onOver: (rowId: string) => void
     onStart: () => void

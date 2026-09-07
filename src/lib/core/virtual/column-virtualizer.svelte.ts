@@ -2,7 +2,7 @@ import { clamp } from '../utils/math.js'
 import { rafBatch } from '../utils/raf-batch.js'
 import type { VirtualRange } from './virtualizer.svelte.js'
 
-export interface ColumnVirtualizerOptions {
+interface ColumnVirtualizerOptions {
     getOffsets: () => number[]
     overscanPx?: number
     initialColumns?: number

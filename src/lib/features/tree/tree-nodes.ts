@@ -1,6 +1,6 @@
 import { type RowNode } from '../../core/types/index.js'
 
-export interface BuildTreeOptions<TRow> {
+interface BuildTreeOptions<TRow> {
     childrenOf: (node: RowNode<TRow>) => RowNode<TRow>[]
 
     isExpanded: (id: string) => boolean
@@ -10,7 +10,7 @@ export interface BuildTreeOptions<TRow> {
     isSeeded?: (id: string) => boolean
 }
 
-export interface TreeResult<TRow> {
+interface TreeResult<TRow> {
     nodes: RowNode<TRow>[]
 
     autoExpanded: string[]

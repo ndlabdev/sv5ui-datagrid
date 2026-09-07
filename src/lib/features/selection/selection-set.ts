@@ -1,5 +1,8 @@
+import { idSetWith as withId, idSetWithout as withoutId } from '../../core/utils/index.js'
 import type { RowNode } from '../../core/types/index.js'
 import type { SelectAllState } from './selection.types.js'
+
+export { withId, withoutId }
 
 export function emptySelection(): ReadonlySet<string> {
     return new Set()
@@ -7,18 +10,6 @@ export function emptySelection(): ReadonlySet<string> {
 
 export function singleSelection(id: string): ReadonlySet<string> {
     return new Set([id])
-}
-
-export function withId(set: ReadonlySet<string>, id: string): ReadonlySet<string> {
-    const next = new Set(set)
-    next.add(id)
-    return next
-}
-
-export function withoutId(set: ReadonlySet<string>, id: string): ReadonlySet<string> {
-    const next = new Set(set)
-    next.delete(id)
-    return next
 }
 
 export function withRange(

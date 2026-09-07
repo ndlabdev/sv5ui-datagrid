@@ -3,7 +3,7 @@ import type { ColumnDef, ColumnState, PinnedSide } from '../types/index.js'
 
 const DEFAULT_MIN_WIDTH = 40
 
-export interface ColumnStateOverrides {
+interface ColumnStateOverrides {
     width?: number
     hidden?: boolean
     pinned?: PinnedSide | null
@@ -40,7 +40,7 @@ export function createColumnState<TRow>(
     }
 }
 
-export type WidthOverrides = Record<string, number>
+type WidthOverrides = Record<string, number>
 
 const LAST_RESORT_WIDTH = 100
 

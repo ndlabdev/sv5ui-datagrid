@@ -3,7 +3,7 @@ import type { GridFeature, Keybinding, RowNode } from '../../core/types/index.js
 import { mutator } from '../../core/utils/index.js'
 import type { RowDragState, RowReorderOptions } from './row-reorder.types.js'
 
-export const ROW_REORDER = 'rowReorder'
+const ROW_REORDER = 'rowReorder'
 
 export class RowReorder<TRow> {
     drag = $state.raw<RowDragState | null>(null)

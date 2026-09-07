@@ -19,7 +19,7 @@ import {
 } from './evaluate.js'
 import type { AdvancedFilterOptions, FilterGroup, FilterNode } from './advanced-filter.types.js'
 
-export const ADVANCED_FILTER = 'advancedFilter'
+const ADVANCED_FILTER = 'advancedFilter'
 
 const emptyModel = (): FilterGroup => ({ kind: 'group', join: 'and', children: [] })
 

@@ -28,7 +28,7 @@ import {
 } from './rules.js'
 import { columnMap, computeStats, dataRowsOf, type RuleStats } from './stats.js'
 
-export const CONDITIONAL_FORMATTING = 'conditionalFormatting'
+const CONDITIONAL_FORMATTING = 'conditionalFormatting'
 
 const SERVER_SKIP =
     'conditionalFormatting() skips colorScale, dataBar, topN and duplicates on ' +

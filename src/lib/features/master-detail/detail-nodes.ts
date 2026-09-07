@@ -1,6 +1,6 @@
 import { type RowNode } from '../../core/types/index.js'
 
-export const DETAIL_ID_PREFIX = 'detail:'
+const DETAIL_ID_PREFIX = 'detail:'
 
 export function detailNodeId(masterId: string): string {
     return `${DETAIL_ID_PREFIX}${masterId}`
@@ -14,7 +14,7 @@ export function masterIdOf(detailId: string): string {
     return detailId.slice(DETAIL_ID_PREFIX.length)
 }
 
-export interface BuildDetailOptions<TRow> {
+interface BuildDetailOptions<TRow> {
     hasDetail: (row: TRow) => boolean
 
     isExpanded: (id: string) => boolean

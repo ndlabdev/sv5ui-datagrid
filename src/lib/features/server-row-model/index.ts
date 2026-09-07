@@ -1,4 +1,4 @@
-export { getServerRowModel, ServerRowModel, serverRowModel } from './server-row-model.svelte.js'
+export { getServerRowModel, serverRowModel, ServerRowModel } from './server-row-model.svelte.js'
 export type {
     DataSource,
     GetRowsRequest,
@@ -6,4 +6,3 @@ export type {
     ServerMode,
     ServerRowModelOptions
 } from './server-row-model.types.js'
-export { isLoadingRow } from '../../core/grid/index.js'

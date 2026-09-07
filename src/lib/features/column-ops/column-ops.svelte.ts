@@ -11,7 +11,7 @@ import {
 import { dropTargetIndex } from './drag.js'
 import type { ColumnDragState, ColumnOpsOptions } from './column-ops.types.js'
 
-export const COLUMN_OPS = 'columnOps'
+const COLUMN_OPS = 'columnOps'
 
 export class ColumnOps<TRow> {
     element = $state<HTMLElement | null>(null)

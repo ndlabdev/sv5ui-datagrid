@@ -5,7 +5,7 @@ import { getFindReplace } from '../find-replace/index.js'
 import { getRangeSelection } from '../range-selection/range-selection.svelte.js'
 import type { CommandPaletteOptions, GridCommand } from './command-palette.types.js'
 
-export function columnCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
+function columnCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     const t = grid.labels
     const commands: GridCommand[] = []
 
@@ -63,7 +63,7 @@ export function columnCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     return commands
 }
 
-export function groupingCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
+function groupingCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     const state = getGrouping(grid)
     if (!state) return []
     const t = grid.labels
@@ -118,7 +118,7 @@ export function groupingCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     return commands
 }
 
-export function rangeCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
+function rangeCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     const state = getRangeSelection(grid)
     if (!state || state.ranges.length === 0) return []
     const t = grid.labels
@@ -159,7 +159,7 @@ export function rangeCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     return commands
 }
 
-export function findCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
+function findCommands<TRow>(grid: GridState<TRow>): GridCommand[] {
     const state = getFindReplace(grid)
     if (!state || state.open) return []
 

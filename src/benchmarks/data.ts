@@ -49,7 +49,7 @@ export function makeBenchNodes(count: number): RowNode<BenchRow>[] {
     return buildRowNodes(makeBenchRows(count), (row) => String(row.id))
 }
 
-export function serverRowAt(index: number): BenchRow {
+function serverRowAt(index: number): BenchRow {
     return {
         id: index + 1,
         name: `Person ${(index * 7919) % 1_000_003}`,

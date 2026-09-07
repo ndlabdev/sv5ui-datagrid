@@ -33,14 +33,14 @@ import {
 } from './range.js'
 import type { CopyRangeOptions, RangeSelectionOptions } from './range-selection.types.js'
 
-export interface RangeEdges {
+interface RangeEdges {
     top: boolean
     bottom: boolean
     start: boolean
     end: boolean
 }
 
-export const RANGE_SELECTION = 'rangeSelection'
+const RANGE_SELECTION = 'rangeSelection'
 
 export class RangeSelection<TRow> {
     ranges = $state.raw<CellRange[]>([])

@@ -6,7 +6,7 @@ export type FilterKind = 'text' | 'number' | 'date' | 'boolean' | 'set'
 
 const PRESENCE: AdvancedFilterOp[] = ['blank', 'notBlank']
 
-export const OPS_BY_KIND: Record<FilterKind, AdvancedFilterOp[]> = {
+const OPS_BY_KIND: Record<FilterKind, AdvancedFilterOp[]> = {
     text: ['contains', 'notContains', 'equals', 'notEqual', 'startsWith', 'endsWith', ...PRESENCE],
     number: ['equals', 'notEqual', 'gt', 'gte', 'lt', 'lte', 'between', ...PRESENCE],
     date: ['equals', 'notEqual', 'before', 'after', 'between', ...PRESENCE],

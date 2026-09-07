@@ -1,6 +1,6 @@
 import { clamp } from '../../core/utils/index.js'
 
-export interface DropTarget {
+interface DropTarget {
     index: number
     indicatorX: number
 }

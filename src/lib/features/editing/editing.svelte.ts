@@ -23,7 +23,7 @@ import {
 } from './undo-stack.js'
 import { isPromise, runValidation, type Validated } from './validate.js'
 
-export const EDITING = 'editing'
+const EDITING = 'editing'
 
 export class Editing<TRow> {
     active = $state.raw<EditingCell | null>(null)

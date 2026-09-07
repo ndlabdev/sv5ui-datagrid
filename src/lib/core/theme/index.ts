@@ -1,4 +1,3 @@
-export { datagridSlots, type DataGridSlots, type DataGridUi } from './slots.js'
 export {
     defineDataGridConfig,
     getDataGridConfig,
@@ -6,3 +5,4 @@ export {
     slotClass,
     type DataGridConfig
 } from './config.js'
+export { datagridSlots, type DataGridSlots, type DataGridUi } from './slots.js'

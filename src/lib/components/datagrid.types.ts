@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid/index.js'
-import type { DataGridUi } from './datagrid.variants.js'
+import type { DataGridUi } from '../core/theme/index.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -205,15 +205,6 @@ export interface GridExportMenuProps {
 export interface GridColumnMenuProps<TRow> {
     /** The column the menu operates on. */
     column: ColumnState<TRow>
-}
-
-export interface GridCellEditorProps<TRow> {
-    /** The node whose cell is being edited. */
-    node: RowNode<TRow>
-    /** The column being edited. */
-    column: ColumnState<TRow>
-    /** Row edit mode: bind the draft to `drafts[columnId]`. */
-    rowMode?: boolean
 }
 
 export interface GridContextMenuProps {

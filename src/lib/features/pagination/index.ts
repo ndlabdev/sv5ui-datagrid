@@ -1,4 +1,3 @@
-export { paginateNodes } from './paginate.js'
 export {
     getPagination,
     Pagination,

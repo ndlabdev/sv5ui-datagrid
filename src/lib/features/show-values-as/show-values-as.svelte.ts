@@ -3,9 +3,9 @@ import { type GridFeature, type RowNode } from '../../core/types/index.js'
 import { applyShares } from './shares.js'
 import type { ShowAs, ShowValuesAsOptions } from './show-values-as.types.js'
 
-export const SHOW_VALUES_AS = 'showValuesAs'
+const SHOW_VALUES_AS = 'showValuesAs'
 
-export const SHOW_VALUES_AS_ORDER = PIPELINE_ORDER.group + 1
+const SHOW_VALUES_AS_ORDER = PIPELINE_ORDER.group + 1
 
 function readShown(slice: unknown): Record<string, ShowAs> | null {
     if (slice === null || typeof slice !== 'object' || Array.isArray(slice)) return null

@@ -1,7 +1,7 @@
 import type { GridState } from '../grid/grid.svelte.js'
 import type { ColumnState, RowNode } from '../types/index.js'
 
-export interface ColumnRowSpans {
+interface ColumnRowSpans {
     owner: number[]
     span: number[]
 }

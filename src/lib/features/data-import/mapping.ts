@@ -17,7 +17,7 @@ function fold(text: string): string {
         .replace(/[^a-z0-9]/g, '')
 }
 
-export const MIN_LOOSE_LENGTH = 4
+const MIN_LOOSE_LENGTH = 4
 
 function nearly(candidate: string, wanted: string): boolean {
     if (wanted.length < MIN_LOOSE_LENGTH || candidate.length < MIN_LOOSE_LENGTH) return false
@@ -88,8 +88,4 @@ export function rememberMapping(
         if (header !== undefined && header !== '') out[mapping.columnId] = header
     }
     return out
-}
-
-export function mappedColumns(mappings: ColumnMapping[]): string[] {
-    return mappings.filter((entry) => entry.sourceIndex !== null).map((entry) => entry.columnId)
 }

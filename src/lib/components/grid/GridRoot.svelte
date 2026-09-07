@@ -8,7 +8,7 @@
     import { untrack } from 'svelte'
     import { setGridContext, setGridElement } from '../internal/context.js'
     import { setGridTheme } from '../internal/theme.js'
-    import { getDataGridConfig } from '../datagrid.config.js'
+    import { getDataGridConfig } from '../../core/theme/index.js'
     import type { GridRootProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import GridStatePersistence from './GridStatePersistence.svelte'

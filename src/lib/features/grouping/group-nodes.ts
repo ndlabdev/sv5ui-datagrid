@@ -4,7 +4,7 @@ import { aggregateRowValues, buildFooterNode, groupPathId } from './totals-nodes
 import type { Aggregation } from './grouping.types.js'
 import { isBlank } from '../../core/utils/index.js'
 
-export interface BuildGroupNodesOptions<TRow> {
+interface BuildGroupNodesOptions<TRow> {
     read?: CellRead<TRow>
 
     by: string[]

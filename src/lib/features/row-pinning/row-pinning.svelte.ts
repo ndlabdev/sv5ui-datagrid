@@ -9,7 +9,7 @@ import type {
 } from '../../core/types/index.js'
 import type { RowPinningOptions } from './row-pinning.types.js'
 
-export const ROW_PINNING = 'rowPinning'
+const ROW_PINNING = 'rowPinning'
 
 export class RowPinning<TRow> {
     pinnedOverrides = $state.raw<Record<string, RowPinSide | null>>({})

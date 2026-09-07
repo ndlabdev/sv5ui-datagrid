@@ -5,7 +5,7 @@ import { createSeenGroups } from '../grouping/seen-groups.js'
 import { buildTreeNodes, indexByParent } from './tree-nodes.js'
 import type { TreeOptions } from './tree.types.js'
 
-export const TREE = 'tree'
+const TREE = 'tree'
 
 export class Tree<TRow> {
     readonly defaultExpandedDepth: number

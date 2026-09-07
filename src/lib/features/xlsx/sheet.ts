@@ -43,7 +43,7 @@ const X_ESCAPE_LITERAL = /_(x[0-9A-Fa-f]{4})_/g
 const xEscape = (char: string): string =>
     `_x${char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}_`
 
-export function escapeCellText(value: string): string {
+function escapeCellText(value: string): string {
     return escapeXml(
         value
             .slice(0, CELL_TEXT_LIMIT)
@@ -89,7 +89,7 @@ function isoLocal(date: Date): string {
         : day
 }
 
-export function isFormulaCell(value: CellValue): value is XlsxFormula {
+function isFormulaCell(value: CellValue): value is XlsxFormula {
     return (
         typeof value === 'object' &&
         value !== null &&

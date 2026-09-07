@@ -64,7 +64,7 @@ function boundsOf(rule: { min?: number; max?: number }, middle: boolean): string
     return middle ? `${low}<cfvo type="percentile" val="50"/>${high}` : `${low}${high}`
 }
 
-export const HIGHLIGHT_STYLE = (colors: Required<XlsxFormatColors>): XlsxStyle => ({
+const HIGHLIGHT_STYLE = (colors: Required<XlsxFormatColors>): XlsxStyle => ({
     font: { color: colors.highlightText },
     fill: colors.highlightFill
 })

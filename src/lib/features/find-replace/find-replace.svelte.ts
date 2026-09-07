@@ -9,7 +9,7 @@ import { slotClass } from '../../core/theme/index.js'
 import { findMatches, type Match, replaceIn } from './find.js'
 import type { FindReplaceOptions } from './find-replace.types.js'
 
-export const FIND_REPLACE = 'findReplace'
+const FIND_REPLACE = 'findReplace'
 
 export class FindReplace<TRow> {
     open = $state(false)
