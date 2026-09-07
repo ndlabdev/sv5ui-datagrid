@@ -44,6 +44,10 @@
         {#if total > pagination.pageSize}
             <Pagination
                 size="sm"
+                ui={{
+                    item: 'size-auto h-8 min-w-8 px-1.5',
+                    ellipsis: 'size-auto h-8 min-w-8'
+                }}
                 {total}
                 itemsPerPage={pagination.pageSize}
                 bind:page={() => pagination.page, (page) => pagination.setPage(page)}

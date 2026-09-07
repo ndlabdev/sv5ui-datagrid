@@ -4,6 +4,7 @@ import { page } from 'vitest/browser'
 import {
     createDataGrid,
     DataGrid,
+    getPagination,
     getSelection,
     pagination,
     selection,
@@ -88,5 +89,57 @@ describe('status bar', () => {
         getSelection(g)!.select('1')
         getSelection(g)!.select('2')
         await expect.element(page.getByText('2 selected')).toBeVisible()
+    })
+})
+
+describe('a page number wider than the button it sits in', () => {
+    function millionRows() {
+        return createDataGrid<Row>({
+            columns,
+            data: rows,
+            getRowId: (row) => String(row.id),
+            rowModel: 'server',
+            features: [pagination({ pageSize: 50, rowCount: 1_000_000 })]
+        })
+    }
+
+    function pageButtons(): HTMLElement[] {
+        return [...document.querySelectorAll<HTMLElement>('[data-pagination-page]')]
+    }
+
+    it('draws five digits without spilling them out of the button', async () => {
+        const g = millionRows()
+        getPagination(g)!.setPage(20_000)
+        render(DataGrid as never, { grid: g } as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const spilling = pageButtons()
+            .filter((button) => button.scrollWidth > button.clientWidth)
+            .map((button) => `${button.textContent?.trim()} needs ${button.scrollWidth}`)
+        expect(spilling).toEqual([])
+    })
+
+    it('keeps a gap, so two page numbers never read as one', async () => {
+        const g = millionRows()
+        getPagination(g)!.setPage(20_000)
+        render(DataGrid as never, { grid: g } as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const boxes = pageButtons().map((button) => button.getBoundingClientRect())
+        const touching: string[] = []
+        for (let i = 1; i < boxes.length; i++) {
+            if (boxes[i]!.left - boxes[i - 1]!.right < 2) touching.push(`${i - 1} and ${i}`)
+        }
+        expect(touching).toEqual([])
+    })
+
+    it('leaves a one digit page square, so the ordinary footer is unchanged', async () => {
+        render(DataGrid as never, { grid: grid(12) } as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const first = pageButtons()[0]!
+        const box = first.getBoundingClientRect()
+        expect(first.textContent?.trim()).toBe('1')
+        expect(Math.round(box.width)).toBe(Math.round(box.height))
     })
 })
