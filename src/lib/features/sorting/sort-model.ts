@@ -38,12 +38,6 @@ function flip(nulls: SortNulls): SortNulls {
     return nulls === 'first' ? 'last' : 'first'
 }
 
-/**
- * A sort read back from a snapshot, keeping only the entries that name a
- * column and a direction. The same reasoning as the filter model: what came
- * through storage is not a `SortState[]` because it was cast to one, and a
- * null entry in that array threw while the pipeline was reading it.
- */
 export function sanitizeSortState(slice: unknown): SortState[] | null {
     if (!Array.isArray(slice)) return null
     return slice.flatMap((entry) => {

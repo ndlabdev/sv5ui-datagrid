@@ -1,17 +1,5 @@
 import type { ClassNameValue } from 'tailwind-merge'
 
-/**
- * Every class the grid puts on an element it draws, named one slot at a time.
- *
- * It lives in the kernel rather than beside `datagridVariants` because two
- * layers need it and only one of them draws markup. A feature contributing a
- * `cellDecoration` names a slot the same way a component does, and having it
- * reach up into `components/` for the table would point an import back down
- * the layer it is imported from.
- *
- * `datagridVariants` builds `tv()` on top of this, and is what applies the
- * variants and an app's `ui` overrides. What a feature gets here is the base.
- */
 export const datagridSlots = {
     root: 'w-full space-y-3',
     toolbar: 'flex flex-wrap items-center gap-2',

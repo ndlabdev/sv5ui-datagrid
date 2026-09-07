@@ -21,11 +21,6 @@ export interface CellPosition {
 
 export const HEADER_ROW = -1
 
-/**
- * The floating filter row: a second navigable line above the body, drawn only
- * when `filtering({ floatingRow: true })` asked for one. Negative like the
- * header so a body index stays what it always was.
- */
 export const FILTER_ROW = -2
 
 export class FocusModel<TRow> {

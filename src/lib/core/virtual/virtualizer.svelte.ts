@@ -2,19 +2,8 @@ import { clamp } from '../utils/math.js'
 import { rafBatch } from '../utils/raf-batch.js'
 import { fixedRowLayout, variableRowLayout, type RowLayout } from './row-layout.js'
 
-/** The height a row is assumed to have until told otherwise. */
 export const DEFAULT_ROW_HEIGHT = 40
 
-/**
- * How tall the scroll spacer is allowed to get. Browsers clamp an element's
- * height - Chromium at 2^25 px, others lower - and a spacer past the clamp is
- * silently shortened, which strands every row beyond it: at 40px a million
- * rows want 40M px and the last 160k become unreachable.
- *
- * Staying under it and scaling instead keeps the whole list reachable. The
- * value is deliberately below the lowest clamp in wide use rather than at
- * Chromium's, since a grid does not get to choose its browser.
- */
 export const MAX_SPACER_HEIGHT = 15_000_000
 
 export interface VirtualRange {

@@ -6,20 +6,17 @@ import type {
     FilterRequestEntry
 } from '../../core/types/index.js'
 
-/** True for the grouped shape, so the single-condition shape narrows cleanly. */
 export function isFilterGroup(
     entry: ColumnFilterEntry
 ): entry is Extract<ColumnFilterEntry, { kind: 'group' }> {
     return entry.kind === 'group'
 }
 
-/** A lone condition reads as a one-item `and`, so no consumer has to branch. */
 export function normalizeFilterEntry(entry: ColumnFilterEntry): FilterRequestEntry {
     if (isFilterGroup(entry)) return { join: entry.join, conditions: entry.conditions }
     return { join: 'and', conditions: [entry] }
 }
 
-/** The conditions of an entry, whichever shape it arrived in. */
 export function filterConditions(entry: ColumnFilterEntry): ColumnFilter[] {
     return isFilterGroup(entry) ? entry.conditions : [entry]
 }

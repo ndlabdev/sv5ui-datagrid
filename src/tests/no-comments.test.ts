@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = 'src'
@@ -9,7 +9,55 @@ const SELF = join('src', 'tests', 'no-comments.test.ts')
 // beside its feature, and the kernel's own type folder, which is the same
 // thing spelled with a directory instead of a suffix.
 const DOCUMENTED = '.types.ts'
-const JSDOC_ON_EXPORT = /\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*\n\s*export\s/
+const JSDOC_ON_EXPORT =
+    /\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*\n\s*export\s+(?:async\s+)?(?:function|const|class|interface|type|abstract)\s+(\w+)/
+
+const NAMED_REEXPORT = /export\s+(?:type\s+)?\{([^}]*)\}\s*from\s*'([^']+)'/g
+const STAR_REEXPORT = /export\s+(?:type\s+)?\*\s*from\s*'([^']+)'/g
+
+/**
+ * Names an application can import, walked from the two entry points.
+ *
+ * A named re-export offers exactly what it names; a star offers whatever the
+ * file behind it does. A doc block earns its place by sitting on one of these,
+ * because that is the only kind an editor ever shows to somebody using the
+ * package.
+ */
+function publicNames(): Set<string> {
+    const names = new Set<string>()
+    const seen = new Set<string>()
+
+    const visit = (module: string) => {
+        if (seen.has(module)) return
+        seen.add(module)
+        let source: string
+        try {
+            source = readFileSync(`${module}.ts`, 'utf8')
+        } catch {
+            return
+        }
+        for (const [, body] of source.matchAll(NAMED_REEXPORT)) {
+            for (const raw of body.split(',')) {
+                const name = raw
+                    .trim()
+                    .replace(/^type\s+/, '')
+                    .split(' as ')
+                    .pop()
+                    ?.trim()
+                if (name) names.add(name)
+            }
+        }
+        for (const [, spec] of source.matchAll(STAR_REEXPORT)) {
+            visit(join(dirname(`${module}.ts`), spec).replace(/\.js$/, ''))
+        }
+    }
+
+    visit(join('src', 'lib', 'index'))
+    visit(join('src', 'lib', 'xlsx'))
+    return names
+}
+
+const PUBLIC = publicNames()
 const DOCUMENTED_DIR = join('src', 'lib', 'core', 'types')
 const GENERATED = '.data.ts'
 
@@ -62,7 +110,13 @@ function skipRegex(source: string, start: number): number {
     return i
 }
 
-/* eslint-disable-next-line complexity -- a tokenizer is a state machine */
+/** True when the block is a doc on a name an application can reach. */
+function documents(chunk: string): boolean {
+    const match = JSDOC_ON_EXPORT.exec(chunk)
+    return match !== null && PUBLIC.has(match[1]!)
+}
+
+// eslint-disable-next-line complexity -- a tokenizer is one state machine
 function commentsIn(file: string): string[] {
     const source = readFileSync(file, 'utf8')
     const svelte = file.endsWith('.svelte')
@@ -104,7 +158,7 @@ function commentsIn(file: string): string[] {
                 const stop = end === -1 ? source.length : end + 2
                 if (
                     !SUPPRESSION.test(source.slice(i, i + 60)) &&
-                    !JSDOC_ON_EXPORT.test(source.slice(i, stop + 120))
+                    !documents(source.slice(i, stop + 160))
                 ) {
                     found.push(`${file}:${lineAt(i)} ${source.slice(i, i + 40).trim()}`)
                 }

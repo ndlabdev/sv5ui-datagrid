@@ -45,7 +45,6 @@ export function defineDataGridConfig(config: Partial<DataGridConfig>): void {
     }
 }
 
-/** The config a grid reads when it mounts. */
 export function getDataGridConfig(): DataGridConfig {
     return current
 }
@@ -55,15 +54,6 @@ export function resetDataGridConfig(): void {
     current = clone(datagridDefaults)
 }
 
-/**
- * One slot's classes for a caller that draws no markup: a feature returning a
- * `cellDecoration`. The grid's own class, then whatever the app set for that
- * slot in `defineDataGridConfig`.
- *
- * A grid's per-instance `ui` is deliberately absent. It arrives through
- * context, which only a component is inside; a feature runs in the pipeline,
- * where there is no component to ask.
- */
 export function slotClass(slot: DataGridSlots): string {
     const override = current.slots[slot]
     return override ? `${datagridSlots[slot]} ${String(override)}` : datagridSlots[slot]

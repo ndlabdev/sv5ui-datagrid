@@ -1,5 +1,6 @@
 import type { ColumnDef, RowNode } from '../../core/types/index.js'
 import type { CellRead } from '../../core/grid/index.js'
+import { isBlank } from '../../core/utils/index.js'
 import { declaresKind, inferKind, kindOf, type FilterKind } from './operators.js'
 
 const SAMPLE = 50
@@ -23,7 +24,7 @@ export function kindsFor<TRow>(
         const values: unknown[] = []
         for (const node of scanned) {
             const value = read(node, def)
-            if (value === null || value === undefined || value === '') continue
+            if (isBlank(value)) continue
             values.push(value)
             if (values.length === SAMPLE) break
         }

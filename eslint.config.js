@@ -43,7 +43,8 @@ export default defineConfig(
         }
     },
     {
-        files: ['scripts/**'],
+        // A script and a budget both exist to report a number.
+        files: ['scripts/**', 'src/benchmarks/**'],
         rules: {
             'no-console': 'off'
         }

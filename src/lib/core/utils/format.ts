@@ -1,7 +1,6 @@
 import type { ColumnDef, ColumnType, ColumnTypeOptions } from '../types/index.js'
 import { isBlank } from './value.js'
 
-/** The slice formatters read, declared apart from the row type. */
 export type FormatOptions = Pick<
     ColumnTypeOptions<never>,
     'locale' | 'numberFormat' | 'currency' | 'wholePercent' | 'dateFormat'
@@ -36,7 +35,6 @@ export const DEFAULT_EMPTY_TEXT = '-'
 
 export { isBlank } from './value.js'
 
-/** Numbers arrive as numbers, strings from CSV, or Date/ISO for dates. */
 export function toNumber(value: unknown): number | null {
     if (typeof value === 'number') return Number.isFinite(value) ? value : null
     if (typeof value === 'string' && value.trim() !== '') {
@@ -85,7 +83,6 @@ export function formatCurrency(value: unknown, options: FormatOptions = {}): str
     }).format(parsed)
 }
 
-/** Intl expects 0-1; `wholePercent` says the data already counts to 100. */
 export function formatPercent(value: unknown, options: FormatOptions = {}): string {
     const parsed = toNumber(value)
     if (parsed === null) return ''
@@ -106,7 +103,6 @@ export function formatDate(value: unknown, options: FormatOptions = {}, withTime
     }).format(parsed)
 }
 
-/** Progress and rating need a ratio the component can draw. */
 export function clampToMax(value: unknown, max: number): number {
     const parsed = toNumber(value) ?? 0
     return Math.min(Math.max(parsed, 0), max)
@@ -121,14 +117,6 @@ const TEXT_TYPES = new Set<ColumnType>([
     'datetime'
 ])
 
-/**
- * The text the built-in renderer prints for a value, so a `cell` snippet can
- * show exactly what its own column would and decorate around it. One
- * definition: the renderer, the snippet and a formatted export all read it.
- *
- * `undefined` where the built-in rendering is a widget - boolean, badge, user,
- * progress, rating, link, actions - since there is no string to stand for it.
- */
 export function formatCellText<TRow>(
     value: unknown,
     def: ColumnDef<TRow>,

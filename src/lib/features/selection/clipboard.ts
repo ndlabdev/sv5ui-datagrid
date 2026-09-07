@@ -89,16 +89,10 @@ export function toTsv(matrix: CellMatrix): string {
         .join('\n')
 }
 
-/**
- * A cell opening with `=`, `+`, `-`, `@` or a control character executes as a
- * formula on the machine that opens the file; an apostrophe makes it literal.
- * The clipboard is left alone: quoting there would corrupt the paste back.
- */
 export function neutralizeFormula(cell: string): string {
     return /^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell
 }
 
-/** The separator every locale agrees on, and the one Excel assumes in en-US. */
 export const DEFAULT_CSV_DELIMITER = ','
 
 function csvCell(cell: string, delimiter: string): string {

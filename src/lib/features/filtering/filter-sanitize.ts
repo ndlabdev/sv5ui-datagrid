@@ -123,7 +123,6 @@ function sanitizeEntry(raw: unknown): ColumnFilterEntry | null {
     return { kind: 'group', join: raw.join === 'or' ? 'or' : 'and', conditions }
 }
 
-/** A model built only from what the snapshot got right; null if it got nothing right. */
 export function sanitizeFilterModel(slice: unknown): FilterModel | null {
     if (!isRecord(slice)) return null
 

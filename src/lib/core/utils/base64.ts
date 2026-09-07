@@ -1,8 +1,3 @@
-/**
- * Base64url, the alphabet a URL carries without escaping: `+` and `/` become
- * `-` and `_`, and the padding goes, so a shared grid link survives being
- * pasted into a chat window and back out again.
- */
 export function bytesToBase64Url(bytes: Uint8Array): string {
     let binary = ''
     for (const byte of bytes) binary += String.fromCharCode(byte)

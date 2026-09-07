@@ -11,7 +11,6 @@ import type {
 import { normalizeFilterEntry } from './filter-model.js'
 import { toDisplayUnit, toModelUnit } from './filter-units.js'
 
-/** How many conditions one column's filter may hold. */
 export const MAX_CONDITIONS = 2
 
 const PRESENCE_OPS = new Set(['blank', 'notBlank'])
@@ -20,7 +19,6 @@ export function isPresenceOp(op: string): boolean {
     return PRESENCE_OPS.has(op)
 }
 
-/** One editable condition row of the filter panel. */
 export interface ConditionDraft {
     op: string
     value: string
@@ -159,7 +157,6 @@ function buildCondition(
     return null
 }
 
-/** Null when nothing usable was entered; a group only once both are valid. */
 export function buildColumnFilter(
     type: FilterType,
     draft: FilterDraft,

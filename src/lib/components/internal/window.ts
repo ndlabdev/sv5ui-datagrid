@@ -25,11 +25,6 @@ export function windowStartOf<TRow>(grid: GridState<TRow>): number {
     return 0
 }
 
-/**
- * What the rows the grid holds are numbered from for assistive technology.
- * A server model holds one page and indexes it from 0, but a screen reader is
- * told where in the whole set it stands, which only the server knows.
- */
 export function rowIndexOffsetOf<TRow>(grid: GridState<TRow>): number {
     const pagination = getPagination(grid)
     if (!pagination?.server || !pagination.pageSize) return 0
@@ -40,7 +35,6 @@ export function headerRowsOf<TRow>(grid: GridState<TRow>): number {
     return grid.columns.headerRowCount + (getFiltering(grid)?.floatingRow ? 1 : 0)
 }
 
-/** The rows `aria-rowindex` counts against - the server's total, if it said. */
 export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {
     const pagination = getPagination(grid)
     return pagination?.server ? pagination.total : grid.totalRows

@@ -1,10 +1,6 @@
 import type { GridState } from '../grid/grid.svelte.js'
 import type { ColumnState, RowNode } from '../types/index.js'
 
-/**
- * One row's horizontal spans. `owner[i]` is the column drawing the cell that
- * covers column `i`; `span[i]` is how many columns the cell at `i` covers.
- */
 export interface RowSpans {
     owner: number[]
     span: number[]

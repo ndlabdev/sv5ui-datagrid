@@ -5,7 +5,6 @@ import {
     type PinnedSide
 } from '../types/index.js'
 
-/** The column state a snapshot round-trips, independent of any class. */
 export interface ColumnSnapshotSource {
     orderIds: string[]
     widthOverrides: Record<string, number>
@@ -96,10 +95,6 @@ export function isDensity(value: unknown): value is Density {
     return DENSITIES.includes(value as Density)
 }
 
-/**
- * Only a well-formed snapshot of the current version, `migrate` first when it
- * is older. Anything else is discarded rather than half-applied.
- */
 export function normalizeSnapshot(
     stored: unknown,
     migrate?: (snapshot: GridSnapshot) => GridSnapshot | undefined

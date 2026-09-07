@@ -90,7 +90,6 @@ function scrollable(element: HTMLElement | null): element is HTMLElement {
     return Boolean(element) && element!.scrollHeight > element!.clientHeight + 1
 }
 
-/** Takes over a press on the grip; a caller only forwards `pointerdown`. */
 export function beginRowDrag(event: PointerEvent, options: RowDragOptions): void {
     const handle = event.currentTarget as HTMLElement
     const row = handle.closest<HTMLElement>('[data-dg-row-id]')

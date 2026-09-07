@@ -1,9 +1,8 @@
 import { parseDate, parseTime, Time, type DateValue } from '@internationalized/date'
-import { toDate } from '../../core/utils/index.js'
+import { isBlank, toDate } from '../../core/utils/index.js'
 
-/** Whatever the cell holds, as the DatePicker's `DateValue`. */
 export function toDateValue(value: unknown): DateValue | undefined {
-    if (value === null || value === undefined || value === '') return undefined
+    if (isBlank(value)) return undefined
 
     const date = toDate(value)
     if (!date) return undefined
@@ -17,15 +16,6 @@ export function toDateValue(value: unknown): DateValue | undefined {
     }
 }
 
-/**
- * Back to ISO, built from the parts: `toString()` is locale-formatted.
- *
- * The year is padded to four digits like the rest. A segmented field reports
- * a year on its way to 2026 as 2, then 20, then 202, and unpadded those left
- * as `2-01-05`: a string `toDateValue` cannot read back, a value no server
- * would take, and, from a cell editor, one that could be committed onto the
- * row itself.
- */
 export function fromDateValue(
     value: { year: number; month: number; day: number } | undefined
 ): string {
@@ -34,9 +24,8 @@ export function fromDateValue(
     return `${pad(value.year, 4)}-${pad(value.month)}-${pad(value.day)}`
 }
 
-/** Converts a stored `HH:mm[:ss]` string into a `Time`. */
 export function toTimeValue(value: unknown): Time | undefined {
-    if (value === null || value === undefined || value === '') return undefined
+    if (isBlank(value)) return undefined
     try {
         return parseTime(String(value))
     } catch {
@@ -44,7 +33,6 @@ export function toTimeValue(value: unknown): Time | undefined {
     }
 }
 
-/** Serializes a TimeField time value back to an `HH:mm` string. */
 export function fromTimeValue(value: { hour: number; minute: number } | undefined): string {
     if (!value) return ''
     const pad = (n: number) => String(n).padStart(2, '0')

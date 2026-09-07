@@ -6,7 +6,6 @@ import type {
     TextFilterOp
 } from '../types/index.js'
 
-/** Order, kept apart from wording so a translation cannot reshuffle it. */
 export const TEXT_OPS: TextFilterOp[] = [
     'contains',
     'notContains',

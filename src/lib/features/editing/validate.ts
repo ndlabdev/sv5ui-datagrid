@@ -13,7 +13,6 @@ function fromSchemaResult(result: StandardSchemaV1.Result<unknown>, input: unkno
     return { error: null, value: (result as { value: unknown }).value }
 }
 
-/** Against `schema` or `validate`; a Promise only when the schema is async. */
 export function runValidation<TRow>(
     value: unknown,
     row: TRow,

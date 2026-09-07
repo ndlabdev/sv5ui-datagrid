@@ -1,6 +1,5 @@
 import type { DataGridLocalePack } from '../types/index.js'
 
-/** What the page says it is written in, best source first. */
 export function documentLocale(): string | undefined {
     if (typeof document !== 'undefined') {
         const declared = document.documentElement.lang?.trim()
@@ -17,10 +16,6 @@ function matchScore(tag: string, wanted: string): number {
     return a.split('-')[0] === b.split('-')[0] ? 1 : 0
 }
 
-/**
- * The pack to use, or undefined for the built-in English. A tag nobody
- * answers for falls through rather than throwing.
- */
 export function resolveLocale(
     packs: DataGridLocalePack[],
     requested?: string

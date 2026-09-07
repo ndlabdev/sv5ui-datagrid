@@ -1,21 +1,11 @@
 import type { GridState } from '../grid/grid.svelte.js'
 import type { ColumnState, RowNode } from '../types/index.js'
 
-/**
- * One column's vertical spans. `owner[i]` is the row drawing the cell that
- * covers row `i`; `span[i]` is how many rows the cell at `i` covers. Indices
- * are into the pre-window list, so a span survives paging and scrolling.
- */
 export interface ColumnRowSpans {
     owner: number[]
     span: number[]
 }
 
-/**
- * Resolved against the whole row list, because a span reaching into view may
- * start above it. One pass per spanning column; hold the result until the
- * rows change. A grid declaring none pays nothing.
- */
 export function rowSpansOf<TRow>(
     grid: GridState<TRow>,
     nodes: RowNode<TRow>[]
@@ -30,13 +20,6 @@ export function rowSpansOf<TRow>(
     return result
 }
 
-/**
- * True when the column at `colIndex` opens a horizontal run of spanning
- * columns, and so is the one to draw the run's inline-start edge.
- *
- * The first visible column never opens one: the viewport's own border is
- * already that line, and a second against it reads as a doubled rule.
- */
 export function opensRowSpanGroup(
     columns: readonly { id: string }[],
     colIndex: number,

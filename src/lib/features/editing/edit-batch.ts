@@ -1,6 +1,5 @@
 import type { EditTransaction } from '../../core/types/index.js'
 
-/** One transaction per row, in the order rows were touched: one undo step. */
 export function groupChangesByRow(
     entries: { rowId: string; columnId: string; value: unknown }[]
 ): EditTransaction[] {
