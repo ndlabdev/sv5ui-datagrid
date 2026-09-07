@@ -14,6 +14,59 @@
         type GridFeature
     } from '$lib/index.js'
 
+    const whatsNew = [
+        {
+            href: '/aggregate',
+            title: 'Nhóm và tổng hợp',
+            check: 'Mỗi cột một hàm tổng hợp khác nhau'
+        },
+        { href: '/share', title: 'Show values as', check: 'Sort và copy phải khớp cái đang hiện' },
+        {
+            href: '/structures',
+            title: 'Tree và master/detail',
+            check: 'Hàng mồ côi, và panel dưới hàng'
+        },
+        {
+            href: '/formula',
+            title: 'Cột công thức',
+            check: '31 hàm, và vòng lặp phụ thuộc bị từ chối'
+        },
+        { href: '/filter', title: 'Lọc nâng cao', check: 'Cây (A AND B) OR C' },
+        {
+            href: '/filter-types',
+            title: 'Toán tử theo kiểu cột',
+            check: 'Kiểu cột nào ra toán tử nào'
+        },
+        { href: '/range', title: 'Vùng chọn ô', check: 'Nhiều vùng, Ctrl+Enter, cắt và dời' },
+        { href: '/fill', title: 'Tay cầm fill', check: 'Đọc ra chuỗi số, ngày, chữ' },
+        { href: '/find', title: 'Find và replace', check: 'Số ô ghi được khác số ô tìm thấy' },
+        {
+            href: '/format',
+            title: 'Định dạng có điều kiện',
+            check: 'Thang màu, thanh dữ liệu, top N'
+        },
+        {
+            href: '/import',
+            title: 'Import wizard',
+            check: 'CSV, XLSX, clipboard, sửa tại chỗ trước commit'
+        },
+        { href: '/views', title: 'Saved views', check: 'Lưu, nạp lại, và gói vào URL' },
+        { href: '/policy', title: 'Policy engine', check: 'Che ở đủ sáu lối ra' },
+        {
+            href: '/server-model',
+            title: 'Server row model',
+            check: 'Trang, block, và fetchAll khi xuất'
+        },
+        { href: '/worker', title: 'Worker row model', check: 'Thời gian chặn luồng chính' },
+        { href: '/xlsx', title: 'XLSX có style', check: 'Mở bằng Excel xem style còn không' },
+        { href: '/auto', title: 'autoColumns', check: 'Nó đoán ra kiểu gì từ dữ liệu' },
+        {
+            href: '/combo',
+            title: 'Tám feature cùng lúc',
+            check: 'Các feature có giẫm chân nhau không'
+        }
+    ]
+
     interface Person {
         id: number
         name: string
@@ -170,6 +223,24 @@
         </div>
         <ThemeModeButton />
     </div>
+
+    <section class="rounded-lg border border-outline-variant bg-surface-container p-5">
+        <div class="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 class="text-lg font-medium text-on-surface">Mới trong 2.0</h2>
+            <Badge label="{whatsNew.length} demo" color="primary" size="sm" />
+            <p class="text-sm text-on-surface-variant">
+                Mười tám route dưới đây chưa có ở 1.3.1. Cột phải ghi thứ đáng soi nhất của mỗi cái.
+            </p>
+        </div>
+        <ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2 xl:grid-cols-3">
+            {#each whatsNew as demo (demo.href)}
+                <li class="flex flex-col gap-0.5 border-t border-outline-variant/60 pt-2">
+                    <Link href={demo.href} class="text-sm font-medium">{demo.title}</Link>
+                    <span class="text-xs text-on-surface-variant">{demo.check}</span>
+                </li>
+            {/each}
+        </ul>
+    </section>
 
     <section class="space-y-3">
         <div class="space-y-1">
