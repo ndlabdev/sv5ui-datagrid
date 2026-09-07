@@ -17,6 +17,9 @@
 
     setGridContext(untrack(() => grid))
     setGridTheme(() => ui)
+    $effect.pre(() => {
+        grid.ui = ui
+    })
 
     let root = $state<HTMLElement | null>(null)
     setGridElement(() => root)

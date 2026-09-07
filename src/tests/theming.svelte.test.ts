@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
+import Theming from '../routes/theming/+page.svelte'
 import { page } from 'vitest/browser'
 import {
     sorting,
@@ -176,5 +177,17 @@ describe('theming - data-driven callbacks', () => {
         expect(cellOf('-40').className).not.toContain('text-on-surface')
         expect(cellOf('120').className).not.toContain('text-error')
         expect(cellOf('Alice').className).not.toContain('text-error')
+    })
+})
+
+describe('a feature slot takes the same ui', () => {
+    it('themes a panel and a range through the one table', async () => {
+        const screen = await render(Theming as never)
+
+        const panel = () => screen.container.querySelector('[data-dg-group-panel]')
+        await expect.poll(() => panel()?.className ?? '').toContain('border-primary/40')
+
+        const cells = [...screen.container.querySelectorAll('[data-dg-cell]')]
+        expect(cells.length).toBeGreaterThan(0)
     })
 })

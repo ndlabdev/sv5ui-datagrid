@@ -197,6 +197,8 @@ export class GridState<TRow> {
 
     status = $state.raw<GridStatus | undefined>(undefined)
 
+    ui = $state.raw<Record<string, unknown> | undefined>(undefined)
+
     getValue(
         node: RowNode<TRow>,
         column: ColumnState<TRow>,

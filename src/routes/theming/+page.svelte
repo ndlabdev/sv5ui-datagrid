@@ -6,7 +6,10 @@
         DataGrid,
         defineDataGridConfig,
         filtering,
+        Grid,
+        grouping,
         pagination,
+        rangeSelection,
         resetDataGridConfig,
         sorting,
         type ColumnDef,
@@ -108,6 +111,25 @@
         grid.density = configOn ? 'compact' : 'standard'
     }
 
+    const featureGrid = createDataGrid<Invoice>({
+        columns,
+        data: invoices,
+        getRowId: (invoice) => String(invoice.id),
+        features: [
+            sorting<Invoice>(),
+            filtering<Invoice>(),
+            pagination<Invoice>({ pageSize: 6 }),
+            grouping<Invoice>({ by: ['status'] }),
+            rangeSelection<Invoice>()
+        ]
+    })
+
+    const featureUi: DataGridUi = {
+        groupPanel: 'border-solid border-primary/40 bg-primary-container/30',
+        groupPanelLabel: 'text-primary',
+        rangeCell: 'bg-tertiary/15 before:border-tertiary/50'
+    }
+
     const presetLabels: Record<PresetName, string> = {
         none: 'Mặc định',
         compactMono: 'Mono',
@@ -183,6 +205,24 @@
             </p>
         </div>
         <DataGrid {grid} {ui} toolbar />
+    </section>
+
+    <section class="space-y-3">
+        <div>
+            <h2 class="text-lg font-medium text-on-surface">
+                4. Slot của feature, cùng một <code>ui</code>
+            </h2>
+            <p class="text-sm text-on-surface-variant">
+                Bảng slot là một. Một feature mang slot của riêng nó vào cùng chỗ, nên
+                <code>groupPanel</code>
+                và <code>rangeCell</code> nhận override y như <code>cell</code> hay
+                <code>statusBar</code> - không có cấu hình thứ hai để nhớ. Kéo chọn một vùng để thấy màu
+                vùng chọn đã đổi.
+            </p>
+        </div>
+        <Grid.GroupPanel grid={featureGrid} />
+        <DataGrid grid={featureGrid} ui={featureUi} toolbar />
+        <Grid.RangeStatusBar grid={featureGrid} />
     </section>
 
     <p class="text-xs text-on-surface-variant">

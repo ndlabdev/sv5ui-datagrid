@@ -9,12 +9,12 @@
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const theme = getGridTheme()
     const slots = datagridVariants()
 
     let { grid: gridProp, class: className }: { grid?: GridState<TRow>; class?: string } = $props()
 
     const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
+    const theme = getGridTheme(grid)
 
     const views = $derived(getSavedViews(grid))
     const t = $derived(grid.labels)

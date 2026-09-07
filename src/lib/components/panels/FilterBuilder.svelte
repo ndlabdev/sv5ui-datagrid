@@ -21,7 +21,6 @@
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const theme = getGridTheme()
     const slots = datagridVariants()
 
     let {
@@ -54,6 +53,7 @@
     } = $props()
 
     const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
+    const theme = getGridTheme(grid)
 
     const MAX_SET_VALUES = 200
 

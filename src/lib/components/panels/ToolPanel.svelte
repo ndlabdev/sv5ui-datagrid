@@ -13,7 +13,6 @@
     import { getGridContext } from '../internal/context.js'
     import { getGridTheme } from '../internal/theme.js'
 
-    const theme = getGridTheme()
     const slots = datagridVariants()
 
     type Tab = 'columns' | 'group' | 'values'
@@ -35,6 +34,7 @@
     } = $props()
 
     const grid = untrack(() => gridProp) ?? getGridContext<TRow>()
+    const theme = getGridTheme(grid)
 
     const t = $derived(grid.labels)
     const grouping = $derived(getGrouping(grid))
