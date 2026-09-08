@@ -8,6 +8,11 @@
  * `{ kind: 'percentOfRow', of }` divides by the sum of the named columns in
  * the same row, which is how a month-per-column table reads across.
  *
+ * On a grouped grid, `percentOfParent` divides by the group row, which holds a
+ * number only for a column `grouping()` aggregates. Give the column an
+ * aggregation of its own as well; without one there is no denominator, the
+ * column reads blank, and the grid says so once in the console.
+ *
  * The share is a fraction: `0.34`, not `34`. Declare the column
  * `type: 'percent'` and the grid formats it as `34%` on screen, in the
  * clipboard and in every export.

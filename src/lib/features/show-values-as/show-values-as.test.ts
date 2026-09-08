@@ -1,7 +1,7 @@
 import { createDataGrid } from '../../core/grid/index.js'
 import { type ColumnDef } from '../../core/types/index.js'
 import { filtering } from '../../features/filtering/index.js'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { grouping } from '../grouping/index.js'
 import { tree } from '../tree/index.js'
 import { getShowValuesAs, showValuesAs } from './show-values-as.svelte.js'
@@ -227,5 +227,27 @@ describe('a share travels with the view it was saved in', () => {
         getShowValuesAs(built)!.hydrate({ revenue: 'nonsense', q1: { kind: 'percentOfRow' } })
 
         expect(getShowValuesAs(built)!.shown).toEqual({})
+    })
+})
+
+describe('percentOfParent without an aggregation to divide by', () => {
+    it('says so once rather than drawing a blank column in silence', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const built = createDataGrid<Sale>({
+            columns,
+            data: sales,
+            getRowId: (sale) => String(sale.id),
+            features: [
+                grouping({ by: ['region'], aggregations: {} }),
+                showValuesAs({ columns: { revenue: 'percentOfParent' } })
+            ]
+        })
+
+        expect(built.preWindowNodes.length).toBeGreaterThan(0)
+        expect(built.preWindowNodes.length).toBeGreaterThan(0)
+
+        expect(warn).toHaveBeenCalledTimes(1)
+        expect(String(warn.mock.calls[0]![0])).toContain('percentOfParent')
+        warn.mockRestore()
     })
 })

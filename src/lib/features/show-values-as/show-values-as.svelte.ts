@@ -1,11 +1,17 @@
 import { gateReader, type GridState, PIPELINE_ORDER } from '../../core/grid/index.js'
 import { type GridFeature, type RowNode } from '../../core/types/index.js'
+import { getGrouping } from '../grouping/index.js'
 import { applyShares } from './shares.js'
 import type { ShowAs, ShowValuesAsOptions } from './show-values-as.types.js'
 
 const SHOW_VALUES_AS = 'showValuesAs'
 
 const SHOW_VALUES_AS_ORDER = PIPELINE_ORDER.group + 1
+
+const missingAggregation = (columnId: string): string =>
+    `showValuesAs: "${columnId}" is shown as percentOfParent, but grouping() has no ` +
+    'aggregation for it, so the group row it divides by holds nothing and the column ' +
+    `reads blank. Add it: grouping({ aggregations: { ${columnId}: 'sum' } }).`
 
 function readShown(slice: unknown): Record<string, ShowAs> | null {
     if (slice === null || typeof slice !== 'object' || Array.isArray(slice)) return null
@@ -46,12 +52,31 @@ export class ShowValuesAs<TRow> {
         this.shown = {}
     }
 
-    apply = (nodes: RowNode<TRow>[]): RowNode<TRow>[] =>
-        applyShares(nodes, {
+    #warnedParent: string[] = []
+
+    #warnMissingAggregation(): void {
+        const grouping = getGrouping(this.#grid)
+        if (!grouping || grouping.by.length === 0) return
+
+        for (const [columnId, showAs] of Object.entries(this.shown)) {
+            if (showAs !== 'percentOfParent') continue
+            if (grouping.aggregations[columnId] !== undefined) continue
+            if (this.#warnedParent.includes(columnId)) continue
+
+            this.#warnedParent.push(columnId)
+            // eslint-disable-next-line no-console
+            console.warn(missingAggregation(columnId))
+        }
+    }
+
+    apply = (nodes: RowNode<TRow>[]): RowNode<TRow>[] => {
+        this.#warnMissingAggregation()
+        return applyShares(nodes, {
             shown: this.shown,
             columns: this.#grid.columns.all.map((column) => column.def),
             read: gateReader(this.#grid, 'render')
         })
+    }
 
     serialize = (): Record<string, ShowAs> | undefined =>
         Object.keys(this.shown).length === 0 ? undefined : this.shown
