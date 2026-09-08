@@ -1,5 +1,6 @@
 import { gateReader, type GridState, isLoadingRow } from '../../core/grid/index.js'
 import { type ColumnState, type RowNode } from '../../core/types/index.js'
+import { withComputed } from '../../core/utils/index.js'
 import { evaluate, FormulaError, type FormulaValue, isFormulaError } from './evaluate.js'
 import type { FormulaColumn } from './formula.types.js'
 import { resolveOrder } from './order.js'
@@ -182,6 +183,6 @@ export function applyFormulas<TRow>(
     return nodes.map((node) => {
         if (isLoadingRow(node.row)) return node
         const computed = computedFor(node, plan)
-        return { ...node, row: { ...node.row, ...computed } }
+        return { ...node, row: withComputed(node.row, computed) }
     })
 }

@@ -1,5 +1,5 @@
 import { type ColumnDef, type RowNode } from '../../core/types/index.js'
-import { numericOrNull } from '../../core/utils/index.js'
+import { numericOrNull, withComputed } from '../../core/utils/index.js'
 import { type CellRead, isDataRow, isLoadingRow, rawRead } from '../../core/grid/index.js'
 import { totalsKindOf } from '../grouping/index.js'
 import type { ShowAs } from './show-values-as.types.js'
@@ -136,6 +136,6 @@ export function applyShares<TRow>(
         for (let entry = 0; entry < columns.length; entry++) {
             written[columns[entry]!.id] = shares[entry]![index]!
         }
-        return { ...node, row: { ...node.row, ...written } }
+        return { ...node, row: withComputed(node.row, written) }
     })
 }

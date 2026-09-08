@@ -1,7 +1,23 @@
 import type { ColumnDef, SetFilterValue } from '../types/index.js'
 
+const COMPUTED_KEY = '__dgComputed'
+
+export function withComputed<TRow>(row: TRow, values: Record<string, unknown>): TRow {
+    const carried = (row as Record<string, unknown>)[COMPUTED_KEY] as string[] | undefined
+    const written = Object.keys(values)
+    return {
+        ...(row as object),
+        ...values,
+        [COMPUTED_KEY]: carried ? [...new Set([...carried, ...written])] : written
+    } as TRow
+}
+
 export function getCellValue<TRow>(row: TRow, column: ColumnDef<TRow>): unknown {
-    if (column.accessor) return column.accessor(row)
+    if (column.accessor) {
+        const computed = (row as Record<string, unknown> | null)?.[COMPUTED_KEY] as
+            string[] | undefined
+        if (computed === undefined || !computed.includes(column.id)) return column.accessor(row)
+    }
     return (row as Record<string, unknown>)[column.id]
 }
 

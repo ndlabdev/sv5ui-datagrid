@@ -2,7 +2,7 @@ import { type ColumnDef, type RowNode } from '../../core/types/index.js'
 import { type CellRead, markSyntheticRow, rawRead } from '../../core/grid/index.js'
 import { aggregateRowValues, buildFooterNode, groupPathId } from './totals-nodes.js'
 import type { Aggregation } from './grouping.types.js'
-import { isBlank } from '../../core/utils/index.js'
+import { isBlank, withComputed } from '../../core/utils/index.js'
 
 interface BuildGroupNodesOptions<TRow> {
     read?: CellRead<TRow>
@@ -70,10 +70,12 @@ function buildLevel<TRow>(
         position += 1
         const groupPath = [...path, { columnId, key }]
         const id = groupNodeId(groupPath)
-        const row = markSyntheticRow({
-            ...aggregateRowValues(members, options.columns, options.aggregations, options.read),
-            [columnId]: options.groupLabel(key, members.length, columnId)
-        } as unknown as TRow)
+        const row = markSyntheticRow(
+            withComputed({} as TRow, {
+                ...aggregateRowValues(members, options.columns, options.aggregations, options.read),
+                [columnId]: options.groupLabel(key, members.length, columnId)
+            })
+        )
 
         output.push({
             id,

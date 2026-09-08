@@ -1,5 +1,6 @@
 import { type ColumnDef, type RowNode } from '../../core/types/index.js'
 import { type CellRead, markSyntheticRow, rawRead } from '../../core/grid/index.js'
+import { withComputed } from '../../core/utils/index.js'
 import { aggregate } from './aggregate.js'
 import type { Aggregation, GroupRowValues } from './grouping.types.js'
 
@@ -53,10 +54,12 @@ export function buildFooterNode<TRow>(
     options: BuildFooterNodeOptions<TRow>
 ): RowNode<TRow> {
     const { columnId, key } = path[path.length - 1]!
-    const row = markSyntheticRow({
-        ...aggregateRowValues(members, options.columns, options.aggregations, options.read),
-        [columnId]: options.footerLabel(key, members.length, columnId)
-    } as unknown as TRow)
+    const row = markSyntheticRow(
+        withComputed({} as TRow, {
+            ...aggregateRowValues(members, options.columns, options.aggregations, options.read),
+            [columnId]: options.footerLabel(key, members.length, columnId)
+        })
+    )
 
     return {
         id: footerNodeId(path),
@@ -89,7 +92,7 @@ export function buildGrandTotalNode<TRow>(
 
     return {
         id: GRAND_TOTAL_ID,
-        row: markSyntheticRow(values as unknown as TRow),
+        row: markSyntheticRow(withComputed({} as TRow, values)),
         index: leaves.length > 0 ? leaves[0]!.index : 0,
         meta: { level: 0 }
     }
