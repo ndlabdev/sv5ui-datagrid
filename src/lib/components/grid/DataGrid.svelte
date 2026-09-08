@@ -7,7 +7,7 @@
     import { pagination } from '../../features/pagination/index.js'
     import { selection } from '../../features/selection/index.js'
     import { sorting } from '../../features/sorting/index.js'
-    import { getVirtualization, virtualization } from '../../features/virtualization/index.js'
+    import { virtualization } from '../../features/virtualization/index.js'
     import type { DataGridProps } from '../datagrid.types.js'
     import GridBody from './GridBody.svelte'
     import GridColumnChooser from '../chrome/GridColumnChooser.svelte'
@@ -82,8 +82,6 @@
         }
     })
 
-    const isVirtual = untrack(() => Boolean(getVirtualization(grid)))
-
     $effect.pre(() => {
         if (externalGrid) return
         grid.data = data ?? []
@@ -91,7 +89,7 @@
     })
 </script>
 
-<GridRoot {grid} {persistState} {ui} class={isVirtual ? undefined : className}>
+<GridRoot {grid} {persistState} {ui}>
     {#if toolbar}
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />
@@ -103,7 +101,7 @@
         </GridToolbar>
     {/if}
     <GridContextMenu {exportFilename}>
-        <GridViewport class={isVirtual ? className : undefined}>
+        <GridViewport class={className}>
             <GridHeader />
             <GridBody {emptyText} {loading} {loadingRows} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
