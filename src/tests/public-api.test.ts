@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import * as api from '$lib/index.js'
+import * as xlsx from '$lib/xlsx.js'
 
 const PUBLIC_API = [
     'DataGrid',
@@ -123,5 +126,66 @@ describe('public API', () => {
         ]) {
             expect(api).not.toHaveProperty(name)
         }
+    })
+})
+
+const XLSX_API = [
+    'BUILT_IN_STYLES',
+    'CellValue',
+    'DEFAULT_FORMAT_COLORS',
+    'DEFAULT_STYLE',
+    'ExportXlsxOptions',
+    'SheetColumn',
+    'SheetOptions',
+    'StyleId',
+    'StyleTable',
+    'WorkbookOptions',
+    'WorkbookSheet',
+    'XLSX_MIME',
+    'XlsxAlignment',
+    'XlsxBorder',
+    'XlsxBorderSide',
+    'XlsxCfRule',
+    'XlsxColor',
+    'XlsxFont',
+    'XlsxFormatColors',
+    'XlsxFormula',
+    'XlsxStyle',
+    'buildGridXlsx',
+    'buildGridXlsxAsync',
+    'cellRef',
+    'columnLetter',
+    'createWorkbook',
+    'createWorkbookAsync',
+    'downloadGridXlsx',
+    'toSerialDate'
+].sort()
+
+function namesIn(source: string): string[] {
+    const names: string[] = []
+    for (const statement of source.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
+        for (const raw of statement[1]!.split(',')) {
+            const name = raw
+                .trim()
+                .replace(/^type\s+/, '')
+                .split(' as ')
+                .pop()
+                ?.trim()
+            if (name) names.push(name)
+        }
+    }
+    return names.sort()
+}
+
+describe('the xlsx entry', () => {
+    it('offers exactly the names it means to, types included', () => {
+        const source = readFileSync(join('src', 'lib', 'xlsx.ts'), 'utf8')
+        expect(namesIn(source)).toEqual(XLSX_API)
+    })
+
+    it('really resolves each value it names, rather than only declaring it', () => {
+        const values = XLSX_API.filter((name) => name in xlsx)
+        expect(Object.keys(xlsx).sort()).toEqual(values)
+        expect(values.length).toBeGreaterThan(10)
     })
 })
