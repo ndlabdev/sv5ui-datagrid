@@ -17,5 +17,10 @@ export type {
     GridRootProps
 } from './datagrid.types.js'
 export { DataGrid } from './grid/index.js'
-export { datagridIcons, registerDataGridIcons } from './internal/index.js'
+export {
+    datagridIcons,
+    getGridContext,
+    getGridElement,
+    registerDataGridIcons
+} from './internal/index.js'
 export { Grid, type GridParts } from './parts.js'

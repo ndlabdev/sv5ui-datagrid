@@ -159,8 +159,9 @@ export interface GridFeature<TRow> {
      * promise on the box: `DataGrid` never mentions these, so a feature nobody
      * registered is a component nobody bundles.
      *
-     * It is handed no props. The grid is in context, and so is the root
-     * element, which `getGridElement` answers for.
+     * It is handed no props. Both `getGridContext` and `getGridElement` are
+     * exported for it: the first answers the grid it is mounted in, the second
+     * a getter for the root element, which arrives after the first paint.
      */
     component?: Component
 
