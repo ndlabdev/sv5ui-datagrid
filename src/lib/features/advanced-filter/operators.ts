@@ -57,9 +57,10 @@ export function inferKind(values: readonly unknown[]): FilterKind {
     const present = values.filter((value) => !isBlank(value))
     if (present.length === 0) return 'text'
 
+    if (present.every((value) => value instanceof Date)) return 'date'
     if (present.every((value) => typeof value === 'boolean')) return 'boolean'
     if (present.every((value) => numericOrNull(value) !== null)) return 'number'
-    if (present.every((value) => value instanceof Date || toDate(value) !== null)) return 'date'
+    if (present.every((value) => toDate(value) !== null)) return 'date'
     return 'text'
 }
 

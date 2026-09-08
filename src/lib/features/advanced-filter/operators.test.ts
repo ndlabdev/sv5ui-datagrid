@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { type ColumnDef } from '../../core/types/index.js'
 import {
+    inferKind,
     isFilterable,
     kindOf,
     needsList,
@@ -100,5 +101,24 @@ describe('a column the panel should not offer', () => {
         ] as const) {
             expect(isFilterable(def({ type })), type).toBe(true)
         }
+    })
+})
+
+describe('inferKind on a column that declares nothing', () => {
+    it('reads real Date objects as dates, not as their epoch milliseconds', () => {
+        expect(inferKind([new Date(2026, 0, 15)])).toBe('date')
+        expect(inferKind([new Date(2026, 0, 15), new Date(2026, 1, 20)])).toBe('date')
+        expect(opsFor(inferKind([new Date(2026, 0, 15)]))).toContain('before')
+    })
+
+    it('still reads a column of plain numbers as numbers', () => {
+        expect(inferKind([2020, 2021, 2022])).toBe('number')
+        expect(inferKind(['12', '34'])).toBe('number')
+        expect(inferKind([null, null, null, 5, 6])).toBe('number')
+    })
+
+    it('reads a date written as a string, and mixed shapes, as dates', () => {
+        expect(inferKind(['2026-01-15'])).toBe('date')
+        expect(inferKind([new Date(2026, 0, 15), '2026-02-20'])).toBe('date')
     })
 })
