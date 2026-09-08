@@ -1,7 +1,9 @@
 <script lang="ts">
+    import { isDataRow } from '../../core/grid/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getSelection } from '../../features/selection/index.js'
+    import { getTree } from '../../features/tree/index.js'
     import { getGridContext } from '../internal/context.js'
     import type { GridStatusBarProps } from '../datagrid.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
@@ -16,12 +18,15 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    const total = $derived(pagination?.server ? pagination.total : grid.sourceNodes.length)
+    const treeState = getTree(grid)
+    const total = $derived(
+        pagination?.server ? pagination.total : (treeState?.totalRows ?? grid.sourceNodes.length)
+    )
     const filtered = $derived(
         pagination?.server
             ? total
             : grid.preWindowNodes.reduce(
-                  (count, node) => (node.meta?.fullWidth ? count : count + 1),
+                  (count, node) => (isDataRow(node) ? count + 1 : count),
                   pinning?.pinnedCount ?? 0
               )
     )

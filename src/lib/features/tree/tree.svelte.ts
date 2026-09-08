@@ -24,6 +24,23 @@ export class Tree<TRow> {
         }
     }
 
+    totalRows = $derived.by(() => {
+        const { getChildren } = this.#options
+        const source = this.#grid.sourceNodes
+        if (!getChildren) return source.length
+
+        let count = 0
+        const walk = (rows: TRow[]) => {
+            for (const row of rows) {
+                count += 1
+                const children = getChildren(row)
+                if (children && children.length > 0) walk(children)
+            }
+        }
+        walk(source.map((node) => node.row))
+        return count
+    })
+
     #wrap(rows: TRow[], parentIndex: number): RowNode<TRow>[] {
         const nodes = rows.map((row, index) => ({
             id: this.#grid.getRowId(row),
