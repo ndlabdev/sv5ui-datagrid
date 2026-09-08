@@ -267,11 +267,11 @@ describe('a substitute a typed column cannot draw', () => {
     const cellText = (container: Element) =>
         container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')?.textContent?.trim()
 
-    it('draws nothing at all when the mark is a string a currency cannot parse', async () => {
+    it('draws the mark itself when a currency column cannot parse it', async () => {
         const screen = await render(TypedDataGrid, { grid: typedGrid(MASK) })
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        expect(cellText(screen.container)).toBe('')
+        expect(cellText(screen.container)).toBe(MASK)
         expect(screen.container.innerHTML).not.toContain('9000')
     })
 

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import type { ColumnDef } from '../types/index.js'
 import {
     clampToMax,
+    DEFAULT_EMPTY_TEXT,
+    formatCellText,
     formatCurrency,
     formatDate,
     formatNumber,
@@ -111,5 +114,23 @@ describe('clampToMax', () => {
     it('treats unreadable values as zero', () => {
         expect(clampToMax('abc', 5)).toBe(0)
         expect(clampToMax(null, 5)).toBe(0)
+    })
+})
+
+describe('a typed column handed text it cannot read', () => {
+    const number: ColumnDef<{ v: unknown }> = { id: 'v', type: 'number' }
+    const date: ColumnDef<{ v: unknown }> = { id: 'v', type: 'date' }
+    const currency: ColumnDef<{ v: unknown }> = { id: 'v', type: 'currency' }
+
+    it('declines rather than answering the empty string', () => {
+        expect(formatCellText('notanumber', number)).toBeUndefined()
+        expect(formatCellText('1234-56-78', date)).toBeUndefined()
+        expect(formatCellText('maybe', currency)).toBeUndefined()
+    })
+
+    it('keeps answering for a value it can read, and for a blank', () => {
+        expect(formatCellText('42', number)).toBe('42')
+        expect(formatCellText('', number)).toBe(DEFAULT_EMPTY_TEXT)
+        expect(formatCellText(null, number)).toBe(DEFAULT_EMPTY_TEXT)
     })
 })

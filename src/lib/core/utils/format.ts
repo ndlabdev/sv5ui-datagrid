@@ -117,6 +117,20 @@ const TEXT_TYPES = new Set<ColumnType>([
     'datetime'
 ])
 
+function readable(value: unknown, type: string | undefined): boolean {
+    switch (type) {
+        case 'number':
+        case 'currency':
+        case 'percent':
+            return toNumber(value) !== null
+        case 'date':
+        case 'datetime':
+            return toDate(value) !== null
+        default:
+            return true
+    }
+}
+
 export function formatCellText<TRow>(
     value: unknown,
     def: ColumnDef<TRow>,
@@ -127,7 +141,11 @@ export function formatCellText<TRow>(
 
     const options = { locale, ...def.typeOptions }
     if (isBlank(value)) return options.emptyText ?? DEFAULT_EMPTY_TEXT
+    if (!readable(value, type)) return undefined
+    return drawn(value, type, options)
+}
 
+function drawn(value: unknown, type: string | undefined, options: FormatOptions): string {
     switch (type) {
         case 'number':
             return formatNumber(value, options)
