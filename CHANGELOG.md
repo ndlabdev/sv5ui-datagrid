@@ -107,7 +107,7 @@ rest is additive.
 
 ### Fixed
 
-Three of these are in code 1.3.1 already ships, so they land whether or not any
+Five of these are in code 1.3.1 already ships, so they land whether or not any
 of the new modules interests you.
 
 - The footer no longer runs one page number into the next. Its buttons were
@@ -117,6 +117,19 @@ of the new modules interests you.
   with what it holds.
 - `gateReader` composes a column's readers once per pass rather than once per
   cell: 15,000 compositions became three over 5,000 rows and three columns.
+- A boolean column no longer claims a value it does not have. The cell coerced
+  whatever it held, so the strings `false` and `no` drew a green tick carrying
+  `aria-label="true"`, the exact opposite of the data, and a screen reader was
+  told so. Any non-empty word did the same. The tick is drawn only for a value
+  that reads as a boolean now - a real one, a number, or a word the grid knows
+  in twelve languages - and anything else draws its own text instead.
+- A height given to `<DataGrid class="h-80" />` holds the rows inside it on a
+  grid that has not registered `virtualization()`. The class was routed to the
+  root, which stacks the toolbar, the grid and the footer and has no overflow
+  of its own, while the element that scrolls is the viewport inside it.
+  Measured at `h-40`: the rows painted 1,483px below the box and over whatever
+  followed on the page. The viewport takes the class in both cases now, so
+  registering a feature no longer moves where your class lands.
 - A typed column no longer swallows text it cannot parse. `notanumber` in a
   `type: 'number'` column, or `1234-56-78` in a `type: 'date'` one, drew an
   empty cell: the value was in the row, the editor opened on it, and the screen

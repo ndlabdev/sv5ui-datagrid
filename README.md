@@ -351,6 +351,20 @@ if (isFormulaError(value)) {
 column in a cycle reads `#CYCLE` down its length and the columns outside that
 cycle keep working.
 
+Those two answer a cell. To check an expression before it becomes one, which is
+what an editor offering `FUNCTION_NAMES` needs next, write it and ask:
+
+```ts
+const formulas = getFormula(grid)!
+formulas.set('draft', expression)
+const failure = formulas.errorOf('draft') // null when it parses
+```
+
+The parser itself is not exported. It answers an internal tree that would have
+to stay still for as long as the package does, and `errorOf` carries the two
+things an editor actually shows: the message, and where in the string it went
+wrong.
+
 Sharing a state as a link is the one saved-views call that can refuse. A grid
 holding many columns, a long filter tree and a set filter with hundreds of
 ticks encodes past what a URL carries, so `shareLink` and `shareToken` reject
