@@ -268,3 +268,54 @@ describe('a11y', () => {
         expect(results.violations.map((violation) => violation.id)).toEqual([])
     })
 })
+
+describe('a boolean column handed something that is not a boolean', () => {
+    interface Loose {
+        id: number
+        active: unknown
+    }
+    const looseColumns: ColumnDef<Loose>[] = [
+        { id: 'active', header: 'Active', type: 'boolean', width: 140 }
+    ]
+    const LooseGrid = DataGrid as unknown as Component<DataGridProps<Loose>>
+
+    async function drawn(values: unknown[]) {
+        const grid = createDataGrid<Loose>({
+            columns: looseColumns,
+            data: values.map((active, index) => ({ id: index + 1, active })),
+            getRowId: (row) => String(row.id)
+        })
+        const screen = await render(LooseGrid, { grid })
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        return values.map((_, index) => {
+            const cell = screen.container.querySelector(`[data-dg-cell="${index}:0"]`)!
+            const icon = cell.querySelector('[aria-label]')
+            return icon
+                ? `icon:${icon.getAttribute('aria-label')}`
+                : (cell.textContent?.trim() ?? '')
+        })
+    }
+
+    it('never claims true for a word that says otherwise', async () => {
+        expect(await drawn(['false', 'no', 'n'])).toEqual([
+            'icon:false',
+            'icon:false',
+            'icon:false'
+        ])
+    })
+
+    it('draws the text rather than an icon when the word is neither', async () => {
+        expect(await drawn(['maybe', 'later'])).toEqual(['maybe', 'later'])
+    })
+
+    it('still reads a real boolean, a number and the words for one', async () => {
+        expect(await drawn([true, false, 0, 1, 'yes'])).toEqual([
+            'icon:true',
+            'icon:false',
+            'icon:false',
+            'icon:true',
+            'icon:true'
+        ])
+    })
+})

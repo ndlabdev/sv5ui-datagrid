@@ -36,6 +36,19 @@ export function isBlank(value: unknown): value is null | undefined | '' {
     return isNullish(value) || value === ''
 }
 
+const TRUE_WORDS = new Set(['true', 'yes', 'y', '1', 'x', 'có', 'co', 'đúng', 'dung'])
+const FALSE_WORDS = new Set(['false', 'no', 'n', '0', '', 'không', 'khong', 'sai'])
+
+export function toBoolean(value: unknown): boolean | null {
+    if (typeof value === 'boolean') return value
+    if (typeof value === 'number') return Number.isFinite(value) ? value !== 0 : null
+    if (typeof value !== 'string') return null
+
+    const word = value.trim().toLowerCase()
+    if (TRUE_WORDS.has(word)) return true
+    return FALSE_WORDS.has(word) ? false : null
+}
+
 export function setKeyOf(value: unknown): SetFilterValue {
     if (isBlank(value)) return null
     if (typeof value === 'number' || typeof value === 'boolean') return value

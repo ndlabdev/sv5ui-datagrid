@@ -16,4 +16,11 @@ export { mutator } from './reactivity.js'
 export { inlineDelta, inlineOffset, isRtl, scrollStart, setScrollStart } from './scroll.js'
 export { inlineStyle } from './style.js'
 export { safeHref } from './url.js'
-export { getCellValue, isBlank, setKeyOf, sortValueGetter, withComputed } from './value.js'
+export {
+    getCellValue,
+    isBlank,
+    setKeyOf,
+    sortValueGetter,
+    toBoolean,
+    withComputed
+} from './value.js'

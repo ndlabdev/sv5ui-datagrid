@@ -1,4 +1,5 @@
 import { type ColumnDef } from '../../core/types/index.js'
+import { toBoolean } from '../../core/utils/index.js'
 import type { SourceValue } from './mapping.js'
 
 type CoerceKind = 'text' | 'number' | 'date' | 'boolean'
@@ -18,9 +19,6 @@ const BY_COLUMN_TYPE: Record<string, CoerceKind> = {
     datetime: 'date',
     boolean: 'boolean'
 }
-
-const TRUE_WORDS = new Set(['true', 'yes', 'y', '1', 'x', 'có', 'co', 'đúng', 'dung'])
-const FALSE_WORDS = new Set(['false', 'no', 'n', '0', '', 'không', 'khong', 'sai'])
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/
 const ISO_ZONE = /(?:Z|[+-]\d{2}:?\d{2})$/i
@@ -146,10 +144,7 @@ export function parseDate(text: string): Date | null {
 }
 
 export function parseBoolean(text: string): boolean | null {
-    const word = text.trim().toLowerCase()
-    if (TRUE_WORDS.has(word)) return true
-    if (FALSE_WORDS.has(word)) return false
-    return null
+    return toBoolean(text)
 }
 
 function coerceNumber(raw: SourceValue, mark?: DecimalMark): Coerced {
