@@ -1,7 +1,7 @@
 # Upgrading to 2.0
 
 Almost everything in this release is additive: register a feature you did not
-have before and it works. Three things are not, and this is all of them.
+have before and it works. Four things are not, and this is all of them.
 
 ## `DataGridLabels` gained 147 members
 
@@ -45,6 +45,27 @@ If you were relying on `neq` to exclude blanks, say so:
 The server contract's reference implementation in
 `src/tests/server-contract-ops.test.ts` shows the same rule, so a server you
 wrote against it needs the same change.
+
+## A typed column draws text it cannot parse
+
+A `type: 'number'` column handed `notanumber`, or a `type: 'date'` column
+handed `1234-56-78`, used to draw an empty cell. The value was in the row and
+the editor opened on it; only the screen said nothing was there. It now falls
+back to the raw text, so what the data holds is what you see.
+
+A blank cell is unaffected: `null`, `undefined` and `''` still draw the
+column's `emptyText`.
+
+This reaches masking too. A `policy()` rule that substitutes a string into a
+typed column used to blank the cell; the mark is drawn now, which is what the
+same rule already did on an untyped column.
+
+If you assert on a cell that cannot be parsed, it changed:
+
+```diff
+-expect(cell.textContent).toBe('')
++expect(cell.textContent).toBe('notanumber')
+```
 
 ## The loading skeleton draws cells
 

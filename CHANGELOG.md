@@ -13,7 +13,7 @@ here is opt-in the way the nine before it were: a feature you do not register
 is code your bundle never sees, and there is now a test that builds a real
 entry to prove it.
 
-[Upgrading from 1.x](MIGRATING.md) is two behaviour changes and one type; the
+[Upgrading from 1.x](MIGRATING.md) is three behaviour changes and one type; the
 rest is additive.
 
 ### Added
@@ -74,8 +74,20 @@ rest is additive.
   can draw a fetch in progress without naming the feature.
 - `notEqual` on a date column, in `DateFilterOp` and in all twelve languages.
 - `autoColumns`, which reads a `ColumnDef[]` off the data.
+- `getGridContext` and `getGridElement` are exported, because
+  `GridFeature.component` is mounted inside the grid and had no way to reach
+  either the grid or its root element from outside the package. The doc comment
+  on `component` named `getGridElement` while no barrel offered it.
+- The named exports a feature brings besides its factory, each one documented
+  in the README: `aggregate` and `totalsKindOf` with `grouping()`,
+  `isDetailNode` with `masterDetail()`, `isLoadingRow` with `serverRowModel()`,
+  `localStorageViews` and `ShareTooLongError` with `savedViews()`,
+  `FormulaError`, `isFormulaError` and `FUNCTION_NAMES` with `formula()`, and
+  `isDataRow` from the kernel. They are what your own code reaches for when it
+  has to read back a row the grid drew, catch what a feature throws, or reuse a
+  calculation it made.
 - 147 more label keys (67 to 214) and 66 more slots (73 to 139), in all twelve
-  languages, and seventeen demo routes.
+  languages, and eighteen demo routes.
 
 ### Changed
 
@@ -95,9 +107,28 @@ rest is additive.
 
 ### Fixed
 
-- A server grid no longer says "no data" while its first request is still out.
+Three of these are in code 1.3.1 already ships, so they land whether or not any
+of the new modules interests you.
+
+- The footer no longer runs one page number into the next. Its buttons were
+  square at 2rem and five digits need more, so a grid of twenty thousand pages
+  drew `199971999819999` with the current page clipped inside its own
+  background. A button keeps its height and its 2rem minimum and now grows
+  with what it holds.
 - `gateReader` composes a column's readers once per pass rather than once per
   cell: 15,000 compositions became three over 5,000 rows and three columns.
+- A typed column no longer swallows text it cannot parse. `notanumber` in a
+  `type: 'number'` column, or `1234-56-78` in a `type: 'date'` one, drew an
+  empty cell: the value was in the row, the editor opened on it, and the screen
+  said nothing was there. The formatter now declines rather than answering the
+  empty string, and the cell falls back to the raw text. A blank cell is still
+  blank, and still draws `emptyText`.
+
+The rest are defects found in the modules this release adds. No grid running
+1.3.1 met them, and they are written down because somebody deciding whether to
+trust new code deserves to see what it has been held to.
+
+- A server grid no longer says "no data" while its first request is still out.
 - A snapshot carrying a `Date` survives a share link. The canonical form
   rebuilt every object from its entries, which turns a `Date` into `{}`, so a
   link and `localStorage` disagreed about the same slice.
@@ -107,6 +138,41 @@ rest is additive.
   argument list, which has an engine limit a grid this size can reach.
 - Replacing without regard to case no longer corrupts text around a character
   that changes length when lowercased.
+- A date condition in the filter builder compared the wrong day. The target was
+  written with `toISOString`, which names the day before anywhere west of
+  Greenwich, while the cell it is measured against is read as a local day. An
+  epoch number fared worse: it was stringified into something no date parser
+  reads, so the condition matched nothing. Both are written from local parts.
+- The filter builder inferred a column's kind from the single row it was asked
+  about, so the same condition answered differently depending on which row it
+  landed on, and a blank cell made its column text, which quietly turned `gt`
+  into a condition that filters nothing. It samples the grid's rows instead.
+- That sample read the first fifty rows rather than the first fifty values, so
+  a column whose early rows are blank was called text for the same reason. It
+  now walks up to a thousand rows to find fifty values.
+- A column that reads its field through an `accessor` shows what a feature
+  computed for it. `grouping()`, `showValuesAs()` and `formula()` all write a
+  result onto the row keyed by column id, and the accessor ran first and
+  unconditionally, so the column read its own field back instead. Three views
+  of one salary column showed the same sum three times, a share read as the
+  number underneath it, and a calculated column showed what it was calculated
+  from. Since a second view of one field needs an `accessor` to hold a distinct
+  id, this made a common grouping layout impossible to express.
+- The status bar counts rows rather than the furniture around them. A group
+  header, a group footer and the grand total were counted in the filtered
+  number but not in the total, so a grid of sixty rows in five groups reported
+  `65 of 60 rows`. It now counts with `isDataRow`, and takes a nested tree's
+  total from the whole hierarchy instead of from the roots in `data`, which had
+  a seventeen-row tree reporting a total of two.
+- The filter builder reads a column of `Date` objects as dates. The number test
+  ran first and accepts a `Date`, because a `Date` coerces to its epoch
+  milliseconds, so the column was offered `gt` and `lt` with a number field
+  asking for a timestamp instead of `before` and `after` with a date picker. A
+  column of plain numbers is still a number column.
+- `showValuesAs({ percentOfParent })` says so once when the column has no
+  aggregation on a grouped grid, instead of drawing a blank column in silence.
+  The group row it divides by holds a number only for a column `grouping()`
+  aggregates, so without one there is no denominator.
 
 ## [1.3.1] - 2026-09-03
 

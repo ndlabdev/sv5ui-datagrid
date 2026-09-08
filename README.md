@@ -311,6 +311,64 @@ declare module '@sv5ui/datagrid' {
 }
 ```
 
+### What a feature brings besides its factory
+
+Registering a feature is enough to use it. These are the named exports your
+own code reaches for when it has to meet a feature halfway: read back a row
+the grid drew, catch what a feature throws, reuse a calculation it made, or,
+from inside a feature's own `component`, reach the grid it is mounted in.
+
+| Export                                 | Comes with         | Reach for it when                                                                                                                    |
+| -------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `isDataRow(node)`                      | the kernel         | You walk `grid.preWindowNodes` and want only rows carrying data, skipping a group header, a footer, a detail panel and a loading row |
+| `isLoadingRow(row)`                    | `serverRowModel()` | A cell snippet draws a row still on its way differently from one that arrived                                                        |
+| `isDetailNode(id)`                     | `masterDetail()`   | You hold a row id and need to know whether it names a detail panel rather than a row                                                 |
+| `totalsKindOf(id)`                     | `grouping()`       | The same question for a group footer (`'footer'`) or the grand total (`'grandTotal'`), and `null` for anything else                  |
+| `aggregate(aggregation, values, rows)` | `grouping()`       | You want the number a group footer would show, somewhere other than the grid: a summary card, a chart, a second table                |
+| `autoColumns(rows, options?)`          | the kernel         | The shape of the data is known only at runtime, so the columns are read off a sample of the rows                                     |
+| `localStorageViews`                    | `savedViews()`     | You take the default store, or write an object of the same shape to keep views on a server instead                                   |
+| `ShareTooLongError`                    | `savedViews()`     | Packing a whole grid state into a link can pass what a URL carries                                                                   |
+| `FormulaError`, `isFormulaError`       | `formula()`        | A calculated cell holds one of these instead of a number when the expression cannot answer                                           |
+| `FUNCTION_NAMES`                       | `formula()`        | You build an editor for expressions and want completion over the functions there are                                                 |
+| `getGridContext()`                     | the kernel         | A feature's `component` needs the grid it is mounted in; it is handed no props                                                       |
+| `getGridElement()`                     | the kernel         | The same component needs the root element, for a listener, a measurement or a layer over the rows                                    |
+
+A calculated column never throws at you. It puts a `FormulaError` in the cell,
+carrying a `code` that reads the way a spreadsheet's does and a `detail` that
+says which name or which value caused it:
+
+```ts
+import { isFormulaError } from '@sv5ui/datagrid'
+
+const value = grid.getValue(node, column)
+if (isFormulaError(value)) {
+    console.warn(value.code, value.detail) // '#CYCLE', '"total" refers back to itself'
+}
+```
+
+`FormulaErrorCode` is the union of what `code` can be: `'#VALUE'`, `'#DIV/0'`,
+`'#NAME'`, `'#NUM'`, `'#LIMIT'` and `'#CYCLE'`. The cell prints the code, so a
+column in a cycle reads `#CYCLE` down its length and the columns outside that
+cycle keep working.
+
+Sharing a state as a link is the one saved-views call that can refuse. A grid
+holding many columns, a long filter tree and a set filter with hundreds of
+ticks encodes past what a URL carries, so `shareLink` and `shareToken` reject
+rather than hand back a link that will not open:
+
+```ts
+import { getSavedViews, ShareTooLongError } from '@sv5ui/datagrid'
+
+try {
+    const link = await getSavedViews(grid)!.shareLink()
+    if (link) location.href = link
+} catch (error) {
+    if (error instanceof ShareTooLongError) {
+        alert(`${error.length} characters is too long for a link. Save it as a view.`)
+    } else throw error
+}
+```
+
 ## Extension points
 
 A feature is a plain object. The built-in features use nothing that is not
