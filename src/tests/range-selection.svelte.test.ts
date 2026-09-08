@@ -455,6 +455,31 @@ describe('the fill handle', () => {
             .toEqual(['0:1', '0:2', '1:1', '1:2'])
     })
 
+    it('carries a series down the rows, not only across the columns', async () => {
+        const grid = createDataGrid<Cell>({
+            columns,
+            data: [
+                { id: 1, region: 'North', q1: 10, q2: 20 },
+                { id: 2, region: 'South', q1: 20, q2: 40 },
+                { id: 3, region: 'East', q1: 0, q2: 60 },
+                { id: 4, region: 'West', q1: 0, q2: 80 },
+                { id: 5, region: 'Nord', q1: 0, q2: 100 }
+            ],
+            getRowId: (row) => String(row.id),
+            features: [sorting(), filtering(), editing(), rangeSelection()]
+        })
+        const screen = await renderGrid(grid)
+        await selectQ1Rows(screen.container)
+
+        grabHandle(cellAt(screen.container, 1, 1))
+        cellAt(screen.container, 4, 1).dispatchEvent(
+            new PointerEvent('pointermove', { bubbles: true })
+        )
+        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))
+
+        await expect.poll(() => grid.data.map((row) => row.q1)).toEqual([10, 20, 30, 40, 50])
+    })
+
     it('draws no handle at all when fill is switched off', async () => {
         const grid = createDataGrid<Cell>({
             columns,
