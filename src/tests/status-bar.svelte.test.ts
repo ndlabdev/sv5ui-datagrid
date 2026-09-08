@@ -1,4 +1,14 @@
-import { createDataGrid, grouping, tree, type ColumnDef, type GridState } from '$lib/index.js'
+import {
+    createDataGrid,
+    filtering,
+    getFiltering,
+    grouping,
+    rowPinning,
+    tree,
+    type ColumnDef,
+    type GridFeature,
+    type GridState
+} from '$lib/index.js'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import DataGrid from '../lib/components/grid/DataGrid.svelte'
@@ -34,10 +44,10 @@ const units: Unit[] = [
 ]
 
 function statusText(): string {
-    const bar = [...document.querySelectorAll('div')].find((node) =>
-        /\d+( of \d+)? rows$/.test((node.textContent ?? '').trim())
-    )
-    return (bar?.textContent ?? '').replace(/\s+/g, ' ').trim()
+    const bars = [...document.querySelectorAll('div')]
+        .map((node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim())
+        .filter((text) => /^\d+( of \d+)? rows$/.test(text))
+    return bars.at(-1) ?? ''
 }
 
 async function statusOf<T>(grid: GridState<T>): Promise<string> {
@@ -56,7 +66,7 @@ describe('the status bar counts rows, not the furniture around them', () => {
             getRowId: (person) => String(person.id),
             features: [grouping({ by: ['team'], aggregations: { salary: 'sum' } })]
         })
-        expect(await statusOf(grid)).toContain('60 rows')
+        expect(await statusOf(grid)).toBe('60 rows')
     })
 
     it('does not count a group footer or the grand total either', async () => {
@@ -73,7 +83,7 @@ describe('the status bar counts rows, not the furniture around them', () => {
                 })
             ]
         })
-        expect(await statusOf(grid)).toContain('24 rows')
+        expect(await statusOf(grid)).toBe('24 rows')
     })
 
     it('takes a nested tree total from the whole hierarchy, not from its roots', async () => {
@@ -83,6 +93,111 @@ describe('the status bar counts rows, not the furniture around them', () => {
             getRowId: (unit) => String(unit.id),
             features: [tree({ getChildren: (unit) => unit.children, defaultExpandedDepth: 1 })]
         })
-        expect(await statusOf(grid)).toContain('5 of 6 rows')
+        expect(await statusOf(grid)).toBe('6 rows')
+    })
+})
+
+interface Flat {
+    id: number
+    parentId: number | null
+    name: string
+}
+
+const flatUnits: Flat[] = [
+    { id: 1, parentId: null, name: 'root a' },
+    { id: 2, parentId: null, name: 'root b' },
+    { id: 3, parentId: 1, name: 'a1' },
+    { id: 4, parentId: 1, name: 'a2' },
+    { id: 5, parentId: 3, name: 'a1x' },
+    { id: 6, parentId: 2, name: 'b1' }
+]
+
+describe('a tree reads the same collapsed as it does open', () => {
+    it('on the nested shape', async () => {
+        const shut = createDataGrid<Unit>({
+            columns: [{ id: 'name' }],
+            data: units,
+            getRowId: (unit) => String(unit.id),
+            features: [tree({ getChildren: (unit) => unit.children })]
+        })
+        const open = createDataGrid<Unit>({
+            columns: [{ id: 'name' }],
+            data: units,
+            getRowId: (unit) => String(unit.id),
+            features: [tree({ getChildren: (unit) => unit.children, defaultExpandedDepth: 9 })]
+        })
+        expect(await statusOf(shut)).toBe('6 rows')
+        expect(await statusOf(open)).toBe('6 rows')
+    })
+
+    it('on the flat shape, where every row is already in data', async () => {
+        const shut = createDataGrid<Flat>({
+            columns: [{ id: 'name' }],
+            data: flatUnits,
+            getRowId: (unit) => String(unit.id),
+            features: [
+                tree({ getParentId: (unit) => (unit.parentId ? String(unit.parentId) : null) })
+            ]
+        })
+        const open = createDataGrid<Flat>({
+            columns: [{ id: 'name' }],
+            data: flatUnits,
+            getRowId: (unit) => String(unit.id),
+            features: [
+                tree({
+                    getParentId: (unit) => (unit.parentId ? String(unit.parentId) : null),
+                    defaultExpandedDepth: 9
+                })
+            ]
+        })
+        expect(await statusOf(shut)).toBe('6 rows')
+        expect(await statusOf(open)).toBe('6 rows')
+    })
+})
+
+describe('the status bar counts what a filter left, not what is open', () => {
+    const columns: ColumnDef<P>[] = [{ id: 'team' }, { id: 'salary' }]
+
+    function grouped(expandedByDefault: boolean, features: GridFeature<P>[] = []) {
+        return createDataGrid<P>({
+            columns,
+            data: people,
+            getRowId: (person) => String(person.id),
+            features: [
+                grouping({ by: ['team'], aggregations: { salary: 'sum' }, expandedByDefault }),
+                ...features
+            ]
+        })
+    }
+
+    it('reads the same with every group shut as with every group open', async () => {
+        expect(await statusOf(grouped(false))).toBe('60 rows')
+        expect(await statusOf(grouped(true))).toBe('60 rows')
+    })
+
+    it('says N of M only when a filter actually narrowed something', async () => {
+        const grid = grouped(false, [filtering()])
+        getFiltering(grid)!.setQuickFilter('T0')
+        expect(await statusOf(grid)).toBe('12 of 60 rows')
+    })
+
+    it('gives the same answer whether the matching groups are open or shut', async () => {
+        const shut = grouped(false, [filtering()])
+        getFiltering(shut)!.setQuickFilter('T0')
+        const open = grouped(true, [filtering()])
+        getFiltering(open)!.setQuickFilter('T0')
+
+        expect(await statusOf(shut)).toBe(await statusOf(open))
+    })
+
+    it('counts a pinned row once, not twice', async () => {
+        const grid = createDataGrid<P>({
+            columns,
+            data: people,
+            getRowId: (person) => String(person.id),
+            features: [rowPinning()]
+        })
+        grid.api.pinRow?.('1', 'top')
+        expect(await statusOf(grid)).toBe('60 rows')
     })
 })

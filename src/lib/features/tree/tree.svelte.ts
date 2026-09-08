@@ -24,10 +24,9 @@ export class Tree<TRow> {
         }
     }
 
-    totalRows = $derived.by(() => {
+    #countUnder(nodes: RowNode<TRow>[]): number {
         const { getChildren } = this.#options
-        const source = this.#grid.sourceNodes
-        if (!getChildren) return source.length
+        if (!getChildren) return nodes.length
 
         let count = 0
         const walk = (rows: TRow[]) => {
@@ -37,9 +36,13 @@ export class Tree<TRow> {
                 if (children && children.length > 0) walk(children)
             }
         }
-        walk(source.map((node) => node.row))
+        walk(nodes.map((node) => node.row))
         return count
-    })
+    }
+
+    totalRows = $derived.by(() => this.#countUnder(this.#grid.sourceNodes))
+
+    filteredRows = $derived.by(() => this.#countUnder(this.#grid.filteredNodes))
 
     #wrap(rows: TRow[], parentIndex: number): RowNode<TRow>[] {
         const nodes = rows.map((row, index) => ({

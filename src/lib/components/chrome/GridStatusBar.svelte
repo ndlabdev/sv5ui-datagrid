@@ -1,7 +1,6 @@
 <script lang="ts">
     import { isDataRow } from '../../core/grid/index.js'
     import { getPagination } from '../../features/pagination/index.js'
-    import { getRowPinning } from '../../features/row-pinning/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import { getTree } from '../../features/tree/index.js'
     import { getGridContext } from '../internal/context.js'
@@ -14,7 +13,6 @@
     const grid = getGridContext()
     const pagination = getPagination(grid)
     const selectionState = getSelection(grid)
-    const pinning = getRowPinning(grid)
     const slots = datagridVariants()
     const theme = getGridTheme()
 
@@ -25,10 +23,11 @@
     const filtered = $derived(
         pagination?.server
             ? total
-            : grid.preWindowNodes.reduce(
-                  (count, node) => (isDataRow(node) ? count + 1 : count),
-                  pinning?.pinnedCount ?? 0
-              )
+            : (treeState?.filteredRows ??
+                  grid.filteredNodes.reduce(
+                      (count, node) => (isDataRow(node) ? count + 1 : count),
+                      0
+                  ))
     )
     const selected = $derived(selectionState?.count ?? 0)
 </script>

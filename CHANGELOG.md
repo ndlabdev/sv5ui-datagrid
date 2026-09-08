@@ -171,6 +171,13 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- The status bar counts the rows a filter left, not the rows that happen to be
+  open. It read from the drawn list, which does not hold a row inside a
+  collapsed group or tree node, so a grouped grid with everything shut reported
+  `0 of 60 rows` under five group rows accounting for all sixty, and a tree read
+  `7 of 17` collapsed and `17 rows` open. `N of M` is the string for a filter,
+  and there was no filter. It counts one stage earlier now, before anything
+  folds a row away, through the new `grid.filteredNodes`.
 - The status bar counts rows rather than the furniture around them. A group
   header, a group footer and the grand total were counted in the filtered
   number but not in the total, so a grid of sixty rows in five groups reported

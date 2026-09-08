@@ -129,6 +129,10 @@ export class GridState<TRow> {
         return this.#pipeline.before(PIPELINE_ORDER.filter)()
     }
 
+    get filteredNodes(): RowNode<TRow>[] {
+        return this.#pipeline.before(PIPELINE_ORDER.group)()
+    }
+
     get totalRows(): number {
         return this.preWindowNodes.length
     }
