@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { isDataRow } from '../../core/grid/index.js'
     import { getPagination } from '../../features/pagination/index.js'
     import { getSelection } from '../../features/selection/index.js'
     import { getTree } from '../../features/tree/index.js'
@@ -21,13 +20,7 @@
         pagination?.server ? pagination.total : (treeState?.totalRows ?? grid.sourceNodes.length)
     )
     const filtered = $derived(
-        pagination?.server
-            ? total
-            : (treeState?.filteredRows ??
-                  grid.filteredNodes.reduce(
-                      (count, node) => (isDataRow(node) ? count + 1 : count),
-                      0
-                  ))
+        pagination?.server ? total : (treeState?.filteredRows ?? grid.filteredRowCount)
     )
     const selected = $derived(selectionState?.count ?? 0)
 </script>

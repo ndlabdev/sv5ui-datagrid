@@ -165,6 +165,20 @@ export interface GridFeature<TRow> {
      */
     component?: Component
 
+    /**
+     * How many data rows this feature is holding, when it is the one that
+     * decided the shape of the list.
+     *
+     * The grid counts rows out of the pipeline, which works until a feature
+     * keeps rows somewhere the pipeline cannot see: a nested tree holds its
+     * children on the row rather than in `data`, so counting the list would
+     * report the roots. Answer `undefined` to let the grid count for itself.
+     *
+     * This is what the status bar puts on screen and what a screen reader is
+     * told after a filter, so the two cannot disagree.
+     */
+    rowCount?: (grid: GridState<TRow>) => number | undefined
+
     /** The feature's JSON-safe slice of a snapshot; undefined stays out. */
     serialize?: (grid: GridState<TRow>) => unknown
     /** Restores what `serialize` produced; a feature added later starts fresh. */

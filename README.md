@@ -337,8 +337,16 @@ The grid offers three lists of nodes, and which one you want depends on the
 question. `grid.nodes` is what is on screen after paging and virtualization.
 `grid.preWindowNodes` is everything the grid would draw, so a row inside a
 collapsed group or tree node is not in it. `grid.filteredNodes` is the list one
-stage earlier, before anything folded rows away: it answers how many rows a
-filter left, which does not change when a group is opened or shut.
+stage earlier, before anything folded rows away.
+
+Two counts sit on top of those, and they answer different questions.
+`grid.totalRows` is the length of the drawn list: what keyboard navigation
+bounds itself by, what `aria-rowcount` reports, and it counts a group header as
+a row because that is a row you can focus. `grid.filteredRowCount` is how many
+data rows a filter left, which is what the status bar shows and what a screen
+reader is told, and it does not move when a group is opened or shut. A feature
+holding rows the pipeline cannot see, as a nested tree does, answers for itself
+through `GridFeature.rowCount`.
 
 A calculated column never throws at you. It puts a `FormulaError` in the cell,
 carrying a `code` that reads the way a spreadsheet's does and a `detail` that

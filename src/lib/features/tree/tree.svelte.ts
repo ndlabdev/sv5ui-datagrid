@@ -122,7 +122,8 @@ export function tree<TRow>(options: TreeOptions<TRow>): GridFeature<TRow> {
         pipelineStage: {
             order: PIPELINE_ORDER.group,
             transform: (nodes, grid) => getTree(grid)?.build(nodes) ?? nodes
-        }
+        },
+        rowCount: (grid) => getTree(grid)?.filteredRows
     }
 }
 

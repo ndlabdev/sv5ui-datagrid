@@ -7,7 +7,7 @@ import { EventBus } from './events.js'
 import { ExpansionModel } from '../interaction/expansion.svelte.js'
 import { FocusModel } from '../interaction/focus-model.svelte.js'
 import { composePipeline, PIPELINE_ORDER, type Pipeline } from './pipeline.svelte.js'
-import { buildRowNodes, nodesById } from './row-node.js'
+import { buildRowNodes, isDataRow, nodesById } from './row-node.js'
 import { buildColumnSnapshot, isDensity, resolveColumnSnapshot } from './snapshot.js'
 import type { ClassNameValue } from 'tailwind-merge'
 import { composeReaders, readCell } from './value-gate.js'
@@ -135,6 +135,14 @@ export class GridState<TRow> {
 
     get totalRows(): number {
         return this.preWindowNodes.length
+    }
+
+    get filteredRowCount(): number {
+        for (const feature of this.features) {
+            const answered = feature.rowCount?.(this)
+            if (answered !== undefined) return answered
+        }
+        return this.filteredNodes.reduce((count, node) => (isDataRow(node) ? count + 1 : count), 0)
     }
 
     feature<TState>(id: string): TState | undefined {

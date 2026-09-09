@@ -44,7 +44,7 @@ export class Announcer<TRow> {
         })
         grid.events.on('filterChanged', () => {
             if (grid.rowModel === 'server') return
-            this.message = locale().filtered(grid.totalRows)
+            this.message = locale().filtered(grid.filteredRowCount)
         })
         grid.events.on('rowCountChanged', ({ total }) => {
             this.message = locale().filtered(total)

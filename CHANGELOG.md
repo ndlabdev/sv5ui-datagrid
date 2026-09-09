@@ -171,6 +171,14 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- A screen reader is told the same number the status bar shows. The
+  announcement after a filter read `grid.totalRows`, which is the drawn list, so
+  a grouped grid said `9 rows` where the bar said `6 of 24`: six data rows plus
+  a group header, a footer and the grand total. It also moved when a group was
+  folded, telling a reader the result set had changed because they closed a
+  disclosure. Both now read `grid.filteredRowCount`, and `GridFeature` gains a
+  `rowCount` hook so a feature holding rows off the pipeline, as a nested tree
+  does, answers for its own shape rather than being counted wrong.
 - The status bar counts the rows a filter left, not the rows that happen to be
   open. It read from the drawn list, which does not hold a row inside a
   collapsed group or tree node, so a grouped grid with everything shut reported
