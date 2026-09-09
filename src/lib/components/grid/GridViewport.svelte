@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { tick } from 'svelte'
     import { useElementSize } from 'sv5ui'
     import { HEADER_ROW, type CellPosition } from '../../core/interaction/index.js'
     import { getColumnOps } from '../../features/column-ops/index.js'
@@ -95,6 +96,28 @@
             return
         }
         followPage(active.row)
+    })
+
+    $effect(() => {
+        if (virtualization) return
+
+        const api = grid.api as { ensureVisible?: (target: number | string) => void }
+        api.ensureVisible = async (target) => {
+            const row =
+                typeof target === 'number'
+                    ? target
+                    : grid.preWindowNodes.findIndex((node) => node.id === target)
+            if (row < 0) return
+
+            followPage(row)
+            await tick()
+            element
+                ?.querySelector(`[data-dg-cell^="${row - windowStartOf(grid)}:"]`)
+                ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        }
+        return () => {
+            delete api.ensureVisible
+        }
     })
 
     function followPage(row: number): void {

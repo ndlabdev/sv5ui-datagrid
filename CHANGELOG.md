@@ -171,6 +171,13 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- Find's next match brings the match into view on a grid that scrolls.
+  `ensureVisible` was registered by `virtualization()` alone, so on a plain
+  grid the call behind the panel's Next button did nothing: the counter
+  advanced, the highlight moved, and a match 682px down a 384px box stayed
+  where it was. A paged grid already turned to the right page; only the
+  ordinary scrolling grid fell through. The viewport supplies `ensureVisible`
+  when no virtualizer does, so the feature's primary gesture works on any grid.
 - A screen reader is told the same number the status bar shows. The
   announcement after a filter read `grid.totalRows`, which is the drawn list, so
   a grouped grid said `9 rows` where the bar said `6 of 24`: six data rows plus
