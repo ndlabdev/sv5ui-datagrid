@@ -171,6 +171,26 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- A hierarchy the server sends is drawn inside a `treegrid`. `tree()`,
+  `grouping()` and `masterDetail()` all turn expansion on, and
+  `serverRowModel({ getRowMeta })` did not, so rows carrying `aria-level` and
+  `aria-expanded` sat inside a plain `grid`, where those attributes are
+  undefined. A screen reader was told five flat rows where there were five
+  groups. A server grid with no hierarchy is unaffected.
+- Applying a saved view, a share link or any snapshot asks a server row model
+  once rather than once per slice it hydrates. `setState` hydrates each feature
+  in turn and each hydration announced itself, so a view carrying both a sort
+  and a filter cost two requests where a header click costs one, and the answer
+  to the first was drawn until the second arrived. The refetch coalesces to the
+  end of the tick; an explicit `refreshServerRows()` still fetches at once.
+- `advancedFilter()` no longer reports itself broken on a server that answers
+  it. `serverRowModel()` puts the tree on every request as
+  `request.advancedFilter`, and a backend reading it filters correctly, while
+  `isApplied` returned `false` and the console said the feature does not work
+  here. Both now account for the server: the warning is skipped when
+  `serverRowModel()` is registered, and reworded to say the grid does not
+  filter locally rather than that nothing does. Without a server row model the
+  warning stands, because then it is the application that has to send the tree.
 - A cell that covers the whole row says how many columns it covers. A detail
   panel, the row that says there is no data and the row that reports a failed
   fetch all draw one cell across every column, and all three declared
