@@ -211,7 +211,7 @@ describe('the advanced filter feature', () => {
         expect(getAdvancedFilter(grid)!.isActive).toBe(true)
         expect(getAdvancedFilter(grid)!.isApplied).toBe(false)
         expect(warn).toHaveBeenCalledTimes(1)
-        expect(warn.mock.calls[0]?.[0]).toContain('does not filter a grid on rowModel')
+        expect(warn.mock.calls[0]?.[0]).toContain('does not itself filter a grid on rowModel')
         warn.mockRestore()
     })
 

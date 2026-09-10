@@ -23,11 +23,14 @@ const ADVANCED_FILTER = 'advancedFilter'
 
 const emptyModel = (): FilterGroup => ({ kind: 'group', join: 'and', children: [] })
 
+const SERVER_ROW_MODEL = 'serverRowModel'
+
 const SERVER_REFUSAL =
-    'advancedFilter() does not filter a grid on rowModel: "server": it could only test the ' +
-    'rows already loaded, and the row count would keep counting the rest. The tree is still ' +
-    'held and still serialized - read getAdvancedFilter(grid).model and send it to the server, ' +
-    'which is the only side that can answer it.'
+    'advancedFilter() does not itself filter a grid on rowModel: "server": it could only test ' +
+    'the rows already loaded, and the row count would keep counting the rest. The tree is ' +
+    'still held and still serialized. serverRowModel() puts it on every request it sends as ' +
+    'request.advancedFilter; without it, read getAdvancedFilter(grid).model and send it ' +
+    'yourself, because the server is the only side that can answer it.'
 
 export class AdvancedFilter<TRow> {
     model = $state.raw<FilterGroup>(emptyModel())
@@ -48,8 +51,13 @@ export class AdvancedFilter<TRow> {
         return !isEmptyModel(this.model)
     }
 
+    get #serverSendsTheTree(): boolean {
+        return this.#grid.features.some((feature) => feature.id === SERVER_ROW_MODEL)
+    }
+
     get isApplied(): boolean {
-        return this.isActive && this.#grid.rowModel !== 'server'
+        if (!this.isActive) return false
+        return this.#grid.rowModel !== 'server' || this.#serverSendsTheTree
     }
 
     get conditionCount(): number {
@@ -108,7 +116,7 @@ export class AdvancedFilter<TRow> {
 
     #refuseOnServer(): boolean {
         if (this.#grid.rowModel !== 'server') return false
-        if (!this.#warned) {
+        if (!this.#warned && !this.#serverSendsTheTree) {
             this.#warned = true
             // eslint-disable-next-line no-console
             console.warn(SERVER_REFUSAL)
