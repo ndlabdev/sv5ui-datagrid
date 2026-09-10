@@ -171,6 +171,14 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- A cell that covers the whole row says how many columns it covers. A detail
+  panel, the row that says there is no data and the row that reports a failed
+  fetch all draw one cell across every column, and all three declared
+  `aria-colindex="1"` and nothing else, which ARIA reads as a span of one. A
+  screen reader on a detail panel was told column 1 of 5. They carry
+  `aria-colspan` now, counted from the visible columns so it follows a column
+  being hidden the way `aria-colcount` already did. A spanning data cell and a
+  spanning header cell had been declaring theirs all along.
 - Find's next match brings the match into view on a grid that scrolls.
   `ensureVisible` was registered by `virtualization()` alone, so on a plain
   grid the call behind the panel's Next button did nothing: the counter

@@ -100,6 +100,8 @@
     }
 
     const rowClass = $derived(slots.row({ class: theme('row') }))
+
+    const spannedColumns = $derived(grid.columns.visible.length)
     const rowSelectedClass = $derived(
         `${rowClass} ${slots.rowSelected({ class: theme('rowSelected') })}`
     )
@@ -474,6 +476,7 @@
                 <div
                     role="gridcell"
                     aria-colindex={1}
+                    aria-colspan={spannedColumns > 1 ? spannedColumns : undefined}
                     tabindex={isActive(rowIndex, 0) ? 0 : -1}
                     data-dg-cell="{rowIndex}:0"
                     class={slots.fullWidthCell({ class: theme('fullWidthCell') })}
@@ -644,6 +647,7 @@
             <div
                 role="gridcell"
                 aria-colindex={1}
+                aria-colspan={spannedColumns > 1 ? spannedColumns : undefined}
                 class={slots.empty({ class: theme('empty') })}
                 style="grid-column: 1 / -1"
             >
@@ -676,6 +680,7 @@
             <div
                 role="gridcell"
                 aria-colindex={1}
+                aria-colspan={spannedColumns > 1 ? spannedColumns : undefined}
                 class={slots.empty({ class: theme('empty') })}
                 style="grid-column: 1 / -1"
             >
