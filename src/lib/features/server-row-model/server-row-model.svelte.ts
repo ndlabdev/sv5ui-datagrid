@@ -74,7 +74,7 @@ export class ServerRowModel<TRow> {
         }
 
         for (const event of ['sortChanged', 'filterChanged'] as const) {
-            grid.events.on(event, () => this.refresh())
+            grid.events.on(event, this.#refreshOnce)
         }
         if (this.mode === 'paged') {
             grid.events.on('pageChanged', () => void this.#loadPage())
@@ -119,6 +119,17 @@ export class ServerRowModel<TRow> {
                 this.answered = true
             }
         }
+    }
+
+    #queued = false
+
+    #refreshOnce = (): void => {
+        if (this.#queued) return
+        this.#queued = true
+        queueMicrotask(() => {
+            this.#queued = false
+            this.refresh()
+        })
     }
 
     refresh = (): void => {
@@ -282,7 +293,12 @@ export function serverRowModel<TRow>(
     return {
         id: SERVER_ROW_MODEL,
         component: ServerRows,
-        createState: (grid) => new ServerRowModel(grid, source, options),
+        createState: (grid) => {
+            if (options.getRowMeta || (options.groupBy?.length ?? 0) > 0) {
+                grid.expansion.enabled = true
+            }
+            return new ServerRowModel(grid, source, options)
+        },
         createApi: (grid) => {
             const state = getServerRowModel(grid)!
             return {
