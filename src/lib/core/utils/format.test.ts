@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import type { ColumnDef } from '../types/index.js'
 import {
     clampToMax,
+    DEFAULT_EMPTY_TEXT,
+    formatCellText,
     formatCurrency,
     formatDate,
     formatNumber,
@@ -31,17 +34,12 @@ describe('coercion', () => {
     })
 
     it('reads a plain date as the day it spells, not as UTC midnight', () => {
-        // Wherever the clock is behind Greenwich, `new Date('2026-03-14')`
-        // lands on the 13th, and the cell drew a day the value does not say.
         const date = toDate('2026-03-14')!
         expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2026, 2, 14])
         expect(formatDate('2026-03-14', { locale: 'en-US' })).toBe('Mar 14, 2026')
     })
 
     it('keeps a year under a hundred out of the 1900s', () => {
-        // `new Date(y, m, d)` reads 0-99 as 1900 + y. A date field reporting a
-        // year mid-keystroke says 2 before it says 2026, and the field was
-        // handed 1902 back and jumped to it.
         const date = toDate('0002-01-05')!
         expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([2, 0, 5])
         expect(toDate('0099-12-31')?.getFullYear()).toBe(99)
@@ -116,5 +114,23 @@ describe('clampToMax', () => {
     it('treats unreadable values as zero', () => {
         expect(clampToMax('abc', 5)).toBe(0)
         expect(clampToMax(null, 5)).toBe(0)
+    })
+})
+
+describe('a typed column handed text it cannot read', () => {
+    const number: ColumnDef<{ v: unknown }> = { id: 'v', type: 'number' }
+    const date: ColumnDef<{ v: unknown }> = { id: 'v', type: 'date' }
+    const currency: ColumnDef<{ v: unknown }> = { id: 'v', type: 'currency' }
+
+    it('declines rather than answering the empty string', () => {
+        expect(formatCellText('notanumber', number)).toBeUndefined()
+        expect(formatCellText('1234-56-78', date)).toBeUndefined()
+        expect(formatCellText('maybe', currency)).toBeUndefined()
+    })
+
+    it('keeps answering for a value it can read, and for a blank', () => {
+        expect(formatCellText('42', number)).toBe('42')
+        expect(formatCellText('', number)).toBe(DEFAULT_EMPTY_TEXT)
+        expect(formatCellText(null, number)).toBe(DEFAULT_EMPTY_TEXT)
     })
 })

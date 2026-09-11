@@ -8,14 +8,12 @@
 
     const grid = getGridContext()
 
-    // Derived: a plain array would snapshot the language it mounted in.
     const options: { value: Density; icon: string; label: string }[] = $derived([
         { value: 'compact', icon: 'lucide:rows-4', label: grid.labels.densityCompact },
         { value: 'standard', icon: 'lucide:rows-3', label: grid.labels.densityStandard },
         { value: 'comfortable', icon: 'lucide:rows-2', label: grid.labels.densityComfortable }
     ])
 
-    /** One setting, one tab stop: the arrows move between the three. */
     let container = $state<HTMLElement | null>(null)
 
     function move(step: number) {

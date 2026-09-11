@@ -32,7 +32,7 @@ export interface CopyOptions {
     headers?: boolean
 
     /**
-     * Copies what the grid is showing — the column's `type` applied — rather
+     * Copies what the grid is showing - the column's `type` applied - rather
      * than the value behind it. Off by default, so a paste into a spreadsheet
      * keeps a number a number. A column whose `type` draws a widget has no text
      * of its own and falls back to the raw value.
@@ -77,7 +77,7 @@ export interface ExportCsvOptions<TRow = unknown> {
     formatValue?: ExportFormatter<TRow>
 
     /**
-     * Writes what the grid is showing — the column's `type` applied — rather
+     * Writes what the grid is showing - the column's `type` applied - rather
      * than the value behind it. Off by default, because a spreadsheet wants a
      * number it can sum and a date it can sort. A column whose `type` draws a
      * widget has no text of its own and falls back to the raw value.

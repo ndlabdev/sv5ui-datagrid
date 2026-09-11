@@ -30,7 +30,6 @@
 
     const packs = [enUS, viVN, zhCN, jaJP, koKR, frFR, deDE, esES, ptBR, ruRU, idID, thTH]
 
-    /** Each language names itself, the way a language picker should read. */
     const languages = [
         { value: 'en-US', label: 'English' },
         { value: 'vi-VN', label: 'Tiếng Việt' },
@@ -86,8 +85,6 @@
             sortable: true,
             filter: 'number',
             type: 'currency',
-            // No `locale` here on purpose: the column inherits the grid's, so
-            // the amounts reformat when the language changes.
             typeOptions: { currency: 'VND' },
             editable: true,
             editor: 'number'
@@ -110,9 +107,6 @@
         }
     ]
 
-    // The packs handed in are the whole configuration: the grid takes the
-    // page's language from here. Assigning `grid.locale` switches it in place —
-    // the sort, filter and selection on screen all survive.
     const grid: GridState<Order> = createDataGrid<Order>({
         data: orders,
         columns,
@@ -135,7 +129,7 @@
 
     const surfaces = [
         'Toolbar: ô tìm kiếm, nút chọn cột, nút mật độ',
-        'Chip lọc: nhãn "Bỏ lọc …" và nút "Xoá hết"',
+        'Chip lọc: nhãn "Bỏ lọc ..." và nút "Xoá hết"',
         'Menu cột (chuột phải lên header hoặc Alt+↓): sắp xếp, ghim, ẩn, vừa nội dung',
         'Bảng lọc: toán tử, giá trị, kết hợp điều kiện, phân biệt hoa thường, Áp dụng / Xoá',
         'Lọc theo tập hợp: ô tìm giá trị và mục (trống)',
@@ -153,11 +147,11 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">i18n — phủ hết chuỗi hiển thị</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">i18n - phủ hết chuỗi hiển thị</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
-                Chỉ khai báo <code>locales: [enUS, viVN, …]</code> — không cấu hình chuỗi nào. Lưới
-                tự chọn theo ngôn ngữ của trang, và đổi <code>grid.locale</code> là đổi tại chỗ: sort,
-                lọc, dòng đang chọn đều giữ nguyên, số tiền cũng định dạng lại theo.
+                Chỉ khai báo <code>locales: [enUS, viVN, ...]</code> - không cấu hình chuỗi nào.
+                Lưới tự chọn theo ngôn ngữ của trang, và đổi <code>grid.locale</code> là đổi tại chỗ:
+                sort, lọc, dòng đang chọn đều giữ nguyên, số tiền cũng định dạng lại theo.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -172,7 +166,7 @@
         </div>
         <p class="text-sm text-on-surface-variant">
             {missing.length === 0
-                ? `${active.tag} phủ đủ ${Object.keys(defaultLabels).length} khoá — ${packs.length} ngôn ngữ đóng sẵn.`
+                ? `${active.tag} phủ đủ ${Object.keys(defaultLabels).length} khoá - ${packs.length} ngôn ngữ đóng sẵn.`
                 : `Còn thiếu: ${missing.join(', ')}`}
         </p>
     </div>
@@ -188,7 +182,7 @@
         </ul>
         <p class="pt-1 text-sm text-on-surface-variant">
             Announcer đang đọc: <span class="font-mono text-on-surface"
-                >{grid.announcer.message || '—'}</span
+                >{grid.announcer.message || '-'}</span
             >
         </p>
     </Card>

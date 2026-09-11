@@ -1,3 +1,4 @@
+import type { Component } from 'svelte'
 import type { GridState } from '../grid/grid.svelte.js'
 import type { GridApi } from './api.js'
 import type { ColumnState } from './columns.js'
@@ -76,7 +77,7 @@ export interface CellValueScope<TRow> {
 /**
  * Reads one cell on its way out of the grid.
  *
- * Return the value untouched — the same reference — for a cell the feature
+ * Return the value untouched - the same reference - for a cell the feature
  * leaves alone. The grid compares by identity to tell a substituted cell from
  * a plain one, and a reader handing back a fresh `new Date(value)` every time
  * reads as having substituted every cell it saw.
@@ -131,8 +132,8 @@ export interface GridFeature<TRow> {
      * opens with.
      *
      * Asked per column rather than per value: the passes that read a whole
-     * column at a time — export, the clipboard, the quick filter's text, the
-     * set filter's list — ask once and then loop over the rows. The render
+     * column at a time - export, the clipboard, the quick filter's text, the
+     * set filter's list - ask once and then loop over the rows. The render
      * path asks per drawn cell, as `cellDecoration` does, so keep the answer
      * cheap and hand back the same reader each time; returning `undefined`
      * leaves that column read straight through.
@@ -147,6 +148,37 @@ export interface GridFeature<TRow> {
      * commit the substitute over the real data.
      */
     cellValue?: (scope: CellValueScope<TRow>) => CellValueReader<TRow> | undefined
+    /**
+     * A component the grid mounts inside its root, for the work a feature can
+     * only do from inside the render tree: an effect, a listener on the grid's
+     * own element, a layer drawn over the rows.
+     *
+     * A feature is built by `createDataGrid`, where there is no effect context
+     * and no DOM, so anything of that kind had no home before this. Naming the
+     * component here rather than having the grid import it is what keeps the
+     * promise on the box: `DataGrid` never mentions these, so a feature nobody
+     * registered is a component nobody bundles.
+     *
+     * It is handed no props. Both `getGridContext` and `getGridElement` are
+     * exported for it: the first answers the grid it is mounted in, the second
+     * a getter for the root element, which arrives after the first paint.
+     */
+    component?: Component
+
+    /**
+     * How many data rows this feature is holding, when it is the one that
+     * decided the shape of the list.
+     *
+     * The grid counts rows out of the pipeline, which works until a feature
+     * keeps rows somewhere the pipeline cannot see: a nested tree holds its
+     * children on the row rather than in `data`, so counting the list would
+     * report the roots. Answer `undefined` to let the grid count for itself.
+     *
+     * This is what the status bar puts on screen and what a screen reader is
+     * told after a filter, so the two cannot disagree.
+     */
+    rowCount?: (grid: GridState<TRow>) => number | undefined
+
     /** The feature's JSON-safe slice of a snapshot; undefined stays out. */
     serialize?: (grid: GridState<TRow>) => unknown
     /** Restores what `serialize` produced; a feature added later starts fresh. */

@@ -48,7 +48,7 @@ function createGrid(options: EditingOptions = {}): GridState<Person> {
     })
 }
 
-describe('Editing — cell mode', () => {
+describe('Editing - cell mode', () => {
     it('seeds the draft on startEdit and commits a valid value', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -151,7 +151,7 @@ describe('Editing — cell mode', () => {
     })
 })
 
-describe('Editing — undo/redo', () => {
+describe('Editing - undo/redo', () => {
     it('undoes and redoes a committed edit', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -225,7 +225,7 @@ describe('Editing — undo/redo', () => {
     })
 })
 
-describe('Editing — applyEdits', () => {
+describe('Editing - applyEdits', () => {
     it('writes many cells across rows as one undo step', () => {
         const grid = createGrid()
         const state = getEditing(grid)!
@@ -278,13 +278,12 @@ describe('Editing — applyEdits', () => {
         const state = getEditing(grid)!
 
         expect(state.applyEdits([{ rowId: 'nope', changes: { name: 'X' } }])).toBe(false)
-        // `active` is not editable on this column set
         expect(state.applyEdits([{ rowId: '1', changes: { active: false } }])).toBe(false)
         expect(grid.data[0].active).toBe(true)
     })
 })
 
-describe('Editing — row mode', () => {
+describe('Editing - row mode', () => {
     it('edits several cells of a row as one transaction and undo', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!
@@ -372,12 +371,10 @@ describe('mode decides what a gesture opens', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!
 
-        // The same call a double-click, Enter and F2 all make.
         state.beginEdit('1', 'name')
 
         expect(state.rowEditId).toBe('1')
         expect(state.active).toBeNull()
-        // Every editable column of the row is drafted, not just the one aimed at.
         expect(Object.keys(state.drafts).sort()).toEqual(['age', 'dept', 'name'])
     })
 
@@ -385,7 +382,6 @@ describe('mode decides what a gesture opens', () => {
         const grid = createGrid({ mode: 'row' })
         const state = getEditing(grid)!
 
-        // `startEdit` is the explicit request; the mode does not override it.
         state.startEdit('1', 'name')
 
         expect(state.active).toEqual({ rowId: '1', columnId: 'name' })
@@ -400,7 +396,6 @@ describe('mode decides what a gesture opens', () => {
 
         expect(state.rowEditId).toBe('1')
         expect(state.drafts.name).toBe('Z')
-        // The other columns keep the row's own values.
         expect(state.drafts.age).toBe(30)
     })
 

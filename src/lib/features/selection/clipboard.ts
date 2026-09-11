@@ -14,7 +14,6 @@ function pad(value: number, width = 2): string {
     return String(value).padStart(width, '0')
 }
 
-/** The calendar the cell was drawn in, which is the one it is written in. */
 function isoDay(date: Date): string {
     return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
@@ -23,11 +22,6 @@ function isoDateTime(date: Date): string {
     return `${isoDay(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
-/**
- * Unformatted, but not raw: a spreadsheet has to read a date back as a date.
- * `toISOString` writes the UTC instant, which is the previous day wherever the
- * clock is ahead of Greenwich, and an epoch column would leave as a number.
- */
 function cellText<TRow>(value: unknown, def?: ColumnDef<TRow>): string {
     if (value === null || value === undefined) return ''
 
@@ -58,11 +52,6 @@ export function rowsToMatrix<TRow>(
     options: {
         formatted?: boolean
         locale?: string
-        /**
-         * The gate a column's values leave through, asked once per column.
-         * Left out — which is what a call from outside the grid can do — the
-         * matrix carries the values as the data holds them.
-         */
         read?: (column: ColumnState<TRow>) => CellValueReader<TRow> | undefined
     } = {}
 ): CellMatrix {
@@ -71,12 +60,8 @@ export function rowsToMatrix<TRow>(
     return nodes.map((node) =>
         targets.map((column, index) => {
             const value = readCell(node, column.def, readers?.[index])
-            // A formatter is downstream of the gate on purpose: an app writing
-            // its own export cell never sees the value the gate held back.
             if (format) return format({ value, node, column })
             if (!options.formatted) return cellText(value, column.def)
-            // A widget column has no text of its own; `formatCellText` says so
-            // by returning undefined, and the raw value stands in.
             return formatCellText(value, column.def, options.locale) ?? cellText(value, column.def)
         })
     )
@@ -104,22 +89,14 @@ export function toTsv(matrix: CellMatrix): string {
         .join('\n')
 }
 
-/**
- * A cell opening with `=`, `+`, `-`, `@` or a control character executes as a
- * formula on the machine that opens the file; an apostrophe makes it literal.
- * The clipboard is left alone: quoting there would corrupt the paste back.
- */
 export function neutralizeFormula(cell: string): string {
     return /^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell
 }
 
-/** The separator every locale agrees on, and the one Excel assumes in en-US. */
 export const DEFAULT_CSV_DELIMITER = ','
 
 function csvCell(cell: string, delimiter: string): string {
     const safe = neutralizeFormula(cell)
-    // Quoting rules follow the delimiter in use: a `;` file must quote cells
-    // holding a semicolon, and need not quote ones holding a comma.
     return safe.includes(delimiter) || /["\n\r]/.test(safe)
         ? `"${safe.replaceAll('"', '""')}"`
         : safe
@@ -133,15 +110,11 @@ export function toCsv(matrix: CellMatrix, delimiter: string = DEFAULT_CSV_DELIMI
 
 export function downloadCsv(csv: string, filename: string): void {
     if (typeof document === 'undefined') return
-    // The BOM is what makes Excel read the file as UTF-8 rather than the
-    // system codepage; without it non-ASCII text opens as mojibake.
     const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = filename
     anchor.click()
-    // Revoking in the same task cancels the download in some browsers, which
-    // have not yet read the blob when `click` returns.
     setTimeout(() => URL.revokeObjectURL(url), 0)
 }

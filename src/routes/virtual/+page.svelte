@@ -210,14 +210,14 @@
 {/snippet}
 
 {#snippet activeCell({ value }: DataGridCellContext<Employee>)}
-    {value ? '✓' : '—'}
+    {value ? '✓' : '-'}
 {/snippet}
 
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">
-                {ROWS.toLocaleString()} rows — row virtualization
+                {ROWS.toLocaleString()} rows - row virtualization
             </h1>
             <p class="text-sm text-on-surface-variant">
                 Fixed-height virtualizer (40px), overscan 6, sticky header, rAF-batched scroll. Sort
@@ -256,10 +256,10 @@
     </Grid.Root>
 
     <p class="font-mono text-xs text-on-surface-variant">
-        rendered rows {virt.virtualizer.range.start + 1}–{virt.virtualizer.range.end} / {grid.totalRows.toLocaleString()}
-        · rendered cols {virt.columnVirtualizer
-            ? `${virt.columnVirtualizer.range.start + 1}–${virt.columnVirtualizer.range.end}`
-            : 'all'} / {grid.columns.visible.length} · DOM giữ ~{virt.virtualizer.range.end -
+        rendered rows {virt.virtualizer.range.start + 1}-{virt.virtualizer.range.end} / {grid.totalRows.toLocaleString()}
+        | rendered cols {virt.columnVirtualizer
+            ? `${virt.columnVirtualizer.range.start + 1}-${virt.columnVirtualizer.range.end}`
+            : 'all'} / {grid.columns.visible.length} | DOM giữ ~{virt.virtualizer.range.end -
             virt.virtualizer.range.start} hàng dù danh sách cao {Math.round(
             virt.virtualizer.totalHeight / 1000
         ).toLocaleString()}k px
@@ -269,7 +269,7 @@
         <div class="space-y-1">
             <h2 class="text-lg font-medium text-on-surface">Variable row heights</h2>
             <p class="text-sm text-on-surface-variant">
-                5.000 hàng với <code>getRowHeight</code> (40/64/88px xen kẽ) — offset tính bằng
+                5.000 hàng với <code>getRowHeight</code> (40/64/88px xen kẽ) - offset tính bằng
                 Fenwick tree, <code>scrollToRow</code> vẫn nhảy chính xác.
             </p>
         </div>
@@ -287,7 +287,7 @@
                 onclick={() => variableVirt.scrollToRow(0)}
             />
             <span class="font-mono text-xs text-on-surface-variant">
-                rows {variableVirt.virtualizer.range.start + 1}–{variableVirt.virtualizer.range.end} /
+                rows {variableVirt.virtualizer.range.start + 1}-{variableVirt.virtualizer.range.end} /
                 {variableGrid.totalRows.toLocaleString()}
             </span>
         </div>

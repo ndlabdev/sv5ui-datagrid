@@ -2,9 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { ColumnDef } from '../../core/types/index.js'
 
 export interface Validated {
-    /** Error message when invalid, null when valid. */
     error: string | null
-    /** The schema's parsed output when valid, else the input value. */
     value: unknown
 }
 
@@ -15,7 +13,6 @@ function fromSchemaResult(result: StandardSchemaV1.Result<unknown>, input: unkno
     return { error: null, value: (result as { value: unknown }).value }
 }
 
-/** Against `schema` or `validate`; a Promise only when the schema is async. */
 export function runValidation<TRow>(
     value: unknown,
     row: TRow,

@@ -12,7 +12,7 @@ import {
     type ColumnDef,
     type DataGridProps
 } from '$lib/index.js'
-import CompoundGrid from './CompoundGrid.svelte'
+import CompoundGrid from './fixtures/CompoundGrid.svelte'
 
 interface Person {
     id: number

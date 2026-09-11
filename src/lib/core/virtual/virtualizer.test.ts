@@ -102,7 +102,6 @@ describe('Virtualizer', () => {
 })
 
 describe('lists taller than the browser will render', () => {
-    /** A million rows at 40px wants 40M px; browsers clamp well below that. */
     const millionRows = () =>
         new Virtualizer({ getCount: () => 1_000_000, rowHeight: 40, overscan: 0 })
 
@@ -118,11 +117,8 @@ describe('lists taller than the browser will render', () => {
     it('reaches the last row at the bottom of the scroller', () => {
         const virtualizer = millionRows()
         virtualizer.viewportHeight = 600
-        // Scrolled to the end, the way a browser reports it.
         virtualizer.scrollTop = virtualizer.totalHeight - virtualizer.viewportHeight
 
-        // Without scaling the spacer is clamped and the run ends around row
-        // 838k, stranding everything past it.
         expect(virtualizer.range.end).toBe(1_000_000)
     })
 
@@ -134,8 +130,6 @@ describe('lists taller than the browser will render', () => {
         expect(virtualizer.totalHeight).toBe(virtualizer.contentHeight)
 
         virtualizer.scrollTop = 4000
-        // Scroll space and content space are the same, so the row under the
-        // viewport top is exactly the one arithmetic says it is.
         expect(virtualizer.range.start).toBe(100)
         expect(virtualizer.offsetY).toBe(4000)
     })
@@ -146,8 +140,6 @@ describe('lists taller than the browser will render', () => {
         virtualizer.scrollTop = 1_000_000
 
         const { start } = virtualizer.range
-        // The rows sit where the scroller expects them: their content offset
-        // carried back by the difference between the two spaces.
         expect(virtualizer.offsetY).toBeCloseTo(1_000_000 + start * 40 - virtualizer.contentTop, 5)
     })
 
@@ -165,7 +157,6 @@ describe('lists taller than the browser will render', () => {
 })
 
 describe('the scroller carries a sticky header', () => {
-    /** The header lengthens the scroll range without lengthening the rows. */
     const withHeader = (count: number) => {
         const virtualizer = new Virtualizer({ getCount: () => count, rowHeight: 40, overscan: 0 })
         virtualizer.viewportHeight = 560
@@ -177,8 +168,6 @@ describe('the scroller carries a sticky header', () => {
         const virtualizer = withHeader(100_000)
         expect(virtualizer.scale).toBe(1)
 
-        // Content space and scroll space stay the same, so the rows are
-        // translated exactly where they were before any of this existed.
         virtualizer.scrollTop = 4000
         expect(virtualizer.contentTop).toBe(4000)
         expect(virtualizer.offsetY).toBe(4000)
@@ -188,15 +177,12 @@ describe('the scroller carries a sticky header', () => {
         const virtualizer = withHeader(1_000_000)
         expect(virtualizer.scale).toBeGreaterThan(1)
 
-        // Scrolled to the end, the way a browser reports it: the spacer plus
-        // the header, less what fits on screen.
         virtualizer.scrollTop =
             virtualizer.totalHeight + virtualizer.chromeHeight - virtualizer.viewportHeight
 
         const last = virtualizer.count - 1
         expect(virtualizer.range.end).toBe(virtualizer.count)
 
-        // Where that row is drawn, in the space the scroller moves it in.
         const screenTop =
             virtualizer.chromeHeight +
             virtualizer.offsetY +
@@ -211,8 +197,6 @@ describe('the scroller carries a sticky header', () => {
         const naive = virtualizer.scale
 
         virtualizer.chromeHeight = 40
-        // Small, but at this scale it is the difference between the last row
-        // sitting on the edge and hanging a rowful past it.
         expect(virtualizer.scale).not.toBe(naive)
     })
 })

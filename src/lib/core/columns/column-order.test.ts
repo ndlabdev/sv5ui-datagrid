@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { groupContiguousOrder } from './column-order.js'
 
 describe('groupContiguousOrder', () => {
-    // a,b belong to g1; c,d to g2; x is ungrouped.
     const groupOf = (id: string): string | null =>
         id === 'a' || id === 'b' ? 'g1' : id === 'c' || id === 'd' ? 'g2' : null
 
@@ -17,8 +16,6 @@ describe('groupContiguousOrder', () => {
     })
 
     it('pulls a stray member back to its group rather than splitting the header', () => {
-        // A stale snapshot asking for g1, g2, g1 must not repeat the g1 label
-        // over two unrelated stretches of the header row.
         expect(groupContiguousOrder(['a', 'c', 'b', 'd'], groupOf)).toEqual(['a', 'b', 'c', 'd'])
     })
 

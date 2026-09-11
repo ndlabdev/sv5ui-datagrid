@@ -5,7 +5,7 @@ import { SvelteMap } from 'svelte/reactivity'
 import type { GridFeature, RowNode } from '../../core/types/index.js'
 import type { VirtualizationOptions } from './virtualization.types.js'
 
-export const VIRTUALIZATION = 'virtualization'
+const VIRTUALIZATION = 'virtualization'
 
 export class Virtualization<TRow> {
     readonly virtualizer: Virtualizer
@@ -15,7 +15,6 @@ export class Virtualization<TRow> {
 
     #grid: GridState<TRow>
     #getRowHeight?: (node: RowNode<TRow>) => number | 'auto'
-    /** Keyed by row id, so a measurement survives re-sorting. Reactive per key. */
     #measured = new SvelteMap<string, number>()
 
     constructor(grid: GridState<TRow>, options: VirtualizationOptions<TRow>) {
@@ -54,10 +53,8 @@ export class Virtualization<TRow> {
         grid.events.on('filterChanged', this.#resetScroll)
     }
 
-    /** True when this row sizes itself, so the renderer leaves its height off. */
     isAutoRow = (node: RowNode<TRow>): boolean => this.#getRowHeight?.(node) === 'auto'
 
-    /** Sub-pixel noise is ignored, or measuring would feed back on itself. */
     measureRow = (id: string, height: number): void => {
         if (height <= 0) return
         const previous = this.#measured.get(id)
@@ -70,7 +67,6 @@ export class Virtualization<TRow> {
         if (this.element) this.element.scrollTop = 0
     }
 
-    // Scroll targets address a row's position in the window, not `node.index`.
     #indexById = $derived.by(() => nodeIndexById(this.#grid.preWindowNodes))
 
     #indexOf(target: number | string): number {
@@ -103,8 +99,6 @@ export class Virtualization<TRow> {
         }
 
         const headerOffset = Math.max(0, element.scrollHeight - virtualizer.totalHeight)
-        // `top` is a scroll position, so the row's height has to be measured
-        // in the same space before the two are added.
         const bottom = top + virtualizer.toScrollSpace(virtualizer.sizeOf(index)) + headerOffset
         if (top < element.scrollTop) {
             this.#setScrollTop(element, top)
@@ -164,7 +158,6 @@ export function getVirtualization<TRow>(grid: GridState<TRow>): Virtualization<T
 
 declare module '../../core/types/api.js' {
     interface GridApi {
-        /** Row index, or a row id. */
         scrollToRow?: (target: number | string) => void
         ensureVisible?: (target: number | string) => void
     }

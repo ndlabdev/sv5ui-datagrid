@@ -1,25 +1,10 @@
 import type { CellValueReader, ColumnDef, RowNode, SetFilterValue } from '../../core/types/index.js'
 import { readCell, readerToken } from '../../core/grid/index.js'
-import { isBlank } from '../../core/utils/index.js'
+import { setKeyOf } from '../../core/utils/index.js'
+
+export { setKeyOf }
 
 export const DISTINCT_VALUES_CAP = 200
-
-/**
- * What a set filter holds instead of the value itself.
- *
- * The list the panel offers and the test the predicate runs have to agree on
- * what counts as the same value, and a set filter also has to survive a
- * snapshot, so the key is JSON-safe. A Date leaves as its instant rather than
- * as `String(date)`, which carries the reader's own timezone into the file.
- */
-export function setKeyOf(value: unknown): SetFilterValue {
-    // Blanks share the single null entry rather than offering the user both it
-    // and an empty-looking row, which they could not tell apart.
-    if (isBlank(value)) return null
-    if (typeof value === 'number' || typeof value === 'boolean') return value
-    if (value instanceof Date) return value.toISOString()
-    return String(value)
-}
 
 const cache = new WeakMap<object, Map<string, SetFilterValue[]>>()
 
@@ -33,8 +18,6 @@ export function distinctValuesCached<TRow>(
         byColumn = new Map()
         cache.set(nodes, byColumn)
     }
-    // Keyed by the gate as well as the column: a list built for one gate is
-    // the wrong list once another one stands in front of the same column.
     const key = `${def.id}#${readerToken(reader)}`
     let values = byColumn.get(key)
     if (!values) {

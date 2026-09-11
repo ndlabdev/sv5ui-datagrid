@@ -11,7 +11,7 @@ import {
     type ColumnDef,
     type DataGridProps
 } from '$lib/index.js'
-import VirtualGrid from './VirtualGrid.svelte'
+import VirtualGrid from './fixtures/VirtualGrid.svelte'
 
 interface Person {
     id: number

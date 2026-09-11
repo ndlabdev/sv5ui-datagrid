@@ -146,7 +146,6 @@ describe('FocusModel', () => {
         expect(grid.focus.headerLines).toBe(1)
         expect(grid.focus.minRow).toBe(HEADER_ROW)
 
-        // Asking for it anyway lands on the header rather than above it.
         grid.focus.focusCell({ row: FILTER_ROW, col: 0 })
         expect(grid.focus.active).toEqual({ row: HEADER_ROW, col: 0 })
     })
@@ -174,7 +173,6 @@ describe('FocusModel with a filter row', () => {
         focus.handleKeydown(keyEvent('ArrowUp'))
         expect(focus.active).toEqual({ row: HEADER_ROW, col: 0 })
 
-        // And no further: it is the top of the grid.
         focus.handleKeydown(keyEvent('ArrowUp'))
         expect(focus.active).toEqual({ row: HEADER_ROW, col: 0 })
     })
@@ -217,9 +215,6 @@ describe('FocusModel with a filter row', () => {
         const grid = createGrid()
         grid.focus.focusCell({ row: 5, col: 1 })
 
-        // The Column chooser putting that column away, or a header group
-        // folding it away: neither calls back into the focus model, and a
-        // position past the last column claims no roving tabindex at all.
         grid.columns.hiddenOverrides = { age: true }
 
         expect(grid.focus.active).toEqual({ row: 5, col: 0 })
@@ -230,13 +225,11 @@ describe('FocusModel with a filter row', () => {
         grid.focus.focusCell({ row: 25, col: 0 })
 
         grid.data = []
-        // Nothing left below the header, so that is where it stands.
         expect(grid.focus.active.row).toBe(HEADER_ROW)
     })
 })
 
 describe('FocusModel across the header levels', () => {
-    /** Two levels: an outer group over an inner one, beside a lone column. */
     function groupedGrid() {
         return createDataGrid<Person>({
             columns: [
@@ -267,7 +260,6 @@ describe('FocusModel across the header levels', () => {
     it('walks up out of the leaf row, one level at a time', () => {
         const grid = groupedGrid()
         const { focus } = grid
-        // Column 1 is `base`, which sits under Detail, which sits under Pay.
         focus.focusCell({ row: HEADER_ROW, col: 1 })
 
         focus.handleKeydown(keyEvent('ArrowUp'))
@@ -276,7 +268,6 @@ describe('FocusModel across the header levels', () => {
         focus.handleKeydown(keyEvent('ArrowUp'))
         expect(focus.active).toEqual({ row: 0, col: 1, section: 'header' })
 
-        // And no further: the grid has no fourth line above the top group.
         focus.handleKeydown(keyEvent('ArrowUp'))
         expect(focus.active).toEqual({ row: 0, col: 1, section: 'header' })
     })
@@ -299,8 +290,6 @@ describe('FocusModel across the header levels', () => {
     it('stays put where a column has no group above it', () => {
         const grid = groupedGrid()
         const { focus } = grid
-        // `name` belongs to no group, so the level above it holds a
-        // placeholder, which names nothing and takes no focus.
         focus.focusCell({ row: HEADER_ROW, col: 0 })
 
         focus.handleKeydown(keyEvent('ArrowUp'))
@@ -309,7 +298,6 @@ describe('FocusModel across the header levels', () => {
 
     it('lands on the cell covering the column, not on the column', () => {
         const grid = groupedGrid()
-        // Column 2 is `bonus`; Detail starts at column 1.
         grid.focus.focusCell({ row: 1, col: 2, section: 'header' })
         expect(grid.focus.active).toEqual({ row: 1, col: 1, section: 'header' })
     })
@@ -317,8 +305,6 @@ describe('FocusModel across the header levels', () => {
     it('steps sideways between the groups of its own level', () => {
         const grid = groupedGrid()
         const { focus } = grid
-        // Level 1 holds Detail only; level 0 holds Pay only. Add a second
-        // group at level 0 by folding nothing: the walk still has one stop.
         focus.focusCell({ row: 0, col: 1, section: 'header' })
 
         focus.handleKeydown(keyEvent('ArrowRight'))

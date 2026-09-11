@@ -10,7 +10,7 @@ import {
     type DataGridProps
 } from '$lib/index.js'
 import Renderers from '../routes/renderers/+page.svelte'
-import FormattedCells from './FormattedCells.svelte'
+import FormattedCells from './fixtures/FormattedCells.svelte'
 
 interface Row {
     id: number
@@ -20,11 +20,6 @@ interface Row {
 
 const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Row>>
 
-/**
- * What a snippet is handed. AG Grid calls it `valueFormatted` and MUI calls it
- * `formattedValue`; either way the grid formats and the renderer decorates,
- * rather than the renderer restating the column's own options.
- */
 describe('formatted, handed to a cell snippet', () => {
     it('prints through the built-in renderer when no snippet takes over', async () => {
         const columns: ColumnDef<Row>[] = [
@@ -45,8 +40,6 @@ describe('formatted, handed to a cell snippet', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // The same string the snippet test reads off `formatted`, so the two
-        // paths are pinned to one another rather than to a literal each.
         const printed = screen.container.querySelector('[data-dg-cell="0:0"]')!.textContent?.trim()
         expect(printed).toContain('1.234,50')
     })
@@ -65,11 +58,9 @@ describe('formatted, handed to a cell snippet', () => {
         expect(byId('money')?.formatted).toBe('$1,235')
         expect(byId('when')?.formatted).toBe('Aug 11, 2026')
         expect(byId('plain')?.formatted).toBe('hello')
-        expect(byId('empty')?.formatted).toBe('—')
-        // A widget has no string standing for it.
+        expect(byId('empty')?.formatted).toBe('-')
         expect(byId('bar')?.formatted).toBeUndefined()
         expect(byId('flag')?.formatted).toBeUndefined()
-        // And the column comes with it, so nothing is restated.
         expect(byId('money')?.column.def.typeOptions?.currency).toBe('USD')
     })
 

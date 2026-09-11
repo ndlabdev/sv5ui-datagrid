@@ -34,10 +34,6 @@
         total: 50 + ((i * 37) % 950)
     }))
 
-    /**
-     * Stands in for the API. It sorts, filters and slices, and hands back one
-     * page — the grid never sees the other 127 rows.
-     */
     async function fetchPage(request: {
         page: number
         pageSize: number
@@ -96,20 +92,10 @@
 
     const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
-    // True from the first frame: the page renders on the server with no rows
-    // and a request already owed, so an empty grid would tell the user there
-    // is no data for as long as that request takes.
     let loading = $state(true)
     let fetches = $state(0)
     let inFlight = 0
 
-    /**
-     * Driven by events, not by an effect: `pagination.page` clamps against the
-     * row count on read, so an effect reading it and then calling
-     * `setRowCount` would feed itself. The events fire after the feature has
-     * settled — `pageChanged` reports the page the grid actually moved to, and
-     * pagination resets to page 1 on a sort or filter before this runs.
-     */
     async function load(): Promise<void> {
         const ticket = ++inFlight
         loading = true
@@ -121,7 +107,6 @@
             sort: sortingState.sort,
             quick: filteringState.quick
         })
-        // A page the user has already navigated away from must not land.
         if (ticket !== inFlight) return
         grid.data = rows
         paginationState.setRowCount(total)
@@ -171,7 +156,7 @@
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">Server row model + selection</h1>
             <p class="text-sm text-on-surface-variant">
-                <code>rowModel: 'server'</code> — grid chỉ giữ đúng một trang, sort/filter/paging do "API"
+                <code>rowModel: 'server'</code> - grid chỉ giữ đúng một trang, sort/filter/paging do "API"
                 giả lập (250ms) làm. Chọn hàng ở trang 2 rồi sang trang khác: selection theo row id nên
                 vẫn còn.
             </p>
@@ -205,8 +190,8 @@
             onclick={selectionState.clear}
         />
         <span data-testid="server-state" class="text-xs text-on-surface-variant">
-            page {paginationState.page}/{paginationState.pageCount} · {grid.nodes.length} rows loaded
-            · {paginationState.total} total · {selectionState.count} selected · {fetches} fetches
+            page {paginationState.page}/{paginationState.pageCount} | {grid.nodes.length} rows loaded
+            | {paginationState.total} total | {selectionState.count} selected | {fetches} fetches
         </span>
     </div>
 
@@ -227,7 +212,7 @@
 
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">
         <span>Kiểm tra:</span>
-        <span>Sang trang 2 rồi bấm một ô bất kỳ — trang phải đứng yên, không nhảy về 1</span>
+        <span>Sang trang 2 rồi bấm một ô bất kỳ - trang phải đứng yên, không nhảy về 1</span>
         <span><Kbd size="sm">↓</Kbd> hết trang cũng không đổi trang (server tự phân trang)</span>
         <span>Bấm vào khoảng trống trong cột checkbox vẫn chọn được hàng</span>
     </div>

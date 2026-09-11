@@ -20,16 +20,6 @@ import {
 } from '$lib/index.js'
 import { DATE_OPS, NUMBER_OPS, TEXT_OPS } from '../lib/core/interaction/index.js'
 
-/**
- * Every operator the grid offers, put through a backend that holds only the
- * request. The lists come from the library rather than from here, so an
- * operator added without a wire meaning fails this rather than shipping with
- * one nobody decided.
- *
- * The rows are chosen to be awkward: holes of all three kinds, text differing
- * only by case, a number that is also a string, dates on both sides of a local
- * midnight.
- */
 interface Row {
     id: string
     name: string | null
@@ -55,12 +45,10 @@ const columns: ColumnDef<Row>[] = [
 const isBlank = (value: unknown) => value === null || value === undefined || value === ''
 const collator = new Intl.Collator(undefined, { numeric: true })
 
-/** A calendar day, which is what a date condition means. See the README. */
 function day(value: unknown): number {
     if (isBlank(value)) return Number.NaN
     const date = value instanceof Date ? value : new Date(value as string | number)
     if (Number.isNaN(date.getTime())) return Number.NaN
-    // A plain date names the day it spells, wherever it is read.
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
         return Date.parse(value.trim()) / 86_400_000
     }
@@ -106,7 +94,7 @@ const comparisons: Record<string, (value: number, target: number) => boolean> = 
 function numberHolds(value: unknown, condition: Extract<Condition, { kind: 'number' }>): boolean {
     if (condition.op === 'blank') return isBlank(value)
     if (condition.op === 'notBlank') return !isBlank(value)
-    if (isBlank(value)) return false
+    if (isBlank(value)) return condition.op === 'neq'
 
     const numeric = Number(value)
     const target = condition.value ?? Number.NaN
@@ -125,6 +113,8 @@ function dateHolds(value: unknown, condition: Extract<Condition, { kind: 'date' 
     switch (condition.op) {
         case 'equals':
             return cell === target
+        case 'notEqual':
+            return isBlank(value) || cell !== target
         case 'before':
             return cell < target
         case 'after':
@@ -158,7 +148,6 @@ function compareOn(left: Row, right: Row, entry: SortRequestEntry): number {
     if (isBlank(b)) return -holes
 
     const factor = entry.direction === 'asc' ? 1 : -1
-    // A date column is ordered as dates, whatever form each row carries.
     const dates = entry.field === 'when'
     const result = dates
         ? day(a) - day(b)
@@ -168,7 +157,6 @@ function compareOn(left: Row, right: Row, entry: SortRequestEntry): number {
     return result * factor
 }
 
-/** A backend, holding only the request. */
 function applyRequest(filter: FilterRequest, sort: SortRequestEntry[]): string[] {
     let result = rows.filter((row) =>
         Object.entries(filter.columns).every(([columnId, entry]) => {
@@ -224,11 +212,6 @@ function answersFor(filter?: ColumnFilterEntry, columnId = 'name', sortBy?: stri
 }
 
 describe('every text operator means the same on both sides', () => {
-    /**
-     * A query per operator that actually matches something. `equals 'item'`
-     * matches nothing here, and two sides agreeing on an empty answer says
-     * nothing about either of them.
-     */
     const queries: Record<TextFilterOp, string> = {
         contains: 'item',
         notContains: 'item',
@@ -285,7 +268,6 @@ describe('every date operator means the same on both sides', () => {
             { kind: 'date', op: 'equals', value: '2024-01-10' },
             'when'
         )
-        // Rows 1, 2 and 4 are that day in three different forms.
         expect(client).toEqual(['1', '2', '4'])
         expect(server).toEqual(client)
     })
@@ -379,7 +361,6 @@ describe('a percent column travels as what the row holds', () => {
             getRowId: (row) => row.id,
             features: [filtering()]
         })
-        // What the panel writes when the user types 5 into a percent column.
         getFiltering(grid)!.setColumnFilter('score', { kind: 'number', op: 'eq', value: 0.05 })
         const request = toFilterRequest(getFiltering(grid)!.model, ['score'])
         expect(request.columns.score.conditions[0]).toEqual({

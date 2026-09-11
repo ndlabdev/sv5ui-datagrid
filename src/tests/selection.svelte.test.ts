@@ -296,8 +296,6 @@ describe('status bar + a11y', () => {
         const screen = await renderGrid(grid)
         const state = getSelection(grid)!
 
-        // What a screen reader actually says, read off the live region rather
-        // than off the string function.
         state.select('1')
         await expect
             .element(screen.getByText('1 row selected', { exact: true }))
@@ -314,7 +312,6 @@ describe('status bar + a11y', () => {
 })
 
 describe('selection column layout', () => {
-    /** How far a control sits from the centre of the cell holding it. */
     function offCentre(cell: HTMLElement): number {
         const control = cell.querySelector('button, input, [role="checkbox"]')!
         const box = cell.getBoundingClientRect()
@@ -322,7 +319,6 @@ describe('selection column layout', () => {
         return inner.x + inner.width / 2 - (box.x + box.width / 2)
     }
 
-    /** What the browser would hand a click at a point, offset from a corner. */
     function hitAt(cell: HTMLElement, dx: number, dy: number): Element {
         const box = cell.getBoundingClientRect()
         const x = dx < 0 ? box.right + dx : box.left + dx
@@ -347,8 +343,6 @@ describe('selection column layout', () => {
         const screen = await renderGrid(grid)
         const cell = cellAt(screen.container, '1:0')
 
-        // The checkbox is 18px inside a 44px cell, so a click aimed a few
-        // pixels off it used to land on nothing at all.
         clickAt(cell, 2, 2)
         expect(selectedNames(grid)).toEqual(['Bob'])
 
@@ -390,15 +384,11 @@ describe('selection column layout', () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
 
-        // The checkbox keeps a slot for its label even when only a screen
-        // reader reads it, and that reserved gap used to push the control
-        // several pixels off centre in a column this narrow.
         const header = screen.container.querySelector<HTMLElement>('[data-dg-cell="-1:0"]')!
         const row = screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
         expect(Math.abs(offCentre(header))).toBeLessThanOrEqual(1)
         expect(Math.abs(offCentre(row))).toBeLessThanOrEqual(1)
 
-        // Hidden from sight, still the accessible name.
         await expect
             .element(screen.getByRole('checkbox', { name: 'Select all rows' }))
             .toBeInTheDocument()

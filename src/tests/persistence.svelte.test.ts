@@ -83,7 +83,6 @@ describe('snapshot round-trip', () => {
             pinned: { email: 'left' },
             hidden: { age: true }
         })
-        // email is pinned left, so it sits ahead of name once age moves to 0.
         expect(snapshot.columns!.order).toEqual(['age', 'email', 'name'])
         expect(snapshot.density).toBe('compact')
         expect(snapshot.features).toMatchObject({
@@ -109,7 +108,6 @@ describe('snapshot round-trip', () => {
         expect(target.columns.widthOf('name')).toBe(240)
         expect(target.columns.visible.map((column) => column.id)).toEqual(['name', 'email'])
         expect(target.density).toBe('comfortable')
-        // The restored sort must actually drive the pipeline, not just sit in state.
         expect(target.nodes[0].row.id).toBe(8)
     })
 

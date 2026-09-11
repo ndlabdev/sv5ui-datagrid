@@ -23,7 +23,7 @@ function createGrid(count: number, pageSize = 5) {
     })
 }
 
-describe('Pagination — page clamping', () => {
+describe('Pagination - page clamping', () => {
     it('holds the page while the row set is large enough', () => {
         const grid = createGrid(30)
         const state = getPagination(grid)!
@@ -46,7 +46,6 @@ describe('Pagination — page clamping', () => {
         state.setPage(6)
         expect(state.page).toBe(6)
 
-        // No filter or sort event fires here — the data prop simply got smaller.
         grid.data = makePeople(8)
 
         expect(state.pageCount).toBe(2)

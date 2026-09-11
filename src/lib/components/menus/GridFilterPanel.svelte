@@ -35,14 +35,11 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    /** Matches the `w-68` on the panel; used to keep it inside the viewport. */
     const PANEL_WIDTH = 272
 
     const type = $derived(filterTypeOf(column.def))
-    // Collected in the units the column draws, handed back in the row's own.
     const scale = $derived(filterUnitScaleOf(column.def))
     const unit = $derived(scale === 100 ? '%' : undefined)
-    /** A value written the way its cell writes it, for the checkbox list. */
     const shown = (value: SetFilterValue): string =>
         formatCellText(value, column.def, grid.locale) ?? String(value)
     const open = $derived(filteringState.filterFor === column.id)
@@ -53,7 +50,6 @@
         { label: labels.or, value: 'or' }
     ])
 
-    // Deep `$state`, not raw: a two-row form binds straight into a condition.
     let draft = $state(emptyDraft('text'))
     let setSearch = $state('')
     let setSelected = $state.raw<SetFilterValue[]>([])
@@ -104,8 +100,6 @@
     let triggerElement = $state<HTMLElement | null>(null)
     let position = $state({ x: 0, y: 0 })
 
-    // Viewport coordinates, so `left` even under RTL: a logical inset would
-    // mirror a position that is already absolute.
     function anchor() {
         if (!triggerElement) return
         const rect = triggerElement.getBoundingClientRect()
@@ -115,14 +109,11 @@
         }
     }
 
-    // However it opened: the column menu sets `filterFor` directly, and
-    // positioning in the click handler alone left the panel in the corner.
     $effect.pre(() => {
         if (!open) return
         anchor()
     })
 
-    /** Fixed to the viewport, so scrolling moves its trigger out from under it. */
     $effect(() => {
         if (!open) return
         const reanchor = () => anchor()
@@ -140,7 +131,6 @@
 
     function onClickOutside(event: PointerEvent) {
         if (triggerElement?.contains(event.target as Node)) return
-        // A portalled listbox is still the panel.
         if (isInPortal(event.target)) return
         filteringState.filterFor = null
     }
@@ -186,9 +176,6 @@
                     {/if}
                     <GridFilterCondition {type} {condition} {unit} ordinal={index + 1} />
                 {/each}
-                <!-- Wraps because a long translation ("Groß-/Kleinschreibung
-                     beachten") takes both lines and would otherwise push the
-                     button out through the panel's right edge. -->
                 <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-0.5">
                     {#if type === 'text'}
                         <Checkbox

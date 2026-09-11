@@ -87,8 +87,6 @@
             align: 'right',
             width: 130,
             typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
-            // Says what the cell says — the formatted amount, not the number
-            // behind it — through the sv5ui tooltip.
             tooltip: true
         },
         {
@@ -98,8 +96,6 @@
             sortable: true,
             align: 'right',
             width: 150,
-            // `type` says what the value is and the snippet decorates it: the
-            // snippet reads `formatted` rather than restating typeOptions.
             type: 'currency',
             typeOptions: { currency: 'USD', numberFormat: { maximumFractionDigits: 0 } },
             cell: budgetCell
@@ -201,16 +197,16 @@
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Cell renderers — sv5ui showcase</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Cell renderers - sv5ui showcase</h1>
             <p class="text-sm text-on-surface-variant">
-                Đặt <code>type</code> trên cột là xong — không cần viết snippet. 11 renderer dựng
+                Đặt <code>type</code> trên cột là xong - không cần viết snippet. 11 renderer dựng
                 sẵn bằng chính component sv5ui: <code>user</code>, <code>badge</code>,
                 <code>currency</code>, <code>percent</code>, <code>date</code>,
                 <code>datetime</code>, <code>boolean</code>, <code>progress</code>,
                 <code>rating</code>, <code>link</code>, <code>actions</code>.
             </p>
             <p class="text-sm text-on-surface-variant">
-                Cột <strong>Salary</strong> bật <code>tooltip: true</code> — di chuột vào ô để thấy
+                Cột <strong>Salary</strong> bật <code>tooltip: true</code> - di chuột vào ô để thấy
                 tooltip sv5ui nói đúng chữ ô đang hiện (<code>$204,000</code>), không phải số thô
                 phía sau. Cột <strong>Budget</strong> vừa khai <code>type</code> vừa có
                 <code>cell</code>: snippet đọc <code>formatted</code> rồi gắn thêm badge.

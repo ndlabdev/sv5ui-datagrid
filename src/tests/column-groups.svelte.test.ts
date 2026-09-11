@@ -5,7 +5,7 @@ import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
 import ColumnsDemo from '../routes/columns/+page.svelte'
 import GroupsDemo from '../routes/groups/+page.svelte'
-import GroupHeaderGrid from './GroupHeaderGrid.svelte'
+import GroupHeaderGrid from './fixtures/GroupHeaderGrid.svelte'
 import {
     columnOps,
     createDataGrid,
@@ -33,7 +33,6 @@ const people: Person[] = [
     { id: 2, name: 'Grace', total: 210, base: 200, bonus: 10 }
 ]
 
-/** `Pay` folds down to its total; `#` and `Name` belong to no group. */
 function payColumns(): ColumnDef<Person>[] {
     return [
         { id: 'id', header: '#', width: 70 },
@@ -60,7 +59,6 @@ function makeGrid(columns = payColumns(), extra = {}): GridState<Person> {
     })
 }
 
-/** The leaf row: one entry per column the grid is drawing. */
 const headers = (container: Element) =>
     [...container.querySelectorAll('[data-dg-cell^="-1:"]')].map(
         (cell) => cell.querySelector('[data-dg-truncate]')?.textContent?.trim() ?? ''
@@ -104,8 +102,6 @@ describe('a collapsible header group', () => {
             ])
         )
 
-        // The column menu trigger carries `aria-expanded` too, so the check
-        // is for a header cell that does.
         expect(groupCell(screen.container)).toBeNull()
     })
 
@@ -118,7 +114,6 @@ describe('a collapsible header group', () => {
 
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Total'])
 
-        // And the way back out, from the column that stayed.
         await page.getByRole('button', { name: 'Total column menu' }).click()
         await page.getByRole('menuitem', { name: 'Expand Pay' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Base', 'Bonus'])
@@ -146,8 +141,6 @@ describe('a collapsible header group', () => {
         await page.getByRole('button', { name: 'Collapse Pay' }).click()
         await expect.poll(() => headers(screen.container)).toHaveLength(3)
 
-        // Fixed widths here, so the row narrows rather than the columns
-        // stretching; what matters is that nothing was left behind.
         expect(widthOf('Name')).toBe(before)
         expect(screen.container.querySelectorAll('[role="gridcell"]').length).toBe(6)
     })
@@ -157,9 +150,6 @@ describe('a collapsible header group', () => {
         const cell = groupCell(screen.container)!.getBoundingClientRect()
         const button = groupCell(screen.container)!.querySelector('button')!.getBoundingClientRect()
 
-        // At the trailing edge of the group it belongs to, rather than in the
-        // middle beside the label, where it reads as the seam between two
-        // groups instead of a control of one.
         expect(cell.right - button.right).toBeLessThan(8)
         expect(button.left).toBeGreaterThan(cell.left + cell.width / 2)
     })
@@ -181,9 +171,6 @@ describe('a collapsible header group', () => {
         await page.getByRole('button', { name: 'Collapse Performance review' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'YTD'])
 
-        // Folding is what makes a group narrow, so this is the state the label
-        // has to survive: it gives way to an ellipsis rather than running
-        // under the toggle or out of the cell.
         const cellEl = groupCell(screen.container)!
         const cell = cellEl.getBoundingClientRect()
         const label = cellEl.querySelector('[data-dg-truncate]')!.getBoundingClientRect()
@@ -198,13 +185,9 @@ describe('a collapsible header group', () => {
         const screen = await render(GroupHeaderGrid as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // The app's own drawing, with the span it was handed.
         await expect.element(page.getByText('Pay (2)')).toBeVisible()
-        // And the grid's own control beside it, as a leaf header keeps its
-        // sort button beside a custom `headerCell`.
         await expect.element(page.getByRole('button', { name: 'Collapse Pay' })).toBeVisible()
 
-        // The toggle handed to the snippet does what the built-in one does.
         await screen.container.querySelector<HTMLElement>('[data-testid="own-toggle"]')!.click()
 
         await expect.element(page.getByText('Pay (1)')).toBeVisible()
@@ -229,13 +212,11 @@ describe('a collapsible header group', () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
 
-        // Into the leaf header of a column inside the group, then up.
         grid.focus.focusCell({ row: -1, col: 2 })
         screen.container.querySelector<HTMLElement>('[data-dg-cell="-1:2"]')!.focus()
         await userEvent.keyboard('{ArrowUp}')
 
         await expect.poll(() => grid.focus.active).toEqual({ row: 0, col: 2, section: 'header' })
-        // The cell itself holds the caret, not the button inside it.
         await expect
             .poll(() => document.activeElement?.getAttribute('data-dg-header-cell'))
             .toBe('0:2')
@@ -243,12 +224,10 @@ describe('a collapsible header group', () => {
         await userEvent.keyboard('{Enter}')
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Total'])
 
-        // Space folds it back, and the caret has not moved off the group.
         await userEvent.keyboard(' ')
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Base', 'Bonus'])
         expect(grid.focus.active).toEqual({ row: 0, col: 2, section: 'header' })
 
-        // And back down the way it came.
         await userEvent.keyboard('{ArrowDown}')
         await expect.poll(() => grid.focus.active).toEqual({ row: -1, col: 2 })
     })
@@ -261,7 +240,6 @@ describe('a collapsible header group', () => {
         screen.container.querySelector<HTMLElement>('[data-dg-cell="-1:0"]')!.focus()
         await userEvent.keyboard('{ArrowUp}')
 
-        // The level above `#` holds a placeholder, which names nothing.
         expect(grid.focus.active).toEqual({ row: -1, col: 0 })
         expect(document.activeElement?.getAttribute('data-dg-cell')).toBe('-1:0')
     })
@@ -289,9 +267,6 @@ describe('a collapsible header group', () => {
         const cellEl = groupCell(screen.container)!
         await expect.poll(() => cellEl.textContent).toContain('tóm tắt')
 
-        // Folded is a group at its narrowest, and a header an app drew has no
-        // reason to know that. The cell clips, so nothing lands in the group
-        // beside it or under the toggle.
         expect(getComputedStyle(cellEl).overflow).toBe('hidden')
         const cell = cellEl.getBoundingClientRect()
         const toggle = cellEl.querySelector('button')!.getBoundingClientRect()
@@ -312,9 +287,6 @@ describe('a collapsible header group', () => {
         await page.getByRole('button', { name: 'Collapse Pay' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Total'])
 
-        // Focus lives on cells everywhere else in the grid; a control holding
-        // it after a click leaves a ring sitting in the header, and leaves the
-        // arrow keys with nothing to move.
         await expect
             .poll(() => document.activeElement?.getAttribute('data-dg-header-cell'))
             .toBe('0:2')
@@ -349,22 +321,17 @@ describe('a collapsible header group', () => {
                     `${cell.getAttribute('data-dg-header-cell')}=${cell.getAttribute('aria-expanded')}`
             )
 
-        // A toggle per level, not one for the outermost group only.
         expect(groupCells()).toEqual(['0:1=true', '1:1=true'])
         expect(headers(screen.container)).toEqual(['#', 'A', 'B'])
 
-        // The inner one folds on its own account.
         await page.getByRole('button', { name: 'Collapse Inner' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Sub'])
         expect(groupCells()).toEqual(['0:1=true', '1:1=false'])
 
-        // And the outer one folds over the top of it.
         await page.getByRole('button', { name: 'Collapse Outer' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'All'])
-        // Nothing of the inner group is on screen, so it has no cell either.
         expect(groupCells()).toEqual(['0:1=false'])
 
-        // Reopening the outer one hands the inner one back as it was left.
         await page.getByRole('button', { name: 'Expand Outer' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Sub'])
         expect(groupCells()).toEqual(['0:1=true', '1:1=false'])
@@ -413,7 +380,6 @@ describe('a collapsible header group', () => {
         })
         await renderGrid(grid)
 
-        // The group sits far off to the right, so its cells are not drawn.
         expect(grid.columns.visible.map((column) => column.id)).toContain('base')
         grid.columns.toggleGroup('pay')
 
@@ -443,8 +409,6 @@ describe('a collapsible header group', () => {
         await page.getByRole('button', { name: 'Collapse Pay' }).click()
         await expect.poll(() => headers(screen.container)).toEqual(['#', 'Name', 'Total'])
 
-        // `Base` and `Bonus` are folded away, and still ticked: the user did
-        // not put them away, the group did.
         expect(grid.columns.all.filter((column) => column.hidden)).toHaveLength(0)
     })
 })
@@ -454,7 +418,6 @@ describe('the columns demo', () => {
         const screen = await render(ColumnsDemo as never)
         await expect.element(page.getByRole('grid').first()).toBeVisible()
 
-        // The page draws three grids; the foldable group is on the first.
         const first = () => screen.container.querySelector('[role="grid"]')!
         const leafHeaders = () =>
             [...first().querySelectorAll('[data-dg-cell^="-1:"]')].map(
@@ -463,7 +426,6 @@ describe('the columns demo', () => {
 
         expect(leafHeaders().some((header) => header.startsWith('Q1'))).toBe(true)
         expect(leafHeaders().some((header) => header.startsWith('YTD'))).toBe(false)
-        // One group declares a fold, the other declares nothing.
         expect(
             screen.container.querySelectorAll('[role="columnheader"][aria-expanded]')
         ).toHaveLength(1)
@@ -472,10 +434,6 @@ describe('the columns demo', () => {
 
         await expect.poll(() => leafHeaders().some((h) => h.startsWith('YTD'))).toBe(true)
         expect(leafHeaders().some((header) => header.startsWith('Q1'))).toBe(false)
-        // The summary column draws what its accessor adds up, rather than a
-        // field of its own that nothing holds.
-        // Row two holds 37, 53, 71 and 89 in its quarters; the summary is
-        // what its accessor makes of them, not a field anything stores.
         const ytdIndex = leafHeaders().findIndex((header) => header.startsWith('YTD'))
         const cell = first().querySelector(`[data-dg-cell="1:${ytdIndex}"]`)
         expect(cell?.textContent?.trim()).toBe('250')
@@ -493,7 +451,6 @@ describe('the header groups demo', () => {
         await expect.element(page.getByRole('grid')).toBeVisible()
         const banner = () => groupCell(screen.container)?.textContent?.replace(/\s+/g, ' ').trim()
 
-        // The app draws the group header, and is handed the span to show.
         expect(banner()).toContain('4 quý')
         expect(leafHeaders(screen.container)).toContain('Q1')
 
@@ -503,7 +460,6 @@ describe('the header groups demo', () => {
         await expect.poll(() => leafHeaders(screen.container)).not.toContain('Q1')
         expect(leafHeaders(screen.container)).toContain('Cả')
 
-        // One door: the event reached the page's own log.
         const log = () => screen.container.querySelector('[data-testid="group-log"]')?.textContent
         await expect.poll(log).toContain('revenue: gập')
     })
@@ -517,19 +473,14 @@ describe('the header groups demo', () => {
                 (cell) => cell.textContent?.trim().split(/\s+/)[0]
             )
 
-        // Doanh thu over its two halves, each with a toggle of its own, and
-        // Kế hoạch, which folds to a rail. Định danh declares nothing and is
-        // no rail, so it gets none.
         expect(toggles()).toEqual(['Doanh', 'Kế', 'Nửa', 'Nửa'])
 
-        // An inner fold leaves the group over it alone.
         await page.getByRole('button', { name: 'Collapse Nửa đầu' }).click()
         await expect
             .poll(() => leafHeaders(screen.container))
             .toEqual(['#', 'Vùng', 'Phụ', 'H1', 'Q3', 'Q4', 'Chỉ', 'Chênh'])
         expect(toggles()).toEqual(['Doanh', 'Kế', 'Nửa', 'Nửa'])
 
-        // And the outer one folds both halves away with it.
         await page.getByRole('button', { name: 'Collapse Doanh thu' }).click()
         await expect
             .poll(() => leafHeaders(screen.container))

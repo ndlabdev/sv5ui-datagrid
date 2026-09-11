@@ -12,8 +12,6 @@
 
     const items = $derived.by<DropdownMenuItem[]>(() =>
         grid.columns.all
-            // The grid's own checkbox and grip columns carry no header and
-            // cannot be hidden, so they would only be blank rows in the list.
             .filter((column) => !isSyntheticColumn(column.id))
             .map((column) => ({
                 type: 'checkbox' as const,
@@ -28,8 +26,6 @@
 </script>
 
 {#if columnOps?.canHide}
-    <!-- A grid with forty columns makes a menu taller than the screen, which
-         then has no way to reach its own end. -->
     <DropdownMenu {items} ui={{ content: 'max-h-[min(60vh,28rem)] overflow-y-auto' }}>
         {#snippet children({ props })}
             <Button

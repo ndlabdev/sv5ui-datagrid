@@ -11,9 +11,7 @@
     }: {
         index: number
         title: string
-        /** Điều cần nhìn thấy để case này coi như đạt. */
         expects: string
-        /** Trạng thái sống của lưới, để đối chiếu với những gì đang thấy. */
         state?: string
         children: Snippet
     } = $props()

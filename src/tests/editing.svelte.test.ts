@@ -182,7 +182,6 @@ describe('cell editing', () => {
         expect(grid.data[0].dept).toBe('Core')
 
         cellAt(screen.container, 0, 2).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-        // The list opens with the editor, so there is nothing to click first.
         await page.getByRole('option', { name: 'Data' }).click()
 
         await expect.poll(() => grid.data[0].dept).toBe('Data')
@@ -253,9 +252,6 @@ describe('cell editing', () => {
             .poll(() => cellAt(screen.container, 0, 6).querySelector('[role="spinbutton"]'))
             .not.toBeNull()
 
-        // Leaving while the year is still one digit. What lands is wrong, as
-        // any half-typed value is, but it has to be a date: `2-07-04` parsed
-        // as nothing, drew as nothing, and went to a server as nothing.
         await userEvent.keyboard('07')
         await userEvent.keyboard('04')
         await userEvent.keyboard('2')
@@ -332,8 +328,6 @@ describe('row edit mode', () => {
         getEditing(grid)!.startRowEdit('1')
         await expect.element(page.getByRole('textbox').first()).toBeVisible()
 
-        // Every editor mounts at once; without a rule the last one to run keeps
-        // the focus and the eye starts somewhere the caret is not.
         const first = cellAt(screen.container, 0, 0).querySelector('input')
         expect(document.activeElement).toBe(first)
         expect(first?.getAttribute('aria-label')).toBe('Name')
@@ -345,8 +339,6 @@ describe('row edit mode', () => {
         getEditing(grid)!.startRowEdit('1')
         await expect.element(page.getByRole('textbox').first()).toBeVisible()
 
-        // The cell carries a roving tabindex and used to claim this focus, so
-        // the keystrokes went nowhere.
         const age = cellAt(screen.container, 0, 1).querySelector('input')!
         await userEvent.click(age)
         expect(document.activeElement).toBe(age)
@@ -361,8 +353,6 @@ describe('row edit mode', () => {
         getEditing(grid)!.startRowEdit('1')
         await expect.element(page.getByRole('textbox').first()).toBeVisible()
 
-        // A cell edit drops its list open because that is what the user came
-        // for. A row edit opening every list at once buries the rows below.
         expect(document.querySelectorAll('[role="listbox"]').length).toBe(0)
     })
 
@@ -372,27 +362,18 @@ describe('row edit mode', () => {
         getEditing(grid)!.startRowEdit('1')
         await expect.element(page.getByRole('textbox').first()).toBeVisible()
 
-        // Two inset rings meeting at a seam read as one doubled rule, which is
-        // what a ring per editor produced across the row.
         const name = cellAt(screen.container, 0, 0).firstElementChild as HTMLElement
         const age = cellAt(screen.container, 0, 1).firstElementChild as HTMLElement
         const seam = age.getBoundingClientRect().left - name.getBoundingClientRect().right
         expect(Math.abs(seam)).toBeLessThanOrEqual(1)
 
-        // The row carries the outline, and it is the only one: a field marking
-        // focus with a second box put four pixels of primary along the seam it
-        // shares with the row, and three lines in the corner of a widget that
-        // draws its own border.
         const row = cellAt(screen.container, 0, 0).parentElement!
         expect(getComputedStyle(row, '::after').boxShadow).not.toBe('none')
 
-        // `name` holds the caret: the first editable field takes it.
         expect(name.contains(document.activeElement)).toBe(true)
         expect(getComputedStyle(name).boxShadow).toBe('none')
         expect(getComputedStyle(age).boxShadow).toBe('none')
 
-        // What it marks focus with instead: a tint, and a rule along the one
-        // edge the row's outline does not already occupy.
         expect(getComputedStyle(name, '::after').backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
         expect(getComputedStyle(age, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
     })
@@ -407,13 +388,11 @@ describe('row edit mode', () => {
         const screen = await renderGrid(grid)
         const paging = getPagination(grid)!
 
-        // The last row the page holds, which is where the jump showed up.
         cellAt(screen.container, 11, 0).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
         await page.getByRole('textbox').first().fill('Edited')
         await userEvent.keyboard('{Enter}')
 
         expect(grid.data[11].name).toBe('Edited')
-        // Pressing Enter to save is not a request to go to page two.
         expect(paging.page).toBe(1)
         expect(grid.focus.active.row).toBe(11)
     })
@@ -446,7 +425,6 @@ describe('row edit mode', () => {
         cellAt(screen.container, 11, 0).focus()
         await userEvent.keyboard('{ArrowDown}')
 
-        // Going somewhere is what an arrow key is for.
         expect(grid.focus.active.row).toBe(12)
         expect(paging.page).toBe(2)
     })
@@ -462,12 +440,7 @@ describe('row edit mode', () => {
         const row = cellAt(screen.container, 0, 0).parentElement!
         const separator = Number(getComputedStyle(row, '::after').zIndex)
 
-        // The editor fills its cell, so the separator lands on the ring rather
-        // than beside it: one grey pixel along one blue edge, which reads as
-        // three edges of one weight and a fourth of another.
         expect(Number(getComputedStyle(box).zIndex)).toBeGreaterThan(separator)
-        // And no higher than the pinned cells, which stay above what scrolls
-        // beneath them whether or not it is being edited.
         expect(Number(getComputedStyle(box).zIndex)).toBeLessThan(8)
     })
 
@@ -477,8 +450,6 @@ describe('row edit mode', () => {
         getEditing(grid)!.startRowEdit('1')
         await expect.element(page.getByRole('textbox').first()).toBeVisible()
 
-        // The dept column edits through a Select, which has a border and a
-        // focus state of its own.
         const dept = cellAt(screen.container, 0, 2).firstElementChild as HTMLElement
         expect(getComputedStyle(dept).boxShadow).toBe('none')
         expect(getComputedStyle(dept, '::after').backgroundColor).toBe('rgba(0, 0, 0, 0)')
@@ -572,13 +543,11 @@ describe('clipboard paste', () => {
 
         const input = screen.container.querySelector<HTMLElement>('input')!
         pasteInto(input, 'FromEditor')
-        // The grid paste must not fire while an editor owns the event.
         expect(grid.data[0].name).toBe('Alice')
     })
 })
 
 describe('leaving a widget editor', () => {
-    /** name, age, dept, active, rating, skills, joined. */
     const DEPT = 2
 
     const isOpen = (container: Element) =>
@@ -591,8 +560,6 @@ describe('leaving a widget editor', () => {
         await userEvent.dblClick(cellAt(screen.container, 0, DEPT))
         await expect.poll(() => isOpen(screen.container)).toBe(true)
 
-        // A widget editor leaves focus on the cell, so a handler on the editor
-        // inside it never sees the key — the binding has to be on the grid.
         await userEvent.keyboard('{Escape}')
         await expect.poll(() => isOpen(screen.container)).toBe(false)
         expect(getEditing(grid)!.active).toBeNull()
@@ -605,8 +572,6 @@ describe('leaving a widget editor', () => {
         await userEvent.dblClick(cellAt(screen.container, 0, DEPT))
         await expect.poll(() => isOpen(screen.container)).toBe(true)
 
-        // It used to sit there with no way out but picking a value: the
-        // outside-click handler only ever ran for text-field editors.
         await userEvent.click(cellAt(screen.container, 2, 1))
         await expect.poll(() => isOpen(screen.container)).toBe(false)
         expect(getEditing(grid)!.active).toBeNull()
@@ -621,8 +586,6 @@ describe('leaving a widget editor', () => {
         await expect.poll(() => isOpen(screen.container)).toBe(true)
         await userEvent.keyboard('{Escape}')
 
-        // A widget commits as its value changes, so ending the edit discards
-        // nothing the user had entered.
         await expect.poll(() => grid.data[0].dept).toBe(before)
     })
 
@@ -639,12 +602,9 @@ describe('leaving a widget editor', () => {
 })
 
 describe('segmented editors in a narrow column', () => {
-    /** name, age, dept, active, rating, skills, joined — `joined` is the date. */
     const JOINED = 6
 
     it('grows past the cell rather than running its segments under the icon', async () => {
-        // Narrow enough that the segments cannot fit beside the trigger: the
-        // width a real report column would give a date.
         const grid = createDataGrid<Person>({
             columns: columns.map((column) =>
                 column.id === 'joined' ? { ...column, width: 110 } : column
@@ -660,9 +620,6 @@ describe('segmented editors in a narrow column', () => {
         const editor = () => cell.firstElementChild as HTMLElement
         await expect.poll(() => Boolean(editor()?.querySelector('[role="spinbutton"]'))).toBe(true)
 
-        // A date field lays out fixed segments and reserves room for its
-        // trigger. Held to a narrower column the segments used to overflow and
-        // print under that trigger.
         const segments = [...cell.querySelectorAll('[role="spinbutton"]')]
         const last = segments.at(-1)!.getBoundingClientRect()
         const trigger = cell.querySelector('button')!.getBoundingClientRect()
@@ -685,7 +642,6 @@ describe('segmented editors in a narrow column', () => {
 })
 
 describe('committing an editor that owns Enter', () => {
-    /** name, age, dept, active, rating, skills, joined. */
     const SKILLS = 5
 
     it('commits a tags editor with Ctrl+Enter, without leaving the cell', async () => {
@@ -696,15 +652,12 @@ describe('committing an editor that owns Enter', () => {
         await userEvent.dblClick(cell)
         await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
 
-        // Enter belongs to the widget: it adds the tag rather than committing.
         await userEvent.keyboard('svelte{Enter}')
         expect(getEditing(grid)!.active).not.toBeNull()
 
         await userEvent.keyboard('{Control>}{Enter}{/Control}')
         await expect.poll(() => getEditing(grid)!.active).toBeNull()
         expect(grid.data[0].skills).toContain('svelte')
-        // The grid's own position is what moves, or does not: unlike Tab,
-        // this commits without leaving the cell.
         expect(grid.focus.active).toMatchObject({ row: 0, col: SKILLS })
     })
 
@@ -724,7 +677,6 @@ describe('committing an editor that owns Enter', () => {
 describe('focus ring while editing', () => {
     const hasRing = (element: Element) => /rgb|oklch/.test(getComputedStyle(element).boxShadow)
 
-    /** `:focus-visible` needs the keyboard, so focus arrives by arrow key. */
     async function focusByKeyboard(container: Element) {
         await userEvent.click(cellAt(container, 0, 1))
         await userEvent.keyboard('{ArrowLeft}')
@@ -740,8 +692,6 @@ describe('focus ring while editing', () => {
         await userEvent.keyboard('{Enter}')
         await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
 
-        // Two rings around one control read as a mistake, so the cell yields
-        // to the editor rather than framing it.
         expect(hasRing(cell)).toBe(false)
         expect(hasRing(cell.firstElementChild!)).toBe(true)
     })
@@ -756,16 +706,12 @@ describe('focus ring while editing', () => {
         await expect.poll(() => Boolean(cell.querySelector('input'))).toBe(true)
         expect(cell.className).not.toMatch(ringClass)
 
-        // The class comes back, not the painted ring: `:focus-visible` follows
-        // the browser's own idea of how focus arrived, and focus returning to
-        // the cell in code does not count as a keypress.
         await userEvent.keyboard('{Escape}')
         await expect.poll(() => ringClass.test(cell.className)).toBe(true)
     })
 })
 
 describe('opening an editor from the keyboard', () => {
-    /** name, age, dept, active, rating, skills, joined. */
     const DEPT = 2
 
     it('drops the list open and hands it the keyboard', async () => {
@@ -776,13 +722,9 @@ describe('opening an editor from the keyboard', () => {
         cell.focus()
         await userEvent.keyboard('{Enter}')
 
-        // Opening the editor is the choice; the list is what the user came
-        // for, so it is already down rather than waiting for a second key.
         await expect
             .poll(() => document.querySelectorAll('[data-bits-floating-content-wrapper]').length)
             .toBe(1)
-        // And the caret is on the control, or the arrows would still be
-        // steering the grid instead of the list.
         expect(cell.contains(document.activeElement)).toBe(true)
         expect(document.activeElement).not.toBe(cell)
     })
@@ -806,7 +748,6 @@ describe('opening an editor from the keyboard', () => {
         cellAt(screen.container, 0, DEPT).focus()
         await userEvent.keyboard('Z')
 
-        // A select would be left holding a value none of its options offer.
         await expect.poll(() => getEditing(grid)!.active).not.toBeNull()
         expect(getEditing(grid)!.draft).not.toBe('Z')
     })

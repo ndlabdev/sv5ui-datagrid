@@ -58,21 +58,36 @@ you use, and nothing else reaches your bundle.
 
 ## Features
 
-| Area                                                                         | What you get                                                                                                                          |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rows**                                                                     | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
-| **Columns**                                                                  | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
-| **Sorting**                                                                  | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
-| **Filtering**                                                                | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
-| **Selection**                                                                | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
-| **Editing**                                                                  | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
-| **Reordering**                                                               | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
-| **Persistence**                                                              | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
-| **Localization**                                                             | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
-| **Accessibility**                                                            | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
-| **Server**                                                                   | `rowModel: 'server'` with normalized filter and sort requests                                                                         |
-| Features are opt-in. A feature you do not register is never imported, so its |
-| code stays out of your bundle.                                               |
+| Area                    | What you get                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rows**                | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
+| **Columns**             | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
+| **Sorting**             | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
+| **Filtering**           | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
+| **Selection**           | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
+| **Editing**             | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
+| **Reordering**          | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
+| **Persistence**         | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
+| **Localization**        | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
+| **Accessibility**       | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
+| **Server**              | `rowModel: 'server'` with normalized filter and sort requests, paged or infinite blocks                                               |
+| **Grouping**            | Group by any number of columns, thirteen aggregators, group footers, a grand total, and values read as a share of one of them         |
+| **Structure**           | Tree data from `getChildren` or `getParentId`, and a detail panel under any row                                                       |
+| **Formulas**            | Calculated columns from an expression, 31 functions, a dependency graph that catches a cycle, and no `eval`                           |
+| **Ranges**              | Excel-style cell ranges, multiple selections, a fill handle that reads a series, cut and move, and a summary bar                      |
+| **Finding**             | Find and replace across the rows a filter left, whole-cell and case options                                                           |
+| **Conditions**          | Colour scales, data bars, duplicates, top N and expression rules, exported into the workbook as real Excel rules                      |
+| **Filter builder**      | Nested `(A AND B) OR C`, operators per column type, alongside the column filters rather than instead of them                          |
+| **Import**              | CSV, TSV, XLSX and clipboard, type guessing, column mapping, validation, and rows staged in the grid to fix in place                  |
+| **Export**              | CSV, and XLSX written without a dependency, on its own entry at `@sv5ui/datagrid/xlsx`                                                |
+| **Views**               | Named views in `localStorage` or storage of your own, and a link that carries the whole state                                         |
+| **Policy**              | Column, row and cell masking applied at render, export, clipboard, search, facet and edit                                             |
+| **Off the main thread** | A worker row model that filters and sorts a columnar copy, with a main-thread fallback                                                |
+| **Command palette**     | `Ctrl/Cmd+K` over the commands the registered features offer                                                                          |
+
+Features are opt-in. A feature you do not register is never imported, so its
+code stays out of your bundle, and `src/tests/bundle-shape.test.ts` builds a
+real entry to prove it.
 
 ## Installation
 
@@ -115,7 +130,7 @@ draws. If your own UI happens to use one of the same icons, it resolves
 locally too.
 
 `registerDataGridIcons` is exported for the one case the import does not
-cover — a grid behind a dynamic `import()`, where your own icons may render
+cover - a grid behind a dynamic `import()`, where your own icons may render
 before the grid's module is even fetched:
 
 ```svelte
@@ -128,13 +143,13 @@ before the grid's module is even fetched:
 
 It is idempotent.
 
-The set covers what the grid itself draws. Icons you hand it — `RowAction.icon`,
-a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet —
+The set covers what the grid itself draws. Icons you hand it - `RowAction.icon`,
+a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet -
 are yours to bundle, as is any icon of your own the grid never uses:
 
 ```ts
 import { addCollection } from '@iconify/svelte'
-addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path …/>' } } })
+addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path .../>' } } })
 ```
 
 `datagridIcons` is exported too, if you want to read the shape or merge it.
@@ -219,6 +234,28 @@ registered.
 | `rowPinning()`     | Rows pinned to the top or bottom                |
 | `rowReorder()`     | Drag grip and keyboard reorder                  |
 
+| Feature                   | Adds                                                           |
+| ------------------------- | -------------------------------------------------------------- |
+| `grouping()`              | Group by N columns, thirteen aggregators, footers, grand total |
+| `tree()`                  | Nested or flat parent/child data                               |
+| `masterDetail()`          | A detail panel under a row                                     |
+| `showValuesAs()`          | A number read as a share of a total, a parent or a row         |
+| `formula()`               | Calculated columns from an expression                          |
+| `advancedFilter()`        | A nested condition tree beside the column filters              |
+| `rangeSelection()`        | Cell ranges, fill handle, cut and move, clipboard              |
+| `findReplace()`           | Find and replace across the rows a filter left                 |
+| `conditionalFormatting()` | Colour scales, data bars, duplicates, top N, expressions       |
+| `dataImport()`            | CSV, TSV, XLSX and clipboard, staged in the grid               |
+| `savedViews()`            | Named views and a link that carries the whole state            |
+| `policy()`                | Masking at render, export, clipboard, search, facet and edit   |
+| `serverRowModel()`        | Paged or infinite blocks fetched from a source                 |
+| `workerDataSource()`      | The same, filtered and sorted off the main thread              |
+| `commandPalette()`        | `Ctrl/Cmd+K` over what the registered features offer           |
+
+The workbook writer is not a feature: `buildGridXlsx` and `createWorkbook` are
+functions, on their own entry at `@sv5ui/datagrid/xlsx`, because writing a
+spreadsheet involves no grid.
+
 Call a factory inside the `features` array, as above, and `TRow` is inferred
 from the array's own type. A factory held in a variable first has nothing to
 infer from and resolves to `GridFeature<unknown>`, so spell the argument out
@@ -255,7 +292,7 @@ getSorting(grid)?.setSort([{ columnId: 'name', direction: 'asc' }])
 
 The accessor is the typed path: it narrows to the feature's own class, generic
 in `TRow`, with nothing optional about what it returns. `grid.api` is the flat
-alternative — every feature's methods in one bag, each one optional, because
+alternative - every feature's methods in one bag, each one optional, because
 the grid that has `setPage` is the one that registered `pagination()`:
 
 ```ts
@@ -274,6 +311,93 @@ declare module '@sv5ui/datagrid' {
 }
 ```
 
+### What a feature brings besides its factory
+
+Registering a feature is enough to use it. These are the named exports your
+own code reaches for when it has to meet a feature halfway: read back a row
+the grid drew, catch what a feature throws, reuse a calculation it made, or,
+from inside a feature's own `component`, reach the grid it is mounted in.
+
+| Export                                 | Comes with         | Reach for it when                                                                                                                    |
+| -------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `isDataRow(node)`                      | the kernel         | You walk `grid.preWindowNodes` and want only rows carrying data, skipping a group header, a footer, a detail panel and a loading row |
+| `isLoadingRow(row)`                    | `serverRowModel()` | A cell snippet draws a row still on its way differently from one that arrived                                                        |
+| `isDetailNode(id)`                     | `masterDetail()`   | You hold a row id and need to know whether it names a detail panel rather than a row                                                 |
+| `totalsKindOf(id)`                     | `grouping()`       | The same question for a group footer (`'footer'`) or the grand total (`'grandTotal'`), and `null` for anything else                  |
+| `aggregate(aggregation, values, rows)` | `grouping()`       | You want the number a group footer would show, somewhere other than the grid: a summary card, a chart, a second table                |
+| `autoColumns(rows, options?)`          | the kernel         | The shape of the data is known only at runtime, so the columns are read off a sample of the rows                                     |
+| `localStorageViews`                    | `savedViews()`     | You take the default store, or write an object of the same shape to keep views on a server instead                                   |
+| `ShareTooLongError`                    | `savedViews()`     | Packing a whole grid state into a link can pass what a URL carries                                                                   |
+| `FormulaError`, `isFormulaError`       | `formula()`        | A calculated cell holds one of these instead of a number when the expression cannot answer                                           |
+| `FUNCTION_NAMES`                       | `formula()`        | You build an editor for expressions and want completion over the functions there are                                                 |
+| `getGridContext()`                     | the kernel         | A feature's `component` needs the grid it is mounted in; it is handed no props                                                       |
+| `getGridElement()`                     | the kernel         | The same component needs the root element, for a listener, a measurement or a layer over the rows                                    |
+
+The grid offers three lists of nodes, and which one you want depends on the
+question. `grid.nodes` is what is on screen after paging and virtualization.
+`grid.preWindowNodes` is everything the grid would draw, so a row inside a
+collapsed group or tree node is not in it. `grid.filteredNodes` is the list one
+stage earlier, before anything folded rows away.
+
+Two counts sit on top of those, and they answer different questions.
+`grid.totalRows` is the length of the drawn list: what keyboard navigation
+bounds itself by, what `aria-rowcount` reports, and it counts a group header as
+a row because that is a row you can focus. `grid.filteredRowCount` is how many
+data rows a filter left, which is what the status bar shows and what a screen
+reader is told, and it does not move when a group is opened or shut. A feature
+holding rows the pipeline cannot see, as a nested tree does, answers for itself
+through `GridFeature.rowCount`.
+
+A calculated column never throws at you. It puts a `FormulaError` in the cell,
+carrying a `code` that reads the way a spreadsheet's does and a `detail` that
+says which name or which value caused it:
+
+```ts
+import { isFormulaError } from '@sv5ui/datagrid'
+
+const value = grid.getValue(node, column)
+if (isFormulaError(value)) {
+    console.warn(value.code, value.detail) // '#CYCLE', '"total" refers back to itself'
+}
+```
+
+`FormulaErrorCode` is the union of what `code` can be: `'#VALUE'`, `'#DIV/0'`,
+`'#NAME'`, `'#NUM'`, `'#LIMIT'` and `'#CYCLE'`. The cell prints the code, so a
+column in a cycle reads `#CYCLE` down its length and the columns outside that
+cycle keep working.
+
+Those two answer a cell. To check an expression before it becomes one, which is
+what an editor offering `FUNCTION_NAMES` needs next, write it and ask:
+
+```ts
+const formulas = getFormula(grid)!
+formulas.set('draft', expression)
+const failure = formulas.errorOf('draft') // null when it parses
+```
+
+The parser itself is not exported. It answers an internal tree that would have
+to stay still for as long as the package does, and `errorOf` carries the two
+things an editor actually shows: the message, and where in the string it went
+wrong.
+
+Sharing a state as a link is the one saved-views call that can refuse. A grid
+holding many columns, a long filter tree and a set filter with hundreds of
+ticks encodes past what a URL carries, so `shareLink` and `shareToken` reject
+rather than hand back a link that will not open:
+
+```ts
+import { getSavedViews, ShareTooLongError } from '@sv5ui/datagrid'
+
+try {
+    const link = await getSavedViews(grid)!.shareLink()
+    if (link) location.href = link
+} catch (error) {
+    if (error instanceof ShareTooLongError) {
+        alert(`${error.length} characters is too long for a link. Save it as a view.`)
+    } else throw error
+}
+```
+
 ## Extension points
 
 A feature is a plain object. The built-in features use nothing that is not
@@ -288,6 +412,7 @@ available to yours.
 | `menuItems`      | column and context menu entries                                  |
 | `cellDecoration` | per-cell classes, inline style and `aria-selected`               |
 | `cellValue`      | stands between a cell's value and every way it leaves the grid   |
+| `component`      | a component the grid mounts in its root, for effects and the DOM |
 | `serialize`      | the feature's slice of a state snapshot                          |
 | `hydrate`        | restores what `serialize` produced                               |
 
@@ -303,7 +428,7 @@ const highlightNegative = (): GridFeature<Row> => ({
 features do not define it skips the work entirely.
 
 A class cannot name a value computed per cell, so the hook also takes `style`,
-a record keyed by CSS property — custom properties included, which is how a
+a record keyed by CSS property - custom properties included, which is how a
 feature reaches a pseudo-element:
 
 ```ts
@@ -346,7 +471,7 @@ given, so `'***'` on a `type: 'currency'` column parses as no number and the
 cell draws empty; `null` draws the column's empty text, and a mark of your own
 needs an untyped column or a `cell` snippet. Nothing leaks either way.
 
-Hand the value back unchanged — the same reference — for a cell you are
+Hand the value back unchanged - the same reference - for a cell you are
 leaving alone; the grid compares by identity. A cell whose value a reader
 substitutes is one the grid refuses to edit, since an editor opened on it
 would commit the substitute over the real data.
@@ -357,7 +482,7 @@ what it hides; a filter predicate decides which rows survive and stays raw for
 the same reason, so a narrowing filter plus a row count says something about
 what was hidden. Take `sortable` and `filter` off a column you mask. And the
 row object itself still reaches your own `cell` snippet, `cellClass` and
-`tooltip` — this is a gate on the grid's own output, not a security boundary:
+`tooltip` - this is a gate on the grid's own output, not a security boundary:
 data that must not reach the browser should not be sent to it.
 
 ## Columns
@@ -414,7 +539,7 @@ printed, so it never restates the column's own `typeOptions`:
 ```
 
 `formatted` is `undefined` where the built-in rendering is a widget rather than
-text — `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` —
+text - `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` -
 because there is no string standing for one. It is computed only if the snippet
 reads it. The snippet also receives `column`, so a renderer can reach its own
 `def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
@@ -422,7 +547,7 @@ it too.
 
 ### Tooltips
 
-`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` —
+`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` -
 the design system's, not the browser's `title`. A function takes its place when
 the text should say more; it receives the cell context, `formatted` included:
 
@@ -441,7 +566,7 @@ turns that off for a column that manages its own.
 
 Null, undefined and empty string all render as an em dash, whatever the
 column's `type` and whether it declares one at all. `typeOptions.emptyText`
-overrides the text per column — not to be confused with the `emptyText` prop on
+overrides the text per column - not to be confused with the `emptyText` prop on
 `<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
 snippet owns its own output, `formatted` included: blanks arrive there already
 turned into that text.
@@ -493,17 +618,17 @@ and
 `columnGroupToggled` the way every other column operation does.
 
 `headerGroupCell` draws the group header yourself, the way `headerCell` draws
-a leaf one. The snippet is handed the group cell — id, label, span, whether it
-is folded — and a `toggle`, and the grid's own control stays beside whatever
+a leaf one. The snippet is handed the group cell - id, label, span, whether it
+is folded - and a `toggle`, and the grid's own control stays beside whatever
 it draws:
 
 ````svelte
 {#snippet payHeader({ cell, toggle }: HeaderGroupContext)}
     <Badge label={`${cell.header} (${cell.span})`} onclick={toggle} />
 {/snippet}
-``` Folding is not hiding —
+``` Folding is not hiding -
 what the Column chooser put away stays away, and what a group folded comes
-back when it opens — and the state travels in a snapshot, keyed by group.
+back when it opens - and the state travels in a snapshot, keyed by group.
 
 A group is only offered a toggle when the state it would switch to leaves a
 column of it on screen. One whose children are all `'open'` would fold its own
@@ -691,7 +816,7 @@ handed, so where the two disagree, what the reader sees is yours:
 | A `percent` column holds the ratio, so 5% travels as `0.05`     | whatever the column stores           |
 
 `nulls` rides on every sort entry, written as the side blanks actually land on,
-so `ORDER BY … NULLS LAST` reproduces it without further thought. `quickFields`
+so `ORDER BY ... NULLS LAST` reproduces it without further thought. `quickFields`
 names the columns a bare query applies to, which is otherwise unguessable.
 
 Two things the request cannot carry, because they are functions: a column's

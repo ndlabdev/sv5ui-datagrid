@@ -1,6 +1,6 @@
 {
     "name": "@sv5ui/datagrid",
-    "version": "1.3.1",
+    "version": "2.0.0",
     "description": "A high-performance data grid for Svelte 5, built on sv5ui",
     "author": "ndlabdev",
     "license": "MIT",
@@ -53,6 +53,11 @@
             "types": "./dist/index.d.ts",
             "svelte": "./dist/index.js",
             "default": "./dist/index.js"
+        },
+        "./xlsx": {
+            "types": "./dist/xlsx.d.ts",
+            "svelte": "./dist/xlsx.js",
+            "default": "./dist/xlsx.js"
         },
         "./locales": {
             "types": "./dist/locales/index.d.ts",

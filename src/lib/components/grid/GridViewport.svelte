@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { tick } from 'svelte'
     import { useElementSize } from 'sv5ui'
     import { HEADER_ROW, type CellPosition } from '../../core/interaction/index.js'
     import { getColumnOps } from '../../features/column-ops/index.js'
@@ -28,7 +29,6 @@
 
     const pinnedRowCount = $derived(pinning?.pinnedCount ?? 0)
 
-    // Body positions omit `section` entirely, so never compare it directly.
     const sectionOf = (position: CellPosition) => position.section ?? 'body'
 
     let element = $state<HTMLElement | null>(null)
@@ -54,8 +54,6 @@
     $effect(() => {
         if (!virtualization) return
         virtualization.virtualizer.viewportHeight = size.height
-        // The header scrolls with the spacer, so it is part of the range the
-        // scroller offers but not of the rows the range has to cover.
         if (element) {
             virtualization.virtualizer.chromeHeight = Math.max(
                 0,
@@ -100,11 +98,28 @@
         followPage(active.row)
     })
 
-    /**
-     * Turns to the page the focused row sits on. Only under a client model: a
-     * server model holds one page, so its rows are indexed 0..n whichever page
-     * they came from and the arithmetic would send every focus back to page 1.
-     */
+    $effect(() => {
+        if (virtualization) return
+
+        const api = grid.api as { ensureVisible?: (target: number | string) => void }
+        api.ensureVisible = async (target) => {
+            const row =
+                typeof target === 'number'
+                    ? target
+                    : grid.preWindowNodes.findIndex((node) => node.id === target)
+            if (row < 0) return
+
+            followPage(row)
+            await tick()
+            element
+                ?.querySelector(`[data-dg-cell^="${row - windowStartOf(grid)}:"]`)
+                ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        }
+        return () => {
+            delete api.ensureVisible
+        }
+    })
+
     function followPage(row: number): void {
         const pagination = getPagination(grid)
         if (!pagination?.pageSize || pagination.server) return
@@ -124,23 +139,13 @@
             const byKeyboard = movedByKeyboard
             movedByKeyboard = false
 
-            // An editor inside the cell already holds the caret; pulling focus
-            // back would take the keystrokes off the field just clicked.
             if (document.activeElement !== cell && cell.contains(document.activeElement)) return
 
             cell.focus()
-            // Next frame, not now: measuring forces a style flush, and doing
-            // that mid-effect mounts a popup the click that opened it is still
-            // propagating towards — which then reads as a click outside.
             if (byKeyboard) requestAnimationFrame(() => revealColumn(cell))
         }
     })
 
-    /**
-     * The span of the viewport no pinned cell is sitting on. Which edge a
-     * pinned cell holds is a question of where it ended up rather than of its
-     * pin side, since under RTL the two swap over.
-     */
     function clearSpan(row: Element, cell: HTMLElement, view: DOMRect) {
         let start = view.left
         let end = view.right
@@ -153,11 +158,6 @@
         return { start, end }
     }
 
-    /**
-     * Scrolls a focused cell clear of the pinned columns. The browser's own
-     * scroll-into-view stops at the viewport edge, which is exactly where the
-     * pinned columns sit, so a cell reached by keyboard parks underneath one.
-     */
     function revealColumn(cell: HTMLElement): void {
         const row = cell.parentElement
         if (!element || !row || document.activeElement !== cell) return
@@ -165,7 +165,6 @@
 
         const { start, end } = clearSpan(row, cell, element.getBoundingClientRect())
         const box = cell.getBoundingClientRect()
-        // A cell wider than the gap can only ever show one edge: its start.
         const offset =
             box.left < start || box.width > end - start
                 ? box.left - start
@@ -174,11 +173,6 @@
         setScrollStart(element, scrollStart(element) + (isRtl(element) ? -offset : offset))
     }
 
-    /**
-     * Pinned rows and header groups are outside the body's coordinates, so
-     * each carries its own descriptor: a group cell spans many columns, and a
-     * pinned row is outside the pipeline the body is indexed by.
-     */
     function selectorFor(position: CellPosition): string {
         const section = sectionOf(position)
         if (section === 'body') return `[data-dg-cell="${position.row}:${position.col}"]`
@@ -188,7 +182,6 @@
         return `[data-dg-pinned-cell="${section}:${position.row}:${position.col}"]`
     }
 
-    /** A descriptor written by a section that keeps its own coordinates. */
     function outsideBody(target: HTMLElement | null): CellPosition | null {
         const header = target?.closest('[data-dg-header-cell]')?.getAttribute('data-dg-header-cell')
         if (header) {
@@ -202,11 +195,8 @@
         return { row: Number(row), col: Number(col), section: section as 'top' | 'bottom' }
     }
 
-    /** The cell an event landed in, read back from its descriptor attribute. */
     function positionOf(event: Event): CellPosition | null {
         const target = event.target as HTMLElement | null
-        // The filter panel renders inside a header cell, so its events bubble
-        // here; treating them as cell interactions steals its focus.
         if (target?.closest('[role="dialog"]')) return null
 
         const outside = outsideBody(target)
@@ -237,7 +227,6 @@
         }
     }
 
-    /** Delegated, so cells do not each allocate a handler. */
     function focusClickedCell(event: MouseEvent) {
         const position = positionOf(event)
         if (position) grid.focus.focusCell(position)
@@ -259,9 +248,6 @@
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        // Set only where the focus model actually moved: a click reaches
-        // something the user can already see, and Escape leaving a popup must
-        // not drag the grid out from under the trigger they came from.
         if (grid.focus.handleKeydown(event)) {
             movedByKeyboard = true
             return
@@ -278,10 +264,6 @@
         editing.startEditWith(node.id, column.id, event.key)
     }
 
-    /**
-     * A paste event rather than a Ctrl+V binding: it reads synchronously
-     * without a permission prompt, and covers right-click paste too.
-     */
     function handlePaste(event: ClipboardEvent) {
         if (!editing || editing.active || editing.rowEditId) return
         if ((event.target as HTMLElement | null)?.closest('input, textarea, [contenteditable]'))
@@ -292,13 +274,11 @@
         void editing.pasteText(text)
     }
 
-    /** Measured on hover: comparing widths per cell per frame forces layout. */
     function maybeTooltip(event: PointerEvent) {
         const target = (event.target as HTMLElement | null)?.closest?.<HTMLElement>(
             '[data-dg-truncate]'
         )
         if (!target) return
-        // The column decides its own tooltip; measuring would fight it.
         if (target.closest('[data-dg-manual-tooltip]')) return
 
         const text = target.textContent ?? ''
@@ -309,19 +289,11 @@
         }
     }
 
-    /**
-     * How far the columns have scrolled, written onto the element rather than
-     * held in state: what reads it is a drawer standing over a pinned group,
-     * which has to follow the pin the cells follow, and state here would be a
-     * rerender of the grid on every scroll frame.
-     */
     function markScroll(target: HTMLElement): void {
         target.style.setProperty('--dg-scroll-x', `${scrollStart(target)}px`)
         target.style.setProperty('--dg-view-w', `${target.clientWidth}px`)
     }
 
-    // Also whenever the grid or its columns are resized: the distance left to
-    // scroll changes with them, and nothing scrolled to say so.
     $effect(() => {
         void size.width
         void grid.columns.style
@@ -338,9 +310,6 @@
     }
 </script>
 
-<!-- False positive: `grid` and `treegrid` are both interactive roles, but the
-     compiler reads the role off a ternary and cannot resolve either literal.
-     Satisfying it needs a static role, so a duplicated element or a spread. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
     bind:this={element}

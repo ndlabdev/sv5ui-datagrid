@@ -19,8 +19,6 @@
 
     function start(event: PointerEvent) {
         if (!draggable) return
-        // A finger keeps its default until the hold completes, or the list
-        // could not be scrolled from the grip.
         if (event.pointerType !== 'touch') event.preventDefault()
         beginRowDrag(event, {
             ghostClass,

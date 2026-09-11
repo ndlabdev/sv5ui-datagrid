@@ -9,16 +9,10 @@ import type {
     PresenceFilterOp,
     RowNode
 } from '../../core/types/index.js'
-import { getCellValue, isBlank } from '../../core/utils/index.js'
+import { getCellValue, isBlank, localDay, MS_PER_DAY } from '../../core/utils/index.js'
 import { setKeyOf } from './distinct-values.js'
 import { normalizeFilterEntry } from './filter-model.js'
 
-/**
- * What an unreadable condition does: nothing. `sanitizeFilterModel` is the
- * boundary that should have dropped it, and this is the layer that keeps a
- * condition arriving some other way out of the pipeline's `$derived`, where a
- * throw costs the whole render pass rather than one column.
- */
 const PASSES = (): boolean => true
 
 export function filterTypeOf<TRow>(def: ColumnDef<TRow>): FilterType | null {
@@ -32,7 +26,6 @@ function customPredicateOf<TRow>(
     return typeof def.filter === 'object' ? def.filter.predicate : undefined
 }
 
-/** Folding once here keeps `toLowerCase` out of the per-row loop. */
 function foldedQuery(filter: Extract<ColumnFilter, { kind: 'text' }>): {
     query: string
     read: (value: unknown) => string
@@ -58,8 +51,6 @@ function textPredicate(
         case 'equals':
             return (value) => !isBlank(value) && read(value) === query
         case 'notEqual':
-            // A blank cell is not the query, so it passes - the same reading
-            // `notContains` takes, and the one a spreadsheet takes.
             return (value) => isBlank(value) || read(value) !== query
         case 'startsWith':
             return (value) => !isBlank(value) && read(value).startsWith(query)
@@ -96,41 +87,25 @@ function numberPredicate(
     const target = filter.value ?? Number.NaN
     if (filter.op === 'between') {
         const to = filter.to ?? Number.NaN
-        // `Number(null)` and `Number('')` are both 0, so a blank cell would
-        // otherwise fall inside any range that spans zero.
         return (value) => {
             if (isBlank(value)) return false
             const numeric = Number(value)
             return numeric >= target && numeric <= to
         }
     }
-    // Widened on purpose: the key is exhaustive by type, and an operator that
-    // reached here from outside the type system is exactly what this catches.
     const compare = (numberComparators as Partial<Record<NumberFilterOp, NumberComparator>>)[
         filter.op
     ]
     if (!compare) return PASSES
+    if (filter.op === 'neq') return (value) => isBlank(value) || compare(Number(value), target)
     return (value) => !isBlank(value) && compare(Number(value), target)
 }
 
-const MS_PER_DAY = 86_400_000
-
-/** A date with no zone in it: the day it spells, wherever it is read. */
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
-
-/**
- * An instant is not a day. Dividing `getTime()` lands on the UTC day while the
- * cell is drawn in local time, so east of Greenwich a midnight Date read as
- * the day before the one on screen.
- */
-function localDay(date: Date): number {
-    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
-}
 
 function toEpochDay(value: unknown): number {
     if (isBlank(value)) return Number.NaN
     if (value instanceof Date) return localDay(value)
-    // An epoch, which `Date.parse` reads as no date at all.
     if (typeof value === 'number') return localDay(new Date(value))
 
     const text = String(value).trim()
@@ -151,6 +126,8 @@ function datePredicate(
     switch (filter.op) {
         case 'equals':
             return (value) => toEpochDay(value) === target
+        case 'notEqual':
+            return (value) => isBlank(value) || toEpochDay(value) !== target
         case 'before':
             return (value) => toEpochDay(value) < target
         case 'after':
@@ -167,9 +144,6 @@ function datePredicate(
 
 function setPredicate(filter: Extract<ColumnFilter, { kind: 'set' }>): (value: unknown) => boolean {
     if (!Array.isArray(filter.values)) return PASSES
-    // Keyed on both sides by the same function the value list is built with, or
-    // the cell holding a Date is never the entry the user picked, and a filter
-    // that came back through a snapshot is never the one that went in.
     const allowed = new Set(filter.values.map((entry) => setKeyOf(entry)))
     return (value) => allowed.has(setKeyOf(value))
 }
@@ -197,7 +171,6 @@ export function valuePredicateFor(filter: ColumnFilter): (value: unknown) => boo
     }
 }
 
-/** One column's conditions as a single test; the value is read once per row. */
 function entryPredicate<TRow>(
     def: ColumnDef<TRow>,
     entry: ColumnFilterEntry
@@ -240,12 +213,6 @@ export function compileColumnFilters<TRow>(
         if (!def || filterTypeOf(def) === null) continue
 
         const test = entryPredicate(def, entry)
-        // Reads past any `cellValue` gate, deliberately. A predicate decides
-        // which rows survive, and deciding that on a substituted value would
-        // make a masked column filter by its mask. What it costs is honest and
-        // written down: filtering a masked column narrows it to a value the
-        // count then reveals, which is why a policy feature has to take the
-        // filter off such a column rather than rely on the gate.
         compiled.push((node) => test(getCellValue(node.row, def), node.row))
     }
 
@@ -259,7 +226,6 @@ export function compileColumnFilters<TRow>(
     }
 }
 
-/** Chip text, worded from the labels so it matches the operator list. */
 function describeText(
     filter: Extract<ColumnFilter, { kind: 'text' }>,
     labels: DataGridLabels
@@ -269,8 +235,7 @@ function describeText(
     return `${op} "${filter.value}"`
 }
 
-/** How a chip writes a value, so it reads in the units the user set it in. */
-export type FilterValueFormat = (value: unknown) => string
+type FilterValueFormat = (value: unknown) => string
 
 const plainValue: FilterValueFormat = (value) => String(value)
 

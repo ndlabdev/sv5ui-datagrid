@@ -97,8 +97,6 @@ describe('column filters', () => {
         })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Open via the column menu, not the filter icon — the path that used to
-        // leave the panel stranded at the top-left corner.
         await page.getByRole('button', { name: 'Name column menu' }).click()
         await page.getByRole('menuitem', { name: 'Filter...' }).click()
 
@@ -108,7 +106,6 @@ describe('column filters', () => {
         const trigger = screen.container.querySelector<HTMLElement>('[aria-label="Filter Name"]')!
         const panelRect = (dialog.element() as HTMLElement).getBoundingClientRect()
         const triggerRect = trigger.getBoundingClientRect()
-        // Not parked at the corner, and sitting just below its trigger.
         expect(panelRect.top).toBeGreaterThan(0)
         expect(panelRect.left).toBeGreaterThan(0)
         expect(Math.abs(panelRect.top - triggerRect.bottom)).toBeLessThan(20)
@@ -126,8 +123,6 @@ describe('column filters', () => {
         await page.getByRole('button', { name: 'Filter Name' }).click()
         const input = page.getByRole('dialog', { name: 'Filter Name' }).getByRole('textbox')
         await input.click()
-        // Type key-by-key (not .fill), the path that used to lose focus to the
-        // header cell the panel is rendered inside.
         await userEvent.keyboard('car')
 
         const active = document.activeElement
@@ -193,7 +188,6 @@ describe('column filters', () => {
 })
 
 describe('quick filter, driven from code', () => {
-    /** The toolbar is the default shape of a grid, so it renders here. */
     async function renderWithToolbar(grid: GridState<Person>) {
         const screen = await render(TypedDataGrid, { grid, toolbar: true })
         await expect.element(screen.getByRole('grid')).toBeVisible()
@@ -206,8 +200,6 @@ describe('quick filter, driven from code', () => {
         const grid = makeGrid()
         await renderWithToolbar(grid)
 
-        // The box used to own both directions of the sync, so it wrote its own
-        // empty value back over this call before anything rendered.
         getFiltering(grid)!.setQuickFilter('Core')
         await expect.poll(() => grid.nodes.length).toBe(2)
         await expect.poll(() => box()?.value).toBe('Core')
@@ -275,14 +267,11 @@ describe('the date condition, through the sv5ui picker', () => {
 
         const dialog = page.getByRole('dialog', { name: 'Filter Joined' })
         await expect.element(dialog).toBeVisible()
-        // A segmented field and a calendar, not the browser's own date input.
         expect(document.querySelector('input[type="date"]')).toBeNull()
 
         await dialog.getByRole('button', { name: 'Open calendar' }).click()
         await page.getByRole('button', { name: '15' }).click()
 
-        // The calendar is portalled out of the dialog; the panel's click
-        // handler has to know that is still itself, or picking closes it.
         await expect.element(dialog).toBeVisible()
 
         await dialog.getByRole('button', { name: 'Apply' }).click()
@@ -306,10 +295,6 @@ describe('typing a date into the panel', () => {
         const dialog = page.getByRole('dialog', { name: 'Filter Joined' })
         await expect.element(dialog).toBeVisible()
 
-        // The field is controlled by the draft it writes to, so every
-        // keystroke round-trips through an ISO string and back. A year mid-way
-        // to 2025 is 2, then 20, then 202, and the trip has to return each of
-        // them unchanged or the segments fight what is being typed.
         const segment = screen.container.ownerDocument.querySelector<HTMLElement>(
             '[role="dialog"] [role="spinbutton"]'
         )!
@@ -343,7 +328,6 @@ describe('two conditions on one column', () => {
         return { screen, dialog }
     }
 
-    /** The sv5ui Select is a button opening a portalled listbox, not a <select>. */
     async function choose(name: string, option: string) {
         await page.getByRole('button', { name }).click()
         await page.getByRole('option', { name: option, exact: true }).click()
@@ -398,8 +382,6 @@ describe('two conditions on one column', () => {
         await dialog.getByRole('checkbox', { name: 'Match case' }).click()
         await dialog.getByRole('button', { name: 'Apply' }).click()
 
-        // Case-insensitively this matches Alice; with the box ticked, nothing.
-        // `aria-rowcount` counts the header row too, so an empty grid reads 1.
         await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '1')
     })
 
@@ -410,7 +392,6 @@ describe('two conditions on one column', () => {
         await expect.element(dialog.getByLabelText('Filter value')).not.toBeInTheDocument()
         await dialog.getByRole('button', { name: 'Apply' }).click()
 
-        // Every name is filled in, so a blank test matches nothing.
         await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '1')
     })
 })
@@ -473,9 +454,6 @@ describe('filter panel positioning', () => {
         const { panel } = await openOn('Age')
         const rect = panel.getBoundingClientRect()
 
-        // Sample the panel: every point in it must belong to the panel. It used
-        // to lose its top strip to the pinned headers, because the wrapper
-        // around the header controls opened a stacking context around it.
         const covered: string[] = []
         for (let dx = 4; dx < rect.width; dx += 24) {
             for (let dy = 4; dy < rect.height; dy += 24) {
@@ -488,9 +466,6 @@ describe('filter panel positioning', () => {
     })
 
     it('survives being closed and opened again', async () => {
-        // The panel is moved to `document.body`, out of the block that owns it.
-        // Reopening is where a mishandled anchor would show up as a panel that
-        // never comes back, or two of them.
         const { screen } = await openOn('Age')
 
         await userEvent.keyboard('{Escape}')
@@ -502,7 +477,6 @@ describe('filter panel positioning', () => {
         await expect.element(page.getByRole('dialog', { name: 'Filter Age' })).toBeVisible()
         expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1)
 
-        // And it still filters, so the move did not sever it from its grid.
         await page.getByRole('dialog', { name: 'Filter Age' }).getByRole('spinbutton').fill('30')
         await page.getByRole('button', { name: 'Apply' }).click()
         await expect.element(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '2')
@@ -513,9 +487,6 @@ describe('filter panel positioning', () => {
             columns: wide,
             data: people,
             getRowId,
-            // German is the length the English default never reaches; the row
-            // holding it used to push the add-condition button out through the
-            // panel's right edge.
             labels: { matchCase: 'Groß-/Kleinschreibung beachten' },
             features: [filtering(), sorting(), columnOps()]
         })
@@ -544,8 +515,6 @@ describe('filter panel positioning', () => {
         viewport.scrollLeft = 120
         viewport.dispatchEvent(new Event('scroll', { bubbles: true }))
 
-        // Fixed to the viewport, so without re-anchoring it would sit still
-        // while the column it belongs to slid out from under it.
         await expect
             .poll(() => Math.round(panel.getBoundingClientRect().x))
             .not.toBe(Math.round(before))
@@ -553,7 +522,6 @@ describe('filter panel positioning', () => {
 })
 
 describe('popup layering', () => {
-    /** Every sampled point inside `element` that some other element covers. */
     function coveredPoints(element: HTMLElement): string[] {
         const rect = element.getBoundingClientRect()
         const covered: string[] = []
@@ -593,17 +561,12 @@ describe('popup layering', () => {
         const listbox = page.getByRole('listbox')
         await expect.element(listbox).toBeVisible()
 
-        // The panel and the sv5ui popup layer used to share `z-50`, which left
-        // the winner to DOM order — and the panel is appended last, so it
-        // covered its own operator list.
         for (const role of coveredPoints(listbox.element() as HTMLElement)) {
             expect(role).toBe('')
         }
     })
 
     it('keeps the whole grid below the popup layer', async () => {
-        // One assertion for the stack as a whole: nothing the grid paints may
-        // reach the level sv5ui portals its menus and listboxes to.
         await openPanel()
         const gridZ = [...document.querySelectorAll<HTMLElement>('[role="grid"] *')]
             .map((element) => Number(getComputedStyle(element).zIndex))
@@ -623,7 +586,6 @@ interface Team {
 
 const TeamGrid = DataGrid as unknown as Component<DataGridProps<Team>>
 
-/** The shape the /qa page has: a ratio in the row, a percentage on screen. */
 const teams: Team[] = [
     { id: 1, name: 'Core', share: 0.05 },
     { id: 2, name: 'Data', share: 0.1 },
@@ -674,8 +636,6 @@ describe('a column drawing a unit filters in that unit', () => {
         await dialog.getByRole('spinbutton').fill('5')
         await dialog.getByRole('button', { name: 'Apply' }).click()
 
-        // Exact: once a filter is set, the chip's "Remove filter Share" also
-        // contains the trigger's name.
         await page.getByRole('button', { name: 'Filter Share', exact: true }).click()
         const reopened = page.getByRole('dialog', { name: 'Filter Share' })
         await expect.element(reopened.getByRole('spinbutton')).toHaveValue(5)

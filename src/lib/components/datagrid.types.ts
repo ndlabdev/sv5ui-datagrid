@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 import type { ClassNameValue } from 'tailwind-merge'
 import type { GridState } from '../core/grid/index.js'
-import type { DataGridUi } from './datagrid.variants.js'
+import type { DataGridUi } from '../core/theme/index.js'
 import type {
     ColumnDef,
     ColumnState,
@@ -207,15 +207,6 @@ export interface GridColumnMenuProps<TRow> {
     column: ColumnState<TRow>
 }
 
-export interface GridCellEditorProps<TRow> {
-    /** The node whose cell is being edited. */
-    node: RowNode<TRow>
-    /** The column being edited. */
-    column: ColumnState<TRow>
-    /** Row edit mode: bind the draft to `drafts[columnId]`. */
-    rowMode?: boolean
-}
-
 export interface GridContextMenuProps {
     /**
      * File name used by the Export CSV item.
@@ -327,7 +318,7 @@ export type DataGridProps<TRow> = {
           getRowId: (row: TRow) => string
 
           /**
-           * Classes added to every row — the escape hatch for data-driven row
+           * Classes added to every row - the escape hatch for data-driven row
            * styling. Pass it to `createDataGrid` instead when you own the grid.
            */
           rowClass?: (node: RowNode<TRow>) => ClassNameValue

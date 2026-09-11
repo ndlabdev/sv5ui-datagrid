@@ -63,7 +63,6 @@ describe('sort cycle', () => {
             { columnId: 'other', direction: 'desc' }
         ])
 
-        // Cycling the appended column to null drops just that column.
         sort.toggleSort('other', { append: true })
         expect(sort.sort).toEqual([{ columnId: 'name', direction: 'asc' }])
     })

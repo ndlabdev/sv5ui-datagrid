@@ -125,8 +125,6 @@ describe('buildColumnFilter', () => {
     })
 
     it('only groups once a second condition is usable', () => {
-        // One filled row plus an untouched one stays the plain shape, so a
-        // stray click on "add condition" cannot change what gets persisted.
         expect(build('text', [{ op: 'contains', value: 'a' }, {}])).toEqual({
             kind: 'text',
             op: 'contains',
@@ -159,7 +157,6 @@ describe('buildColumnFilter', () => {
             value: 'a',
             caseSensitive: true
         })
-        // Off is the default, so it is left out and the JSON stays small.
         expect(build('text', [{ op: 'equals', value: 'a' }])).toEqual({
             kind: 'text',
             op: 'equals',

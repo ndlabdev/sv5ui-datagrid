@@ -14,7 +14,6 @@
 
     let menuNode = $state.raw<RowNode<unknown> | null>(null)
 
-    // Unfiltered, so it covers pinned rows too.
     function captureNode(event: MouseEvent) {
         const id = (event.target as HTMLElement | null)
             ?.closest('[data-dg-row-id]')

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDataGrid } from './grid.svelte.js'
 import { buildRowNodes } from './row-node.js'
-import { composeReaders, readCell, readerToken } from './value-gate.js'
+import { composeReaders, gateReader, readCell, readerToken } from './value-gate.js'
 import type { CellValueScope, ColumnDef, GridFeature } from '../types/index.js'
 
 interface Row {
@@ -73,5 +73,60 @@ describe('readerToken', () => {
     it('marks the absence of a reader, so an ungated column keys apart', () => {
         expect(readerToken(undefined)).toBe('-')
         expect(readerToken(() => 'x')).not.toBe('-')
+    })
+})
+
+describe('gateReader', () => {
+    interface Wide {
+        id: number
+        a: number
+        b: string
+        c: number
+    }
+
+    function wideGrid(feature: GridFeature<Wide>) {
+        return createDataGrid<Wide>({
+            data: Array.from({ length: 5000 }, (_, i) => ({ id: i, a: i, b: 'x', c: -i })),
+            columns: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+            getRowId: (row) => String(row.id),
+            features: [feature]
+        })
+    }
+
+    it('composes once per column however many cells the pass reads', () => {
+        let composed = 0
+        const grid = wideGrid({
+            id: 'counter',
+            cellValue: () => {
+                composed++
+                return (value) => value
+            }
+        })
+
+        const read = gateReader(grid, 'export')
+        for (const node of grid.nodes) for (const def of grid.columns.leafDefs) read(node, def)
+
+        expect(composed).toBe(grid.columns.leafDefs.length)
+    })
+
+    it('reads through the gate, not around it', () => {
+        const grid = wideGrid({
+            id: 'mask',
+            cellValue: ({ column }) => (column.id === 'b' ? () => 'hidden' : undefined)
+        })
+        const read = gateReader(grid, 'export')
+        const [first] = grid.nodes
+
+        expect(read(first!, { id: 'b' })).toBe('hidden')
+        expect(read(first!, { id: 'a' })).toBe(0)
+    })
+
+    it('falls through to the raw value for a column the grid does not know', () => {
+        const grid = wideGrid({ id: 'none' })
+        const read = gateReader(grid, 'export')
+        const [first] = grid.nodes
+
+        expect(read(first!, { id: 'c' })).toBe(-0)
+        expect(read(first!, { id: 'nope' })).toBeUndefined()
     })
 })

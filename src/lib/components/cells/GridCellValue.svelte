@@ -5,6 +5,7 @@
         DEFAULT_EMPTY_TEXT,
         formatCellText,
         isBlank,
+        toBoolean,
         safeHref
     } from '../../core/utils/index.js'
     import type { ColumnDef, RowAction } from '../../core/types/index.js'
@@ -24,13 +25,11 @@
     const grid = getGridOrNull()
     const labels = $derived(grid?.labels ?? defaultLabels)
 
-    /** Inherits the grid's language unless `typeOptions.locale` says otherwise. */
     const options = $derived({ locale: grid?.locale, ...def.typeOptions })
     const emptyText = $derived(options.emptyText ?? DEFAULT_EMPTY_TEXT)
     const blank = $derived(isBlank(value))
+    const truth = $derived(toBoolean(value))
 
-    // The same function a `cell` snippet reads through `formatted`, so the two
-    // cannot drift. Blank is handled there; this branch only runs when not.
     const text = $derived(formatCellText(value, def, grid?.locale) ?? String(value ?? ''))
 
     const actions = $derived<RowAction<TRow>[]>(
@@ -68,11 +67,13 @@
     {/if}
 {:else if blank}
     <span class="text-on-surface-variant">{emptyText}</span>
+{:else if def.type === 'boolean' && truth === null}
+    <span class="text-on-surface-variant">{String(value)}</span>
 {:else if def.type === 'boolean'}
     <Icon
-        name={value ? (options.trueIcon ?? 'lucide:check') : (options.falseIcon ?? 'lucide:minus')}
-        class={value ? 'size-4 text-success' : 'size-4 text-on-surface-variant'}
-        aria-label={String(Boolean(value))}
+        name={truth ? (options.trueIcon ?? 'lucide:check') : (options.falseIcon ?? 'lucide:minus')}
+        class={truth ? 'size-4 text-success' : 'size-4 text-on-surface-variant'}
+        aria-label={String(truth)}
     />
 {:else if def.type === 'badge'}
     <Badge

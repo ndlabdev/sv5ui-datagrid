@@ -37,7 +37,6 @@ const people: Person[] = [
     { id: 2, name: 'Grace', salary: 8000 }
 ]
 
-/** Hides one column, for the purposes named, the way a policy feature would. */
 function mask(purposes?: CellValuePurpose[]): GridFeature<Person> {
     return {
         id: 'mask',
@@ -55,7 +54,6 @@ function makeGrid(
 ): GridState<Person> {
     return createDataGrid<Person>({
         columns,
-        // Copied: an edit replaces a row, and the fixtures are shared.
         data: data.map((row) => ({ ...row })),
         getRowId: (row) => String(row.id),
         features: [filtering(), selection(), editing({ mode }), ...features]
@@ -90,7 +88,6 @@ describe('a gate closes every way a value leaves the grid', () => {
         })
         expect(matrix[0]).toEqual(['Ada', MASK])
 
-        // An app's own export formatter is downstream of the gate.
         const formatted = rowsToMatrix(
             grid.nodes,
             grid.columns.visible,
@@ -139,7 +136,6 @@ describe('a gate closes every way a value leaves the grid', () => {
         ])
 
         expect(written).toBe(true)
-        // The edit replaces the row, so the fresh node is the one to read.
         expect(firstNode(grid).row).toEqual({ id: 1, name: 'Ada Lovelace', salary: 9000 })
     })
 
@@ -150,8 +146,6 @@ describe('a gate closes every way a value leaves the grid', () => {
 
         expect(Object.keys(state.drafts)).toEqual(['name'])
 
-        // Forced through the API rather than through a field the row opened:
-        // the commit has to drop it too, or this is the door around the rule.
         state.setRowDraft('salary', 1)
         state.setRowDraft('name', 'Ada Lovelace')
         expect(state.commitRow()).toBe(true)
@@ -245,7 +239,6 @@ describe('a gate is asked per column on the passes that read whole columns', () 
         }
     }
 
-    /** What one copy of `size` rows costs the gate. */
     function copyCost(size: number): number {
         const { feature, asked } = counter()
         const grid = makeGrid([feature], crowd(size))
@@ -256,7 +249,6 @@ describe('a gate is asked per column on the passes that read whole columns', () 
         return asked() - before
     }
 
-    /** What one search over `size` rows costs it. */
     function searchCost(size: number): number {
         const { feature, asked } = counter()
         const grid = makeGrid([feature], crowd(size))
@@ -277,10 +269,6 @@ describe('a gate is asked per column on the passes that read whole columns', () 
     })
 })
 
-/**
- * A window stage means the rows on screen are not the rows an export writes,
- * so both sets have to come out gated.
- */
 describe('a gated grid paging on the client', () => {
     const crowd = Array.from({ length: 20 }, (_, i) => ({
         id: i + 1,
@@ -302,7 +290,6 @@ describe('a gated grid paging on the client', () => {
         expect(grid.nodes).toHaveLength(5)
         expect(grid.getValue(firstNode(grid), salaryColumn(grid))).toBe(MASK)
 
-        // `allRows` reaches past the page: twenty rows, none of them readable.
         const matrix = rowsToMatrix(grid.preWindowNodes, grid.columns.visible, undefined, {
             read: (column) => grid.readerFor(column.id, 'export')
         })
@@ -324,11 +311,6 @@ describe('a gated grid paging on the client', () => {
     })
 })
 
-/**
- * Server mode takes a different road: the filter stage passes rows through
- * untouched, because the page arrived filtered. Everything else still reads
- * cells, and the page in hand is the page a user can copy.
- */
 describe('a gated grid on one page of a server', () => {
     const database: Person[] = Array.from({ length: 20 }, (_, i) => ({
         id: i + 1,
@@ -386,35 +368,22 @@ describe('a gated grid on one page of a server', () => {
         const grid = serverGrid()
         expect(getEditing(grid)!.editableAt(firstNode(grid), salaryColumn(grid).def)).toBe(false)
 
-        // The server did the filtering, so the stage returns the page whole.
-        // The query never reads a cell, so there is nothing here for a gate to
-        // hold back: what leaves is the string the user typed.
         getFiltering(grid)!.setQuickFilter('1000')
         expect(grid.nodes).toHaveLength(5)
         expect(getFiltering(grid)!.model.quick).toBe('1000')
     })
 })
 
-/**
- * The gate is only worth having if it is the only door. `getCellValue` is the
- * raw accessor behind it and stays exported for the features that read values
- * in bulk, so nothing but the door itself may reach for it: a call site added
- * later that reads past the gate is a value the grid was told to hide and
- * shows anyway.
- */
 describe('nothing reads past the gate', () => {
     const LIB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../lib')
 
     const allowed = new Set([
-        // The accessor itself, and the two barrels that offer it.
         'core/utils/value.ts',
         'core/utils/index.ts',
         'core/index.ts',
-        // The door.
         'core/grid/value-gate.ts',
-        // A predicate decides which rows survive; RFC EP5 §7 records why it
-        // reads past the gate and what that costs.
-        'features/filtering/filter-predicates.ts'
+        'features/filtering/filter-predicates.ts',
+        'features/worker-row-model/worker-row-model.ts'
     ])
 
     function sourceFiles(dir: string): string[] {

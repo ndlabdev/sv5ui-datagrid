@@ -19,7 +19,6 @@
     const actions = ['created', 'updated', 'archived', 'restored', 'exported']
     const TOTAL = 1_000_000
     const CHUNK = 200
-    /** How close to the end of what is loaded the window may come. */
     const THRESHOLD = 60
 
     function rowAt(index: number): Event {
@@ -31,7 +30,6 @@
         }
     }
 
-    /** One chunk of the log, oldest first, the way a cursor API hands it over. */
     function fetchChunk(from: number): Event[] {
         const rows: Event[] = []
         for (let index = from; index < Math.min(from + CHUNK, TOTAL); index++) {
@@ -71,12 +69,6 @@
         loading = false
     }
 
-    /**
-     * Reads the window the virtualizer asks for and appends when it comes
-     * within `THRESHOLD` of the end. The write feeds the read — the row count
-     * is what the window is measured against — so the append is untracked and
-     * the guard has to settle, which it does as soon as the window fits.
-     */
     $effect(() => {
         const end = virtual.virtualizer.range.end
         untrack(() => {
@@ -84,7 +76,6 @@
         })
     })
 
-    /** Frame times across a scripted scroll: what a fling actually costs. */
     async function measureScroll(): Promise<void> {
         const element = virtual.element
         if (!element) return
@@ -121,8 +112,6 @@
         loadMore()
     }
 
-    // No initial fetch here: the effect above already sees an empty grid as a
-    // window standing at the end of what is loaded, and asks for the chunk.
     onMount(() => {
         void tick().then(() => {
             domRows = document.querySelectorAll('[role="row"][data-dg-row-id]').length
@@ -134,7 +123,7 @@
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-on-surface">
-                Server row model — infinite scroll
+                Server row model - infinite scroll
             </h1>
             <p class="text-sm text-on-surface-variant">
                 Một triệu dòng log phía "server", lấy về từng khối {CHUNK} dòng khi cửa sổ của virtualizer
@@ -151,8 +140,8 @@
         <Button variant="outline" size="sm" label="Scroll 60 frames" onclick={measureScroll} />
         <Button variant="ghost" size="sm" label="Reset" onclick={reset} />
         <span data-testid="infinite-state" class="text-xs text-on-surface-variant">
-            {chunks} chunks · {grid.data.length.toLocaleString()} of {TOTAL.toLocaleString()} rows held
-            · {domRows} rows in the DOM · worst frame {worstFrame.toFixed(1)}ms over {frames}
+            {chunks} chunks | {grid.data.length.toLocaleString()} of {TOTAL.toLocaleString()} rows held
+            | {domRows} rows in the DOM | worst frame {worstFrame.toFixed(1)}ms over {frames}
         </span>
     </div>
 
@@ -164,7 +153,7 @@
     </Grid.Root>
 
     <p class="text-xs text-on-surface-variant">
-        Số dòng trong DOM đứng yên dù cuộn bao xa — virtualizer chỉ dựng phần nhìn thấy. Số dòng
+        Số dòng trong DOM đứng yên dù cuộn bao xa - virtualizer chỉ dựng phần nhìn thấy. Số dòng
         <em>held</em> thì tăng theo từng khối: đó là bộ nhớ app chấp nhận đánh đổi để cuộn liên tục,
         và là khác biệt duy nhất so với <Link href="/server/big">phân trang</Link>, nơi grid vứt
         trang cũ đi.

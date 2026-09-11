@@ -33,23 +33,15 @@
     const theme = getGridTheme()
     const labels = $derived(grid.labels)
 
-    // ---- What this column's filter needs -----------------------------------
-
     const type = $derived(filterTypeOf(column.def))
     const scale = $derived(filterUnitScaleOf(column.def))
     const entry = $derived(filteringState.columnFilters[column.id])
     const cell = $derived(floatingCellOf(type, entry, scale))
 
-    /** No steppers: a filter field is not a place to count up from. */
     const numberUi = { increment: 'hidden', decrement: 'hidden' }
 
-    /**
-     * The picker takes no `aria-label`; it takes an `id` for a label to point
-     * at, which is the way sv5ui means it to be named.
-     */
     const dateFieldId = $props.id()
 
-    /** What the panel holds, in the words the chips use for the same filter. */
     const summary = $derived.by(() => {
         if (!entry) return ''
         const written = (value: unknown) =>
@@ -62,12 +54,6 @@
         untrack(() => debounce)
     )
 
-    /**
-     * What the field holds, for the widget that speaks numbers. A value that
-     * is not a number at all — a snapshot written by hand, a filter set by an
-     * app — reads as no value rather than as `NaN`, which the widget would
-     * draw and then hand back.
-     */
     const numberValue = $derived.by(() => {
         const raw = String(field.current ?? '')
         if (raw === '') return null
@@ -75,9 +61,6 @@
         return Number.isFinite(parsed) ? parsed : null
     })
 
-    // ---- The typed field: text, number, date -------------------------------
-
-    /** One condition, in the operator the column already filters by. */
     function apply(raw: string): void {
         if (!type || cell.kind !== 'input') return
         filteringState.setColumnFilter(
@@ -87,8 +70,6 @@
                 {
                     join: 'and',
                     conditions: [{ op: cell.op, value: raw, to: '' }],
-                    // Kept, so typing in the row does not quietly undo a Match
-                    // case the panel turned on.
                     caseSensitive: cell.caseSensitive,
                     boolValue: 'true',
                     setSelected: []
@@ -98,9 +79,6 @@
         )
     }
 
-    // Pushes what the field produced, and nothing else — the two halves the
-    // quick filter box is built from, for the same reason: one effect reading
-    // both directions writes the field back over a filter set in code.
     $effect(() => {
         const value = String(field.debounced ?? '')
         untrack(() => {
@@ -108,8 +86,6 @@
         })
     })
 
-    // The other direction: a filter cleared by a chip, set by the panel or
-    // restored from a snapshot shows here.
     $effect(() => {
         const value = cell.kind === 'input' ? cell.value : ''
         untrack(() => {
@@ -117,13 +93,6 @@
         })
     })
 
-    // ---- The choice: boolean -----------------------------------------------
-
-    /**
-     * A choice with no filter on it needs a value of its own. An empty string
-     * reads to the select as nothing selected, which drew an empty control
-     * with no way back to it.
-     */
     const ANY = 'any'
     const asChoice = (value: string) => (value === '' ? ANY : value)
 
@@ -147,34 +116,20 @@
         })
     })
 
-    // ---- The list of ticks: set --------------------------------------------
-
-    /**
-     * A set value keyed for a list of strings, without collapsing two values a
-     * column may genuinely hold apart: the number 5 and the string `5` are one
-     * tick each, and a blank is neither of them.
-     */
     function keyOf(value: SetFilterValue): string {
         if (value === null) return 'x:'
         const tag = typeof value === 'number' ? 'n' : typeof value === 'boolean' ? 'b' : 's'
         return `${tag}:${String(value)}`
     }
 
-    /** Order is not part of a set, so it is not part of comparing two. */
     const sameKeys = (a: string[], b: string[]) =>
         a.length === b.length && [...a].sort().join('\u0000') === [...b].sort().join('\u0000')
 
-    /** A value as its own column writes it, and a blank as the panel names it. */
     const shownValue = (value: SetFilterValue) =>
         value === null
             ? labels.blankValue
             : (formatCellText(value, column.def, grid.locale) ?? String(value))
 
-    /**
-     * Reading the column's distinct values is a pass over every row the grid
-     * holds, so it waits until the list is opened. Until then the ticks are
-     * the only entries, which is all the trigger needs to name them.
-     */
     let listOpened = $state(false)
 
     const setValues = $derived.by(() => {
@@ -182,7 +137,6 @@
         if (!listOpened) return ticked
         const offered = filteringState.distinctFor(column.id)
         const known = new Set(offered.map(keyOf))
-        // A ticked value the data no longer holds keeps its place in the list.
         return [...offered, ...ticked.filter((value) => !known.has(keyOf(value)))]
     })
 
@@ -229,12 +183,6 @@
         onValueChange={(next) => (field.current = next === null ? '' : String(next))}
     />
 {:else if cell.kind === 'input' && type === 'date'}
-    <!-- Through the same debounced field as the other two, and reading back
-         from it rather than from the model. A segmented field reports every
-         keystroke: typing 01/05/2026 walks through the years 2, 20 and 202,
-         and each of those would otherwise be a filter over the whole set.
-         Reading the model back would also fight the typing, since what it
-         holds during that walk is a year the person has already moved past. -->
     <label class="sr-only" for={dateFieldId}>{labels.filterRowValue(column.header)}</label>
     <DatePicker
         id={dateFieldId}
@@ -245,8 +193,6 @@
         onValueChange={(next) => (field.current = fromDateValue(next))}
     />
     {#if String(field.current ?? '') !== ''}
-        <!-- A picker has no clear of its own. Immediate, not debounced: this
-             is a finished gesture, not a value half typed. -->
         <Button
             variant="ghost"
             size="xs"
@@ -277,9 +223,6 @@
         bind:value={choice}
     />
 {:else if cell.kind === 'set'}
-    <!-- The panel's own control, inline: tick the values, search them when
-         there are many. One condition still, whatever is ticked, so the line
-         between this row and the panel does not move. -->
     <SelectMenu
         multiple
         size="xs"
@@ -294,10 +237,6 @@
         onOpenChange={(open) => (listOpened ||= open)}
     />
 {:else if cell.kind === 'summary'}
-    <!-- A set of values, a second condition, a range: more than one field can
-         hold, so the row says what is there and asks the panel to open.
-         Asks rather than draws one: a column has a single panel, on its
-         header, and a second instance of it would open alongside the first. -->
     <span class={slots.filterSummary({ class: theme('filterSummary') })}>{summary}</span>
     <Button
         variant="ghost"

@@ -22,7 +22,6 @@ interface Cell {
 
 const TypedDataGrid = DataGrid as unknown as Component<DataGridProps<Cell>>
 
-/** 160 + 4x140 = 720px of columns, rendered into a 320px viewport. */
 const columns: ColumnDef<Cell>[] = [
     { id: 'region', header: 'Region', flex: 1, minWidth: 160 },
     { id: 'q1', header: 'Q1', width: 140 },
@@ -63,7 +62,6 @@ function viewportOf(container: Element): HTMLElement {
     return container.querySelector<HTMLElement>('[role="grid"]')!
 }
 
-/** Header first, then pinned rows, then the body. */
 function rowgroupsOf(container: Element): HTMLElement[] {
     return [...container.querySelectorAll<HTMLElement>('[role="rowgroup"]')]
 }

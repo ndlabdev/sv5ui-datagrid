@@ -6,20 +6,11 @@ import { compileColumnFilters } from './filter-predicates.js'
 import { sanitizeFilterModel } from './filter-sanitize.js'
 import { quickFilterNodes } from './quick-filter.js'
 
-export const FILTERING = 'filtering'
+const FILTERING = 'filtering'
 
 export interface FilteringOptions {
     initialQuick?: string
     initialColumns?: Record<string, ColumnFilterEntry>
-    /**
-     * Draws a filter row under the header: one condition per column, in the
-     * column's own operator. The panel keeps the rest — a second condition, a
-     * join, a set of discrete values — and the row hands those columns back to
-     * it rather than flattening what they hold.
-     *
-     * The kernel reads this too. The row is a second line focus can reach, and
-     * a line the rows below it are numbered under.
-     */
     floatingRow?: boolean
 }
 
@@ -27,7 +18,6 @@ export class Filtering<TRow> {
     quick = $state('')
     columnFilters = $state.raw<Record<string, ColumnFilterEntry>>({})
     filterFor = $state<string | null>(null)
-    /** Whether a filter row is drawn under the header. */
     floatingRow = $state(false)
 
     #grid: GridState<TRow>
@@ -81,9 +71,6 @@ export class Filtering<TRow> {
     distinctFor(columnId: string) {
         const def = this.#grid.columns.leafDefs.find((candidate) => candidate.id === columnId)
         if (!def) return []
-        // Through the gate: the list a set filter offers is a list the user
-        // reads, and it would otherwise spell out every value a masked column
-        // holds.
         return distinctValuesCached(
             this.#grid.sourceNodes,
             def,
@@ -120,19 +107,13 @@ export function filtering<TRow>(options: FilteringOptions = {}): GridFeature<TRo
             order: PIPELINE_ORDER.filter,
             transform: (nodes, grid) => {
                 const state = getFiltering(grid)
-                // Server mode: the rows arrived filtered; filtering again would
-                // drop rows the server deliberately returned.
                 if (!state || grid.rowModel === 'server') return nodes
                 const quickFiltered = quickFilterNodes(
                     nodes,
                     grid.columns.visible.map((column) => column.def),
                     state.quick,
                     {
-                        // The same locale the cells are drawn with, or the
-                        // search would be against text nobody is looking at.
                         locale: grid.locale,
-                        // And the same gate they are drawn through, or it
-                        // would find what the cells do not show.
                         read: (def) => grid.readerFor(def.id, 'search')
                     }
                 )

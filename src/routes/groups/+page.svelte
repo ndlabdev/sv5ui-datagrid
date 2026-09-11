@@ -49,12 +49,6 @@
         }
     })
 
-    /**
-     * Three groups, each folding a different way:
-     * - Doanh thu: quý là chi tiết, cả năm là bản tóm tắt
-     * - Kế hoạch: chỉ có chi tiết, nên gập là mất sạch, và lưới không cho gập
-     * - Định danh: không khai gì, nên không có nút
-     */
     const columns: ColumnDef<Region>[] = [
         {
             id: 'identity',
@@ -81,15 +75,11 @@
                     id: 'actual',
                     header: 'Cả năm',
                     columnGroupShow: 'closed',
-                    // Room enough that the group above it still reads when
-                    // everything below folds away into it.
                     flex: 2,
                     minWidth: 140,
                     align: 'right',
                     sortable: true
                 },
-                // Two nested groups, each folding on its own account, and both
-                // folding away when the group over them does.
                 {
                     id: 'first-half',
                     header: 'Nửa đầu',
@@ -149,12 +139,8 @@
             ]
         },
         {
-            // Id của nhóm phải khác id của mọi cột: cả hai cùng sống trong một
-            // không gian tên, nhóm này trước đây trùng tên với cột trong nó.
             id: 'planning',
             header: 'Kế hoạch',
-            // Gập kiểu dải: không cột nào phải khai `columnGroupShow`, cả nhóm
-            // thu lại thành một dải dọc và chính dải đó là đường mở ra lại.
             collapseMode: 'rail',
             children: [
                 { id: 'plan', header: 'Chỉ tiêu', minWidth: 100, align: 'right', sortable: true },
@@ -185,8 +171,6 @@
 {/snippet}
 
 {#snippet revenueHeader({ cell }: HeaderGroupContext)}
-    <!-- Header nhóm do app tự vẽ. Không bọc trong nút: ô nhóm đã là chỗ nhận
-         focus, và nút gập của lưới nằm ngay cạnh. -->
     <span class="truncate font-semibold text-on-surface">{cell.header}</span>
     <Badge
         label={cell.collapsed ? 'tóm tắt' : `${cell.span} quý`}
@@ -225,7 +209,7 @@
                 bằng <code>headerGroupCell</code>.
             </p>
             <p class="text-sm text-on-surface">
-                Doanh thu: <strong>{revenueFolded ? 'gập' : 'mở'}</strong> · Nửa đầu:
+                Doanh thu: <strong>{revenueFolded ? 'gập' : 'mở'}</strong> | Nửa đầu:
                 <strong>{firstHalfFolded ? 'gập' : 'mở'}</strong>
             </p>
         </Card>

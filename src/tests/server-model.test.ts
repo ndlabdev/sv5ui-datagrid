@@ -63,13 +63,12 @@ function serverGrid(extra: ReturnType<typeof selection<Order>>[] = []): GridStat
     })
 }
 
-/** Turns the page the way an app wired to `pageChanged` would. */
 function goToPage(grid: GridState<Order>, page: number): void {
     getPagination(grid)!.setPage(page)
     grid.data = pageOf(page)
 }
 
-describe('server row model — what each feature does with one page', () => {
+describe('server row model - what each feature does with one page', () => {
     it('selection: count spans pages but the rows do not', () => {
         const grid = serverGrid()
         const state = getSelection(grid)!
@@ -192,7 +191,6 @@ describe('server row model — what each feature does with one page', () => {
         getPagination(grid)!.setRowCount(46)
         expect(grid.announcer.message).toBe('46 rows')
 
-        // A plain page turn refetches and sets the same total: not news.
         grid.announcer.announce('')
         getPagination(grid)!.setRowCount(46)
         expect(grid.announcer.message).toBe('')

@@ -16,11 +16,6 @@ import { distinctValues, DISTINCT_VALUES_CAP } from '../lib/features/filtering/i
 import { rowsToMatrix, toCsv } from '../lib/features/selection/index.js'
 import { buildRowNodes } from '../lib/core/grid/index.js'
 
-/**
- * One row list, grown from nothing to a million, asked whether it still holds
- * every row it started with. Speed is the benchmarks' business; this is about
- * whether a page, a window or an export loses one.
- */
 interface Row {
     id: string
     name: string
@@ -30,7 +25,6 @@ interface Row {
 
 const DEPTS = ['Core', 'Data', 'Infra', 'Ops']
 
-/** Holes every seventh row, because a hole is where an off-by-one hides. */
 function makeRows(count: number): Row[] {
     return Array.from({ length: count }, (_, i) => ({
         id: String(i + 1),
@@ -94,8 +88,6 @@ describe('paging never loses a row, whatever the size', () => {
         const page = getPagination(grid)!
         page.setPage(10)
         getFiltering(grid)!.setColumnFilter('dept', { kind: 'set', values: ['Core'] })
-        // Filtering resets to the first page rather than stranding the reader
-        // on a page that no longer exists.
         expect(page.page).toBe(1)
         expect(grid.nodes.length).toBeGreaterThan(0)
     })
@@ -141,7 +133,6 @@ describe('sorting keeps the list it was given', () => {
 })
 
 describe('the quick filter answers the same as reading every cell', () => {
-    /** What the cache has to agree with, at every size. */
     function naive(rows: Row[], query: string): string[] {
         const needle = query.toLowerCase()
         return rows
@@ -171,8 +162,6 @@ describe('the quick filter answers the same as reading every cell', () => {
         state.setQuickFilter('core')
         const before = grid.nodes.length
 
-        // A new array of the same rows: the cache is keyed by row, so this is
-        // the case where it must still be right rather than merely fast.
         grid.data = [...rows]
         expect(grid.nodes).toHaveLength(before)
 
@@ -219,17 +208,8 @@ describe('selection and export carry the whole list', () => {
 })
 
 describe('a million rows', () => {
-    // One size the rest of the suite cannot afford to run at every assertion,
-    // kept to the properties that would hide a lost row.
     const rows = makeRows(1_000_000)
 
-    /**
-     * These do a million rows of real work each, so the default five seconds
-     * is not a deadline they should be held to: it is the deadline for a test
-     * that has hung. A shared runner is slower than the machine this was
-     * written on, and one of them passed here and timed out there, which is
-     * worse than being slow.
-     */
     const HEAVY = 60_000
 
     it(

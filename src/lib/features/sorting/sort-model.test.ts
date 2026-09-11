@@ -20,7 +20,6 @@ const people: Person[] = [
 const nodes = buildRowNodes<Person>(people, (person) => String(person.id))
 
 const columns: ColumnDef<Person>[] = [
-    // Shows the full name, orders by surname.
     { id: 'display', sortable: true, sortField: 'lastName' },
     { id: 'age', sortable: true }
 ]
@@ -28,8 +27,6 @@ const columns: ColumnDef<Person>[] = [
 describe('sortField on the client', () => {
     it('orders by the named field, not the one on screen', () => {
         const sorted = sortNodes(nodes, columns, [{ columnId: 'display', direction: 'asc' }])
-        // By surname: Hopper, Lovelace, Turing. By what the cell shows it
-        // would have been Ada, Alan, Grace.
         expect(sorted.map((node) => node.row.display)).toEqual([
             'Grace Hopper',
             'Ada Lovelace',
@@ -79,8 +76,6 @@ describe('toSortRequest', () => {
     })
 
     it('finds a column nested under a header group', () => {
-        // What `grid.columns.defs` looks like once the grid has header groups:
-        // the groups sit at the top and the real columns hang off `children`.
         const grouped: ColumnDef<Person>[] = [
             { id: 'identity', header: 'Identity', children: columns }
         ]
@@ -96,16 +91,12 @@ describe('toSortRequest', () => {
     })
 
     it('writes the side the blanks land on, not the side the option names', () => {
-        // A blank sorts as the smallest value here, so descending moves it to
-        // the other end. SQL's NULLS FIRST does not move, so the request has to
-        // say where they end up rather than what was asked for.
         expect(toSortRequest([{ columnId: 'age', direction: 'desc' }], columns, 'first')).toEqual([
             { field: 'age', direction: 'desc', nulls: 'last' }
         ])
     })
 
     it('drops a sort naming a column the grid does not have', () => {
-        // The server can resolve it no better than the grid could.
         expect(toSortRequest([{ columnId: 'ghost', direction: 'asc' }], columns)).toEqual([])
     })
 

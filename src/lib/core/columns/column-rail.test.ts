@@ -7,7 +7,6 @@ interface Row {
     id: number
 }
 
-/** A group that folds to a strip rather than to a summary column. */
 function makeDefs(): ColumnDef<Row>[] {
     return [
         { id: 'id', header: '#' },
@@ -34,14 +33,10 @@ describe('a group folded to a rail', () => {
 
         model.toggleGroup('revenue')
 
-        // The strip stands where the group stood, not at either end.
         expect(ids(model)).toEqual(['id', RAIL, 'plan'])
     })
 
     it('folds without any column asking it to', () => {
-        // No child declares `columnGroupShow`; the strip is the way back, so
-        // the group folds anyway. A summary group with the same children
-        // could not, and still cannot.
         const model = new ColumnModel<Row>(makeDefs())
         expect(model.groupToggles.get('revenue')).toEqual({ collapsed: false, collapsible: true })
 
@@ -68,7 +63,6 @@ describe('a group folded to a rail', () => {
         const rail = model.get(RAIL)!
         expect(rail.header).toBe('Doanh thu')
         expect(rail.resizable).toBe(false)
-        // Not a column an app declared, so nothing reads a value out of it.
         expect(model.leafDefs.some((def) => def.id === RAIL)).toBe(false)
     })
 

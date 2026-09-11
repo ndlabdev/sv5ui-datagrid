@@ -222,7 +222,6 @@ describe('row pinning', () => {
         expect(Math.abs(top.getBoundingClientRect().top - before)).toBeLessThanOrEqual(2)
     })
 
-    /** Which edge of the row its hairline is drawn on, read off the ::after box. */
     function hairlineEdge(row: Element): 'top' | 'bottom' | 'none' {
         const style = getComputedStyle(row, '::after')
         if (style.display === 'none' || style.content === 'none') return 'none'
@@ -246,10 +245,6 @@ describe('row pinning', () => {
 
         const rowAt = (id: string) => screen.container.querySelector(`[data-dg-row-id="${id}"]`)!
 
-        // The top section meets the body at its foot, the bottom section at its
-        // head. Drawing both at the foot left the boundary above a bottom-pinned
-        // row unmarked, and put a rule under the last one against the grid's own
-        // bottom edge.
         expect(hairlineEdge(rowAt('1'))).toBe('bottom')
         expect(hairlineEdge(rowAt('7'))).toBe('top')
         expect(hairlineEdge(rowAt('8'))).toBe('top')

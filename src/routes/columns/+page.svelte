@@ -106,9 +106,6 @@
             id: 'performance',
             header: 'Performance',
             children: [
-                // The summary the group folds down to, and the four it folds
-                // away. `Compensation` above declares neither, so it is a
-                // group with nothing to fold and no toggle.
                 {
                     id: 'ytd',
                     header: 'YTD',
@@ -164,8 +161,6 @@
 
     const savedLayout = useLocalStorage<GridSnapshot | null>('datagrid-columns-layout', null)
 
-    // A preset is just a snapshot narrowed to its columns: setState leaves sort,
-    // filter and density alone when the snapshot carries none of them.
     function saveLayout() {
         const { version, columns } = grid.getState()
         savedLayout.current = { version, columns }
@@ -206,7 +201,6 @@
         ]
     })
 
-    // ── Column spanning ──────────────────────────────────────────────────
     interface Line {
         id: number
         label: string
@@ -221,7 +215,7 @@
         { id: 2, label: 'Costs', q1: 74, q2: 80, q3: 88, note: '' },
         {
             id: 3,
-            label: 'Audited figures — quarterly totals restated',
+            label: 'Audited figures - quarterly totals restated',
             q1: null,
             q2: null,
             q3: null,
@@ -230,8 +224,6 @@
         { id: 4, label: 'Net', q1: 46, q2: 58, q3: 63, note: '' }
     ]
 
-    // The banner row spans its label across every quarter column; data rows
-    // keep one cell per column.
     const spanColumns: ColumnDef<Line>[] = [
         {
             id: 'label',
@@ -261,8 +253,6 @@
     {money.format(Number(value))}
 {/snippet}
 
-<!-- The sort control, filter icon, column menu and resize handle stay: a
-     headerCell snippet draws the label, not the whole header cell. -->
 {#snippet moneyHeader({ header }: HeaderContext<Employee>)}
     <span class="truncate" data-dg-truncate>{header}</span>
     <span class="text-[10px] font-normal text-on-surface-variant/70">USD</span>
@@ -271,10 +261,10 @@
 <Container class="space-y-8 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Columns UX — Phase 3</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Columns UX - Phase 3</h1>
             <p class="text-sm text-on-surface-variant">
-                Resize (kéo mép / double-click autosize) · Reorder (kéo header) · Pin · Ẩn/hiện ·
-                Header groups thu gọn được · Column menu · <code>headerCell</code> (cột Salary) —
+                Resize (kéo mép / double-click autosize) | Reorder (kéo header) | Pin | Ẩn/hiện |
+                Header groups thu gọn được | Column menu | <code>headerCell</code> (cột Salary) -
                 tất cả điều khiển được bằng bàn phím.
                 <strong>Sắp xếp lại rồi F5</strong>: layout, sort, filter, page size và density đều
                 được giữ nguyên.
@@ -334,7 +324,7 @@
                 Pinned + column virtualization (100k px nội dung ngang)
             </h2>
             <p class="text-sm text-on-surface-variant">
-                Cột <em>#</em> và <em>Name</em> pin trái, <em>Dept</em> pin phải (sticky) — sống chung
+                Cột <em>#</em> và <em>Name</em> pin trái, <em>Dept</em> pin phải (sticky) - sống chung
                 với column windowing và 500 hàng ảo hoá.
             </p>
         </div>

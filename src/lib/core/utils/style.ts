@@ -1,10 +1,5 @@
 const PROPERTY = /^(--[a-zA-Z0-9-_]+|[a-zA-Z-]+)$/
 
-/**
- * A `CellDecoration.style` record as one `style` attribute. A value is cut at
- * the first `;` so one entry stays one declaration: a feature reading a colour
- * out of row data cannot have that data open a second one.
- */
 export function inlineStyle(style: Record<string, string> | undefined): string | undefined {
     if (!style) return undefined
     let result = ''

@@ -11,7 +11,6 @@
     const grid = getGridContext()
     const labels = $derived(grid.labels)
 
-    // Order lives with the operators, wording with the labels.
     const items = $derived.by(() => {
         if (type === 'text') return TEXT_OPS.map((op) => ({ label: labels.textOps[op], value: op }))
         if (type === 'number') {
@@ -23,8 +22,6 @@
     const inputType = $derived(type === 'number' ? 'number' : 'text')
     const needsValue = $derived(!isPresenceOp(condition.op))
 
-    // The picker takes a label by id rather than an `aria-label`. One id per
-    // component instance, so the pair is built from it.
     const fieldId = $props.id()
     const valueId = `${fieldId}-value`
     const upperId = `${fieldId}-to`

@@ -58,8 +58,6 @@ describe('sortNodes', () => {
         const entryNodes = buildRowNodes(holes, (entry) => entry.id)
         const sort = [{ columnId: 'note', direction: 'asc' as const }]
 
-        // Collated as a value, '' would sort before every letter and so be
-        // indistinguishable from nulls: 'first' whatever the option said.
         const last = sortNodes(entryNodes, entryColumns, sort, 'last')
         expect(last.map((node) => node.row.id)).toEqual(['c', 'a', 'b', 'd'])
 

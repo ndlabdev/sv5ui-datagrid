@@ -7,7 +7,7 @@
     import { pagination } from '../../features/pagination/index.js'
     import { selection } from '../../features/selection/index.js'
     import { sorting } from '../../features/sorting/index.js'
-    import { getVirtualization, virtualization } from '../../features/virtualization/index.js'
+    import { virtualization } from '../../features/virtualization/index.js'
     import type { DataGridProps } from '../datagrid.types.js'
     import GridBody from './GridBody.svelte'
     import GridColumnChooser from '../chrome/GridColumnChooser.svelte'
@@ -75,18 +75,12 @@
             })
     )
 
-    // A grid built elsewhere still answers the prop: the row is a line the
-    // focus model and the row numbering below it both have to know about, so
-    // the flag lives on the feature rather than in the markup. Set before the
-    // header renders, so the first paint counts its rows correctly.
     untrack(() => {
         if (floatingFilters && externalGrid) {
             const state = getFiltering(grid)
             if (state) state.floatingRow = true
         }
     })
-
-    const isVirtual = untrack(() => Boolean(getVirtualization(grid)))
 
     $effect.pre(() => {
         if (externalGrid) return
@@ -95,7 +89,7 @@
     })
 </script>
 
-<GridRoot {grid} {persistState} {ui} class={isVirtual ? undefined : className}>
+<GridRoot {grid} {persistState} {ui}>
     {#if toolbar}
         <GridToolbar>
             <GridQuickFilter class="min-w-64" />
@@ -107,7 +101,7 @@
         </GridToolbar>
     {/if}
     <GridContextMenu {exportFilename}>
-        <GridViewport class={isVirtual ? className : undefined}>
+        <GridViewport class={className}>
             <GridHeader />
             <GridBody {emptyText} {loading} {loadingRows} {error} {onRetry} {fullWidthRow} />
         </GridViewport>
