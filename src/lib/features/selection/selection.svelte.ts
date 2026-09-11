@@ -1,4 +1,4 @@
-import { type GridState, nodesById } from '../../core/grid/index.js'
+import { type GridState, isLoadingRow, nodesById } from '../../core/grid/index.js'
 import { HEADER_ROW } from '../../core/interaction/index.js'
 import {
     SELECTION_COLUMN_ID,
@@ -49,7 +49,8 @@ export class Selection<TRow> {
 
     selectableNodes = $derived.by(() =>
         this.#grid.preWindowNodes.filter(
-            (node) => !node.meta?.fullWidth && this.isRowSelectable(node.row)
+            (node) =>
+                !node.meta?.fullWidth && !isLoadingRow(node.row) && this.isRowSelectable(node.row)
         )
     )
 

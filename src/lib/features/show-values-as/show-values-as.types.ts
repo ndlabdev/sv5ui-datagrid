@@ -13,6 +13,12 @@
  * aggregation of its own as well; without one there is no denominator, the
  * column reads blank, and the grid says so once in the console.
  *
+ * Under `rowModel: 'server'` the two whole-column shares are skipped, because
+ * the client holds only the blocks it has loaded and a share measured against
+ * those would change as the user scrolls. `percentOfRow` still runs, since it
+ * reads one row at a time. The grid says so once in the console, and
+ * `getShowValuesAs(grid).skippedColumns` lists what was left alone.
+ *
  * The share is a fraction: `0.34`, not `34`. Declare the column
  * `type: 'percent'` and the grid formats it as `34%` on screen, in the
  * clipboard and in every export.

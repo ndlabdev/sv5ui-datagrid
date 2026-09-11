@@ -171,6 +171,17 @@ trust new code deserves to see what it has been held to.
   number underneath it, and a calculated column showed what it was calculated
   from. Since a second view of one field needs an `accessor` to hold a distinct
   id, this made a common grouping layout impossible to express.
+- `showValuesAs()` no longer measures a share against the rows the client
+  happens to hold. On `rowModel: 'server'` a `percentOfGrandTotal` divided by
+  the loaded blocks, so one row read 10% with ten rows in and 2.5% with forty,
+  and moved as the user scrolled. The two whole-column shares are skipped there
+  now, with one warning and a `skippedColumns` list, the way
+  `conditionalFormatting()` already treats its rank rules; `percentOfRow` still
+  runs because it reads one row at a time.
+- Select all on a server grid selects the rows that have arrived and none of the
+  placeholders. With ten of forty rows loaded it selected forty, thirty of them
+  empty rows standing in for a block still on its way, and `getSelectedRows()`
+  handed all thirty back.
 - A hierarchy the server sends is drawn inside a `treegrid`. `tree()`,
   `grouping()` and `masterDetail()` all turn expansion on, and
   `serverRowModel({ getRowMeta })` did not, so rows carrying `aria-level` and

@@ -8,6 +8,13 @@ const SHOW_VALUES_AS = 'showValuesAs'
 
 const SHOW_VALUES_AS_ORDER = PIPELINE_ORDER.group + 1
 
+const SERVER_SKIP =
+    'showValuesAs() skips percentOfGrandTotal and percentOfParent on rowModel: "server": each ' +
+    'divides by a total over the whole column, and the client only holds the blocks it has ' +
+    'loaded, so the share would change under the user as they scroll. percentOfRow still ' +
+    'runs - it reads one row at a time. getShowValuesAs(grid).skippedColumns lists what was ' +
+    'skipped.'
+
 const missingAggregation = (columnId: string): string =>
     `showValuesAs: "${columnId}" is shown as percentOfParent, but grouping() has no ` +
     'aggregation for it, so the group row it divides by holds nothing and the column ' +
@@ -69,10 +76,36 @@ export class ShowValuesAs<TRow> {
         }
     }
 
+    get skippedColumns(): readonly string[] {
+        if (this.#grid.rowModel !== 'server') return []
+        return Object.entries(this.shown)
+            .filter(([, showAs]) => typeof showAs === 'string')
+            .map(([columnId]) => columnId)
+    }
+
+    #warnedServer = false
+
+    #shownHere(): Record<string, ShowAs> {
+        if (this.#grid.rowModel !== 'server') return this.shown
+
+        const kept: Record<string, ShowAs> = {}
+        let skipped = false
+        for (const [columnId, showAs] of Object.entries(this.shown)) {
+            if (typeof showAs === 'string') skipped = true
+            else kept[columnId] = showAs
+        }
+        if (skipped && !this.#warnedServer) {
+            this.#warnedServer = true
+            // eslint-disable-next-line no-console
+            console.warn(SERVER_SKIP)
+        }
+        return kept
+    }
+
     apply = (nodes: RowNode<TRow>[]): RowNode<TRow>[] => {
         this.#warnMissingAggregation()
         return applyShares(nodes, {
-            shown: this.shown,
+            shown: this.#shownHere(),
             columns: this.#grid.columns.all.map((column) => column.def),
             read: gateReader(this.#grid, 'render')
         })
