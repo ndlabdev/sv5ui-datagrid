@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-11
+
 The largest release the grid has had. Sixteen feature modules, nine parts to
 draw them with, and a second entry point for writing spreadsheets. Everything
 here is opt-in the way the nine before it were: a feature you do not register
@@ -1155,6 +1157,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[2.0.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v2.0.0
 [1.3.1]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.1
 [1.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.0
 [1.2.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.2.0
