@@ -26,7 +26,7 @@
     const blurbs = [
         'Short note.',
         'A longer note that wraps onto a second line once the column is narrow enough to force it.',
-        'A much longer note again — auto row height measures whatever the cell actually renders, so three or four lines of prose are fine and the scrollbar still lands in the right place.'
+        'A much longer note again - auto row height measures whatever the cell actually renders, so three or four lines of prose are fine and the scrollbar still lands in the right place.'
     ]
 
     let tasks = $state.raw<Task[]>(
@@ -39,7 +39,7 @@
         }))
     )
 
-    let lastMove = $state('—')
+    let lastMove = $state('-')
 
     const columns: ColumnDef<Task>[] = [
         {
@@ -47,7 +47,6 @@
             header: '#',
             width: 64,
             align: 'right',
-            // Frozen: an id column has nothing to gain from being dragged wider.
             resizable: false,
             meta: { role: 'key' }
         },
@@ -59,8 +58,6 @@
             flex: 1,
             minWidth: 220,
             cell: notesCell,
-            // The cell already wraps, so the hover-truncation tooltip has
-            // nothing to add — turn it off rather than have both.
             tooltip: false
         },
         { id: 'owner', header: 'Owner', width: 130, filter: 'set' },
@@ -82,7 +79,6 @@
         getRowId: (task) => String(task.id),
         features: [
             rowReorder({
-                // The first task is the backlog anchor and stays put.
                 isRowDraggable: (task) => task.id !== 1,
                 onReorder: ({ node, from, to }) => {
                     lastMove = `${node.row.title}: ${from + 1} → ${to + 1}`
@@ -96,8 +92,6 @@
     })
 
     $effect(() => {
-        // The feature rewrites `grid.data`; mirror it back so the page state
-        // and the grid never disagree about the order.
         tasks = grid.data
     })
 </script>

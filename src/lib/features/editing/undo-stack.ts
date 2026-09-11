@@ -1,6 +1,5 @@
 import type { EditTransaction } from '../../core/types/index.js'
 
-/** One undoable edit. Lists, so a row edit or a paste undoes in one step. */
 export interface UndoCommand {
     before: EditTransaction[]
     after: EditTransaction[]
@@ -8,7 +7,6 @@ export interface UndoCommand {
 
 export interface UndoState {
     stack: UndoCommand[]
-    /** Index one past the last applied command. */
     cursor: number
 }
 
@@ -16,7 +14,6 @@ export function emptyUndo(): UndoState {
     return { stack: [], cursor: 0 }
 }
 
-/** Pushes a command, truncating any redo branch ahead of the cursor. */
 export function pushCommand(state: UndoState, command: UndoCommand): UndoState {
     const stack = state.stack.slice(0, state.cursor)
     stack.push(command)
@@ -31,14 +28,12 @@ export function canRedo(state: UndoState): boolean {
     return state.cursor < state.stack.length
 }
 
-/** Returns the command to reverse and the state with the cursor moved back. */
 export function undo(state: UndoState): { command: UndoCommand; state: UndoState } | null {
     if (!canUndo(state)) return null
     const cursor = state.cursor - 1
     return { command: state.stack[cursor], state: { ...state, cursor } }
 }
 
-/** Returns the command to re-apply and the state with the cursor moved forward. */
 export function redo(state: UndoState): { command: UndoCommand; state: UndoState } | null {
     if (!canRedo(state)) return null
     const command = state.stack[state.cursor]

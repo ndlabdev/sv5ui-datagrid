@@ -72,11 +72,6 @@
         return list
     }
 
-    /**
-     * The keyboard's way to fold a group. The toggle in the group header is a
-     * pointer target: header groups are not cells the roving focus visits, so
-     * without this entry a group could be folded only with a mouse.
-     */
     function groupItems(): MenuEntry[] {
         const group = grid.columns.foldableGroupOf(column.id)
         if (!group) return []
@@ -119,7 +114,6 @@
 
     const open = $derived(columnOps.menuFor === column.id)
 
-    /** Cheap enough to evaluate per column, unlike the items themselves. */
     const hasItems = $derived(
         Boolean(sorting && column.def.sortable) ||
             columnOps.canPin ||
@@ -129,7 +123,6 @@
             Boolean(grid.columns.foldableGroupOf(column.id))
     )
 
-    // Built only while open: every visible column mounts one of these.
     const items = $derived(
         open ? [...sortItems(), ...pinItems(), ...actionItems(), ...groupItems()] : []
     )

@@ -54,6 +54,11 @@
             "svelte": "./dist/index.js",
             "default": "./dist/index.js"
         },
+        "./xlsx": {
+            "types": "./dist/xlsx.d.ts",
+            "svelte": "./dist/xlsx.js",
+            "default": "./dist/xlsx.js"
+        },
         "./locales": {
             "types": "./dist/locales/index.d.ts",
             "svelte": "./dist/locales/index.js",

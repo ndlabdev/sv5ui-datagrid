@@ -87,8 +87,6 @@ describe('pinned row keyboard access', () => {
         const grid = pinnedGrid()
         const screen = await renderGrid(grid)
 
-        // DOM focus only follows the model once focus is already inside the
-        // grid — the grid must never steal it from elsewhere on the page.
         screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
         grid.focus.focusCell({ row: grid.totalRows - 1, col: 0 })
         grid.focus.moveBy(1, 0)
@@ -179,8 +177,6 @@ describe('rtl pointer gestures', () => {
     }
 
     it('resizes by travel along the inline axis, not by raw clientX', async () => {
-        // Dragging toward the inline end widens the column in both directions;
-        // under RTL the inline end is to the left, so clientX moves the other way.
         expect(await dragHandleBy('ltr', 60)).toBe(220)
         expect(await dragHandleBy('rtl', -60)).toBe(220)
     })
@@ -209,8 +205,6 @@ describe('rtl layout', () => {
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
         const indented = screen.container.querySelector<HTMLElement>('[data-dg-cell="1:0"]')!
-        // The logical property is what carries the indent; the physical one is
-        // resolved by the browser and flips with the direction.
         expect(indented.style.paddingInlineStart).not.toBe('')
         expect(indented.style.paddingLeft).toBe('')
     })
@@ -242,7 +236,7 @@ describe('server-side pagination', () => {
     it('reports the server total in the footer', async () => {
         const grid = serverGrid()
         await renderGrid(grid)
-        await expect.element(page.getByText('1–5 of 137')).toBeVisible()
+        await expect.element(page.getByText('1-5 of 137')).toBeVisible()
     })
 
     it('stays on the page whose cell was clicked', async () => {
@@ -253,9 +247,6 @@ describe('server-side pagination', () => {
         grid.events.on('pageChanged', (event) => pages.push(event.page))
 
         state.setPage(2)
-        // The server sends one page at a time, so its rows are indexed 0..4
-        // whichever page they belong to; deriving the page from a row index
-        // would send every click back to page 1.
         await page.getByRole('gridcell', { name: 'Person 3' }).click()
 
         expect(state.page).toBe(2)
@@ -301,7 +292,6 @@ describe('server-side pagination', () => {
             { columnId: 'name', direction: 'desc' }
         ])
 
-        // The page the server sent is exactly what renders, untouched.
         expect(grid.nodes.map((node) => node.row.id)).toEqual([1, 2, 3, 4, 5])
     })
 })

@@ -26,11 +26,6 @@ const columns: ColumnDef<Person>[] = [
     { id: 'dept', sortable: true }
 ]
 
-/**
- * Calls a setter from inside an `$effect` and reports how many times the effect
- * ran. One means the setter read nothing the effect could subscribe to; more
- * means the effect saw its own write, and an unbounded loop throws outright.
- */
 function effectRuns(
     features: GridFeature<Person>[],
     call: (grid: GridState<Person>) => void

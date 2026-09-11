@@ -80,7 +80,6 @@ describe('the panel reads back what the user typed', () => {
     })
 
     it('does not leak the noise binary division leaves behind', () => {
-        // 0.07 * 100 is 7.000000000000001 before rounding.
         const draft = draftFromFilter('number', { kind: 'number', op: 'eq', value: 0.07 }, 100)
         expect(draft.conditions[0].value).toBe('7')
     })

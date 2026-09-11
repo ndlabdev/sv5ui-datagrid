@@ -58,7 +58,7 @@
     const countries = ['VN', 'US', 'DE', 'JP', 'SG', 'AU', 'BR', 'FR']
     const cities = ['Hanoi', 'Austin', 'Berlin', 'Osaka', 'Singapore', 'Sydney', 'Rio', 'Lyon']
     const statuses = ['Open', 'Won', 'Lost', 'Pending']
-    const tiers = ['Free', 'Pro', 'Enterprise']
+    const tiers = ['Basic', 'Plus', 'Enterprise']
     const owners = ['Ada', 'Linus', 'Grace', 'Alan', 'Margaret', 'Edsger']
     const channels = ['Direct', 'Partner', 'Web', 'Referral']
     const regions = ['APAC', 'EMEA', 'AMER']
@@ -68,11 +68,6 @@
     const stages = ['Discovery', 'Trial', 'Negotiation', 'Closed']
     const priorities = ['P1', 'P2', 'P3']
 
-    /**
-     * Built as a plain loop over preallocated storage: at a million rows the
-     * difference between this and `Array.from` is seconds, and the point of
-     * the page is to measure the grid rather than the generator.
-     */
     function build(count: number): Record_[] {
         const rows = new Array<Record_>(count)
         for (let i = 0; i < count; i++) {
@@ -228,8 +223,6 @@
 
     async function load() {
         loading = true
-        // Building a million rows holds the main thread, so the skeleton only
-        // reaches the screen if the browser is given a frame first.
         await nextFrame()
 
         const count = Number(size)
@@ -260,13 +253,13 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Stress — nhiều dòng, nhiều cột</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Stress - nhiều dòng, nhiều cột</h1>
             <p class="max-w-3xl text-sm text-on-surface-variant">
                 39 cột với đủ kiểu hiển thị (tiền tệ, phần trăm, ngày, badge, progress, rating,
                 boolean) trên tối đa một triệu dòng. Ảo hoá cả hai chiều, nên số ô thực sự nằm trong
                 DOM không đổi theo lượng dữ liệu. Sắp xếp, lọc và cuộn đều chạy trên toàn bộ tập.
                 Quá một triệu dòng thì tổng chiều cao vượt mức trình duyệt chịu vẽ, nên thanh cuộn
-                được nén lại — dòng cuối vẫn tới được, chỉ là mỗi pixel cuộn đi xa hơn.
+                được nén lại - dòng cuối vẫn tới được, chỉ là mỗi pixel cuộn đi xa hơn.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -310,7 +303,7 @@
         <h2 class="font-medium text-on-surface">Cần soi</h2>
         <ul class="list-inside list-disc space-y-1 text-sm text-on-surface-variant">
             <li>Số dòng và cột được vẽ giữ nguyên dù chọn 100k hay 1 triệu.</li>
-            <li>Cuộn dọc và ngang cùng lúc — cột <code>#</code> ghim trái phải đứng yên.</li>
+            <li>Cuộn dọc và ngang cùng lúc - cột <code>#</code> ghim trái phải đứng yên.</li>
             <li>Sắp theo Total (số) và Customer (chuỗi) trên toàn bộ tập.</li>
             <li>Lọc nhanh chạy trên mọi cột đang hiện, không chỉ trang đang xem.</li>
             <li>Chọn hết rồi xem thanh trạng thái đếm đúng tổng.</li>

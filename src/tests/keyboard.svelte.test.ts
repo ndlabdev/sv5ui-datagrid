@@ -14,7 +14,7 @@ import {
     type ColumnDef,
     type DataGridProps
 } from '$lib/index.js'
-import VirtualGrid from './VirtualGrid.svelte'
+import VirtualGrid from './fixtures/VirtualGrid.svelte'
 
 interface Person {
     id: number
@@ -207,7 +207,10 @@ describe('overlays', () => {
 
         const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')
         expect(body).not.toBeNull()
-        expect(screen.container.querySelectorAll('[role="gridcell"]')).toHaveLength(0)
+
+        const cells = [...screen.container.querySelectorAll('[role="gridcell"]')]
+        expect(cells).not.toHaveLength(0)
+        expect(cells.every((cell) => (cell.textContent ?? '').trim() === '')).toBe(true)
     })
 
     it('fills the grid with skeletons rather than a fixed few', async () => {
@@ -219,8 +222,6 @@ describe('overlays', () => {
             loading: true
         })
 
-        // A flat count left most of a tall grid blank, which reads as broken
-        // rather than busy — the very thing the loading state answers.
         const body = screen.container.querySelector('[role="rowgroup"][aria-busy="true"]')!
         expect(body.querySelectorAll('[role="row"]')).toHaveLength(25)
     })
@@ -298,7 +299,6 @@ describe('keyboard navigation past pinned columns', () => {
         return screen.container.querySelector<HTMLElement>('[role="grid"]')!
     }
 
-    /** True when a pinned sibling overlaps the focused cell. */
     function coveredByPinned(cell: HTMLElement): boolean {
         const box = cell.getBoundingClientRect()
         for (const sibling of cell.parentElement!.children) {
@@ -315,9 +315,6 @@ describe('keyboard navigation past pinned columns', () => {
         const viewport = await renderWide()
         viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
 
-        // The browser's own scroll-into-view stops at the viewport edge, which
-        // is where the pinned columns sit — a cell reached by keyboard used to
-        // park underneath one.
         for (let step = 0; step < 5; step++) {
             await userEvent.keyboard('{ArrowRight}')
             const cell = document.activeElement as HTMLElement
@@ -336,17 +333,12 @@ describe('keyboard navigation past pinned columns', () => {
         viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!.focus()
         await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}')
 
-        // A focused cell is lifted over the row separator so its ring stays
-        // whole; without lifting the pinned cells further it would also rise
-        // over them and paint across the frozen column.
         const pinned = viewport.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
         const focused = document.activeElement as HTMLElement
         expect(Number(getComputedStyle(pinned).zIndex)).toBeGreaterThan(
             Number(getComputedStyle(focused).zIndex || 0)
         )
 
-        // And it draws the separator it has risen above, so the line still
-        // crosses the frozen column.
         expect(getComputedStyle(pinned, '::after').height).toBe('1px')
     })
 })

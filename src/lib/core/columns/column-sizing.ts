@@ -3,7 +3,7 @@ import type { ColumnDef, ColumnState, PinnedSide } from '../types/index.js'
 
 const DEFAULT_MIN_WIDTH = 40
 
-export interface ColumnStateOverrides {
+interface ColumnStateOverrides {
     width?: number
     hidden?: boolean
     pinned?: PinnedSide | null
@@ -40,24 +40,10 @@ export function createColumnState<TRow>(
     }
 }
 
-export type WidthOverrides = Record<string, number>
+type WidthOverrides = Record<string, number>
 
-/** What a track falls back to when nothing usable is left to fall back on. */
 const LAST_RESORT_WIDTH = 100
 
-/**
- * The last gate before a number becomes CSS. A non-finite one reaches the
- * custom property as `NaNpx`, and `grid-template-columns: var(...)` is then
- * invalid at computed-value time: the browser drops the whole declaration,
- * every column folds into a single track and the cells stack down the page,
- * with nothing thrown and nothing logged.
- *
- * The width setters and the snapshot boundary each refuse such a value on the
- * way in. This is here because they are not the only way in - a container
- * measured as `NaN` and a column definition written with `width: NaN` reach
- * the same line without passing either - and because a track that is merely
- * the wrong size is a far smaller failure than a grid that will not lay out.
- */
 function px(value: number | undefined, fallback: number): string {
     if (typeof value === 'number' && Number.isFinite(value)) return `${value}px`
     return `${Number.isFinite(fallback) ? fallback : LAST_RESORT_WIDTH}px`

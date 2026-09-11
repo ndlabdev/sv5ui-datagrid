@@ -11,7 +11,8 @@ export type TextFilterOp =
     | 'notBlank'
 export type NumberFilterOp =
     'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' | 'blank' | 'notBlank'
-export type DateFilterOp = 'equals' | 'before' | 'after' | 'between' | 'blank' | 'notBlank'
+export type DateFilterOp =
+    'equals' | 'notEqual' | 'before' | 'after' | 'between' | 'blank' | 'notBlank'
 
 /** Operators that test presence and therefore carry no value. */
 export type PresenceFilterOp = 'blank' | 'notBlank'
@@ -31,7 +32,7 @@ export type ColumnFilter =
 export type FilterJoin = 'and' | 'or'
 
 /**
- * Two conditions on one column, produced only when the second is filled in —
+ * Two conditions on one column, produced only when the second is filled in -
  * a lone condition keeps its plain shape and older snapshots still hydrate.
  */
 export interface ColumnFilterGroup {

@@ -39,14 +39,6 @@ function cellAt(container: Element, row: number, col: number): HTMLElement {
     return cell
 }
 
-/**
- * Asserted on the computed style rather than on `widthOverrides`, because the
- * override record looked perfectly reasonable while the layout was already
- * gone: a width of `NaN` reached the custom property as `NaNpx`, which makes
- * `grid-template-columns` invalid at computed-value time. The browser drops
- * the whole declaration, every column folds into one track, and the cells
- * stack down the page. Nothing throws on the way.
- */
 function tracksOf(container: Element, row: number): string[] {
     const line = cellAt(container, row, 0).parentElement
     if (!line) throw new Error('no row element')

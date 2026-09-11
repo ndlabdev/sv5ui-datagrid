@@ -7,7 +7,6 @@ interface Row {
     id: number
 }
 
-/** A group that folds down to one summary column, plus an ungrouped column. */
 function makeDefs(): ColumnDef<Row>[] {
     return [
         { id: 'id', header: '#' },
@@ -28,7 +27,6 @@ const ids = (model: ColumnModel<Row>) => model.visible.map((column) => column.id
 describe('a folded group', () => {
     it('draws the detail open and the summary closed', () => {
         const model = new ColumnModel<Row>(makeDefs())
-        // `total` is the summary, so it waits for the group to fold.
         expect(ids(model)).toEqual(['id', 'base', 'bonus'])
 
         expect(model.toggleGroup('pay')).toBe(true)
@@ -50,20 +48,15 @@ describe('a folded group', () => {
         model.hiddenOverrides = { base: true }
         model.toggleGroup('pay')
 
-        // The chooser reads `all`, and a column folded with its group is still
-        // ticked there: the user did not put it away, the group did.
         const chooser = new Map(model.all.map((column) => [column.id, column.hidden]))
         expect(chooser.get('bonus')).toBe(false)
         expect(chooser.get('base')).toBe(true)
 
-        // And the one the user did put away stays away when the group opens.
         model.toggleGroup('pay')
         expect(ids(model)).toEqual(['id', 'bonus'])
     })
 
     it('refuses to fold itself off the screen', () => {
-        // Every child is `open`, so folding would leave no header cell to
-        // click and no way back.
         const model = new ColumnModel<Row>([
             {
                 id: 'pay',
@@ -84,8 +77,6 @@ describe('a folded group', () => {
         const model = new ColumnModel<Row>(makeDefs())
         model.hiddenOverrides = { total: true }
 
-        // Folding would take `base` and `bonus`, and `total` is not coming
-        // back on its own.
         expect(model.groupToggles.get('pay')?.collapsible).toBe(false)
         expect(model.toggleGroup('pay')).toBe(false)
     })
@@ -209,7 +200,6 @@ describe('a folded group in a snapshot', () => {
         grid.columns.toggleGroup('pay')
         grid.columns.toggleGroup('pay')
 
-        // Folding is not reordering: what came back came back in place.
         expect(grid.columns.all.map((column) => column.id)).toEqual(order)
     })
 })

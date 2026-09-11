@@ -23,7 +23,7 @@ import {
 } from './undo-stack.js'
 import { isPromise, runValidation, type Validated } from './validate.js'
 
-export const EDITING = 'editing'
+const EDITING = 'editing'
 
 export class Editing<TRow> {
     active = $state.raw<EditingCell | null>(null)
@@ -64,10 +64,6 @@ export class Editing<TRow> {
             return editable({ row: node.row, node, value: readCell(node, def) })
         }
 
-        // A value the user is not being shown is not one they can overwrite:
-        // an editor opened on it would seed the substitute and commit it over
-        // the data behind it. Identity, not equality, is the test the reader
-        // contract is written against.
         const value = readCell(node, def)
         if (reader(value, node) !== value) return false
         if (editable === true) return true
@@ -93,24 +89,11 @@ export class Editing<TRow> {
         this.error = null
     }
 
-    /**
-     * What a user gesture opens. Double-click, `Enter`, `F2` and typing all
-     * come through here so `mode` decides once, rather than every call site
-     * hard-coding a cell edit and leaving the option inert.
-     *
-     * `startEdit` and `startRowEdit` stay as they were: an app that wants one
-     * specific shape asks for it by name, whatever the mode says.
-     */
     beginEdit = (rowId: string, columnId: string): void => {
         if (this.mode === 'row') this.startRowEdit(rowId)
         else this.startEdit(rowId, columnId)
     }
 
-    /**
-     * Opens an edit on the key that started it. Only an editor that takes
-     * typed text keeps the character: seeding a select or a rating with it
-     * would put a value in the draft that its own control cannot represent.
-     */
     startEditWith = (rowId: string, columnId: string, initial: string): void => {
         this.beginEdit(rowId, columnId)
         const column = this.#grid.columns.get(columnId)
@@ -157,7 +140,6 @@ export class Editing<TRow> {
         return { rowId: tx.rowId, changes: before }
     }
 
-    /** Reports every cell a transaction wrote, paired with its prior value. */
     #emitCellEdits(applied: EditTransaction, before: EditTransaction): void {
         for (const [columnId, newValue] of Object.entries(applied.changes)) {
             this.#grid.events.emit('cellEdited', {
@@ -180,8 +162,6 @@ export class Editing<TRow> {
             rowId: node.id,
             changes: { [columnId]: validated.value }
         }
-        // `node` may predate an async validation, so the event reports the
-        // inverse transaction's values, captured at write time.
         const before = this.#applyTransaction(after)
         this.#undo = pushCommand(this.#undo, { before: [before], after: [after] })
         this.#emitCellEdits(after, before)
@@ -203,7 +183,6 @@ export class Editing<TRow> {
         return this.#commitValue(node, def, validated)
     }
 
-    /** The rows the page in view holds, or null where nothing pages. */
     #pageRows(): { first: number; last: number } | null {
         const pagination = this.#grid.state['pagination'] as
             { page?: number; pageSize?: number | null; server?: boolean } | undefined
@@ -213,13 +192,6 @@ export class Editing<TRow> {
         return { first, last: first + pageSize - 1 }
     }
 
-    /**
-     * Committing is not navigating. Moving down off the last row of a page
-     * turns the page, which takes the row just edited off the screen and puts
-     * the caret somewhere the user was not looking: they pressed Enter to save
-     * what they typed. Arrow keys still cross the boundary, being a request to
-     * go somewhere rather than the tail of one to write something.
-     */
     #move(direction: MoveDirection): void {
         const delta = direction === 'down' ? [1, 0] : direction === 'right' ? [0, 1] : [0, -1]
         const active = this.#grid.focus.active
@@ -270,10 +242,6 @@ export class Editing<TRow> {
         if (!node) return false
 
         const columns = this.#grid.columns
-        // Filtered the way `applyEdits` filters. A draft only reaches this map
-        // through a field the row opened, so the two agree already; they have
-        // to keep agreeing when a draft is set through the API instead, or a
-        // column a gate is holding back could be written through this door.
         const validations = Object.keys(this.drafts).flatMap((columnId) => {
             const def = columns.get(columnId)?.def
             if (!def || !this.editableAt(node, def)) return []
@@ -332,8 +300,6 @@ export class Editing<TRow> {
         this.rowErrors = {}
     }
 
-    /** Replays through the same reporting path as a direct edit, so a consumer
-     * syncing to a server sees a reverted change too. */
     #replay(transactions: EditTransaction[]): void {
         for (const tx of transactions) {
             const before = this.#applyTransaction(tx)
@@ -355,10 +321,6 @@ export class Editing<TRow> {
         this.#undo = result.state
     }
 
-    /**
-     * Many cells at once, each through the column's `parse` and validation.
-     * One invalid cell rejects the batch; a successful one is a single undo.
-     */
     applyEdits = (edits: EditTransaction[]): boolean | Promise<boolean> => {
         const resolved = edits.flatMap((edit) => {
             const node = this.#nodeById(edit.rowId)
@@ -380,10 +342,6 @@ export class Editing<TRow> {
         )
     }
 
-    /**
-     * Clipboard text from the focused cell, spreading right and down. Cells
-     * landing on a non-editable column or past the last row are dropped.
-     */
     pasteText = (text: string): boolean | Promise<boolean> => {
         const matrix = parseClipboardMatrix(text)
         const { row, col } = this.#grid.focus.active
@@ -422,7 +380,6 @@ export class Editing<TRow> {
         }
         if (entries.length === 0) return false
 
-        // One transaction per row, so a batch applies and undoes in one step.
         const after = groupChangesByRow(
             entries.map((entry) => ({
                 rowId: entry.node.id,
@@ -463,11 +420,6 @@ function startActive<TRow>(grid: GridState<TRow>): void {
     if (cell) getEditing(grid)!.beginEdit(cell.node.id, cell.def.id)
 }
 
-/**
- * True while an edit is open and nothing it opened is covering it. A popup
- * belongs to whoever opened it: Escape should shut the listbox first and only
- * abandon the edit on the way back out.
- */
 function isEditing<TRow>(grid: GridState<TRow>): boolean {
     const state = getEditing(grid)
     return Boolean(state && (state.active || state.rowEditId)) && !popupOpen()
@@ -483,10 +435,6 @@ function createKeybindings<TRow>(): Keybinding<TRow>[] {
     return [
         { key: 'Enter', when: canStartEdit, handler: startActive },
         { key: 'F2', when: canStartEdit, handler: startActive },
-        // Bound on the grid, not on the editor: a widget editor leaves focus on
-        // the cell, whose keydown never reaches a handler on the editor inside
-        // it. A popup the editor opened is portalled out of the grid, so its
-        // own Escape closes the popup and never arrives here.
         { key: 'Escape', when: isEditing, handler: cancelEdit },
         {
             key: 'Ctrl+z',
@@ -533,24 +481,12 @@ export function getEditing<TRow>(grid: GridState<TRow>): Editing<TRow> | undefin
     return grid.feature<Editing<TRow>>(EDITING)
 }
 
-/**
- * What a column of a given type holds, when the app has not said otherwise
- * with `parse`.
- *
- * Text arrives from places that have no types to offer: the clipboard, and any
- * editor that hands back what was typed. Storing "42" in a number column
- * leaves the row a different shape from its neighbours, and the app that reads
- * it back gets a string where every other row has a number.
- */
 function parseByType<TRow>(raw: unknown, def: ColumnDef<TRow>): unknown {
     if (typeof raw !== 'string' || raw.trim() === '') return raw
     if (def.type !== 'number' && def.type !== 'currency' && def.type !== 'percent') return raw
-    // Text that is not a number is left alone for validation to refuse, rather
-    // than stored as NaN.
     return toNumber(raw) ?? raw
 }
 
-/** Editors a printable key can sensibly start with. */
 const TYPED_EDITORS = new Set(['text', 'number', 'textarea'])
 
 export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
@@ -561,14 +497,11 @@ export function editorTypeOf<TRow>(column: ColumnState<TRow>): string {
 
 declare module '../../core/types/api.js' {
     interface GridApi {
-        /** Opens whatever `mode` says: a cell, or the row it belongs to. */
         beginEdit?: (rowId: string, columnId: string) => void
-        /** Always a single cell, whatever `mode` says. */
         startEditing?: (rowId: string, columnId: string) => void
         stopEditing?: () => void
         getEditingCell?: () => EditingCell | null
         startRowEdit?: (rowId: string) => void
-        /** Async when a validator is, so callers await the result. */
         commitRow?: () => boolean | Promise<boolean>
         applyEdits?: (edits: EditTransaction[]) => boolean | Promise<boolean>
         pasteText?: (text: string) => boolean | Promise<boolean>

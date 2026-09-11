@@ -59,11 +59,6 @@ const heads = (container: Element) => [
 const strips = (container: Element) => [
     ...container.querySelectorAll<HTMLElement>('[data-dg-rail]')
 ]
-/**
- * Clicked where it stands. The locator scrolls what it clicks into view
- * first, and under column virtualization that scroll rebuilds the header the
- * button is in, so the click lands on an element that has been replaced.
- */
 function clickToggle(container: Element, name: string): void {
     const button = [...container.querySelectorAll('button')].find((candidate) =>
         (candidate.textContent ?? '').includes(name)
@@ -75,7 +70,6 @@ function clickToggle(container: Element, name: string): void {
 const left = (el: Element, of: Element) =>
     Math.round(el.getBoundingClientRect().left - of.getBoundingClientRect().left)
 
-/** A group pinned to one side, wide columns between, so the grid must scroll. */
 function pinnedColumns(side: 'left' | 'right'): ColumnDef<Row>[] {
     const railed: ColumnDef<Row> = {
         id: 'plan',
@@ -110,9 +104,6 @@ describe('a drawer over a pinned group', () => {
                 screen.container.querySelector(`[data-dg-cell="0:${railIndex}"]`) ??
                 [...screen.container.querySelector('[data-dg-row-id]')!.children][railIndex]!
 
-            // The cells hold their place with `sticky`; the drawer is one
-            // element over every row, which cannot be sticky, so it has to be
-            // told where the pin is.
             const before = left(cell(), viewport)
             expect(left(heads(screen.container)[0], viewport)).toBe(before)
             expect(left(strips(screen.container)[0], viewport)).toBe(before)
@@ -150,10 +141,6 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Kế hoạch')
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // Standing inside a group, nothing beside it draws a line: the grid
-        // only draws them where a group ends. So the drawer draws its own,
-        // and the cell before it gives up the one it would have drawn, or
-        // the two land on neighbouring pixels and read as one thick line.
         const drawer = [heads(screen.container)[0], strips(screen.container)[0]]
         for (const piece of drawer) {
             const style = getComputedStyle(piece)
@@ -182,10 +169,6 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Nửa sau')
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // A pinned cell is raised over the separator and the spans so it
-        // draws what it covers. A drawer's own cells carry nothing to draw,
-        // and raised they cover the drawer itself: the surface survives,
-        // being the same colour, but the edge down its leading side does not.
         const strip = strips(screen.container)[0]
         const railIndex = grid.columns.visible.findIndex((column) => column.id.includes('rail'))
         const cell = [...screen.container.querySelector('[data-dg-row-id]')!.children].find(
@@ -214,9 +197,6 @@ describe('a drawer among other things', () => {
         clickToggle(wide.container, 'Collapse Kế hoạch')
         await expect.poll(() => strips(wide.container).length).toBe(1)
 
-        // The grid's own border is the trailing edge of the last column, but
-        // only when the columns reach it. Here they stop 400px short, and a
-        // drawer left open on that side is a drawer with one side.
         for (const piece of [heads(wide.container)[0], strips(wide.container)[0]]) {
             const style = getComputedStyle(piece)
             expect(style.borderLeftWidth).toBe('1px')
@@ -240,8 +220,6 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Kế hoạch')
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // Drawn there it would stand one pixel inside a line the grid has
-        // already drawn, which is the thick smudge in another place.
         await expect
             .poll(() => getComputedStyle(strips(screen.container)[0]).borderRightWidth)
             .toBe('0px')
@@ -279,9 +257,7 @@ describe('a drawer among other things', () => {
         await page.getByRole('button', { name: 'Collapse Kế hoạch' }).click()
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // The parent keeps its header and shrinks to what is left of it.
         await expect.poll(parent).toBe('2')
-        // And the drawer runs past the parent's own level, not from under it.
         const head = heads(screen.container)[0].getBoundingClientRect()
         const header = screen.container.querySelector('[role="rowgroup"]')!.getBoundingClientRect()
         expect(head.top).toBeCloseTo(header.top, 0)
@@ -309,8 +285,6 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Nửa đầu')
         await expect.poll(() => strips(screen.container).length).toBe(2)
 
-        // One line between them, drawn once and by one side only, and it
-        // runs the whole height rather than stopping where the header does.
         const [firstHead, secondHead] = heads(screen.container)
         const [firstStrip, secondStrip] = strips(screen.container)
         const edge = (el: Element, side: 'Left' | 'Right') =>
@@ -319,11 +293,9 @@ describe('a drawer among other things', () => {
         expect(edge(secondStrip, 'Left')).toBe('1px')
         expect(edge(firstHead, 'Right')).toBe('0px')
         expect(edge(firstStrip, 'Right')).toBe('0px')
-        // Both are framed on their leading side, so neither reads as open.
         expect(edge(firstHead, 'Left')).toBe('1px')
         expect(edge(firstStrip, 'Left')).toBe('1px')
 
-        // The two pieces of that line meet, and reach the last row.
         expect(secondHead.getBoundingClientRect().bottom).toBeCloseTo(
             secondStrip.getBoundingClientRect().top,
             0
@@ -353,9 +325,6 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Nửa sau')
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // A pinned cell travels no further than it has to, and with nothing
-        // to scroll it does not travel at all. The drawer has to say the same
-        // thing, or it sits at the far edge with its column left behind.
         const viewport = screen.container.querySelector<HTMLElement>('[role="grid"]')!
         expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth + 1)
         const cell = [...screen.container.querySelector('[data-dg-row-id]')!.children].at(-1)!
@@ -388,16 +357,10 @@ describe('a drawer among other things', () => {
         clickToggle(screen.container, 'Collapse Kế hoạch')
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // The room a group cell keeps for its toggle is padding, and padding
-        // is a floor no width can go under. A drawer is 44px wide, so a cell
-        // still holding that room stands a pixel wider than the column and
-        // lays a second line beside the drawer's own.
         const covered = screen.container.querySelector<HTMLElement>(
             '[role="columnheader"][aria-expanded="false"]'
         )!
         const drawer = heads(screen.container)[0]
-        // Polled: until the grid has been measured the drawer stands on
-        // estimated widths, which a flex column only matches once measured.
         await expect
             .poll(() =>
                 Math.abs(
@@ -437,7 +400,6 @@ describe('a drawer among other things', () => {
 
         second.click()
         await expect.poll(() => grid.columns.isCollapsed('half')).toBe(false)
-        // The one beside it did not go with it.
         expect(grid.columns.isCollapsed('plan')).toBe(true)
     })
 
@@ -467,8 +429,6 @@ describe('a drawer among other things', () => {
         await page.getByRole('button', { name: 'Collapse Kế hoạch' }).click()
         await expect.poll(() => strips(screen.container).length).toBe(1)
 
-        // The strip covers the rows it folded away, but a pinned row group
-        // stands outside it, so those cells wear the surface themselves.
         const surface = getComputedStyle(strips(screen.container)[0]).backgroundColor
         const pinned = [...screen.container.querySelectorAll('[data-dg-pinned-cell]')].filter(
             (cell) => cell.getAttribute('data-dg-pinned-cell')?.endsWith(':1')
@@ -479,8 +439,6 @@ describe('a drawer among other things', () => {
             const style = getComputedStyle(cell)
             expect(style.backgroundColor).toBe(surface)
             expect(cell.textContent?.trim()).toBe('')
-            // And the lines down its sides, or the drawer is cut in two
-            // wherever a pinned row crosses it.
             expect(style.borderLeftWidth).toBe(edges.borderLeftWidth)
             expect(style.borderRightWidth).toBe(edges.borderRightWidth)
         }
@@ -521,7 +479,6 @@ describe('a drawer among other things', () => {
             (child) => child.getAttribute('data-dg-cell')?.endsWith(`:${railIndex}`)
         )!
         expect(left(strips(screen.container)[0], viewport)).toBe(left(cell, viewport))
-        // The name rides in the header, so 600px of rows change nothing.
         const name = screen.container.querySelector('[data-dg-rail-head] [data-dg-truncate]')!
         expect(
             name.getBoundingClientRect().top - viewport.getBoundingClientRect().top
@@ -589,7 +546,6 @@ describe('the cases demo', () => {
         await expect.element(page.getByRole('grid').first()).toBeVisible()
         expect(screen.container.querySelectorAll('[role="grid"]')).toHaveLength(10)
 
-        // Two of them open folded, by declaration, and say so.
         expect(screen.container.textContent).toContain('đang gập: rev, planning')
         expect(strips(screen.container).length).toBeGreaterThan(0)
     })

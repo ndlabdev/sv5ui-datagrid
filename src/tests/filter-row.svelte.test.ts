@@ -76,21 +76,8 @@ async function renderGrid(grid: GridState<Person>) {
     return screen
 }
 
-/** What `GridFilterCell` waits before a typed value reaches the model. */
 const FILTER_DEBOUNCE_MS = 200
 
-/**
- * Types through the driver and reports the most writes a working debounce could
- * have produced.
- *
- * Counting writes only means something against the time the typing took. The
- * browser driver round-trips once per key, and on a loaded machine that round
- * trip outlasts the window, so the debounce fires between keystrokes and a
- * write per key is correct rather than a regression. A debounce can write once
- * per window it is left alone for, plus once at the end, which is the bound
- * this returns: exactly 1 when the typing fitted in one window, which is what
- * an unloaded machine and CI do.
- */
 async function typeWithin(keys: string) {
     const started = performance.now()
     await userEvent.keyboard(keys)
@@ -104,13 +91,11 @@ describe('the filter row', () => {
 
         expect(row.querySelectorAll('[role="gridcell"]')).toHaveLength(columns.length)
 
-        // One control per column, each the one its filter needs.
         const cell = (index: number) => filterCell(screen.container, index)
-        expect(cell(0).querySelector('input:not([role])')).not.toBeNull() // text
-        expect(cell(1).querySelector('[role="combobox"]')).not.toBeNull() // set
-        expect(cell(2).querySelector('input[role="spinbutton"]')).not.toBeNull() // number
-        expect(cell(3).querySelector('[data-select-trigger]')).not.toBeNull() // boolean
-        // `note` declares no filter, so its cell stays empty.
+        expect(cell(0).querySelector('input:not([role])')).not.toBeNull()
+        expect(cell(1).querySelector('[role="combobox"]')).not.toBeNull()
+        expect(cell(2).querySelector('input[role="spinbutton"]')).not.toBeNull()
+        expect(cell(3).querySelector('[data-select-trigger]')).not.toBeNull()
         expect(cell(4).textContent?.trim()).toBe('')
     })
 
@@ -170,12 +155,9 @@ describe('the filter row', () => {
         const screen = await renderGrid(grid)
         const cell = filterCell(screen.container, 1)
 
-        // Nothing chosen reads as the any choice, the same word the boolean
-        // column uses for it.
         expect(cell.textContent).toContain('(any)')
 
         await page.getByRole('button', { name: 'Team filter value' }).click()
-        // The values come from the column, and only once the list is opened.
         await expect.element(page.getByRole('option', { name: 'Core' })).toBeVisible()
         await page.getByRole('option', { name: 'Core' }).click()
 
@@ -184,7 +166,6 @@ describe('the filter row', () => {
             .toEqual({ kind: 'set', values: ['Core'] })
         await expect.poll(() => bodyRows(screen.container)).toBe(2)
 
-        // A second value is the same one condition, with two values in it.
         await page.getByRole('option', { name: 'Tools' }).click()
         await expect
             .poll(() => getFiltering(grid)!.columnFilters['team'], { timeout: 2000 })
@@ -207,7 +188,6 @@ describe('the filter row', () => {
     it('hands a set column back to the panel when it holds something else', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
-        // Not a shape this row wrote, so it is not one it may flatten.
         getFiltering(grid)!.setColumnFilter('team', { kind: 'text', op: 'contains', value: 'Co' })
 
         const cell = filterCell(screen.container, 1)
@@ -221,7 +201,6 @@ describe('the filter row', () => {
         const trigger = () =>
             filterCell(screen.container, 3).querySelector<HTMLElement>('[data-select-trigger]')!
 
-        // Not an empty control: unfiltered reads as the any choice.
         expect(trigger().textContent?.trim()).toBe('(any)')
 
         getFiltering(grid)!.setColumnFilter('active', { kind: 'boolean', value: true })
@@ -234,7 +213,6 @@ describe('the filter row', () => {
     it('filters from the boolean choice, and clears back to any', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
-        // The sv5ui Select is a button opening a portalled listbox.
         const open = () => page.getByRole('button', { name: 'Active filter value' }).click()
 
         await open()
@@ -257,7 +235,6 @@ describe('the filter row', () => {
     it('opens the column one panel, not a second of its own', async () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
-        // A range needs two bounds, so this cell is the one that asks.
         getFiltering(grid)!.setColumnFilter('age', {
             kind: 'number',
             op: 'between',
@@ -267,8 +244,6 @@ describe('the filter row', () => {
         const cell = filterCell(screen.container, 2)
         await expect.poll(() => cell.querySelector('button')).not.toBeNull()
 
-        // The row asks; the header's panel answers. Two instances of the panel
-        // for one column both read the same open flag and both appear.
         await cell.querySelector<HTMLElement>('button')!.click()
 
         await expect.poll(() => document.querySelectorAll('[role="dialog"]').length).toBe(1)
@@ -300,7 +275,6 @@ describe('the filter row', () => {
         const screen = await renderGrid(makeGrid())
         const grid = screen.container.querySelector('[role="grid"]')!
 
-        // One header row plus the filter row plus three body rows.
         expect(grid.getAttribute('aria-rowcount')).toBe('5')
         expect(filterRow(screen.container)!.getAttribute('aria-rowindex')).toBe('2')
         expect(
@@ -320,7 +294,6 @@ describe('the filter row', () => {
 
         await userEvent.keyboard('{ArrowDown}')
         await expect.poll(() => grid.focus.active).toEqual({ row: -2, col: 0 })
-        // The cell passes focus on, or the row could be reached and not typed in.
         await expect.poll(() => document.activeElement?.tagName).toBe('INPUT')
 
         await userEvent.keyboard('{ArrowDown}')
@@ -387,7 +360,6 @@ describe('the data ops demo', () => {
 
         const cell = filterCell(screen.container, 0)
         expect(getComputedStyle(cell).position).toBe('sticky')
-        // And the cell beside it, on an unpinned column, does not.
         expect(getComputedStyle(filterCell(screen.container, 2)).position).not.toBe('sticky')
     })
 
@@ -410,8 +382,6 @@ describe('the data ops demo', () => {
         const headerCells = drawn('[data-dg-cell^="-1:"]')
         expect(headerCells).toBeGreaterThan(0)
         expect(headerCells).toBeLessThan(many.length)
-        // One filter cell per drawn header cell: the row cannot lag the window
-        // it shares, or a field would sit over the wrong column.
         expect(drawn('[data-dg-cell^="-2:"]')).toBe(headerCells)
     })
 
@@ -428,7 +398,6 @@ describe('the data ops demo', () => {
         input.focus()
         await userEvent.keyboard('a')
 
-        // Type-to-edit reads the focused row, and the filter row is not one.
         expect(getEditing(grid)!.active).toBeNull()
         expect(getEditing(grid)!.rowEditId).toBeNull()
         await expect.poll(() => input.value).toBe('a')
@@ -446,8 +415,6 @@ describe('the data ops demo', () => {
         const input = filterCell(screen.container, 0).querySelector('input')!
 
         await userEvent.fill(input, 'ada')
-        // The model is what an app forwards; the rows stay as the server sent
-        // them, because filtering them again would drop rows it meant to send.
         await expect
             .poll(() => getFiltering(grid)!.columnFilters['name'], { timeout: 2000 })
             .toEqual({ kind: 'text', op: 'contains', value: 'ada' })
@@ -484,7 +451,6 @@ describe('the data ops demo', () => {
         const before = { ...grid.focus.active }
         await userEvent.keyboard('{ArrowDown}')
 
-        // The list is moving its own highlight; the grid must not also move.
         expect(grid.focus.active).toEqual(before)
     })
 
@@ -507,7 +473,6 @@ describe('the data ops demo', () => {
         })
         const screen = await renderGrid(grid)
 
-        // Group level, leaf header, filter row, then the three body rows.
         expect(screen.container.querySelector('[role="grid"]')?.getAttribute('aria-rowcount')).toBe(
             '6'
         )
@@ -524,8 +489,6 @@ describe('the data ops demo', () => {
         const screen = await renderGrid(grid)
         const cell = filterCell(screen.container, 2)
 
-        // The number widget, not a bare text box: a spinbutton with the
-        // steppers taken out of the way.
         const input = cell.querySelector<HTMLInputElement>('input[role="spinbutton"]')!
         expect(input).not.toBeNull()
         expect(cell.querySelector('input[type="text"]:not([role])')).toBeNull()
@@ -564,7 +527,6 @@ describe('the data ops demo', () => {
         await expect.poll(() => cell.textContent).toContain('2026')
         await expect.poll(() => bodyRows(screen.container)).toBe(1)
 
-        // A picker has no clear of its own, so the cell carries one.
         await page.getByRole('button', { name: 'Remove filter Joined' }).click()
         await expect.poll(() => getFiltering(grid)!.columnFilters['joined']).toBeUndefined()
         await expect.poll(() => bodyRows(screen.container)).toBe(2)
@@ -586,20 +548,11 @@ describe('the data ops demo', () => {
             value: '2026-01-05'
         })
 
-        // Day before month, as the language writes it.
         await expect
             .poll(() => filterCell(screen.container, 0).textContent?.replace(/\s+/g, ''))
             .toContain('05/01/2026')
     })
 
-    /**
-     * A segmented date field reports every keystroke. Typing 01/05/2026 walks
-     * the year through 2, 20 and 202, and each of those is a complete date as
-     * far as the field is concerned. Un-debounced, that was three filters over
-     * the whole set, the first two on years nobody asked for, and the last of
-     * them left the model empty because the value pushed back into the field
-     * was one the typing had already moved past.
-     */
     it('writes the model once for a date typed a digit at a time', async () => {
         const grid = createDataGrid<Person>({
             columns: [{ id: 'joined', header: 'Joined', width: 260, filter: 'date' }],
@@ -662,7 +615,6 @@ describe('the data ops demo', () => {
         await expect.element(clear).toBeVisible()
         await clear.click()
 
-        // A finished gesture, so no debounce stands between it and the model.
         expect(getFiltering(grid)!.columnFilters['joined']).toBeUndefined()
         expect(filterCell(screen.container, 0).textContent).not.toContain('2026')
     })
@@ -690,14 +642,12 @@ describe('the data ops demo', () => {
             'input[role="spinbutton"]'
         )!
 
-        // 5 in the field is 5%, and 5% is 0.05 in the row.
         await userEvent.fill(input, '5')
         await expect
             .poll(() => getFiltering(grid)!.columnFilters['age'], { timeout: 2000 })
             .toEqual({ kind: 'number', op: 'eq', value: 0.05 })
         await expect.poll(() => bodyRows(screen.container)).toBe(1)
 
-        // And back the other way: what the panel stored reads as 50, not 0.5.
         getFiltering(grid)!.setColumnFilter('age', { kind: 'number', op: 'eq', value: 0.5 })
         await expect.poll(() => input.value).toBe('50')
     })
@@ -733,8 +683,6 @@ describe('the data ops demo', () => {
         })
         const screen = await renderGrid(grid)
 
-        // The pinned block sticks below the header, and the header is one row
-        // taller than it was.
         const row = filterRow(screen.container)!.getBoundingClientRect()
         const pinned = screen.container
             .querySelector('[data-dg-pinned-cell^="top:"]')!
@@ -752,8 +700,6 @@ describe('the data ops demo', () => {
 
         getFiltering(grid)!.floatingRow = false
 
-        // A grid whose only tab stop was a row it no longer draws cannot be
-        // tabbed into at all.
         await expect.poll(() => grid.focus.active).toEqual({ row: -1, col: 0 })
         expect(screen.container.querySelectorAll('[data-dg-cell][tabindex="0"]')).toHaveLength(1)
     })
@@ -784,8 +730,6 @@ describe('the data ops demo', () => {
         const grid = makeGrid()
         const screen = await renderGrid(grid)
 
-        // The bare token, not the `group-hover:` and `hover:none` variants
-        // the base class already carries.
         const pinned = () =>
             screen.container
                 .querySelector('[data-dg-cell="-1:0"]')!
@@ -793,15 +737,10 @@ describe('the data ops demo', () => {
                 .className.split(/\s+/)
                 .includes('opacity-100')
 
-        // Hidden until hovered, so the header label gets the cell.
         expect(pinned()).toBe(false)
 
-        // What the column menu's Filter item does, and what the filter row
-        // does for a column it hands back to the panel.
         getFiltering(grid)!.filterFor = 'name'
 
-        // The panel is anchored to that trigger and portalled away from it, so
-        // `focus-within` cannot hold it on screen by itself.
         await expect.poll(pinned).toBe(true)
         await expect.element(page.getByRole('dialog', { name: 'Filter Name' })).toBeVisible()
     })
@@ -821,7 +760,6 @@ describe('the data ops demo', () => {
         await userEvent.keyboard('{ArrowDown}')
 
         await expect.poll(() => document.activeElement?.getAttribute('role')).toBe('spinbutton')
-        // The first of the three, so the date can be typed from its start.
         const segments = [
             ...filterCell(screen.container, 0).querySelectorAll('[role="spinbutton"]')
         ]
@@ -860,7 +798,6 @@ describe('the data ops demo', () => {
                     header: 'Team',
                     width: 220,
                     filter: 'set',
-                    // Every read of this column passes through here.
                     accessor: (row) => {
                         reads++
                         return row.team
@@ -873,15 +810,12 @@ describe('the data ops demo', () => {
         })
         await renderGrid(grid)
 
-        // A page of ten cells, not a pass over five hundred rows: drawing a
-        // filter row nobody has touched must not scan the whole column.
         const drawn = reads
         expect(drawn).toBeLessThan(100)
 
         await page.getByRole('button', { name: 'Team filter value' }).click()
         await expect.element(page.getByRole('option', { name: 'T0' })).toBeVisible()
 
-        // And now it has read them all, once.
         expect(reads - drawn).toBeGreaterThanOrEqual(500)
     })
 })

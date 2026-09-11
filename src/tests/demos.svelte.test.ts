@@ -9,7 +9,6 @@ describe('headless demo', () => {
     it('builds a working grid from the compound parts', async () => {
         render(Headless as never)
         await expect.element(page.getByRole('grid')).toBeVisible()
-        // Custom toolbar + custom footer, not <DataGrid>.
         await expect.element(page.getByPlaceholder('Tìm task...')).toBeVisible()
         await expect.element(page.getByText(/Trang 1 \//)).toBeVisible()
     })
@@ -19,7 +18,6 @@ describe('headless demo', () => {
         await expect.element(page.getByRole('grid')).toBeVisible()
 
         const rowCount = () => document.querySelectorAll('[role="row"][data-dg-row-id]').length
-        // A unique term, so the result is smaller than the page of 8.
         await userEvent.fill(page.getByPlaceholder('Tìm task...'), 'Task 48')
         await expect.poll(rowCount).toBe(1)
         await expect.element(page.getByRole('gridcell', { name: 'Task 48' })).toBeVisible()
@@ -46,8 +44,6 @@ describe('server row model demo', () => {
 
         await page.getByRole('gridcell', { name: 'Charlie #11' }).click()
 
-        // The whole point of the server model: the fetched page survives the
-        // click instead of the focus dragging the grid back to page 1.
         expect(state()).toContain('page 2/14')
         await expect.element(page.getByRole('gridcell', { name: 'Charlie #11' })).toBeVisible()
         expect(events().filter((entry) => entry.includes('pageChanged'))).toEqual([
@@ -58,13 +54,9 @@ describe('server row model demo', () => {
     it('indexes the rows it holds, so the keyboard still reaches them', async () => {
         await openPageTwo()
 
-        // A server model holds one page, so its row indexes run 0..n on every
-        // page. Numbering them from the page offset left every lookup into
-        // `preWindowNodes` — Space, Ctrl+C, type-to-edit — pointing past the end.
         await page.getByRole('gridcell', { name: 'Charlie #11' }).click()
         await userEvent.keyboard(' ')
         await expect.poll(state).toContain('1 selected')
-        // The focused row, not whichever row the stale index landed on.
         const selected = document.querySelectorAll('[aria-selected="true"][data-dg-row-id]')
         expect(Array.from(selected).map((row) => row.getAttribute('data-dg-row-id'))).toEqual([
             '11'
@@ -82,7 +74,6 @@ describe('server row model demo', () => {
 
         const cell = document.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
         const box = cell.getBoundingClientRect()
-        // Off the checkbox, inside the cell — where a casual aim lands.
         document
             .elementFromPoint(box.left + 2, box.top + 2)!
             .dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -92,7 +83,6 @@ describe('server row model demo', () => {
 
         await page.getByRole('button', { name: 'Go to page 5' }).click()
         await expect.poll(state).toContain('page 5/14')
-        // Selection is keyed by row id, so a row off the current page keeps it.
         expect(state()).toContain('1 selected')
     })
 
@@ -107,8 +97,6 @@ describe('server row model demo', () => {
 
         await page.getByRole('button', { name: 'Go to page 2' }).click()
         await expect.element(page.getByRole('gridcell', { name: 'Charlie #11' })).toBeVisible()
-        // The header checkbox speaks for the rows the grid holds — one page
-        // here — so it must not throw away the pages it cannot see.
         await page.getByRole('checkbox', { name: 'Select all rows' }).click()
         await expect.poll(state).toContain('12 selected')
 

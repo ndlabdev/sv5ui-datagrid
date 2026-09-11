@@ -75,7 +75,7 @@ export interface DataGridLabels {
     rowsPerPage: string
     /** One page-size choice, e.g. "25 / page". */
     pageSizeOption: (size: number) => string
-    /** The footer's "1–25 of 300" summary. */
+    /** The footer's "1-25 of 300" summary. */
     pageRange: (from: number, to: number, total: number) => string
     totalRows: (total: number) => string
     filteredRows: (filtered: number, total: number) => string
@@ -95,6 +95,171 @@ export interface DataGridLabels {
     exportLoadedRows: string
     exportSelectedRows: string
     clearSelection: string
+
+    groupBy: string
+    groupPanelEmpty: string
+    addGroup: string
+    clearGroups: string
+    moveGroupEarlier: (column: string) => string
+    moveGroupLater: (column: string) => string
+    removeGroup: (column: string) => string
+
+    groupByColumn: string
+    ungroupColumn: string
+
+    groupFooter: (key: string, count: number) => string
+    grandTotal: (count: number) => string
+
+    groupLoaded: (key: string, count: number) => string
+    groupFooterLoaded: (key: string, count: number) => string
+    grandTotalLoaded: (count: number) => string
+
+    rangeCells: (count: string) => string
+    rangeShape: (rows: number, columns: number) => string
+    rangeSum: string
+    rangeAvg: string
+    rangeMin: string
+    rangeMax: string
+
+    commandPaletteTitle: string
+    commandPalettePlaceholder: string
+    commandPaletteEmpty: string
+    commandGroupDefault: string
+
+    commandShowColumn: (column: string) => string
+    commandHideColumn: (column: string) => string
+    commandUnpinColumn: (column: string) => string
+    commandPinColumnLeft: (column: string) => string
+    commandPinColumnRight: (column: string) => string
+    commandGroupByColumn: (column: string) => string
+    commandUngroupColumn: (column: string) => string
+    commandExpandAllGroups: string
+    commandCollapseAllGroups: string
+    commandClearGrouping: string
+    commandCopyRange: string
+    commandFillDown: string
+    commandFillRight: string
+    commandGroupColumns: string
+    commandGroupGrouping: string
+    commandGroupClipboard: string
+
+    findTitle: string
+    findPlaceholder: string
+    replacePlaceholder: string
+    findCaseSensitive: string
+    findWholeCell: string
+    findPrevious: string
+    findNext: string
+    findClose: string
+    findReplaceOne: string
+    findReplaceAll: string
+    commandFind: string
+
+    findCount: (current: number, total: number) => string
+    findNoMatch: string
+
+    findNoWritable: (total: number) => string
+
+    findReplaced: (cells: number) => string
+
+    findCountLoaded: (current: number, total: number) => string
+    findNoMatchLoaded: string
+
+    findServerReadOnly: string
+
+    viewsLabel: string
+    viewsEmpty: string
+    viewsPick: string
+    viewNamePlaceholder: string
+    viewSave: string
+    viewUpdate: string
+    viewRevert: string
+    viewRemove: string
+    viewShare: string
+    viewShareCopied: string
+    viewModified: string
+    commandSaveView: string
+    viewShareTooLong: (length: number) => string
+
+    formatLabel: string
+    formatEmpty: string
+    formatAdd: string
+    formatClear: string
+    formatColumn: string
+    formatKind: string
+    formatKindColorScale: string
+    formatKindDataBar: string
+    formatKindDuplicates: string
+    formatKindTopN: string
+    formatKindExpression: string
+    formatTopCount: string
+    formatExpressionPlaceholder: string
+    formatWholeRow: string
+    formatRuleName: (kind: string, column: string) => string
+    formatRemoveRule: (rule: string) => string
+    formatBadExpression: (message: string) => string
+
+    toolPanelTitle: string
+    toolPanelColumns: string
+    toolPanelGroup: string
+    toolPanelValues: string
+    toolPanelSearch: string
+    toolPanelShowAll: string
+    toolPanelHideAll: string
+    toolPanelEmpty: string
+    toolPanelMoveUp: (column: string) => string
+    toolPanelMoveDown: (column: string) => string
+    toolPanelNoAggregation: string
+    toolPanelActions: (column: string) => string
+    toolPanelCollapse: string
+    toolPanelExpand: string
+
+    filterTitle: string
+    filterEmpty: string
+    filterAddCondition: string
+    filterAddGroup: string
+    filterRemove: string
+    filterJoin: (join: 'and' | 'or') => string
+    filterNot: string
+    filterBuilderColumn: string
+    filterBuilderOperator: string
+    filterBuilderValue: string
+    filterValueTo: string
+    filterTrue: string
+    filterFalse: string
+    filterOp: (op: string) => string
+    filterServerHandled: string
+
+    importTitle: string
+    importDropHere: string
+    importChooseFile: string
+    importPaste: string
+    importEmpty: string
+    importUnknownFormat: (name: string) => string
+    importHeaderRow: string
+    importSheet: string
+    importColumnFrom: string
+    importSkipColumn: string
+    importMatchTitle: string
+    importReviewTitle: string
+    importBack: string
+    importNext: string
+    importCancel: string
+    importAddRows: (count: number) => string
+    importAddValid: (count: number) => string
+    importIssues: (count: number) => string
+    importReady: string
+    importNotNumber: (header: string) => string
+    importNotDate: (header: string) => string
+    importNotBoolean: (header: string) => string
+    importInvalid: (header: string) => string
+    importDuplicate: (key: string) => string
+    importExisting: (key: string) => string
+    importServerRefusal: string
+    importRowCount: (count: number) => string
+    importTooBig: (name: string, megabytes: number) => string
+    importMatched: (matched: number, total: number) => string
+    importNothingMatched: string
 }
 
 /** Any subset; operator maps override one entry at a time. */

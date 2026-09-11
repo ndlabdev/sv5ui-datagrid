@@ -5,10 +5,6 @@ import { describe, expect, it } from 'vitest'
 
 const ROUTES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../routes')
 
-/**
- * `persistState` reads localStorage, so an SSR'd grid paints defaults and
- * corrects them after hydration. Every persisting demo must opt out of SSR.
- */
 describe('persisted demo routes disable SSR', () => {
     const offenders: string[] = []
 

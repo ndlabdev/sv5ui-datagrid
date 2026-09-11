@@ -102,15 +102,6 @@
     let role = $state('staff')
     const hidden = $derived(role !== 'hr')
 
-    /**
-     * One feature, one hook. It is asked per column and returns a reader for
-     * the three it hides, so the other two are read straight through and cost
-     * nothing at all.
-     *
-     * A reader is a transform, not just a blank: the salary leaves as a mark,
-     * the email keeps its domain, and the phone leaves as nothing, which the
-     * cell draws as its empty text.
-     */
     const readers: Record<string, (value: unknown) => unknown> = {
         salary: () => '***',
         email: (value) => String(value).replace(/^[^@]+/, '***'),
@@ -120,8 +111,6 @@
     const policy: GridFeature<Employee> = {
         id: 'hr-policy',
         cellValue: ({ column }) => (hidden ? readers[column.id] : undefined),
-        // Classes say which cells the policy touched; the values above are
-        // what it actually held back.
         cellDecoration: ({ column }) =>
             hidden && readers[column.id] ? { class: 'text-on-surface-variant italic' } : undefined
     }
@@ -137,21 +126,16 @@
     const selected = getSelection(grid)!
     const editor = getEditing(grid)!
 
-    // Selected once, up front, so the clipboard panel below has something to
-    // copy and stays a pure read of the selection.
     selected.selectAll()
 
     const firstNode = $derived(grid.nodes[0])
 
-    /** Exit 1: what the cell draws, read back out of the grid. */
     const drawn = $derived(
         firstNode ? String(grid.getValue(firstNode, grid.columns.get('salary')!)) : ''
     )
 
-    /** Exit 2: the clipboard, exactly what `Ctrl+C` would put there. */
     const clipboard = $derived(selected.copyText({ headers: true }) ?? '')
 
-    /** Exit 3: the file, built from the pieces `exportCsv` itself uses. */
     const csv = $derived.by(() => {
         const visible = grid.columns.visible
         const matrix = rowsToMatrix(grid.preWindowNodes, visible, undefined, {
@@ -160,10 +144,8 @@
         return toCsv(withHeaderRow(matrix, visible))
     })
 
-    /** Exit 5: the values a set filter offers on a hidden column. */
     const facets = $derived(filter.distinctFor('salary').map((value) => String(value)))
 
-    /** Exit 6: whether an editor may open on the cell at all. */
     const editable = $derived(
         firstNode ? editor.editableAt(firstNode, grid.columns.get('salary')!.def) : false
     )

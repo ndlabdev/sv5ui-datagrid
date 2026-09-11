@@ -215,7 +215,7 @@
 {#snippet orderDetail({ row }: DataGridFullWidthContext<Order>)}
     <div class="flex h-full flex-col gap-2">
         <div class="flex items-center gap-2 text-sm font-medium text-on-surface">
-            Order #{row.id} — {row.customer}
+            Order #{row.id} - {row.customer}
             <Badge label={row.country} size="xs" />
         </div>
         <table class="w-fit text-xs">
@@ -241,7 +241,7 @@
             </tbody>
         </table>
         <div class="text-xs text-on-surface-variant">
-            Total {money.format(row.total)} · {row.items.length} line items
+            Total {money.format(row.total)} | {row.items.length} line items
         </div>
     </div>
 {/snippet}
@@ -249,11 +249,11 @@
 <Container class="space-y-10 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Row structures — Phase 6</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Row structures - Phase 6</h1>
             <p class="text-sm text-on-surface-variant">
-                Row-structure kernel (RowMeta · ExpansionModel · treegrid ARIA · full-width rows) +
-                row pinning. Grouping/tree/master-detail hoàn chỉnh thuộc Pro — demo dưới dùng đúng
-                extension points công khai mà Pro sẽ dùng.
+                Row-structure kernel (RowMeta | ExpansionModel | treegrid ARIA | full-width rows) +
+                row pinning. Grouping, tree và master-detail đầy đủ là các feature riêng; demo dưới
+                dùng đúng những extension point công khai mà chúng dùng.
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -268,7 +268,7 @@
                 Expandable rows + virtualization ({ROWS.toLocaleString()} orders)
             </h2>
             <p class="text-xs text-on-surface-variant">
-                Feature inline ~20 dòng qua pipeline stage <code>flatten</code> — detail full-width
+                Feature inline ~20 dòng qua pipeline stage <code>flatten</code> - detail full-width
                 cao {DETAIL_HEIGHT}px, Fenwick variable heights.
             </p>
         </div>
@@ -294,13 +294,13 @@
         <div class="space-y-1">
             <h2 class="text-lg font-medium text-on-surface">Row pinning</h2>
             <p class="text-xs text-on-surface-variant">
-                Grand total pinned top · Average pinned bottom — pinned rows bỏ qua sort/filter.
+                Grand total pinned top | Average pinned bottom - pinned rows bỏ qua sort/filter.
                 Chuột phải một hàng để pin/unpin.
             </p>
         </div>
         <DataGrid grid={metricGrid} toolbar class="h-90" />
         <div class="text-xs text-on-surface-variant">
-            Pinned: {metricPinning.topNodes.length} top · {metricPinning.bottomNodes.length} bottom
+            Pinned: {metricPinning.topNodes.length} top | {metricPinning.bottomNodes.length} bottom
         </div>
     </section>
 </Container>

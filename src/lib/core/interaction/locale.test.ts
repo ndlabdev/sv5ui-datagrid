@@ -12,14 +12,11 @@ describe('resolveLocale', () => {
     })
 
     it('accepts a language without its region, and a region nobody ships', () => {
-        // A grid in roughly the right language beats one in the wrong one.
         expect(resolveLocale(packs, 'vi')?.tag).toBe('vi-VN')
         expect(resolveLocale(packs, 'en-GB')?.tag).toBe('en-US')
     })
 
     it('falls through rather than guessing at an unrelated tag', () => {
-        // English is the built-in fallback; a missing translation is not a
-        // reason to render in a language nobody asked for.
         expect(resolveLocale(packs, 'ja-JP')).toBeUndefined()
         expect(resolveLocale([], 'vi-VN')).toBeUndefined()
     })

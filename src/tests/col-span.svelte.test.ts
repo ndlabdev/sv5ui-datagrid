@@ -26,8 +26,6 @@ const rows: Row[] = [
     { id: 2, name: 'plain', a: 'A2', b: 'B2', c: 'C2', d: 'D2' }
 ]
 
-// Row 1 spans column `a` (index 1) across three columns — covering 1, 2, 3 —
-// leaving column `d` (index 4) as the first cell after the span. Row 2 is normal.
 const columns: ColumnDef<Row>[] = [
     { id: 'name', header: 'Name' },
     { id: 'a', header: 'A', colSpan: (ctx) => (ctx.row.name === 'wide' ? 3 : 1) },
@@ -62,7 +60,6 @@ describe('column spanning', () => {
         expect(spanned.getAttribute('aria-colspan')).toBe('3')
         expect(cell(screen.container, 0, 2)).toBeNull()
         expect(cell(screen.container, 0, 3)).toBeNull()
-        // The cell after the span still renders.
         expect(cell(screen.container, 0, 4)).not.toBeNull()
     })
 
@@ -81,11 +78,9 @@ describe('column spanning', () => {
         expect(g.focus.active).toMatchObject({ row: 0, col: 1 })
 
         await userEvent.keyboard('{ArrowRight}')
-        // `d` (index 4) is the first cell after the 3-wide span.
         expect(activeCell()).toBe('0:4')
 
         await userEvent.keyboard('{ArrowLeft}')
-        // Back onto the span, which owns column 1.
         expect(activeCell()).toBe('0:1')
     })
 
@@ -93,8 +88,6 @@ describe('column spanning', () => {
         const g = grid()
         const screen = await renderGrid(g)
 
-        // Row 1 column 2 is a normal cell; moving up lands in row 0 where column
-        // 2 is covered by the span, so focus snaps onto the spanning cell.
         cell(screen.container, 1, 2)!.focus()
         expect(g.focus.active).toMatchObject({ row: 1, col: 2 })
 

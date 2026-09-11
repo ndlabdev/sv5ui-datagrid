@@ -13,8 +13,6 @@
     const slots = datagridVariants()
     const theme = getGridTheme()
 
-    // A grid can hold any `pageSize`, so fold the active one in or the
-    // Select has nothing to show its value against.
     const sizeItems = $derived(
         [...new Set([...pageSizes, pagination?.pageSize].filter((size): size is number => !!size))]
             .sort((a, b) => a - b)
@@ -46,6 +44,10 @@
         {#if total > pagination.pageSize}
             <Pagination
                 size="sm"
+                ui={{
+                    item: 'size-auto h-8 min-w-8 px-1.5',
+                    ellipsis: 'size-auto h-8 min-w-8'
+                }}
                 {total}
                 itemsPerPage={pagination.pageSize}
                 bind:page={() => pagination.page, (page) => pagination.setPage(page)}

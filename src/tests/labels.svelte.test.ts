@@ -37,7 +37,6 @@ const columns: ColumnDef<Person>[] = [
     { id: 'dept', header: 'Bộ phận', width: 140, filter: 'set' }
 ]
 
-/** A partial translation: the point is that the rest keeps working. */
 const vi = {
     search: 'Tìm kiếm...',
     apply: 'Áp dụng',
@@ -72,7 +71,6 @@ describe('mergeLabels', () => {
     it('merges an operator map entry at a time', () => {
         const merged = mergeLabels({ textOps: { contains: 'Chứa' } })
         expect(merged.textOps.contains).toBe('Chứa')
-        // Translating one operator must not blank out the other seven.
         expect(merged.textOps.notContains).toBe(defaultLabels.textOps.notContains)
     })
 
@@ -102,7 +100,6 @@ describe('translated grid', () => {
         await page.getByRole('button', { name: 'Tên column menu' }).click()
         await expect.element(page.getByRole('menuitem', { name: 'Sắp xếp tăng dần' })).toBeVisible()
         await expect.element(page.getByRole('menuitem', { name: 'Ẩn cột' })).toBeVisible()
-        // Not in the override, so it falls back rather than disappearing.
         await expect.element(page.getByRole('menuitem', { name: 'Clear sort' })).toBeVisible()
     })
 
@@ -118,7 +115,6 @@ describe('translated grid', () => {
 
         await page.getByRole('button', { name: 'Filter operator' }).click()
         await expect.element(page.getByRole('option', { name: 'Chứa' })).toBeVisible()
-        // Untranslated operators stay in the list in the default language.
         await expect.element(page.getByRole('option', { name: 'Does not contain' })).toBeVisible()
     })
 
@@ -156,7 +152,6 @@ describe('language packs', () => {
         const screen = await render(TypedDataGrid, { grid, toolbar: true })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Nothing configured but the two packs: the page decides.
         await expect.element(page.getByPlaceholder('Tìm kiếm...')).toBeVisible()
         document.documentElement.lang = ''
     })
@@ -173,7 +168,6 @@ describe('language packs', () => {
         grid.locale = 'en-US'
 
         await expect.element(page.getByPlaceholder('Search...')).toBeVisible()
-        // The grid was never rebuilt, so what the user had set is still set.
         expect(getSorting(grid)!.sort).toHaveLength(1)
         expect(getSelection(grid)!.count).toBe(1)
     })
@@ -182,7 +176,6 @@ describe('language packs', () => {
         const grid = createDataGrid<Person>({
             columns: [
                 { id: 'name', header: 'Name', flex: 1 },
-                // No `locale` of its own: it follows the grid.
                 {
                     id: 'id',
                     header: 'Total',
@@ -203,7 +196,6 @@ describe('language packs', () => {
         expect(cell()).toContain('€1.00')
 
         grid.locale = 'vi-VN'
-        // Same value, the other locale's grouping and symbol placement.
         await expect.poll(cell).toContain('1,00')
     })
 
@@ -222,7 +214,6 @@ describe('language packs', () => {
 
         await page.getByRole('button', { name: 'Lọc Tên' }).click()
         const dialog = page.getByRole('dialog', { name: 'Lọc Tên' })
-        // The override wins; the rest of the pack stays.
         await expect.element(dialog.getByRole('button', { name: 'Xác nhận' })).toBeVisible()
         await expect.element(dialog.getByRole('button', { name: 'Xoá' })).toBeVisible()
     })

@@ -7,11 +7,6 @@ import { sortNodes } from '../lib/features/sorting/sort.js'
 import { compileColumnFilters } from '../lib/features/filtering/filter-predicates.js'
 import { rowsToMatrix, toCsv } from '../lib/features/selection/clipboard.js'
 
-/**
- * The features that read a value, against the shapes an API delivers. The
- * matrix beside this one asks what a cell draws; this one asks whether the
- * rest of the grid agrees with it.
- */
 interface Row {
     id: string
     value: unknown
@@ -125,7 +120,6 @@ describe('a filter survives being written to a snapshot and read back', () => {
         getFiltering(grid)!.setColumnFilter('value', filter)
         const before = grid.nodes.length
 
-        // What `persistState` does: through JSON and back, not by reference.
         const snapshot = JSON.parse(JSON.stringify(grid.api.getState())) as GridSnapshot
 
         const restored = createDataGrid<Row>({

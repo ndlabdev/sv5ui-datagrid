@@ -57,7 +57,6 @@
         maximumFractionDigits: 0
     })
 
-    // A hand-rolled standard-schema — any zod/valibot/arktype schema works the same way.
     function schema(check: (value: unknown) => string | null): StandardSchemaV1 {
         return {
             '~standard': {
@@ -159,10 +158,10 @@
 
     let lastEdit = $state('')
     grid.events.on('cellEdited', ({ rowId, columnId, oldValue, newValue }) => {
-        lastEdit = `row ${rowId} · ${columnId}: ${JSON.stringify(oldValue)} → ${JSON.stringify(newValue)}`
+        lastEdit = `row ${rowId} | ${columnId}: ${JSON.stringify(oldValue)} → ${JSON.stringify(newValue)}`
     })
     grid.events.on('rowEdited', ({ rowId, changes }) => {
-        lastEdit = `row ${rowId} · ${JSON.stringify(changes)}`
+        lastEdit = `row ${rowId} | ${JSON.stringify(changes)}`
     })
 
     function toggleRowMode() {
@@ -186,7 +185,7 @@
 {/snippet}
 
 {#snippet activeCell({ value }: DataGridCellContext<Employee>)}
-    {value ? '✓' : '—'}
+    {value ? '✓' : '-'}
 {/snippet}
 
 {#snippet ratingCell({ value }: DataGridCellContext<Employee>)}
@@ -204,11 +203,11 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Inline editing — Phase 7</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Inline editing - Phase 7</h1>
             <p class="text-sm text-on-surface-variant">
-                {employees.length.toLocaleString()} hàng · editor sv5ui: Input / InputNumber / SelectMenu
-                / Rating / InputTags / Checkbox / DatePicker · validation standard-schema · undo/redo
-                · row edit mode. Tất cả ở Community.
+                {employees.length.toLocaleString()} hàng | editor sv5ui: Input / InputNumber / SelectMenu
+                / Rating / InputTags / Checkbox / DatePicker | validation standard-schema | undo/redo
+                và row edit mode.
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -270,10 +269,10 @@
         <span
             >double-click hoặc <Kbd size="sm">Enter</Kbd> / <Kbd size="sm">F2</Kbd> / gõ để bắt đầu</span
         >
-        <span><Kbd size="sm">Enter</Kbd> lưu + xuống · <Kbd size="sm">Tab</Kbd> lưu + phải</span>
+        <span><Kbd size="sm">Enter</Kbd> lưu + xuống | <Kbd size="sm">Tab</Kbd> lưu + phải</span>
         <span><Kbd size="sm">Esc</Kbd> huỷ</span>
         <span
-            ><Kbd size="sm">Ctrl</Kbd>+<Kbd size="sm">Z</Kbd> undo · <Kbd size="sm">Ctrl</Kbd>+<Kbd
+            ><Kbd size="sm">Ctrl</Kbd>+<Kbd size="sm">Z</Kbd> undo | <Kbd size="sm">Ctrl</Kbd>+<Kbd
                 size="sm">Shift</Kbd
             >+<Kbd size="sm">Z</Kbd> redo</span
         >

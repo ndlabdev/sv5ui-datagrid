@@ -26,14 +26,12 @@ function createGrid() {
     })
 }
 
-describe('Filtering — a setter does not subscribe its caller', () => {
+describe('Filtering - a setter does not subscribe its caller', () => {
     it('settles after one run when an effect writes a column filter', () => {
         const cleanup = $effect.root(() => {
             const grid = createGrid()
             const state = getFiltering(grid)!
 
-            // `setColumnFilter` stores a fresh object each call, so an emit that
-            // read the model back would re-trigger this effect without end.
             let query = $state('a')
             let runs = 0
             $effect(() => {
@@ -74,7 +72,7 @@ describe('Filtering — a setter does not subscribe its caller', () => {
     })
 })
 
-describe('Filtering — what filterChanged reports', () => {
+describe('Filtering - what filterChanged reports', () => {
     it('carries the model as it stands after the write', () => {
         const grid = createGrid()
         const state = getFiltering(grid)!

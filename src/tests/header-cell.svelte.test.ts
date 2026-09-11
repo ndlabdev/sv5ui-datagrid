@@ -29,12 +29,10 @@ const people: Person[] = [
 
 const getRowId = (person: Person) => String(person.id)
 
-/** Renders the label the grid resolved, marked so a test can find it. */
 const labelSnippet = createRawSnippet<[HeaderContext<Person>]>((context) => ({
     render: () => `<span data-custom-header>★ ${context().header}</span>`
 }))
 
-/** Renders no readable text at all - the worst case for the accessible name. */
 const iconOnlySnippet = createRawSnippet<[HeaderContext<Person>]>(() => ({
     render: () => '<span data-custom-header aria-hidden="true">◆</span>'
 }))
@@ -70,7 +68,6 @@ describe('headerCell snippet', () => {
 
         const custom = headerCell(screen.container, 1).querySelector('[data-custom-header]')
         expect(custom?.textContent).toBe('★ Revenue')
-        // The plain column is untouched by the feature.
         expect(headerCell(screen.container, 0).querySelector('[data-custom-header]')).toBeNull()
     })
 
@@ -164,8 +161,6 @@ describe('headerCell snippet', () => {
         const screen = await render(TypedDataGrid, { grid })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // The filler above the ungrouped column names nothing, so it must not
-        // read as an unlabelled column header.
         const headers = [...screen.container.querySelectorAll('[role="columnheader"]')].filter(
             (cell) => !cell.hasAttribute('data-dg-cell')
         )
@@ -177,7 +172,6 @@ describe('headerCell snippet', () => {
             { id: 'revenue', header: 'Revenue', headerCell: iconOnlySnippet, width: 160 }
         ])
 
-        // What the column chooser, column menu, exports and the announcer read.
         expect(grid.columns.get('revenue')?.header).toBe('Revenue')
     })
 })
@@ -197,10 +191,7 @@ describe('header column dividers', () => {
         const headers = [...screen.container.querySelectorAll('[role="columnheader"]')]
         expect(headers).toHaveLength(2)
 
-        // The resize handle sits on this edge but only shows on hover, so the
-        // line is what says where a column ends and what can be dragged.
         expect(getComputedStyle(headers[0]).borderInlineEndWidth).toBe('1px')
-        // The last column's edge is the grid's own border.
         expect(getComputedStyle(headers[1]).borderInlineEndWidth).toBe('0px')
     })
 
@@ -215,8 +206,6 @@ describe('header column dividers', () => {
         })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 
-        // Dividers belong to the header: ruling the whole body would turn a
-        // reading surface into a spreadsheet.
         const cell = screen.container.querySelector<HTMLElement>('[data-dg-cell="0:0"]')!
         expect(getComputedStyle(cell).borderInlineEndWidth).toBe('0px')
     })

@@ -101,16 +101,16 @@
 {/snippet}
 
 {#snippet activeCell({ value }: DataGridCellContext<Employee>)}
-    {value ? '✓' : '—'}
+    {value ? '✓' : '-'}
 {/snippet}
 
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Selection + clipboard — Phase 5</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Selection + clipboard - Phase 5</h1>
             <p class="text-sm text-on-surface-variant">
-                Row selection (checkbox pinned trái, select-all indeterminate) · Shift+click range ·
-                copy TSV · export CSV · context menu — hàng Active = ✗ không chọn được
+                Row selection (checkbox pinned trái, select-all indeterminate) | Shift+click range |
+                copy TSV | export CSV | context menu - hàng Active = ✗ không chọn được
                 (isRowSelectable).
             </p>
         </div>
@@ -144,7 +144,7 @@
             onclick={selectionState.clear}
         />
         <span class="text-xs text-on-surface-variant">
-            Export CSV xuất selection — hoặc toàn bộ hàng đã lọc khi chưa chọn gì
+            Export CSV xuất selection - hoặc toàn bộ hàng đã lọc khi chưa chọn gì
         </span>
     </div>
 

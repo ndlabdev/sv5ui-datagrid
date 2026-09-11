@@ -12,9 +12,9 @@ export interface RowMeta {
     expandable?: boolean
     /** One cell across every column, rendered through `fullWidthRow`. */
     fullWidth?: boolean
-    /** `aria-setsize` — number of siblings at this level. */
+    /** `aria-setsize` - number of siblings at this level. */
     setSize?: number
-    /** `aria-posinset` — 1-based position among siblings. */
+    /** `aria-posinset` - 1-based position among siblings. */
     posInSet?: number
 }
 

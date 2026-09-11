@@ -1,4 +1,4 @@
-export { DISTINCT_VALUES_CAP, distinctValues, distinctValuesCached } from './distinct-values.js'
+export { DISTINCT_VALUES_CAP, distinctValues } from './distinct-values.js'
 export {
     buildColumnFilter,
     draftFromFilter,
@@ -6,29 +6,12 @@ export {
     emptyDraft,
     isPresenceOp,
     MAX_CONDITIONS,
-    type ConditionDraft,
-    type FilterDraft
+    type ConditionDraft
 } from './filter-draft.js'
-export {
-    filterConditions,
-    isFilterGroup,
-    normalizeFilterEntry,
-    toFilterRequest
-} from './filter-model.js'
+export { toFilterRequest } from './filter-model.js'
+export { compileColumnFilters, describeFilter, filterTypeOf } from './filter-predicates.js'
 export { sanitizeFilterModel } from './filter-sanitize.js'
-export { filterUnitScaleOf, toDisplayUnit, toModelUnit } from './filter-units.js'
-export { floatingCellOf, type FloatingCell } from './floating-filter.js'
-export {
-    compileColumnFilters,
-    describeFilter,
-    filterTypeOf,
-    valuePredicateFor
-} from './filter-predicates.js'
-export {
-    Filtering,
-    filtering,
-    FILTERING,
-    getFiltering,
-    type FilteringOptions
-} from './filtering.svelte.js'
+export { filterUnitScaleOf } from './filter-units.js'
+export { filtering, Filtering, getFiltering, type FilteringOptions } from './filtering.svelte.js'
+export { floatingCellOf } from './floating-filter.js'
 export { quickFilterNodes } from './quick-filter.js'

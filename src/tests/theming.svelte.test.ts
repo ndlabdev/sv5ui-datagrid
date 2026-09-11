@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
+import Theming from '../routes/theming/+page.svelte'
 import { page } from 'vitest/browser'
 import {
     sorting,
@@ -47,14 +48,13 @@ function cellOf(text: string): HTMLElement {
 
 afterEach(() => resetDataGridConfig())
 
-describe('theming — per-instance ui', () => {
-    it('adds slot classes without dropping the variant’s own', async () => {
+describe('theming - per-instance ui', () => {
+    it("adds slot classes without dropping the variant's own", async () => {
         renderGrid({ ui: { cell: 'font-mono', headerCell: 'uppercase' } })
         await expect.element(page.getByRole('grid')).toBeVisible()
 
         const cell = cellOf('Alice')
         expect(cell.className).toContain('font-mono')
-        // The variant's own layout classes survive the merge.
         expect(cell.className).toContain('items-center')
 
         const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
@@ -62,8 +62,6 @@ describe('theming — per-instance ui', () => {
     })
 
     it('reaches the label of a sortable column, not just its cell', async () => {
-        // A grid instance, because `features` belongs to `createDataGrid` and
-        // not to the component's own props.
         const grid = createDataGrid<Row>({
             columns: [{ id: 'name', header: 'Name', sortable: true }],
             data: rows,
@@ -79,14 +77,10 @@ describe('theming — per-instance ui', () => {
         )
         await expect.element(page.getByRole('grid')).toBeVisible()
 
-        // Read off the computed style, not the class list: the class was on the
-        // cell all along, and the <button> a sortable column wraps its label in
-        // refuses `text-transform` from its parent by user-agent rule.
         const header = document.querySelector<HTMLElement>('[role="columnheader"]')!
         const label = header.querySelector<HTMLElement>('[data-dg-truncate]')!
         expect(getComputedStyle(header).textTransform).toBe('uppercase')
         expect(getComputedStyle(label).textTransform).toBe('uppercase')
-        // The two that always worked, so a regression here is visible too.
         expect(getComputedStyle(label).letterSpacing).toBe(getComputedStyle(header).letterSpacing)
         expect(getComputedStyle(label).color).toBe(getComputedStyle(header).color)
     })
@@ -101,7 +95,7 @@ describe('theming — per-instance ui', () => {
     })
 })
 
-describe('theming — global config', () => {
+describe('theming - global config', () => {
     it('applies config slots to every grid', async () => {
         defineDataGridConfig({ slots: { cell: 'tracking-wide' } })
         renderGrid()
@@ -157,7 +151,7 @@ describe('theming — global config', () => {
     })
 })
 
-describe('theming — data-driven callbacks', () => {
+describe('theming - data-driven callbacks', () => {
     it('applies rowClass per row', async () => {
         renderGrid({ rowClass: (node) => node.row.amount < 0 && 'row-negative' })
         await expect.element(page.getByRole('grid')).toBeVisible()
@@ -180,10 +174,20 @@ describe('theming — data-driven callbacks', () => {
         await expect.element(page.getByRole('grid')).toBeVisible()
 
         expect(cellOf('-40').className).toContain('text-error')
-        // The default cell colour loses to the callback rather than fighting it.
         expect(cellOf('-40').className).not.toContain('text-on-surface')
         expect(cellOf('120').className).not.toContain('text-error')
-        // A column without the callback is untouched.
         expect(cellOf('Alice').className).not.toContain('text-error')
+    })
+})
+
+describe('a feature slot takes the same ui', () => {
+    it('themes a panel and a range through the one table', async () => {
+        const screen = await render(Theming as never)
+
+        const panel = () => screen.container.querySelector('[data-dg-group-panel]')
+        await expect.poll(() => panel()?.className ?? '').toContain('border-primary/40')
+
+        const cells = [...screen.container.querySelectorAll('[data-dg-cell]')]
+        expect(cells.length).toBeGreaterThan(0)
     })
 })

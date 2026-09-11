@@ -151,10 +151,6 @@ describe('buildHeaderLevels', () => {
 })
 
 describe('columnGroupShow', () => {
-    /**
-     * A group that folds down to one summary column, holding a nested group
-     * that folds on its own account.
-     */
     const defs: ColumnDef<Row>[] = [
         { id: 'id', header: '#' },
         {
@@ -206,9 +202,7 @@ describe('columnGroupShow', () => {
     })
 
     it('folds a nested group on its own account, not on the one above it', () => {
-        // `extras` closed: its own `open` child goes, the rest of `pay` stays.
         expect(shown(['extras'])).toEqual(['id', 'base', 'bonus'])
-        // And an outer fold takes the whole nested group with it.
         expect(shown(['pay', 'extras'])).toEqual(['id', 'total'])
     })
 

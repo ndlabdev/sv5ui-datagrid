@@ -40,7 +40,6 @@ function makeGrid(features: GridFeature<Cell>[] = []): GridState<Cell> {
     })
 }
 
-/** Decorates the 2x2 block at rows 0-1, columns 0-1. */
 function blockDecorator(className: string): GridFeature<Cell> {
     return {
         id: 'demo-decorator',
@@ -66,7 +65,6 @@ describe('cellDecoration extension point', () => {
         expect(cellAt(screen.container, 0, 0).className).toContain('x-decorated')
         expect(cellAt(screen.container, 1, 1).className).toContain('x-decorated')
         expect(cellAt(screen.container, 2, 0).className).not.toContain('x-decorated')
-        // the cell keeps its own classes
         expect(cellAt(screen.container, 0, 0).className).toContain('items-center')
     })
 
@@ -135,9 +133,6 @@ describe('cellDecoration extension point', () => {
         expect(cellAt(screen.container, 0, 1).style.color).toBe('rgb(1, 1, 1)')
     })
 
-    // The grid writes its layout as style directives, which outrank the
-    // attribute a decoration lands in: a feature cannot move a cell out of
-    // its own column, whatever it asks for.
     it('does not let a decoration override the layout the grid wrote', async () => {
         const escapee: GridFeature<Cell> = {
             id: 'escapee-decorator',

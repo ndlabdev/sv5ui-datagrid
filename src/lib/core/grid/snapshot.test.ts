@@ -139,7 +139,6 @@ describe('folded groups in a snapshot', () => {
     })
 
     it('keys groups apart from columns', () => {
-        // A column id is not a group id, whatever it is called.
         expect(
             resolveColumnSnapshot({ collapsed: { total: true } }, ['total'], ['pay'])
                 .collapsedGroups

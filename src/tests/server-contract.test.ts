@@ -10,15 +10,6 @@ import {
     toSortRequest
 } from '$lib/index.js'
 
-/**
- * What a backend can do with what it is sent.
- *
- * The reference below is allowed to read the request and the rows, and nothing
- * else: no column definitions, no grid, no knowledge of how the client drew
- * anything. Whatever it cannot reproduce is not a bug in it, it is something
- * the wire format does not carry, and a real backend will diverge there in
- * exactly the same way and without saying so.
- */
 interface Row {
     id: string
     name: string
@@ -50,18 +41,10 @@ function gridOf() {
 
 const isBlank = (value: unknown) => value === null || value === undefined || value === ''
 
-/**
- * Natural ordering, the one thing here a backend has to be told rather than
- * sent: the grid compares text with numeric collation, so "Item 2" comes
- * before "Item 10". A database ordering by its own default collation puts them
- * the other way, and the grid under a server row model does not re-sort what
- * it is handed, so what the reader sees is whatever the backend decided.
- */
 const collator = new Intl.Collator(undefined, { numeric: true })
 
 type Condition = FilterRequest['columns'][string]['conditions'][number]
 
-/** The documented meaning of a text condition, as a backend implements it. */
 function textHolds(value: unknown, condition: Extract<Condition, { kind: 'text' }>): boolean {
     if (condition.op === 'blank') return isBlank(value)
     if (condition.op === 'notBlank') return !isBlank(value)
@@ -124,12 +107,10 @@ function conditionHolds(value: unknown, condition: Condition): boolean {
     }
 }
 
-/** One ORDER BY term: the direction moves the rows, `nulls` moves the holes. */
 function compareOn(left: Row, right: Row, entry: SortRequestEntry): number {
     const a = left[entry.field as keyof Row]
     const b = right[entry.field as keyof Row]
     if (isBlank(a) && isBlank(b)) return 0
-    // Where the request says, rather than where SQL would put them by default.
     const holes = entry.nulls === 'last' ? 1 : -1
     if (isBlank(a)) return holes
     if (isBlank(b)) return -holes
@@ -142,7 +123,6 @@ function compareOn(left: Row, right: Row, entry: SortRequestEntry): number {
     return result * factor
 }
 
-/** A backend, holding only the request. */
 function applyRequest(source: Row[], filter: FilterRequest, sort: SortRequestEntry[]): string[] {
     let result = source.filter((row) => {
         for (const [columnId, entry] of Object.entries(filter.columns)) {

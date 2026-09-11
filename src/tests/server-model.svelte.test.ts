@@ -68,7 +68,7 @@ async function renderGrid(grid: GridState<Order>) {
     return screen
 }
 
-describe('server row model — what the page renders', () => {
+describe('server row model - what the page renders', () => {
     it('tells a screen reader where in the whole set the page sits', async () => {
         const grid = serverGrid()
         const screen = await renderGrid(grid)
@@ -141,7 +141,7 @@ describe('server row model — what the page renders', () => {
         await renderGrid(grid)
         getPagination(grid)!.setPage(14)
         grid.data = pageOf(14)
-        await expect.element(page.getByText('131–137 of 137')).toBeVisible()
+        await expect.element(page.getByText('131-137 of 137')).toBeVisible()
     })
 
     it('passes axe on a page past the first', async () => {

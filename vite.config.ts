@@ -20,7 +20,23 @@ export default defineConfig({
                     // or miscounts a version is expensive in its own way, so
                     // the parts of it that can be tested are.
                     include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.{js,mjs,ts}'],
-                    exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+                    exclude: [
+                        'src/**/*.svelte.{test,spec}.{js,ts}',
+                        'src/benchmarks/**/*.{test,spec}.{js,ts}'
+                    ]
+                }
+            },
+            {
+                // Budgets rather than benchmarks: each one asserts a ceiling,
+                // so a regression fails rather than being noted in a number
+                // nobody reads. Serial, because two of them racing on one
+                // machine is what makes a timing test flake.
+                extends: true,
+                test: {
+                    name: 'benchmarks',
+                    environment: 'node',
+                    include: ['src/benchmarks/**/*.{test,spec}.{js,ts}'],
+                    fileParallelism: false
                 }
             },
             {

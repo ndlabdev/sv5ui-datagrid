@@ -35,7 +35,6 @@ describe('text predicates', () => {
         expect(passes({ kind: 'text', op: 'notBlank', value: '' }, 'Alice')).toBe(true)
         expect(passes({ kind: 'text', op: 'notBlank', value: '' }, '')).toBe(false)
         expect(passes({ kind: 'text', op: 'notBlank', value: '' }, null)).toBe(false)
-        // A blank cell holds neither the query nor its equal, so it passes both.
         expect(passes({ kind: 'text', op: 'notContains', value: 'a' }, null)).toBe(true)
         expect(passes({ kind: 'text', op: 'notEqual', value: 'a' }, '')).toBe(true)
     })
@@ -57,7 +56,7 @@ describe('number predicates', () => {
     it('covers comparison ops and between boundaries', () => {
         expect(passes({ kind: 'number', op: 'eq', value: 5 }, 5)).toBe(true)
         expect(passes({ kind: 'number', op: 'neq', value: 5 }, 6)).toBe(true)
-        expect(passes({ kind: 'number', op: 'neq', value: 5 }, null)).toBe(false)
+        expect(passes({ kind: 'number', op: 'neq', value: 5 }, null)).toBe(true)
         expect(passes({ kind: 'number', op: 'gt', value: 5 }, 6)).toBe(true)
         expect(passes({ kind: 'number', op: 'gte', value: 5 }, 5)).toBe(true)
         expect(passes({ kind: 'number', op: 'lt', value: 5 }, 4)).toBe(true)
@@ -82,8 +81,6 @@ describe('date predicates', () => {
     it('compares by day, accepting ISO strings and Date objects', () => {
         const filter: ColumnFilter = { kind: 'date', op: 'equals', value: '2026-01-15' }
         expect(passes(filter, '2026-01-15')).toBe(true)
-        // Was 2026-01-15T23:59:00Z, the 15th in UTC and the 16th from Bangkok
-        // eastwards, so it passed or failed on where it ran.
         expect(passes(filter, new Date(2026, 0, 15, 23, 59))).toBe(true)
         expect(passes(filter, '2026-01-16')).toBe(false)
 
@@ -100,8 +97,6 @@ describe('date predicates', () => {
 })
 
 describe('a date is filtered by the day it is drawn on', () => {
-    // Read back the way the renderer reads it, so these hold in any zone. A
-    // run under UTC cannot fail: there the two were always the same day.
     const dayOf = (date: Date): string =>
         `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
@@ -145,7 +140,6 @@ describe('set + boolean predicates', () => {
         expect(passes(filter, null)).toBe(true)
         expect(passes(filter, undefined)).toBe(true)
         expect(passes(filter, 'Data')).toBe(false)
-        // The value list offers one null entry for every kind of hole.
         expect(passes(filter, '')).toBe(true)
 
         expect(passes({ kind: 'boolean', value: true }, true)).toBe(true)

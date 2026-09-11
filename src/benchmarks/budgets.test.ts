@@ -17,13 +17,8 @@ const benchColumnStates = benchColumns.map((def) => createColumnState(def))
 
 const SAMPLES = 3
 
-/**
- * What a gated column costs the passes that read whole columns. One reader,
- * reused, which is the shape a feature is asked to hand back.
- */
 const maskReader = () => '***'
 
-/** A grid on one page of a backend it never sees the rest of. */
 function serverGrid(pageSize: number, rowCount: number): GridState<BenchRow> {
     const grid = createDataGrid<BenchRow>({
         columns: benchColumns,
@@ -36,7 +31,6 @@ function serverGrid(pageSize: number, rowCount: number): GridState<BenchRow> {
     return grid
 }
 
-/** Swapping `data` and reading the output is the whole of a page turn. */
 function turnPages(grid: GridState<BenchRow>, count: number, pageSize: number): void {
     for (let page = 1; page <= count; page++) {
         grid.data = serverPageOf(page, pageSize)
@@ -44,21 +38,8 @@ function turnPages(grid: GridState<BenchRow>, count: number, pageSize: number): 
     }
 }
 
-/**
- * `measure` runs an operation SAMPLES + 1 times, so a test here costs several
- * times what it asserts. On the CI runner a multi-sort of 100k rows measures
- * about 1.2s, which is four seconds of work against vitest's 5s default and
- * timed the suite out even with the ceilings sized correctly. A benchmark is
- * not a unit test and should not borrow its timeout.
- */
 const BUDGET_TIMEOUT = 60_000
 
-/**
- * The fastest of several samples, after a warm-up. A genuine regression slows
- * every sample, so the ceiling still catches it; background load on the
- * machine only slows some, which is what made a single-sample measurement
- * fail this suite intermittently.
- */
 function measure(run: () => void): number {
     run()
 
@@ -70,20 +51,6 @@ function measure(run: () => void): number {
     }
     return best
 }
-
-/**
- * Every ceiling here is sized for the slowest machine the suite runs on, which
- * is the two-core CI runner rather than a development machine. The runner
- * measures about 3.7x slower: a string sort of 100k rows takes 325ms locally
- * and 1172ms there. A ceiling calibrated locally therefore passes for whoever
- * writes it and fails for everyone else, which is what these two did.
- *
- * The point is to catch a regression, not to state a performance target, so
- * each ceiling is roughly double what the runner already measures. Anything
- * that slows an operation by half again is caught; a fast machine reporting a
- * number far under the ceiling is expected, not slack to be tightened up.
- * PLAN section 8 holds the real targets.
- */
 
 describe(
     'performance budgets (coarse regression ceilings; PLAN §8 targets are stricter)',
@@ -179,13 +146,6 @@ describe(
             expect(elapsed).toBeLessThan(150)
         })
 
-        /**
-         * A server model holds one page, so a page turn should cost what the
-         * page costs and nothing for the set behind it. The two backends here
-         * differ by a factor of a hundred and are measured against the same
-         * ceiling on purpose: if the set ever starts to count, only the second
-         * one breaks.
-         */
         it('turns 200 pages of 50 rows within budget, whatever the backend holds', () => {
             const small = serverGrid(50, 100_000)
             const huge = serverGrid(50, 10_000_000)

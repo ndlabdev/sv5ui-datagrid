@@ -101,8 +101,6 @@
 
     let savedModel = $state<string>('')
 
-    // A live flag, not a build-time one: turning it off takes the row out of
-    // the keyboard grid and out of the row numbering with it.
     let floatingRow = $state(true)
     $effect(() => {
         filteringState.floatingRow = floatingRow
@@ -126,16 +124,16 @@
 {/snippet}
 
 {#snippet activeCell({ value }: DataGridCellContext<Employee>)}
-    {value ? '✓' : '—'}
+    {value ? '✓' : '-'}
 {/snippet}
 
 <Container class="space-y-6 py-10">
     <div class="flex items-center justify-between">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Data ops — Phase 4</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Data ops - Phase 4</h1>
             <p class="text-sm text-on-surface-variant">
-                {ROWS.toLocaleString()} hàng · multi-sort (Shift+click) · column filters đủ 5 loại (text/number/date/set/boolean)
-                · filter chips · status bar · page-size — filter model serializable.
+                {ROWS.toLocaleString()} hàng | multi-sort (Shift+click) | column filters đủ 5 loại (text/number/date/set/boolean)
+                | filter chips | status bar | page-size - filter model serializable.
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -189,6 +187,6 @@
                 >Enter</Kbd
             > multi-sort</span
         >
-        <span>filter icon hoặc <Kbd size="sm">Alt</Kbd> + <Kbd size="sm">↓</Kbd> → Filter…</span>
+        <span>filter icon hoặc <Kbd size="sm">Alt</Kbd> + <Kbd size="sm">↓</Kbd> → Filter...</span>
     </div>
 </Container>

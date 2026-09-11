@@ -40,7 +40,6 @@ import {
 
 const SYNTHETIC_COLUMN_WIDTH = 44
 
-/** The grid's own columns: fixed width, pinned left, never resized or moved. */
 function syntheticColumnDef(id: string): ColumnDef<unknown> {
     return {
         id,
@@ -54,12 +53,6 @@ function syntheticColumnDef(id: string): ColumnDef<unknown> {
     }
 }
 
-/**
- * The strip a railed group leaves behind: narrow, fixed, and unmovable, and
- * pinned only where the columns it stands for were. The other synthetic
- * columns lead the row and pin left for that reason; a rail stands where its
- * group stood.
- */
 function railColumnDef(groupId: string, header: string): ColumnDef<unknown> {
     return { ...syntheticColumnDef(railColumnId(groupId)), header, pinned: undefined }
 }
@@ -75,26 +68,14 @@ export class ColumnModel<TRow> {
 
     orderIds = $state.raw<string[]>([])
     widthOverrides = $state.raw<Record<string, number>>({})
-    /**
-     * Columns the user put away, and the groups the user folded. Two records
-     * rather than one: a column folded away with its group is not one the
-     * Column chooser should show as unticked, and ticking it there would open
-     * a single column in the middle of a closed group.
-     */
     hiddenOverrides = $state.raw<Record<string, boolean>>({})
     collapsedGroups = $state.raw<Record<string, boolean>>({})
     pinnedOverrides = $state.raw<Record<string, PinnedSide | null>>({})
 
     leafDefs = $derived.by(() => flattenColumns(this.defs))
 
-    /** What the columns declare, before a rail stands in for any of them. */
     #declaredPaths = $derived.by(() => buildGroupPaths(this.defs))
 
-    /**
-     * The same, plus a path for every rail: a rail belongs to the group it
-     * stands for, so the header still draws that group over it, and the
-     * toggle in it is what unfolds the group again.
-     */
     groupPaths = $derived.by(() =>
         withRailPaths(this.#declaredPaths, this.#railedGroups, railColumnId)
     )
@@ -103,12 +84,10 @@ export class ColumnModel<TRow> {
     #groupById = $derived.by(() => groupDefsById(this.defs))
     #leafIdsByGroup = $derived.by(() => leafIdsByGroup(this.#declaredPaths))
 
-    /** A group node by id, for what draws or names it. */
     groupDef(groupId: string): ColumnDef<TRow> | undefined {
         return this.#groupById.get(groupId)
     }
 
-    /** The group's own starting state, with the user's answer over it. */
     isCollapsed(groupId: string): boolean {
         return this.collapsedGroups[groupId] ?? this.#groupById.get(groupId)?.collapsed ?? false
     }
@@ -117,7 +96,6 @@ export class ColumnModel<TRow> {
         return this.hiddenOverrides[def.id] ?? def.hidden ?? false
     }
 
-    /** What each foldable group offers the header. */
     groupToggles = $derived.by(() =>
         buildGroupToggles(this.defs, {
             paths: this.#declaredPaths,
@@ -129,12 +107,10 @@ export class ColumnModel<TRow> {
         })
     )
 
-    /** Whether this group folds to a rail rather than to a summary column. */
     isRail(groupId: string): boolean {
         return this.#groupById.get(groupId)?.collapseMode === 'rail'
     }
 
-    /** The groups standing folded as a rail right now, outermost first. */
     #railedGroups = $derived.by(() =>
         [...this.#groupById.values()].filter(
             (group) => group.collapseMode === 'rail' && this.isCollapsed(group.id)
@@ -142,8 +118,6 @@ export class ColumnModel<TRow> {
     )
 
     all = $derived.by(() => {
-        // Applied here rather than at the `setState` boundary so every route
-        // into `orderIds` gets the same guarantee.
         const requested = groupContiguousOrder(this.orderIds, (leafId) =>
             parentGroupIdOf(this.#declaredPaths, leafId)
         )
@@ -160,7 +134,6 @@ export class ColumnModel<TRow> {
                           pinned: this.pinnedOverrides[def.id]
                       })
         )
-        // The grip sits outside the checkbox so dragging never toggles a row.
         const lead: ColumnState<TRow>[] = []
         if (this.rowHandleColumn) {
             lead.push(createColumnState(rowHandleColumnDef as ColumnDef<TRow>))
@@ -176,18 +149,14 @@ export class ColumnModel<TRow> {
         ]
     })
 
-    /** The outermost railed group a column sits under, if any. */
     #railOver(leafId: string): ColumnDef<TRow> | undefined {
         if (this.#railedGroups.length === 0) return undefined
         const ancestors = this.groupPaths.get(leafId) ?? []
         return ancestors.find((group) => this.#railedGroups.includes(group))
     }
 
-    /** Folded away with its group, which is not the same as put away. */
     #foldedAway(id: string): boolean {
         const def = this.#leafById.get(id)
-        // A rail is not a declared column, and is drawn precisely because its
-        // group is folded.
         if (!def) return false
         return hiddenByCollapse(this.#declaredPaths.get(id) ?? [], def, (groupId) =>
             this.isCollapsed(groupId)
@@ -241,10 +210,6 @@ export class ColumnModel<TRow> {
     setWidth(id: string, width: number): number {
         const column = this.get(id)
         if (!column) return 0
-        // `clamp` and `Math.round` both carry `NaN` through, and a width the
-        // layout cannot draw takes `grid-template-columns` down with it rather
-        // than making one column wrong. Refuse it and say what the width still
-        // is.
         if (!Number.isFinite(width)) return this.widthOf(id) ?? 0
         const clamped = Math.round(clamp(width, column.minWidth, column.maxWidth))
         this.widthOverrides = { ...this.widthOverrides, [id]: clamped }
@@ -261,7 +226,6 @@ export class ColumnModel<TRow> {
         this.widthOverrides = next
     }
 
-    /** How many synthetic columns lead the row; nothing may move before them. */
     get #leadCount(): number {
         return (this.rowHandleColumn ? 1 : 0) + (this.selectionColumn ? 1 : 0)
     }
@@ -278,7 +242,6 @@ export class ColumnModel<TRow> {
         return target
     }
 
-    /** Folds or unfolds a group, when doing so leaves something to unfold. */
     setGroupCollapsed(groupId: string, collapsed: boolean): boolean {
         const toggle = this.groupToggles.get(groupId)
         if (!toggle || toggle.collapsed === collapsed || !toggle.collapsible) return false
@@ -290,7 +253,6 @@ export class ColumnModel<TRow> {
         return this.setGroupCollapsed(groupId, !this.isCollapsed(groupId))
     }
 
-    /** The group a column would fold with, nearest first, or none. */
     foldableGroupOf(columnId: string): ColumnDef<TRow> | undefined {
         const ancestors = this.groupPaths.get(columnId) ?? []
         for (let level = ancestors.length - 1; level >= 0; level--) {

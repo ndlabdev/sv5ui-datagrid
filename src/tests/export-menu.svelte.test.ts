@@ -43,10 +43,6 @@ function makeGrid(withSelection = true): GridState<Person> {
     })
 }
 
-/**
- * Downloads never leave the page here: the blob handed to `createObjectURL` is
- * kept, and the anchor click that would save it is recorded instead.
- */
 let downloads: { name: string; blob: Blob }[] = []
 let createObjectURL: typeof URL.createObjectURL
 let clickAnchor: typeof HTMLAnchorElement.prototype.click
@@ -62,7 +58,6 @@ beforeEach(() => {
         return 'blob:stub'
     }
     HTMLAnchorElement.prototype.click = function click(this: HTMLAnchorElement) {
-        // Only a download anchor is ours; anything else still behaves.
         if (this.download && pending) downloads.push({ name: this.download, blob: pending })
         else clickAnchor.call(this)
     }
@@ -89,8 +84,6 @@ describe('toolbar export menu', () => {
         await page.getByRole('button', { name: 'Export CSV' }).click()
         await expect.element(page.getByRole('menuitem', { name: 'All rows' })).toBeVisible()
 
-        // Nothing is selected, so exporting the selection would produce an
-        // empty file: the item is offered but not usable.
         const selected = page.getByRole('menuitem', { name: 'Selected rows' })
         await expect.element(selected).toBeVisible()
         await expect.element(selected).toHaveAttribute('aria-disabled', 'true')
@@ -137,8 +130,6 @@ describe('toolbar export menu', () => {
         await page.getByRole('menuitem', { name: 'All rows' }).click()
 
         await expect.poll(() => downloads).toHaveLength(1)
-        // "All rows" means all the filter left, which is the set the user is
-        // actually looking at.
         const csv = await bodyOf()
         expect(csv).toContain('Ada,Core')
         expect(csv).not.toContain('Linus,Data')
@@ -161,8 +152,6 @@ describe('toolbar export menu', () => {
     })
 
     it('is absent when the grid cannot export', async () => {
-        // Export lives on the selection feature; without it the button would
-        // only ever be dead.
         const screen = await render(TypedDataGrid, { grid: makeGrid(false), toolbar: true })
         await expect.element(screen.getByRole('grid')).toBeVisible()
 

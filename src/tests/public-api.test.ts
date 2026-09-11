@@ -1,33 +1,23 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import * as api from '$lib/index.js'
+import * as xlsx from '$lib/xlsx.js'
 
-/**
- * The runtime surface, spelled out. Types are not in it — they cost nothing and
- * break nobody at runtime — so this list is what an app can actually call.
- *
- * A symbol earns a place by being something an app does with the grid. If a
- * change adds a name here, the question to answer is what documented task
- * needs it; if it removes one, that is a breaking change and a major version.
- */
 const PUBLIC_API = [
-    // Components
     'DataGrid',
     'Grid',
-    // Grid instance
     'createDataGrid',
     'getCellValue',
     'SELECTION_COLUMN_ID',
     'SNAPSHOT_VERSION',
-    // Configuration and icons
     'defineDataGridConfig',
     'resetDataGridConfig',
     'registerDataGridIcons',
     'datagridIcons',
     'defaultLabels',
     'mergeLabels',
-    // Writing a feature
     'PIPELINE_ORDER',
-    // Feature modules
     'columnOps',
     'editing',
     'filtering',
@@ -37,7 +27,6 @@ const PUBLIC_API = [
     'selection',
     'sorting',
     'virtualization',
-    // Feature state accessors
     'getColumnOps',
     'getEditing',
     'getFiltering',
@@ -47,28 +36,64 @@ const PUBLIC_API = [
     'getSelection',
     'getSorting',
     'getVirtualization',
-    // Server row model requests
     'toFilterRequest',
     'toSortRequest',
-    // Export and clipboard
     'pickColumns',
     'rowsToMatrix',
     'toCsv',
     'toTsv',
-    'withHeaderRow'
+    'withHeaderRow',
+
+    'autoColumns',
+    'isDataRow',
+    'isLoadingRow',
+    'isDetailNode',
+    'ShareTooLongError',
+    'advancedFilter',
+    'commandPalette',
+    'conditionalFormatting',
+    'dataImport',
+    'findReplace',
+    'formula',
+    'grouping',
+    'masterDetail',
+    'policy',
+    'rangeSelection',
+    'savedViews',
+    'serverRowModel',
+    'showValuesAs',
+    'tree',
+    'workerDataSource',
+    'getAdvancedFilter',
+    'getCommandPalette',
+    'getConditionalFormatting',
+    'getDataImport',
+    'getFindReplace',
+    'getFormula',
+    'getGridContext',
+    'getGridElement',
+    'getGrouping',
+    'getMasterDetail',
+    'getPolicy',
+    'getRangeSelection',
+    'getSavedViews',
+    'getServerRowModel',
+    'getShowValuesAs',
+    'getTree',
+    'aggregate',
+    'totalsKindOf',
+    'FormulaError',
+    'isFormulaError',
+    'FUNCTION_NAMES',
+    'localStorageViews'
 ].sort()
 
 describe('public API', () => {
     it('exports exactly what it means to export', () => {
-        // The namespace object holds the live bindings, so its keys are the
-        // exports themselves rather than a list somebody kept up to date.
         expect(Object.keys(api).sort()).toEqual(PUBLIC_API)
     })
 
     it('exports no symbol that is only wiring', () => {
-        // Each of these was reachable once and nothing outside the library ever
-        // reached for it: internal defaults, context plumbing, the variants
-        // factory that would have made every class name an API.
         for (const name of [
             'formatCurrency',
             'formatDate',
@@ -79,7 +104,6 @@ describe('public API', () => {
             'toNumber',
             'formatCellText',
             'datagridVariants',
-            'getGridContext',
             'setGridContext',
             'GridCellValue',
             'DEFAULT_EMPTY_TEXT',
@@ -102,5 +126,66 @@ describe('public API', () => {
         ]) {
             expect(api).not.toHaveProperty(name)
         }
+    })
+})
+
+const XLSX_API = [
+    'BUILT_IN_STYLES',
+    'CellValue',
+    'DEFAULT_FORMAT_COLORS',
+    'DEFAULT_STYLE',
+    'ExportXlsxOptions',
+    'SheetColumn',
+    'SheetOptions',
+    'StyleId',
+    'StyleTable',
+    'WorkbookOptions',
+    'WorkbookSheet',
+    'XLSX_MIME',
+    'XlsxAlignment',
+    'XlsxBorder',
+    'XlsxBorderSide',
+    'XlsxCfRule',
+    'XlsxColor',
+    'XlsxFont',
+    'XlsxFormatColors',
+    'XlsxFormula',
+    'XlsxStyle',
+    'buildGridXlsx',
+    'buildGridXlsxAsync',
+    'cellRef',
+    'columnLetter',
+    'createWorkbook',
+    'createWorkbookAsync',
+    'downloadGridXlsx',
+    'toSerialDate'
+].sort()
+
+function namesIn(source: string): string[] {
+    const names: string[] = []
+    for (const statement of source.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
+        for (const raw of statement[1]!.split(',')) {
+            const name = raw
+                .trim()
+                .replace(/^type\s+/, '')
+                .split(' as ')
+                .pop()
+                ?.trim()
+            if (name) names.push(name)
+        }
+    }
+    return names.sort()
+}
+
+describe('the xlsx entry', () => {
+    it('offers exactly the names it means to, types included', () => {
+        const source = readFileSync(join('src', 'lib', 'xlsx.ts'), 'utf8')
+        expect(namesIn(source)).toEqual(XLSX_API)
+    })
+
+    it('really resolves each value it names, rather than only declaring it', () => {
+        const values = XLSX_API.filter((name) => name in xlsx)
+        expect(Object.keys(xlsx).sort()).toEqual(values)
+        expect(values.length).toBeGreaterThan(10)
     })
 })

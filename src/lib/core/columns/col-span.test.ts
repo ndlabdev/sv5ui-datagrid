@@ -69,7 +69,6 @@ describe('rowColSpans', () => {
             { id: 'c' },
             { id: 'd', pinned: 'right' }
         ]
-        // 'a' is pinned left; the span stops before the unpinned columns.
         const spans = make(columns, { id: 1, kind: 'x' })
         expect(spans.span[0]).toBe(1)
         expect(spans.owner).toEqual([0, 1, 2, 3])

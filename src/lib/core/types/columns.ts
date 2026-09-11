@@ -39,53 +39,53 @@ export interface RowAction<TRow> {
 
 /** Options for the renderer named by `type`; only its own fields are read. */
 export interface ColumnTypeOptions<TRow> {
-    /** `number`, `currency`, `percent`, `date`, `datetime` — BCP 47 tag. Defaults to the browser locale. */
+    /** `number`, `currency`, `percent`, `date`, `datetime` - BCP 47 tag. Defaults to the browser locale. */
     locale?: string
 
-    /** `number`, `currency`, `percent` — passed straight to `Intl.NumberFormat`. */
+    /** `number`, `currency`, `percent` - passed straight to `Intl.NumberFormat`. */
     numberFormat?: Intl.NumberFormatOptions
 
-    /** `currency` — ISO 4217 code. @default 'USD' */
+    /** `currency` - ISO 4217 code. @default 'USD' */
     currency?: string
 
     /**
-     * `percent` — set when the value is already 0-100 rather than 0-1.
+     * `percent` - set when the value is already 0-100 rather than 0-1.
      * @default false
      */
     wholePercent?: boolean
 
-    /** `date`, `datetime` — passed straight to `Intl.DateTimeFormat`. */
+    /** `date`, `datetime` - passed straight to `Intl.DateTimeFormat`. */
     dateFormat?: Intl.DateTimeFormatOptions
 
-    /** `badge` — value to colour, so statuses read at a glance. */
+    /** `badge` - value to colour, so statuses read at a glance. */
     colors?: Record<string, BadgeColor>
 
-    /** `badge` — colour used for values missing from `colors`. @default 'surface' */
+    /** `badge` - colour used for values missing from `colors`. @default 'surface' */
     fallbackColor?: BadgeColor
 
-    /** `user` — avatar image URL. */
+    /** `user` - avatar image URL. */
     avatar?: (row: TRow) => string | undefined
 
-    /** `user` — secondary line under the name. */
+    /** `user` - secondary line under the name. */
     description?: (row: TRow) => string | undefined
 
-    /** `progress`, `rating` — upper bound. @default 100 for progress, 5 for rating */
+    /** `progress`, `rating` - upper bound. @default 100 for progress, 5 for rating */
     max?: number
 
-    /** `link` — defaults to the cell value. */
+    /** `link` - defaults to the cell value. */
     href?: (row: TRow) => string
 
-    /** `link` — anchor target, e.g. `_blank`. */
+    /** `link` - anchor target, e.g. `_blank`. */
     target?: string
 
-    /** `actions` — menu entries; return an empty array to render nothing. */
+    /** `actions` - menu entries; return an empty array to render nothing. */
     actions?: (row: TRow) => RowAction<TRow>[]
 
-    /** `boolean` — icons for the two states. */
+    /** `boolean` - icons for the two states. */
     trueIcon?: string
     falseIcon?: string
 
-    /** Text shown for null and undefined. @default '—' */
+    /** Text shown for null and undefined. @default '-' */
     emptyText?: string
 }
 
@@ -184,15 +184,15 @@ export interface DataGridCellContext<TRow> {
     /** The column this cell belongs to, `def` and resolved state alike. */
     column: ColumnState<TRow>
     /**
-     * Set for the `cell` snippet only — `cellClass`, `tooltip`, `colSpan` and
+     * Set for the `cell` snippet only - `cellClass`, `tooltip`, `colSpan` and
      * `rowSpan` run before there is anything rendered to speak of.
      *
      * The text the built-in renderer would print for `value`, so a snippet can
      * show what its own `type` says and decorate around it rather than
      * restating the column's `typeOptions`.
      *
-     * `undefined` where the built-in rendering is a widget — `boolean`,
-     * `badge`, `user`, `progress`, `rating`, `link`, `actions` — because there
+     * `undefined` where the built-in rendering is a widget - `boolean`,
+     * `badge`, `user`, `progress`, `rating`, `link`, `actions` - because there
      * is no string standing for one. Computed only if the snippet reads it.
      */
     formatted?: string
@@ -287,8 +287,8 @@ export interface ColumnDef<TRow> {
      * the ones marked `'closed'` arrive, so the group keeps its place in the
      * row at its normal width.
      *
-     * `'rail'` folds the group away entirely — every column under it, header
-     * and cells alike — and leaves a narrow strip in its place, labelled down
+     * `'rail'` folds the group away entirely - every column under it, header
+     * and cells alike - and leaves a narrow strip in its place, labelled down
      * its length. A group folds this way whether or not any child declares
      * `columnGroupShow`, since the strip is what unfolds it again.
      *
@@ -334,7 +334,7 @@ export interface ColumnDef<TRow> {
     sortFn?: (a: TRow, b: TRow) => number
 
     /**
-     * The field this column sorts by when that is not what it displays — a
+     * The field this column sorts by when that is not what it displays - a
      * name column showing "Ada Lovelace" but ordering by `lastName`. On the
      * client it names the row property; under `rowModel: 'server'` it is what
      * `toSortRequest` sends. `sortFn` wins over it.
