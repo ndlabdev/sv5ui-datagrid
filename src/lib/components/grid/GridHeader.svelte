@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { Snippet } from 'svelte'
-    import { Badge, Button, Icon } from 'sv5ui'
+    import { Badge, Button, Icon, usePointerDrag } from 'sv5ui'
     import { HEADER_ROW } from '../../core/interaction/index.js'
-    import { inlineDelta, inlineOffset, isRtl, rafBatch } from '../../core/utils/index.js'
+    import { inlineDelta, inlineOffset, isRtl } from '../../core/utils/index.js'
     import {
         isSyntheticColumn,
         railGroupIdOf,
@@ -185,57 +185,52 @@
         return pinVar ? `var(${pinVar})` : undefined
     }
 
-    let resizing: ((clientX: number) => void) | null = null
-
     function capturePointer(element: HTMLElement, pointerId: number) {
         try {
             element.setPointerCapture(pointerId)
         } catch {}
     }
 
-    function startResize(event: PointerEvent, columnId: string) {
-        const ops = columnOps
-        if (!ops?.canResize) return
-        event.stopPropagation()
-        const handle = event.currentTarget as HTMLElement
-        capturePointer(handle, event.pointerId)
-        const startX = event.clientX
-        const startWidth = ops.currentWidth(columnId)
-        const rtl = isRtl(handle)
-        resizing = rafBatch((clientX) =>
-            ops.setColumnWidth(columnId, startWidth + inlineDelta(rtl, startX, clientX))
-        )
-    }
+    let resizeTarget: { ids: string[]; widths: number[]; rtl: boolean } | null = null
 
-    function startGroupResize(event: PointerEvent, cell: HeaderGroupCell) {
-        const ops = columnOps
-        if (!ops?.canResize || cell.isPlaceholder) return
-        event.stopPropagation()
-        const handle = event.currentTarget as HTMLElement
-        capturePointer(handle, event.pointerId)
-        const startX = event.clientX
-        const rtl = isRtl(handle)
-        const startWidths = cell.leafIds.map((id) => ops.currentWidth(id))
-        const total = startWidths.reduce((sum, width) => sum + width, 0)
-        const share = (index: number) =>
-            total > 0 ? startWidths[index] / total : 1 / startWidths.length
-        resizing = rafBatch((clientX) => {
-            const delta = inlineDelta(rtl, startX, clientX)
+    const resize = usePointerDrag({
+        axis: 'x',
+        onStart: ({ event }) => {
+            const ops = columnOps
+            const handle = event.currentTarget as HTMLElement | null
+            const ids = handle?.dataset.dgResize?.split(',').filter(Boolean) ?? []
+            if (!ops?.canResize || ids.length === 0) return false
+
+            event.stopPropagation()
+            resizeTarget = {
+                ids,
+                widths: ids.map((id) => ops.currentWidth(id)),
+                rtl: isRtl(handle!)
+            }
+        },
+        onMove: ({ dx }) => {
+            const target = resizeTarget
+            const ops = columnOps
+            if (!target || !ops) return
+
+            const delta = inlineDelta(target.rtl, 0, dx)
+            if (target.ids.length === 1) {
+                ops.setColumnWidth(target.ids[0]!, target.widths[0]! + delta)
+                return
+            }
+
+            const total = target.widths.reduce((sum, width) => sum + width, 0)
             const widths: Record<string, number> = {}
-            cell.leafIds.forEach((id, i) => {
-                widths[id] = startWidths[i] + delta * share(i)
+            target.ids.forEach((id, index) => {
+                const share = total > 0 ? target.widths[index]! / total : 1 / target.widths.length
+                widths[id] = target.widths[index]! + delta * share
             })
             grid.columns.setWidths(widths)
-        })
-    }
-
-    function moveResize(event: PointerEvent) {
-        resizing?.(event.clientX)
-    }
-
-    function endResize() {
-        resizing = null
-    }
+        },
+        onEnd: () => {
+            resizeTarget = null
+        }
+    })
 
     let headerRowElement = $state<HTMLElement | null>(null)
     let dragCandidate: {
@@ -380,14 +375,14 @@
                             {#if columnOps?.canResize && !railedShut(cell)}
                                 <div
                                     data-dg-noreorder
+                                    data-dg-resize={cell.isPlaceholder
+                                        ? undefined
+                                        : cell.leafIds.join(',')}
                                     role="separator"
                                     aria-orientation="vertical"
                                     aria-label={grid.labels.resizeGroup(cell.header)}
                                     class={resizeHandleClass}
-                                    onpointerdown={(event) => startGroupResize(event, cell)}
-                                    onpointermove={moveResize}
-                                    onpointerup={endResize}
-                                    onpointercancel={endResize}
+                                    {...resize.handlers}
                                 ></div>
                             {/if}
                         </div>
@@ -484,14 +479,12 @@
                     {#if columnOps.canResizeColumn(column.id)}
                         <div
                             data-dg-noreorder
+                            data-dg-resize={column.id}
                             role="separator"
                             aria-orientation="vertical"
                             aria-label={grid.labels.resizeColumn(column.header)}
                             class={resizeHandleClass}
-                            onpointerdown={(event) => startResize(event, column.id)}
-                            onpointermove={moveResize}
-                            onpointerup={endResize}
-                            onpointercancel={endResize}
+                            {...resize.handlers}
                             ondblclick={() => columnOps.autoSizeColumn(column.id)}
                         ></div>
                     {/if}
