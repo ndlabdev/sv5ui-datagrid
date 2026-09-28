@@ -91,7 +91,7 @@ export class ColumnModel<TRow> {
     )
 
     #leafById = $derived.by(() => leafDefsById(this.leafDefs))
-    #groupById = $derived.by(() => groupDefsById(this.defs))
+    #groupById = $derived.by(() => groupDefsById(this.shaped))
     #leafIdsByGroup = $derived.by(() => leafIdsByGroup(this.#declaredPaths))
 
     groupDef(groupId: string): ColumnDef<TRow> | undefined {
@@ -107,7 +107,7 @@ export class ColumnModel<TRow> {
     }
 
     groupToggles = $derived.by(() =>
-        buildGroupToggles(this.defs, {
+        buildGroupToggles(this.shaped, {
             paths: this.#declaredPaths,
             leaves: this.#leafById,
             leafIdsByGroup: this.#leafIdsByGroup,

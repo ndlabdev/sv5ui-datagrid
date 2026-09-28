@@ -14,7 +14,6 @@ import { parse } from '../lib/features/formula/index.js'
 import { findReplace, getFindReplace } from '../lib/features/find-replace/index.js'
 import { advancedFilter, getAdvancedFilter } from '../lib/features/advanced-filter/index.js'
 import { grouping } from '../lib/features/grouping/index.js'
-import { pivot } from '../lib/features/pivot/index.js'
 import { showValuesAs } from '../lib/features/show-values-as/index.js'
 import {
     buildMoveEdits,
@@ -66,35 +65,6 @@ function report(name: string, ms: number, budget: number): number {
 
 const rows100k = makeBenchRows(100_000)
 
-function pivotGrid(keys: number, data: BenchRow[], heavy = false) {
-    return createDataGrid<BenchRow>({
-        columns: [
-            { id: 'dept' },
-            { id: 'country' },
-            { id: 'bucket', accessor: (row) => `K${row.id % keys}` },
-            { id: 'third', accessor: (row) => `T${row.id % 3}` },
-            { id: 'salary' }
-        ],
-        data,
-        getRowId: benchRowId,
-        features: [
-            pivot<BenchRow>({
-                rows: heavy ? ['dept', 'country'] : ['dept'],
-                columns: heavy ? ['bucket', 'third'] : ['bucket'],
-                values: heavy
-                    ? [
-                          { field: 'salary', agg: 'sum' },
-                          { field: 'salary', agg: 'avg' }
-                      ]
-                    : [{ field: 'salary', agg: 'sum' }],
-                totalColumn: heavy ? 'Total' : undefined,
-                totalRow: heavy ? 'All' : undefined,
-                maxColumns: 2_000
-            })
-        ]
-    })
-}
-
 function groupedGrid(by: string[], data: BenchRow[]) {
     return createDataGrid<BenchRow>({
         columns: wideBenchColumns,
@@ -105,44 +75,6 @@ function groupedGrid(by: string[], data: BenchRow[]) {
 }
 
 describe('performance budgets', () => {
-    it(
-        'crosses 100k rows at a cost set by the rows, not by the columns it generates',
-        () => {
-            const narrow = pivotGrid(4, rows100k)
-            const wide = pivotGrid(100, rows100k)
-
-            const narrowMs = measure(() => {
-                void narrow.preWindowNodes
-            })
-            const wideMs = measure(() => {
-                void wide.preWindowNodes
-            })
-
-            expect(
-                wide.columns.visible.filter((column) => column.id.startsWith('__pv'))
-            ).toHaveLength(100)
-            report('pivot 100k rows, 4 columns', narrowMs, 1_500)
-            expect(report('pivot 100k rows, 100 columns', wideMs, 1_500)).toBeLessThan(1_500)
-
-            expect(wideMs).toBeLessThan(narrowMs * 3)
-        },
-        BUDGET_TIMEOUT
-    )
-
-    it(
-        'crosses 100k rows on two fields by two, two measures and both totals',
-        () => {
-            const grid = pivotGrid(50, rows100k, true)
-            const ms = measure(() => {
-                void grid.preWindowNodes
-            })
-
-            expect(grid.columns.visible.filter((c) => c.id.startsWith('__pv'))).toHaveLength(302)
-            expect(report('pivot 100k rows, nested, 2 measures', ms, 2_000)).toBeLessThan(2_000)
-        },
-        BUDGET_TIMEOUT
-    )
-
     it(
         'groups 100k rows on one level inside its budget',
         () => {

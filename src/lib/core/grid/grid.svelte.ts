@@ -171,10 +171,15 @@ export class GridState<TRow> {
     }
 
     setState(snapshot: GridSnapshot): void {
+        for (const feature of this.features) {
+            const slice = snapshot.features?.[feature.id]
+            if (slice !== undefined) feature.hydrate?.(slice, this)
+        }
+
         const columns = resolveColumnSnapshot(
             snapshot.columns,
             this.columns.leafDefs.map((def) => def.id),
-            groupIdsOf(this.columns.defs)
+            groupIdsOf(this.columns.shaped)
         )
         this.columns.orderIds = columns.orderIds
         this.columns.widthOverrides = columns.widthOverrides
@@ -183,11 +188,6 @@ export class GridState<TRow> {
         this.columns.collapsedGroups = columns.collapsedGroups
 
         if (isDensity(snapshot.density)) this.density = snapshot.density
-
-        for (const feature of this.features) {
-            const slice = snapshot.features?.[feature.id]
-            if (slice !== undefined) feature.hydrate?.(slice, this)
-        }
     }
 
     readerFor(

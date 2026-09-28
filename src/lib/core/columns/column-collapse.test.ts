@@ -203,3 +203,52 @@ describe('a folded group in a snapshot', () => {
         expect(grid.columns.all.map((column) => column.id)).toEqual(order)
     })
 })
+
+describe('a header group a feature generated', () => {
+    const shaper = {
+        id: 'shaper',
+        columns: (defs: ColumnDef<Row>[]) => [
+            ...defs,
+            {
+                id: 'made',
+                header: 'Made',
+                children: [
+                    { id: 'made:detail', header: 'Detail', columnGroupShow: 'open' as const },
+                    { id: 'made:summary', header: 'Summary' }
+                ]
+            }
+        ]
+    }
+
+    function grid() {
+        return createDataGrid<Row>({
+            columns: [{ id: 'id', header: '#' }],
+            data: [{ id: 1 }],
+            getRowId: (row) => String(row.id),
+            features: [shaper]
+        })
+    }
+
+    it('is a group the model can find', () => {
+        expect(grid().columns.groupDef('made')?.header).toBe('Made')
+    })
+
+    it('is a group the reader can fold', () => {
+        const columns = grid().columns
+
+        expect(columns.groupToggles.get('made')?.collapsible).toBe(true)
+        expect(columns.setGroupCollapsed('made', true)).toBe(true)
+        expect(columns.visible.map((column) => column.id)).toEqual(['id', 'made:summary'])
+    })
+
+    it('keeps a fold through a snapshot', () => {
+        const source = grid()
+        source.columns.setGroupCollapsed('made', true)
+
+        const fresh = grid()
+        fresh.api.setState!(source.api.getState!())
+
+        expect(fresh.columns.isCollapsed('made')).toBe(true)
+        expect(fresh.columns.visible.map((column) => column.id)).toEqual(['id', 'made:summary'])
+    })
+})
