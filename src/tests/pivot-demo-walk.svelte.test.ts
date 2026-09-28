@@ -65,3 +65,37 @@ describe('the pivot demo holds together as a reader drives it', () => {
         expect(pressed).toContain(false)
     })
 })
+
+describe('folding a column group in the demo', () => {
+    it('folds one branch down to its total and leaves the others alone', async () => {
+        await open()
+
+        await click('Lồng thêm Product ra ngang')
+        await expect.poll(() => headers()).toContain('Widget')
+
+        await click('Tổng con mỗi nhóm cột')
+        await expect.poll(() => headers()).toContain('Q1 tổng')
+
+        await click('Cho gập nhóm cột')
+        await expect
+            .poll(() => document.querySelectorAll('[aria-expanded="true"]').length)
+            .toBeGreaterThan(0)
+
+        const leaves = () => headers().filter((text) => text === 'Widget').length
+        const opened = leaves()
+
+        const group = Array.from(
+            document.querySelectorAll('[role="columnheader"][aria-expanded="true"]')
+        ).find((el) => (el.textContent ?? '').trim().startsWith('Q1'))
+        const fold = group?.querySelector('button') as HTMLElement | null | undefined
+
+        expect(group).toBeDefined()
+        expect(fold).toBeTruthy()
+
+        fold?.click()
+
+        await expect.poll(leaves).toBe(opened - 1)
+        expect(headers()).toContain('Q1 tổng')
+        expect(headers()).toContain('Q2 tổng')
+    })
+})

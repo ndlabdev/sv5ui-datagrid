@@ -1,5 +1,6 @@
 <script lang="ts">
     import {
+        columnOps,
         createDataGrid,
         DataGrid,
         filtering,
@@ -111,6 +112,7 @@
         features: [
             filtering(),
             sorting(),
+            columnOps(),
             pivot<Sale>({
                 rows: [FIRST_DOWN],
                 columns: [FIRST_ACROSS],
@@ -149,6 +151,7 @@
     const SIZE_ORDER = ['Small', 'Medium', 'Large']
 
     let subtotals = $state(false)
+    let foldable = $state(false)
     let totals = $state(false)
     let ownKeys = $state(false)
     let saved = $state<ReturnType<NonNullable<typeof pivotGrid.api.getState>> | null>(null)
@@ -156,6 +159,7 @@
     $effect(() => {
         const state = pivotState()
         state.setColumnSubtotal(subtotals ? (header: string) => `${header} tổng` : undefined)
+        state.setColumnGroups(foldable ? 'open' : 'fixed')
         state.setTotalColumn(totals ? 'Tổng' : undefined)
         state.setTotalRow(totals ? 'Tất cả' : undefined)
     })
@@ -307,6 +311,13 @@
                 onclick={() => (subtotals = !subtotals)}
             />
             <Button
+                variant={foldable ? 'solid' : 'outline'}
+                size="sm"
+                label="Cho gập nhóm cột"
+                disabled={!nested}
+                onclick={() => (foldable = !foldable)}
+            />
+            <Button
                 variant={totals ? 'solid' : 'outline'}
                 size="sm"
                 label="Cột Tổng và hàng Tất cả"
@@ -371,6 +382,15 @@
                 đi, rồi bấm <strong class="text-on-surface">Nạp lại</strong>: bảng chéo trở về đúng
                 như lúc lưu. Trước đợt này thì cấu hình pivot không vào snapshot, nên nạp lại là mất
                 trắng.
+            </p>
+
+            <p class="text-xs text-on-surface-variant">
+                Bật <strong class="text-on-surface">Lồng thêm Product</strong>,
+                <strong class="text-on-surface">Tổng con</strong> và
+                <strong class="text-on-surface">Cho gập nhóm cột</strong>, rồi bấm mũi tên trên tiêu
+                đề <code>Q1</code>: nhóm gập lại còn đúng cột tổng của nó, các nhóm bên cạnh không
+                đụng tới. Không có tổng con thì không còn gì để gập xuống, nên nhóm cuộn thành một
+                dải hẹp thay vì biến mất.
             </p>
 
             <p class="text-xs text-on-surface-variant">
