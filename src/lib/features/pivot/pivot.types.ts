@@ -163,6 +163,25 @@ export interface PivotOptions<TRow = unknown> {
     columnSubtotal?: (header: string) => string
 
     /**
+     * Whether a reader can fold a group of the column axis away, and which
+     * state it starts in. `'open'` and `'closed'` both make it foldable.
+     *
+     * Folded, a group shows its `columnSubtotal` and nothing else, which is
+     * how a wide crossing is read one branch at a time. Without a subtotal
+     * there would be nothing left to show, so the group folds to a narrow
+     * labelled rail instead.
+     *
+     * Only groups fold, so a single column field has none: with one field
+     * every generated column is already a leaf.
+     *
+     * The control a reader folds with lives in `columnOps()`, so register that
+     * too or the groups are foldable only through the api.
+     *
+     * @default 'fixed'
+     */
+    columnGroups?: 'fixed' | 'open' | 'closed'
+
+    /**
      * A row at the bottom holding each measure over every row the grid is
      * showing, headed by this text in the first row field's column. Left out,
      * there is no total row.

@@ -188,11 +188,14 @@ export function measuredLook<TRow>(
     return { ...look, type: source.type, typeOptions: source.typeOptions, cell: source.cell }
 }
 
+export type ColumnGroupMode = 'fixed' | 'open' | 'closed'
+
 interface ColumnShape<TRow> {
     measures: PivotMeasure<TRow>[]
     looks: Partial<ColumnDef<TRow>>[]
     totalHeader: string | undefined
     subtotalHeader?: (header: string) => string
+    groups: ColumnGroupMode
     header: HeaderText
     sortable: boolean
     accessor?: (keys: string[], measure: number) => (row: TRow) => unknown
@@ -242,10 +245,24 @@ function branch<TRow>(nodes: KeyNode[], shape: ColumnShape<TRow>, prefix: string
         const text = shape.header(node.key, prefix.length, node.value)
 
         if (node.children.length > 0) {
+            const subtotal = subtotalOf(keys, shape, text)
+            const folds = shape.groups !== 'fixed'
+
             return {
                 id: `${CROSSING}${pathId(keys)}`,
                 header: text,
-                children: [...branch(node.children, shape, keys), ...subtotalOf(keys, shape, text)]
+                ...(folds
+                    ? {
+                          collapsed: shape.groups === 'closed',
+                          ...(subtotal.length === 0 ? { collapseMode: 'rail' as const } : {})
+                      }
+                    : {}),
+                children: [
+                    ...branch(node.children, shape, keys).map((child) =>
+                        folds ? { ...child, columnGroupShow: 'open' as const } : child
+                    ),
+                    ...subtotal
+                ]
             }
         }
         const leaves = measureLeaves<TRow>(keys, shape, text)

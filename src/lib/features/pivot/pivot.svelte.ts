@@ -14,6 +14,7 @@ import { buildGroupNodes } from '../grouping/group-nodes.js'
 import { buildGrandTotalNode, totalsKindOf } from '../grouping/totals-nodes.js'
 import type { Aggregation } from '../grouping/grouping.types.js'
 import {
+    type ColumnGroupMode,
     type Crossing,
     crossingId,
     crossingIndex,
@@ -86,6 +87,7 @@ export class Pivot<TRow> {
     totalColumn = $state.raw<string | undefined>(undefined)
     totalRow = $state.raw<string | undefined>(undefined)
     sortableColumns = $state.raw(false)
+    columnGroups = $state.raw<ColumnGroupMode>('fixed')
     columnSubtotal = $state.raw<((header: string) => string) | undefined>(undefined)
 
     #grid: GridState<TRow>
@@ -100,6 +102,7 @@ export class Pivot<TRow> {
         this.totalColumn = options.totalColumn
         this.totalRow = options.totalRow
         this.sortableColumns = options.sortableColumns ?? false
+        this.columnGroups = options.columnGroups ?? 'fixed'
         this.columnSubtotal = options.columnSubtotal
 
         if (options.rows.length === 0 || options.columns.length === 0) {
@@ -156,6 +159,10 @@ export class Pivot<TRow> {
 
     setTotalRow = mutator((header: string | undefined): void => {
         this.totalRow = header
+    })
+
+    setColumnGroups = mutator((mode: ColumnGroupMode): void => {
+        this.columnGroups = mode
     })
 
     setSortableColumns = mutator((sortable: boolean): void => {
@@ -339,6 +346,7 @@ export class Pivot<TRow> {
             ),
             totalHeader: found.paths.length > 0 ? this.totalColumn : undefined,
             subtotalHeader: this.columnSubtotal,
+            groups: this.columnGroups,
             header:
                 this.#options.columnHeader ??
                 defaultHeader(this.#columnDefs(), this.#grid.locale, this.#grid.labels.blankValue),
@@ -600,6 +608,9 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 clearPivot: state.clearPivot,
                 setPivotTotalColumn: state.setTotalColumn,
                 setPivotTotalRow: state.setTotalRow,
+                setPivotColumnGroups: state.setColumnGroups,
+                setPivotColumnSubtotal: state.setColumnSubtotal,
+                setPivotSortableColumns: state.setSortableColumns,
                 isPivoting: () => state.isCrossing
             }
         },
@@ -634,6 +645,9 @@ declare module '../../core/types/api.js' {
         clearPivot?: () => void
         setPivotTotalColumn?: (header: string | undefined) => void
         setPivotTotalRow?: (header: string | undefined) => void
+        setPivotColumnGroups?: (mode: 'fixed' | 'open' | 'closed') => void
+        setPivotColumnSubtotal?: (label: ((header: string) => string) | undefined) => void
+        setPivotSortableColumns?: (sortable: boolean) => void
         isPivoting?: () => boolean
     }
 }
