@@ -10,6 +10,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { buildGridXlsx, downloadGridXlsx } from '../lib/features/xlsx/export.js'
 import { toSerialDate } from '../lib/features/xlsx/sheet.js'
 import { XLSX_MIME } from '../lib/features/xlsx/workbook.js'
+import { pivot, type PivotOptions } from '../lib/features/pivot/index.js'
 
 interface Order {
     id: number
@@ -213,5 +214,72 @@ describe('downloading', () => {
         await downloadGridXlsx(makeGrid(), { filename: 'report.xlsx' })
         expect(clicks[0]).toBe('report.xlsx')
         click.mockRestore()
+    })
+})
+
+describe('exporting a pivot', () => {
+    interface Sale {
+        id: number
+        region: string
+        quarter: string
+        amount: number
+    }
+
+    const sales: Sale[] = [
+        { id: 1, region: 'North', quarter: 'Q1', amount: 100 },
+        { id: 2, region: 'North', quarter: 'Q2', amount: 150 },
+        { id: 3, region: 'North', quarter: 'Q1', amount: 80 },
+        { id: 4, region: 'South', quarter: 'Q1', amount: 200 }
+    ]
+
+    function crossed(options: Partial<PivotOptions<Sale>> = {}) {
+        return createDataGrid<Sale>({
+            columns: [{ id: 'region' }, { id: 'quarter' }, { id: 'amount', type: 'number' }],
+            data: sales,
+            getRowId: (row) => String(row.id),
+            features: [
+                pivot<Sale>({
+                    rows: ['region'],
+                    columns: ['quarter'],
+                    values: [{ field: 'amount', agg: 'sum' }],
+                    ...options
+                })
+            ]
+        })
+    }
+
+    const sheetFor = (grid: GridState<Sale>) =>
+        partOf(buildGridXlsx(grid, {}), 'xl/worksheets/sheet1.xml')
+
+    it('writes the crossing, not the rows the pivot folded away', () => {
+        const sheet = sheetFor(crossed({ totalColumn: 'Total' }))
+
+        expect(sheet).toContain('<v>180</v>')
+        expect(sheet).toContain('<v>150</v>')
+        expect(sheet).toContain('<v>330</v>')
+        expect(sheet).toContain('North')
+    })
+
+    it('writes one row per group rather than one per record', () => {
+        const sheet = sheetFor(crossed())
+        const bodyRows = sheet.split('<row ').length - 1
+
+        expect(bodyRows).toBe(3)
+    })
+
+    it('writes the leaf headers, flattening the tiers above them', () => {
+        const sheet = sheetFor(crossed())
+
+        expect(sheet).toContain('Q1')
+        expect(sheet).toContain('Q2')
+    })
+
+    it('falls back to the data rows when the pivot drew no crossing', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const sheet = sheetFor(crossed({ maxColumns: 1 }))
+
+        expect(sheet).toContain('<v>100</v>')
+        expect(sheet).toContain('<v>80</v>')
+        vi.restoreAllMocks()
     })
 })

@@ -115,11 +115,18 @@ function exportColumns<TRow>(grid: GridState<TRow>, columnIds?: string[]): Colum
     return columnIds.flatMap((id) => visible.filter((column) => column.id === id))
 }
 
+function exportableNodes<TRow>(grid: GridState<TRow>): RowNode<TRow>[] {
+    const data = grid.preWindowNodes.filter(isDataRow)
+    if (!grid.feature('pivot')) return data
+
+    const crossed = grid.preWindowNodes.filter((node) => !isDataRow(node))
+    return crossed.length > 0 ? crossed : data
+}
+
 function loadedRows<TRow>(grid: GridState<TRow>, options: ExportXlsxOptions<TRow>): TRow[] {
     if (options.rows) return options.rows.map((node) => node.row)
 
-    const isData = isDataRow
-    const nodes = grid.preWindowNodes.filter(isData)
+    const nodes = exportableNodes(grid)
     if (!options.selectedOnly) return nodes.map((node) => node.row)
 
     const selection = grid.feature<{ isSelected: (id: string) => boolean }>('selection')
