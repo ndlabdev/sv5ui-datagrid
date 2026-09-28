@@ -106,6 +106,9 @@ export interface DataGridLabels {
 
     groupByColumn: string
     ungroupColumn: string
+    pivotByRow: string
+    pivotByColumn: string
+    removeFromPivot: string
 
     groupFooter: (key: string, count: number) => string
     grandTotal: (count: number) => string

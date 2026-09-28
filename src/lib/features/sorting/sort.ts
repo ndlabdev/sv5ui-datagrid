@@ -82,7 +82,7 @@ export function sortNodes<TRow>(
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
-function compareValues(a: unknown, b: unknown, nullSign: number): number {
+export function compareValues(a: unknown, b: unknown, nullSign: number): number {
     if (isBlank(a)) return isBlank(b) ? 0 : nullSign
     if (isBlank(b)) return -nullSign
     if (typeof a === 'number' && typeof b === 'number') return a - b

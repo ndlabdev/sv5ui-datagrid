@@ -116,6 +116,9 @@ export const thTH: DataGridLocalePack = {
 
         groupByColumn: 'จัดกลุ่มตามคอลัมน์นี้',
         ungroupColumn: 'ยกเลิกการจัดกลุ่มคอลัมน์นี้',
+        pivotByRow: 'พิว็อตคอลัมน์นี้ลงแนวตั้ง',
+        pivotByColumn: 'พิว็อตคอลัมน์นี้ตามแนวนอน',
+        removeFromPivot: 'นำออกจากพิว็อต',
 
         groupFooter: (key) => `รวม: ${key}`,
         grandTotal: (count) => `รวมทั้งหมด (${count})`,

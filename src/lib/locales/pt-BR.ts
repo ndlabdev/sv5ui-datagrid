@@ -124,6 +124,9 @@ export const ptBR: DataGridLocalePack = {
 
         groupByColumn: 'Agrupar por esta coluna',
         ungroupColumn: 'Desagrupar esta coluna',
+        pivotByRow: 'Dinamizar esta coluna para baixo',
+        pivotByColumn: 'Dinamizar esta coluna na horizontal',
+        removeFromPivot: 'Remover da tabela dinamica',
 
         groupFooter: (key) => `Total: ${key}`,
         grandTotal: (count) => `Total geral (${count})`,

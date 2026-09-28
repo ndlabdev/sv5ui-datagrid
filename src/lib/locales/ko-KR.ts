@@ -115,6 +115,9 @@ export const koKR: DataGridLocalePack = {
 
         groupByColumn: '이 열로 그룹화',
         ungroupColumn: '이 열 그룹화 해제',
+        pivotByRow: '이 열을 행으로 피벗',
+        pivotByColumn: '이 열을 열로 피벗',
+        removeFromPivot: '피벗에서 제거',
 
         groupFooter: (key) => `합계: ${key}`,
         grandTotal: (count) => `총합계 (${count})`,

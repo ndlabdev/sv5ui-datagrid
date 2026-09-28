@@ -124,6 +124,9 @@ export const frFR: DataGridLocalePack = {
 
         groupByColumn: 'Grouper par cette colonne',
         ungroupColumn: 'Dégrouper cette colonne',
+        pivotByRow: 'Pivoter cette colonne vers le bas',
+        pivotByColumn: 'Pivoter cette colonne en largeur',
+        removeFromPivot: 'Retirer du tableau croise',
 
         groupFooter: (key) => `Total: ${key}`,
         grandTotal: (count) => `Total (${count})`,

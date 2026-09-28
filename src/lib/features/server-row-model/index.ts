@@ -3,6 +3,7 @@ export type {
     DataSource,
     GetRowsRequest,
     GetRowsResult,
+    PivotRequest,
     ServerMode,
     ServerRowModelOptions
 } from './server-row-model.types.js'

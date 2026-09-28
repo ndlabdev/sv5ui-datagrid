@@ -115,6 +115,9 @@ export const jaJP: DataGridLocalePack = {
 
         groupByColumn: 'この列でグループ化',
         ungroupColumn: 'この列のグループ化を解除',
+        pivotByRow: 'この列を行方向にピボット',
+        pivotByColumn: 'この列を列方向にピボット',
+        removeFromPivot: 'ピボットから外す',
 
         groupFooter: (key) => `合計：${key}`,
         grandTotal: (count) => `総計 (${count})`,

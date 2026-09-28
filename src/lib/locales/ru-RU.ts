@@ -121,6 +121,9 @@ export const ruRU: DataGridLocalePack = {
 
         groupByColumn: 'Группировать по этому столбцу',
         ungroupColumn: 'Убрать группировку по этому столбцу',
+        pivotByRow: 'Свести этот столбец вниз',
+        pivotByColumn: 'Свести этот столбец поперёк',
+        removeFromPivot: 'Убрать из сводной таблицы',
 
         groupFooter: (key) => `Итог: ${key}`,
         grandTotal: (count) => `Общий итог (${count})`,

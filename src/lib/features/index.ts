@@ -102,6 +102,14 @@ export {
     type PaginationOptions
 } from './pagination/index.js'
 export {
+    getPivot,
+    isPivotColumn,
+    pivot,
+    type Pivot,
+    type PivotMeasure,
+    type PivotOptions
+} from './pivot/index.js'
+export {
     getPolicy,
     policy,
     type MaskKind,
@@ -162,6 +170,7 @@ export {
     type DataSource,
     type GetRowsRequest,
     type GetRowsResult,
+    type PivotRequest,
     type ServerMode,
     type ServerRowModel,
     type ServerRowModelOptions

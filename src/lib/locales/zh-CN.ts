@@ -115,6 +115,9 @@ export const zhCN: DataGridLocalePack = {
 
         groupByColumn: '按此列分组',
         ungroupColumn: '取消此列的分组',
+        pivotByRow: '将此列透视为行',
+        pivotByColumn: '将此列透视为列',
+        removeFromPivot: '从透视表中移除',
 
         groupFooter: (key) => `合计：${key}`,
         grandTotal: (count) => `总计 (${count})`,

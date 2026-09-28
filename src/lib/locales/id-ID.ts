@@ -116,6 +116,9 @@ export const idID: DataGridLocalePack = {
 
         groupByColumn: 'Kelompokkan menurut kolom ini',
         ungroupColumn: 'Batalkan pengelompokan kolom ini',
+        pivotByRow: 'Pivot kolom ini ke bawah',
+        pivotByColumn: 'Pivot kolom ini ke samping',
+        removeFromPivot: 'Keluarkan dari pivot',
 
         groupFooter: (key) => `Total: ${key}`,
         grandTotal: (count) => `Total (${count})`,

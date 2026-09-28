@@ -115,6 +115,9 @@ export const viVN: DataGridLocalePack = {
 
         groupByColumn: 'Nhóm theo cột này',
         ungroupColumn: 'Bỏ nhóm cột này',
+        pivotByRow: 'Pivot cột này xuống dọc',
+        pivotByColumn: 'Pivot cột này ra ngang',
+        removeFromPivot: 'Bỏ khỏi pivot',
 
         groupFooter: (key) => `Tổng: ${key}`,
         grandTotal: (count) => `Tổng cộng (${count})`,

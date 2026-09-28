@@ -57,6 +57,7 @@ const PUBLIC_API = [
     'formula',
     'grouping',
     'masterDetail',
+    'pivot',
     'policy',
     'rangeSelection',
     'savedViews',
@@ -74,6 +75,7 @@ const PUBLIC_API = [
     'getGridElement',
     'getGrouping',
     'getMasterDetail',
+    'getPivot',
     'getPolicy',
     'getRangeSelection',
     'getSavedViews',
@@ -84,6 +86,7 @@ const PUBLIC_API = [
     'totalsKindOf',
     'FormulaError',
     'isFormulaError',
+    'isPivotColumn',
     'FUNCTION_NAMES',
     'localStorageViews'
 ].sort()

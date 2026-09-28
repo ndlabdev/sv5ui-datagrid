@@ -151,6 +151,9 @@ export const defaultLabels: DataGridLabels = {
 
     groupByColumn: 'Group by this column',
     ungroupColumn: 'Ungroup this column',
+    pivotByRow: 'Pivot down this column',
+    pivotByColumn: 'Pivot across this column',
+    removeFromPivot: 'Remove from pivot',
 
     groupFooter: (key) => `Total: ${key}`,
     grandTotal: (count) => `Total (${count})`,
