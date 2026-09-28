@@ -84,7 +84,7 @@ export class GridState<TRow> {
         this.rowClass = options.rowClass
         this.configuredDensity = options.density
         this.rowModel = options.rowModel ?? 'client'
-        this.columns = new ColumnModel(options.columns)
+        this.columns = new ColumnModel(options.columns, () => this)
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.#valueGates = this.features.filter((feature) => feature.cellValue !== undefined)
