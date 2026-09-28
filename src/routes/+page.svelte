@@ -16,6 +16,11 @@
 
     const whatsNew = [
         {
+            href: '/pivot',
+            title: 'Pivot table',
+            check: 'Cột sinh từ dữ liệu, và Total không cộng các ô'
+        },
+        {
             href: '/aggregate',
             title: 'Nhóm và tổng hợp',
             check: 'Mỗi cột một hàm tổng hợp khác nhau'

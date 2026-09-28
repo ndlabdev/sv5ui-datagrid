@@ -3,6 +3,7 @@ import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
 import Headless from '../routes/headless/+page.svelte'
 import Persistence from '../routes/persistence/+page.svelte'
+import Pivot from '../routes/pivot/+page.svelte'
 import Server from '../routes/server/+page.svelte'
 
 describe('headless demo', () => {
@@ -115,5 +116,147 @@ describe('persistence demo', () => {
 
         await page.getByRole('button', { name: 'Sort theo price ↓' }).click()
         await expect.poll(snapshot).toContain('sorting')
+    })
+})
+
+describe('pivot demo', () => {
+    const headers = () =>
+        Array.from(document.querySelectorAll('[role="columnheader"]')).map(
+            (cell) => cell.textContent?.trim() ?? ''
+        )
+
+    const rowCount = () => document.querySelectorAll('[role="row"][data-dg-row-id]').length
+
+    async function show(label: string) {
+        render(Pivot as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+        if (label !== '1. Dữ liệu thô') {
+            await page.getByRole('button', { name: label }).click()
+        }
+    }
+
+    it('starts on the long list the pivot is made from', async () => {
+        await show('1. Dữ liệu thô')
+
+        expect(headers()).toEqual(['Region', 'Quarter', 'Product', 'Shipped', 'Size', 'Amount'])
+        await expect.poll(rowCount).toBeGreaterThan(50)
+    })
+
+    it('folds that list down one field, keeping the declared columns', async () => {
+        await show('2. Gộp nhóm')
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(headers()).toEqual(['Region', 'Quarter', 'Product', 'Shipped', 'Size', 'Amount'])
+        await expect.poll(rowCount).toBe(4)
+    })
+
+    it('folds it down and across, inventing a column per value found', async () => {
+        await show('3. Pivot')
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        for (const quarter of ['Q1', 'Q2', 'Q3', 'Q4']) {
+            await expect.poll(() => headers()).toContain(quarter)
+        }
+        expect(headers()).not.toContain('Quarter')
+        expect(headers()).not.toContain('Amount')
+        expect(headers()).toContain('Region')
+    })
+
+    it('grows a column when the data grows a value, with no code change', async () => {
+        await show('3. Pivot')
+        await expect.poll(() => headers()).toContain('Q4')
+        expect(headers()).not.toContain('Q5')
+
+        await page.getByRole('button', { name: 'Thêm dữ liệu quý Q5' }).click()
+        await expect.poll(() => headers()).toContain('Q5')
+        expect(headers()).toContain('Region')
+    })
+
+    it('transposes the table when the two axes trade places', async () => {
+        await show('3. Pivot')
+        await expect.poll(() => headers()).toContain('Q1')
+
+        await page.getByRole('button', { name: 'Đổi trục' }).click()
+        await expect.poll(() => headers()).toContain('North')
+        expect(headers()).toContain('Quarter')
+        expect(headers()).not.toContain('Q1')
+    })
+
+    it('crosses on whichever pair of fields is picked', async () => {
+        await show('3. Pivot')
+        await page.getByRole('button', { name: 'product', exact: true }).nth(1).click()
+
+        await expect.poll(() => headers()).toContain('Widget')
+        expect(headers()).not.toContain('Q1')
+    })
+})
+
+describe('pivot demo, the parts a reader has to see working', () => {
+    const headers = () =>
+        Array.from(document.querySelectorAll('[role="columnheader"]')).map(
+            (cell) => cell.textContent?.trim() ?? ''
+        )
+
+    async function openPivot() {
+        render(Pivot as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+        await page.getByRole('button', { name: '3. Pivot' }).click()
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+    }
+
+    it('puts a date axis in date order, drawn as dates', async () => {
+        await openPivot()
+        await page.getByRole('button', { name: 'shipped', exact: true }).nth(1).click()
+
+        await expect.poll(() => headers()).toContain('Jan 10, 2026')
+        const drawn = headers().filter((text) => text.includes('2026'))
+        expect(drawn).toEqual(['Jan 10, 2026', 'Apr 10, 2026', 'Jul 10, 2026', 'Oct 10, 2026'])
+    })
+
+    it('takes the order the application declares over the one the values have', async () => {
+        await openPivot()
+        await page.getByRole('button', { name: 'size', exact: true }).nth(1).click()
+        await expect.poll(() => headers()).toContain('Large')
+        expect(headers().filter((t) => ['Small', 'Medium', 'Large'].includes(t))).toEqual([
+            'Large',
+            'Medium',
+            'Small'
+        ])
+
+        await page.getByRole('button', { name: 'Tự khai khoá cho Size' }).click()
+        await expect
+            .poll(() => headers().filter((t) => ['Small', 'Medium', 'Large'].includes(t)))
+            .toEqual(['Small', 'Medium', 'Large'])
+    })
+
+    it('closes each nested column group with its own total', async () => {
+        await openPivot()
+        await page.getByRole('button', { name: 'Lồng thêm Product ra ngang' }).click()
+        await expect.poll(() => headers()).toContain('Widget')
+
+        await page.getByRole('button', { name: 'Tổng con mỗi nhóm cột' }).click()
+        await expect.poll(() => headers().some((text) => text.endsWith(' tổng'))).toBe(true)
+    })
+
+    it('turns the crossing off and back on through the api', async () => {
+        await openPivot()
+        expect(headers()).toContain('Q1')
+
+        await page.getByRole('button', { name: 'Tắt pivot' }).click()
+        await expect.poll(() => headers()).toContain('Quarter')
+        expect(headers()).not.toContain('Q1')
+
+        await page.getByRole('button', { name: 'Bật lại' }).click()
+        await expect.poll(() => headers()).toContain('Q1')
+    })
+
+    it('brings a saved crossing back after it was turned off', async () => {
+        await openPivot()
+        await page.getByRole('button', { name: 'Lưu view' }).click()
+        await page.getByRole('button', { name: 'Tắt pivot' }).click()
+        await expect.poll(() => headers()).not.toContain('Q1')
+
+        await page.getByRole('button', { name: 'Nạp lại view đã lưu' }).click()
+        await expect.poll(() => headers()).toContain('Q1')
     })
 })
