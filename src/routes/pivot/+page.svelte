@@ -11,7 +11,8 @@
         isPivotColumn,
         pivot,
         sorting,
-        type ColumnDef
+        type ColumnDef,
+        type PivotShowAs
     } from '$lib/index.js'
     import { Badge, Button, Container, Link, ThemeModeButton } from 'sv5ui'
 
@@ -152,6 +153,7 @@
 
     let subtotals = $state(false)
     let foldable = $state(false)
+    let share = $state<PivotShowAs | undefined>(undefined)
     let totals = $state(false)
     let ownKeys = $state(false)
     let saved = $state<ReturnType<NonNullable<typeof pivotGrid.api.getState>> | null>(null)
@@ -160,6 +162,7 @@
         const state = pivotState()
         state.setColumnSubtotal(subtotals ? (header: string) => `${header} tổng` : undefined)
         state.setColumnGroups(foldable ? 'open' : 'fixed')
+        state.setValues([{ field: 'amount', agg: 'sum', showAs: share }])
         state.setTotalColumn(totals ? 'Tổng' : undefined)
         state.setTotalRow(totals ? 'Tất cả' : undefined)
     })
@@ -318,6 +321,19 @@
                 onclick={() => (foldable = !foldable)}
             />
             <Button
+                variant={share === 'percentOfRow' ? 'solid' : 'outline'}
+                size="sm"
+                label="% của tổng hàng"
+                onclick={() => (share = share === 'percentOfRow' ? undefined : 'percentOfRow')}
+            />
+            <Button
+                variant={share === 'percentOfColumn' ? 'solid' : 'outline'}
+                size="sm"
+                label="% của tổng cột"
+                onclick={() =>
+                    (share = share === 'percentOfColumn' ? undefined : 'percentOfColumn')}
+            />
+            <Button
                 variant={totals ? 'solid' : 'outline'}
                 size="sm"
                 label="Cột Tổng và hàng Tất cả"
@@ -382,6 +398,14 @@
                 đi, rồi bấm <strong class="text-on-surface">Nạp lại</strong>: bảng chéo trở về đúng
                 như lúc lưu. Trước đợt này thì cấu hình pivot không vào snapshot, nên nạp lại là mất
                 trắng.
+            </p>
+
+            <p class="text-xs text-on-surface-variant">
+                <strong class="text-on-surface">% của tổng hàng</strong> chia mỗi ô cho những dòng
+                mà hàng ấy gom lại, nên đọc ngang là 1.
+                <strong class="text-on-surface">% của tổng cột</strong> chia cho những dòng dưới cùng
+                một giao, nên đọc dọc là 1. Cả hai mẫu số đều đo lại từ dòng, không cộng các ô bên cạnh,
+                nên đổi hàm gộp sang trung bình vẫn ra số đúng.
             </p>
 
             <p class="text-xs text-on-surface-variant">

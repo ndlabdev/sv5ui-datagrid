@@ -99,3 +99,38 @@ describe('folding a column group in the demo', () => {
         expect(headers()).toContain('Q2 tổng')
     })
 })
+
+describe('reading a measure as a share in the demo', () => {
+    const cells = () =>
+        Array.from(document.querySelectorAll('[role="row"][data-dg-row-id]'))
+            .map((row) =>
+                Array.from(row.querySelectorAll('[role="gridcell"]')).map(
+                    (cell) => cell.textContent?.trim() ?? ''
+                )
+            )
+            .filter((row) => row.length > 1)
+
+    it('turns the numbers into percentages that read across to a hundred', async () => {
+        await open()
+        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('$')
+
+        await click('% của tổng hàng')
+        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('%')
+
+        const first = cells()[0]!
+            .slice(1)
+            .filter((text) => text.includes('%'))
+        const total = first.reduce((sum, text) => sum + Number(text.replace(/[^0-9.]/g, '')), 0)
+        expect(total).toBeGreaterThan(99)
+        expect(total).toBeLessThan(101)
+    })
+
+    it('goes back to money when the share is turned off', async () => {
+        await open()
+        await click('% của tổng hàng')
+        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('%')
+
+        await click('% của tổng hàng')
+        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('$')
+    })
+})
