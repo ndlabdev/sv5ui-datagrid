@@ -283,6 +283,11 @@ export class Pivot<TRow> {
         this.serverColumns = paths
     })
 
+    #fieldsResolve(): boolean {
+        const defs = this.#grid.columns.defs
+        return this.values.every((measure) => defs.some((def) => def.id === measure.field))
+    }
+
     #columnDefs(): ColumnDef<TRow>[] {
         const defs = this.#grid.columns.defs
         const found = this.columns.map((id) => defs.find((def) => def.id === id))
@@ -371,6 +376,7 @@ export class Pivot<TRow> {
         this.#warnMissing(defs)
         this.#warnTotalRow()
         if (!this.#onServer && this.#columnDefs().length === 0) return false
+        if (!this.#onServer && !this.#fieldsResolve()) return false
         if (this.#crossing.overflowed) {
             this.#warnOverflow()
             return false
@@ -551,6 +557,7 @@ export class Pivot<TRow> {
         if (!this.isCrossing) return nodes
         if (this.#refuseServer()) return nodes
         if (this.#crossing.overflowed || this.#columnDefs().length === 0) return nodes
+        if (!this.#fieldsResolve()) return nodes
 
         const read = gateReader(this.#grid, 'render')
         const aggregations = this.#aggregations(nodes)
@@ -633,16 +640,32 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
     return {
         rows: [...state.rows],
         columns: [...state.columns],
+        columnGroups: state.columnGroups,
+        sortableColumns: state.sortableColumns,
+        ...(state.totalColumn === undefined ? {} : { totalColumn: state.totalColumn }),
+        ...(state.totalRow === undefined ? {} : { totalRow: state.totalRow }),
         ...(named
             ? {
                   values: state.values.map((measure) => ({
                       field: measure.field,
                       agg: measure.agg as string,
-                      ...(measure.header === undefined ? {} : { header: measure.header })
+                      ...(measure.header === undefined ? {} : { header: measure.header }),
+                      ...(measure.showAs === undefined ? {} : { showAs: measure.showAs })
                   }))
               }
             : {})
     }
+}
+
+const SHARES: PivotShowAs[] = ['percentOfRow', 'percentOfColumn', 'percentOfTotal']
+const GROUP_MODES: ColumnGroupMode[] = ['fixed', 'open', 'closed']
+
+function shareIn(value: unknown): PivotShowAs | undefined {
+    return SHARES.find((share) => share === value)
+}
+
+function headerIn(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined
 }
 
 function fieldsIn<TRow>(slice: Record<string, unknown>, key: string, grid: GridState<TRow>) {
@@ -662,15 +685,17 @@ function measuresIn<TRow>(
 
     const kept = found.flatMap((entry): PivotMeasure<TRow>[] => {
         if (entry === null || typeof entry !== 'object') return []
-        const { field, agg, header } = entry as Record<string, unknown>
+        const { field, agg, header, showAs } = entry as Record<string, unknown>
         if (typeof field !== 'string' || typeof agg !== 'string') return []
         if (!grid.columns.get(field)) return []
 
+        const share = shareIn(showAs)
         return [
             {
                 field,
                 agg: agg as PivotMeasure<TRow>['agg'],
-                ...(typeof header === 'string' ? { header } : {})
+                ...(typeof header === 'string' ? { header } : {}),
+                ...(share === undefined ? {} : { showAs: share })
             }
         ]
     })
@@ -689,6 +714,14 @@ function hydratePivot<TRow>(slice: unknown, grid: GridState<TRow>): void {
     if (rows) state.setRows(rows)
     if (columns) state.setColumns(columns)
     if (values) state.setValues(values)
+
+    const mode = GROUP_MODES.find((known) => known === shape.columnGroups)
+    if (mode) state.setColumnGroups(mode)
+    if (typeof shape.sortableColumns === 'boolean') {
+        state.setSortableColumns(shape.sortableColumns)
+    }
+    state.setTotalColumn(headerIn(shape.totalColumn))
+    state.setTotalRow(headerIn(shape.totalRow))
 }
 
 function pivotMenuItems<TRow>(ctx: MenuContext<TRow>): MenuItem[] {

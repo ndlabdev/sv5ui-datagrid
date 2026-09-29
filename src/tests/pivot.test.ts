@@ -870,3 +870,30 @@ describe('a saved view carries a pivot order back', () => {
         expect(order(grid)).toEqual(['North', 'South'])
     })
 })
+
+describe('a measure naming no column is refused the same way a field is', () => {
+    it('draws no crossing at all rather than a table of empty columns', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const grid = build({ values: [{ field: 'nowhere', agg: 'sum' }] })
+
+        expect(columnIds(grid).some(isPivotColumn)).toBe(false)
+        expect(grid.preWindowNodes).toHaveLength(sales.length)
+
+        const said = warn.mock.calls.filter((call) => String(call[0]).includes('no column defined'))
+        expect(String(said[0]?.[0])).toContain('nowhere')
+        warn.mockRestore()
+    })
+
+    it('refuses when one measure of two is the one that names nothing', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const grid = build({
+            values: [
+                { field: 'amount', agg: 'sum' },
+                { field: 'nowhere', agg: 'count' }
+            ]
+        })
+
+        expect(columnIds(grid).some(isPivotColumn)).toBe(false)
+        warn.mockRestore()
+    })
+})

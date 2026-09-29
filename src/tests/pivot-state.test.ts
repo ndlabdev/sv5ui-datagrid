@@ -171,3 +171,96 @@ describe('the column menu offers the two axes', () => {
         expect(state.columns).toEqual([])
     })
 })
+
+describe('a saved view carries every setting a reader can change', () => {
+    function rich() {
+        return createDataGrid<Sale>({
+            columns,
+            data: sales,
+            getRowId: (row) => String(row.id),
+            features: [
+                sorting(),
+                pivot<Sale>({
+                    rows: ['region'],
+                    columns: ['quarter', 'product'],
+                    values: [{ field: 'amount', agg: 'sum' }],
+                    columnSubtotal: (header) => `${header} total`
+                })
+            ]
+        })
+    }
+
+    const settings = (grid: GridState<Sale>) => {
+        const state = getPivot(grid)!
+        return {
+            groups: state.columnGroups,
+            sortable: state.sortableColumns,
+            totalColumn: state.totalColumn,
+            totalRow: state.totalRow,
+            showAs: state.values[0]!.showAs
+        }
+    }
+
+    it('brings the share, the folding, the totals and the sorting back', () => {
+        const source = rich()
+        const state = getPivot(source)!
+        state.setValueShowAs(0, 'percentOfRow')
+        state.setColumnGroups('closed')
+        state.setSortableColumns(true)
+        state.setTotalColumn('Total')
+        state.setTotalRow('All')
+
+        const snapshot = source.api.getState!()
+
+        const fresh = rich()
+        expect(settings(fresh)).toEqual({
+            groups: 'fixed',
+            sortable: false,
+            totalColumn: undefined,
+            totalRow: undefined,
+            showAs: undefined
+        })
+
+        fresh.api.setState!(snapshot)
+        expect(settings(fresh)).toEqual({
+            groups: 'closed',
+            sortable: true,
+            totalColumn: 'Total',
+            totalRow: 'All',
+            showAs: 'percentOfRow'
+        })
+    })
+
+    it('takes a total back off when the view was saved without one', () => {
+        const source = rich()
+        const snapshot = source.api.getState!()
+
+        const fresh = rich()
+        getPivot(fresh)!.setTotalColumn('Total')
+        getPivot(fresh)!.setTotalRow('All')
+
+        fresh.api.setState!(snapshot)
+        expect(settings(fresh).totalColumn).toBeUndefined()
+        expect(settings(fresh).totalRow).toBeUndefined()
+    })
+
+    it('refuses a share or a folding mode the snapshot made up', () => {
+        const fresh = rich()
+        getPivot(fresh)!.setColumnGroups('open')
+
+        fresh.api.setState!({
+            version: 1,
+            features: {
+                pivot: {
+                    rows: ['region'],
+                    columns: ['quarter'],
+                    columnGroups: 'sideways',
+                    values: [{ field: 'amount', agg: 'sum', showAs: 'percentOfMoon' }]
+                }
+            }
+        } as never)
+
+        expect(settings(fresh).groups).toBe('open')
+        expect(settings(fresh).showAs).toBeUndefined()
+    })
+})
