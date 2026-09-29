@@ -121,6 +121,7 @@ export const viVN: DataGridLocalePack = {
         pivotRows: 'Chạy dọc',
         pivotColumns: 'Chạy ngang',
         pivotValues: 'Giá trị',
+        pivotValuesOn: 'Xếp số đo',
         pivotPanelEmpty: 'Chưa giao nhau',
         addPivotRow: 'Thêm vào trục dọc',
         addPivotColumn: 'Thêm vào trục ngang',

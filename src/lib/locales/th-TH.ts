@@ -122,6 +122,7 @@ export const thTH: DataGridLocalePack = {
         pivotRows: 'แนวตั้ง',
         pivotColumns: 'แนวนอน',
         pivotValues: 'ค่า',
+        pivotValuesOn: 'การวางค่าที่วัด',
         pivotPanelEmpty: 'ยังไม่มีการไขว้',
         addPivotRow: 'เพิ่มในแนวตั้ง',
         addPivotColumn: 'เพิ่มในแนวนอน',

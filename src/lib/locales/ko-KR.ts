@@ -121,6 +121,7 @@ export const koKR: DataGridLocalePack = {
         pivotRows: '행 방향',
         pivotColumns: '열 방향',
         pivotValues: '값',
+        pivotValuesOn: '측정값 배치',
         pivotPanelEmpty: '아직 교차 없음',
         addPivotRow: '행 방향에 추가',
         addPivotColumn: '열 방향에 추가',

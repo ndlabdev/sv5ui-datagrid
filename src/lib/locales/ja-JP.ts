@@ -121,6 +121,7 @@ export const jaJP: DataGridLocalePack = {
         pivotRows: '行方向',
         pivotColumns: '列方向',
         pivotValues: '値',
+        pivotValuesOn: '値の並べ方',
         pivotPanelEmpty: 'まだ交差していません',
         addPivotRow: '行方向に追加',
         addPivotColumn: '列方向に追加',

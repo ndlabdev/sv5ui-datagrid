@@ -491,3 +491,36 @@ describe('a ratio crosses the wire', () => {
         expect(seen[0]!.pivot!.values).toEqual([{ field: 'amount', agg: 'sum' }])
     })
 })
+
+describe('the measures stay on the column axis when the server answers', () => {
+    it('keeps a leaf per measure and says why, whatever valuesOn asks for', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const { grid, getRows } = serverGrid(
+            {
+                rows: [
+                    { id: 1, region: 'North', quarter: '', amount: 0, pivot: { Q1: [180, 90] } },
+                    { id: 2, region: 'South', quarter: '', amount: 0, pivot: { Q1: [200, 200] } }
+                ],
+                rowCount: 2,
+                pivotColumns: [['Q1']]
+            },
+            {
+                valuesOn: 'rows',
+                values: [
+                    { field: 'amount', agg: 'sum' },
+                    { field: 'amount', agg: 'avg', header: 'Average' }
+                ]
+            }
+        )
+        await load(grid, getRows)
+
+        expect(columnIds(grid).filter(isPivotColumn)).toEqual(['__pv:c:Q1::0', '__pv:c:Q1::1'])
+        expect(grid.preWindowNodes).toHaveLength(2)
+        expect(
+            warn.mock.calls.filter((call) =>
+                String(call[0]).includes('measures on the column axis')
+            )
+        ).toEqual([expect.anything()])
+        warn.mockRestore()
+    })
+})

@@ -223,6 +223,25 @@
 
             <div class="grow"></div>
 
+            {#if pivot.isCrossing}
+                <DropdownMenu
+                    items={[
+                        { label: t.pivotColumns, onSelect: () => pivot.setValuesOn('columns') },
+                        { label: t.pivotRows, onSelect: () => pivot.setValuesOn('rows') }
+                    ]}
+                >
+                    {#snippet children({ props })}
+                        <Button
+                            {...props}
+                            variant="ghost"
+                            size="xs"
+                            label={pivot.valuesOn === 'rows' ? t.pivotRows : t.pivotColumns}
+                            aria-label={t.pivotValuesOn}
+                        />
+                    {/snippet}
+                </DropdownMenu>
+            {/if}
+
             {#if free.length > 0}
                 <DropdownMenu items={addTo((id) => pivot.addValue(id))}>
                     {#snippet children({ props })}

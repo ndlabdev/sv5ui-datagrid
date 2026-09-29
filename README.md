@@ -745,6 +745,44 @@ rows' own margins is thirty, and they part further the more the rows differ in
 size. `type` comes with it because a ratio is the unit of neither column it
 divides, and nothing but the application knows which it is.
 
+### Where the measures stack
+
+With two measures and twelve quarters a crossing is twenty four columns wide,
+and with five it is sixty. `valuesOn: 'rows'` stops the column axis
+multiplying: each crossing becomes one column, and every group opens into one
+row per measure instead, headed by a generated column naming which measure the
+row holds.
+
+```ts
+pivot<Sale>({
+    rows: ['region'],
+    columns: ['quarter'],
+    values: [
+        { field: 'amount', agg: 'sum' },
+        { field: 'amount', agg: 'avg', header: 'Average' }
+    ],
+    valuesOn: 'rows'
+})
+```
+
+Every level stacks, not only the innermost, so a group folded shut still shows
+its measures. That is the point of the setting: the tables worth turning
+sideways are the ones too wide to read, and folding is how they are read.
+
+Two things follow from a column no longer naming a measure. Sorting by a
+crossing sorts the groups by the first measure, and the grid says so once,
+since the header a reader clicked cannot say which measure they meant. And one
+column now serves every measure, so measures whose results are of different
+types share a column that carries no type and draws each value as it comes;
+give them the same `type` to get the formatting back.
+
+`maxColumns` counts what is drawn, so moving the measures down the page buys
+back as many crossings as there were measures.
+
+`rowModel: "server"` keeps the measures on the column axis whatever this says.
+Splitting one row into several is the client rebuilding rows the server sent,
+which is the one thing the server row model does not let it do.
+
 ### The axis, and what it is made of
 
 Keys are ordered by the values themselves, so a number axis counts and a date

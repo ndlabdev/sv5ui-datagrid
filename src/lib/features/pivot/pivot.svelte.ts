@@ -1,4 +1,10 @@
-import { gateReader, type GridState, PIPELINE_ORDER, rawRead } from '../../core/grid/index.js'
+import {
+    type CellRead,
+    gateReader,
+    type GridState,
+    PIPELINE_ORDER,
+    rawRead
+} from '../../core/grid/index.js'
 import {
     type ColumnDef,
     type ColumnType,
@@ -16,6 +22,7 @@ import { buildGroupNodes, groupNodeId } from '../grouping/group-nodes.js'
 import { buildGrandTotalNode, totalsKindOf } from '../grouping/totals-nodes.js'
 import type { Aggregation } from '../grouping/grouping.types.js'
 import {
+    agreedLook,
     type ColumnGroupMode,
     type Crossing,
     crossingId,
@@ -24,6 +31,9 @@ import {
     crossingIndex,
     defaultHeader,
     measuredLook,
+    measureRowBase,
+    measureRowId,
+    MEASURE_COLUMN,
     keepOnly,
     isPivotColumn,
     missingFields,
@@ -41,10 +51,10 @@ import {
     serverCrossing,
     totalId
 } from './pivot-columns.js'
-import { reorderGroups } from './pivot-sort.js'
+import { alongFirstMeasure, reorderGroups } from './pivot-sort.js'
 import type { PivotRequest } from '../server-row-model/server-row-model.types.js'
 import type { SortState } from '../../core/types/index.js'
-import type { PivotMeasure, PivotOptions, PivotShowAs } from './pivot.types.js'
+import type { PivotMeasure, PivotOptions, PivotShowAs, PivotValuesOn } from './pivot.types.js'
 
 const PIVOT = 'pivot'
 const SERVER_ROW_MODEL = 'serverRowModel'
@@ -87,6 +97,16 @@ const SERVER_DRILL =
     'crossed rows the server sent, not the rows they were measured from. Ask the server for them ' +
     'with the same crossing, or cross on the client.'
 
+const SERVER_VALUES_ON_ROWS =
+    'pivot() keeps its measures on the column axis on rowModel: "server". Putting them down the ' +
+    'page means one row per measure, and the client only holds the blocks the server sent, so it ' +
+    'cannot split a row it did not build. The crossing still draws, with a leaf per measure.'
+
+const SORT_BY_FIRST_MEASURE =
+    'pivot() has its measures on the row axis, where a column header names a crossing rather ' +
+    'than a measure, so sorting by one sorts the groups by the first measure. Put the measure ' +
+    'you mean first in values, or move the measures back to the column axis to sort by each.'
+
 const RUNNING_AGG =
     'pivot() left a runningTotal empty: it runs only a sum or a count of one column, the ' +
     'reductions where adding the cells and measuring the rows give the same answer. A ratio does ' +
@@ -116,6 +136,7 @@ export class Pivot<TRow> {
     sortableColumns = $state.raw(false)
     columnGroups = $state.raw<ColumnGroupMode>('fixed')
     columnSubtotal = $state.raw<((header: string) => string) | undefined>(undefined)
+    valuesOn = $state.raw<PivotValuesOn>('columns')
 
     #grid: GridState<TRow>
     #options: PivotOptions<TRow>
@@ -131,6 +152,7 @@ export class Pivot<TRow> {
         this.sortableColumns = options.sortableColumns ?? false
         this.columnGroups = options.columnGroups ?? 'fixed'
         this.columnSubtotal = options.columnSubtotal
+        this.valuesOn = options.valuesOn ?? 'columns'
 
         if (options.rows.length === 0 || options.columns.length === 0) {
             throw new Error('pivot() needs at least one row field and one column field')
@@ -190,6 +212,10 @@ export class Pivot<TRow> {
 
     setColumnGroups = mutator((mode: ColumnGroupMode): void => {
         this.columnGroups = mode
+    })
+
+    setValuesOn = mutator((where: PivotValuesOn): void => {
+        this.valuesOn = where
     })
 
     setSortableColumns = mutator((sortable: boolean): void => {
@@ -257,6 +283,10 @@ export class Pivot<TRow> {
         return this.#grid.rowModel === 'server'
     }
 
+    get #onRows(): boolean {
+        return this.valuesOn === 'rows' && this.values.length > 0 && !this.#onServer
+    }
+
     get serverHandled(): boolean {
         if (!this.#onServer) return false
         return this.#grid.features.some((feature) => feature.id === SERVER_ROW_MODEL)
@@ -321,7 +351,7 @@ export class Pivot<TRow> {
         if (!this.isCrossing) return EMPTY
         const limit = {
             max: this.#limit,
-            leavesPerPath: this.values.length,
+            leavesPerPath: this.#onRows ? 1 : this.values.length,
             withSubtotals: this.columnSubtotal !== undefined
         }
 
@@ -344,7 +374,7 @@ export class Pivot<TRow> {
         crossingIndex({
             paths: this.#crossing.paths,
             subtotals: this.columnSubtotal ? subtotalPaths(this.#crossing.tree) : [],
-            measures: this.values.length,
+            measures: this.#onRows ? 1 : this.values.length,
             withTotal: this.totalColumn !== undefined
         })
     )
@@ -384,6 +414,17 @@ export class Pivot<TRow> {
         console.warn(SERVER_TOTAL_ROW)
     }
 
+    #valuesOnRowsWarned = false
+
+    #warnValuesOnRows(): void {
+        if (!this.#onServer || this.valuesOn !== 'rows') return
+        if (this.#valuesOnRowsWarned) return
+
+        this.#valuesOnRowsWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(SERVER_VALUES_ON_ROWS)
+    }
+
     #overflowWarned = false
 
     #warnOverflow(): void {
@@ -399,6 +440,7 @@ export class Pivot<TRow> {
 
         this.#warnMissing(defs)
         this.#warnTotalRow()
+        this.#warnValuesOnRows()
         if (!this.#onServer && this.#columnDefs().length === 0) return false
         if (!this.#onServer && !this.#fieldsResolve()) return false
         if (this.#crossing.overflowed) {
@@ -414,14 +456,15 @@ export class Pivot<TRow> {
         const found = this.#crossing
         const shown = keepOnly(defs, this.rows)
         const sources = this.#grid.columns.defs
+        const looks = this.values.map((measure) =>
+            measuredLook(
+                measure,
+                sources.find((source) => source.id === measure.field)
+            )
+        )
         const generated = pivotColumnDefs<TRow>(found, {
-            measures: this.values,
-            looks: this.values.map((measure) =>
-                measuredLook(
-                    measure,
-                    sources.find((source) => source.id === measure.field)
-                )
-            ),
+            measures: this.#onRows ? this.values.slice(0, 1) : this.values,
+            looks: this.#onRows ? [agreedLook(looks)] : looks,
             totalHeader: found.paths.length > 0 ? this.totalColumn : undefined,
             subtotalHeader: this.columnSubtotal,
             groups: this.columnGroups,
@@ -436,10 +479,26 @@ export class Pivot<TRow> {
                   }
                 : {})
         })
-        return [...shown, ...generated]
+        if (!this.#onRows) return [...shown, ...generated]
+        return [...shown, this.#measureColumn(), ...generated]
     }
 
-    #aggregations(all: RowNode<TRow>[]): Record<string, Aggregation<TRow>> {
+    #measureColumn(): ColumnDef<TRow> {
+        return {
+            id: MEASURE_COLUMN,
+            header: this.#grid.labels.pivotValues,
+            sortable: false,
+            filter: false
+        }
+    }
+
+    #measureLabel = (at: number): string => {
+        const measure = this.values[at]
+        if (!measure) return ''
+        return measure.header ?? measure.field
+    }
+
+    #aggregations(all: RowNode<TRow>[]): Record<string, Aggregation<TRow>>[] {
         const read = gateReader(this.#grid, 'render')
         const defs = this.#grid.columns.defs
         const columns = this.#columnDefs()
@@ -558,32 +617,44 @@ export class Pivot<TRow> {
             return share(raw(), key === undefined ? wholeOf(index) : keyOf(index, key))
         }
 
-        const out: Record<string, Aggregation<TRow>> = {}
-        for (const path of this.#crossing.paths) {
-            const id = pathId(path)
-            for (let index = 0; index < measures.length; index++) {
-                out[crossingId(path, index)] = (_values, rows) =>
-                    shown(index, () => reduce(index, bucketsFor(rows).get(id)), rows, id)
-            }
-        }
+        const onRows = this.#onRows
+        const slots = onRows
+            ? measures.map((_measure, index) => [index])
+            : [measures.map((_measure, index) => index)]
+        const leafOf = (index: number): number => (onRows ? 0 : index)
 
-        if (this.columnSubtotal) {
-            for (const path of subtotalPaths(this.#crossing.tree)) {
+        const crossed = this.#crossing
+        const subtotals = this.columnSubtotal ? subtotalPaths(crossed.tree) : []
+
+        return slots.map((indexes) => {
+            const out: Record<string, Aggregation<TRow>> = {}
+
+            for (const path of crossed.paths) {
                 const id = pathId(path)
-                for (let index = 0; index < measures.length; index++) {
-                    out[subtotalId(path, index)] = (_values, rows) =>
+                for (const index of indexes) {
+                    out[crossingId(path, leafOf(index))] = (_values, rows) =>
                         shown(index, () => reduce(index, bucketsFor(rows).get(id)), rows, id)
                 }
             }
-        }
 
-        if (this.totalColumn !== undefined) {
-            for (let index = 0; index < measures.length; index++) {
-                out[totalId(index)] = (_values, rows) =>
-                    shown(index, () => reduce(index, rows), rows, undefined)
+            if (this.columnSubtotal) {
+                for (const path of subtotals) {
+                    const id = pathId(path)
+                    for (const index of indexes) {
+                        out[subtotalId(path, leafOf(index))] = (_values, rows) =>
+                            shown(index, () => reduce(index, bucketsFor(rows).get(id)), rows, id)
+                    }
+                }
             }
-        }
-        return out
+
+            if (this.totalColumn !== undefined) {
+                for (const index of indexes) {
+                    out[totalId(leafOf(index))] = (_values, rows) =>
+                        shown(index, () => reduce(index, rows), rows, undefined)
+                }
+            }
+            return out
+        })
     }
 
     #order(rows: RowNode<TRow>[]): RowNode<TRow>[] {
@@ -593,7 +664,25 @@ export class Pivot<TRow> {
         const defs = this.#grid.columns.all.map((column) => column.def)
         const nulls = getSorting(this.#grid)?.nulls
 
-        return reorderGroups(rows, (siblings) => sortNodes(siblings, defs, sort, nulls))
+        const order = (siblings: RowNode<TRow>[]): RowNode<TRow>[] =>
+            sortNodes(siblings, defs, sort, nulls)
+
+        if (!this.#onRows) return reorderGroups(rows, order)
+
+        if (this.values.length > 1) this.#warnSortMeasure()
+        return reorderGroups(
+            rows,
+            alongFirstMeasure(rows, (id) => measureRowId(id, 0), order)
+        )
+    }
+
+    #sortMeasureWarned = false
+
+    #warnSortMeasure(): void {
+        if (this.#sortMeasureWarned) return
+        this.#sortMeasureWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(SORT_BY_FIRST_MEASURE)
     }
 
     #runningWarned = false
@@ -624,10 +713,11 @@ export class Pivot<TRow> {
         const nodes = this.#grid.filteredNodes
         const fields = this.#rowDefs()
 
+        const wanted = measureRowBase(node.id)
         const gathered =
-            totalsKindOf(node.id) === 'grandTotal'
+            totalsKindOf(wanted) === 'grandTotal'
                 ? nodes.map((row) => row.row)
-                : rowsInGroup(nodes, { fields, read, idOf: groupNodeId, wanted: node.id })
+                : rowsInGroup(nodes, { fields, read, idOf: groupNodeId, wanted })
 
         if (ref.keys.length === 0) return gathered
 
@@ -662,10 +752,20 @@ export class Pivot<TRow> {
         const rows = buildGroupNodes(nodes, {
             by: this.rows,
             columns,
-            aggregations,
+            aggregations: this.#onRows ? {} : aggregations[0]!,
             isExpanded: (id) => this.#grid.expansion.isExpanded(id),
             groupLabel: (key) => key,
-            read
+            read,
+            ...(this.#onRows
+                ? {
+                      repeat: {
+                          count: aggregations.length,
+                          aggregationsAt: (at: number) => aggregations[at]!,
+                          idAt: measureRowId,
+                          fieldsAt: (at: number) => ({ [MEASURE_COLUMN]: this.#measureLabel(at) })
+                      }
+                  }
+                : {})
         })
 
         const ordered = this.#order(rows)
@@ -673,15 +773,37 @@ export class Pivot<TRow> {
         const label = this.totalRow
         if (label === undefined || nodes.length === 0) return ordered
 
-        return [
-            ...ordered,
+        return [...ordered, ...this.#totalRows(nodes, aggregations, { columns, label, read })]
+    }
+
+    #totalRows(
+        nodes: RowNode<TRow>[],
+        aggregations: Record<string, Aggregation<TRow>>[],
+        into: { columns: ColumnDef<TRow>[]; label: string; read: CellRead<TRow> }
+    ): RowNode<TRow>[] {
+        const build = (
+            record: Record<string, Aggregation<TRow>>,
+            labelColumnId: string | undefined,
+            text: string
+        ): RowNode<TRow> =>
             buildGrandTotalNode(nodes, {
-                read,
-                columns,
-                aggregations,
-                labelColumnId: this.rows[0],
-                grandTotalLabel: () => label
+                read: into.read,
+                columns: into.columns,
+                aggregations: record,
+                labelColumnId,
+                grandTotalLabel: () => text
             })
+
+        if (!this.#onRows) return [build(aggregations[0]!, this.rows[0], into.label)]
+
+        const head = build({}, this.rows[0], into.label)
+        return [
+            head,
+            ...aggregations.map((record, at) => ({
+                ...build(record, MEASURE_COLUMN, this.#measureLabel(at)),
+                id: measureRowId(head.id, at),
+                meta: { level: 1, setSize: aggregations.length, posInSet: at + 1 }
+            }))
         ]
     }
 }
@@ -738,6 +860,7 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
         columns: [...state.columns],
         columnGroups: state.columnGroups,
         sortableColumns: state.sortableColumns,
+        valuesOn: state.valuesOn,
         ...(state.totalColumn === undefined ? {} : { totalColumn: state.totalColumn }),
         ...(state.totalRow === undefined ? {} : { totalRow: state.totalRow }),
         ...(named
@@ -765,6 +888,8 @@ const SHARES: PivotShowAs[] = [
     'rankInRow'
 ]
 const GROUP_MODES: ColumnGroupMode[] = ['fixed', 'open', 'closed']
+
+const VALUES_ON: PivotValuesOn[] = ['columns', 'rows']
 
 const COLUMN_TYPES: ColumnType[] = [
     'text',
@@ -863,6 +988,8 @@ function hydratePivot<TRow>(slice: unknown, grid: GridState<TRow>): void {
 
     const mode = GROUP_MODES.find((known) => known === shape.columnGroups)
     if (mode) state.setColumnGroups(mode)
+    const where = VALUES_ON.find((known) => known === shape.valuesOn)
+    if (where) state.setValuesOn(where)
     if (typeof shape.sortableColumns === 'boolean') {
         state.setSortableColumns(shape.sortableColumns)
     }
@@ -928,6 +1055,8 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 setPivotColumnGroups: state.setColumnGroups,
                 setPivotColumnSubtotal: state.setColumnSubtotal,
                 setPivotSortableColumns: state.setSortableColumns,
+                setPivotValuesOn: (where: unknown) => state.setValuesOn(where as PivotValuesOn),
+                pivotValuesOn: () => state.valuesOn,
                 isPivoting: () => state.isCrossing
             }
         },
@@ -945,7 +1074,7 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
         cellValue: ({ column, purpose }) =>
             purpose === 'edit' && isPivotColumn(column.id) ? refuseEditing : undefined,
         cellDecoration: ({ node }) =>
-            totalsKindOf(node.id) === 'grandTotal'
+            totalsKindOf(measureRowBase(node.id)) === 'grandTotal'
                 ? { class: 'border-t border-outline-variant bg-surface-container/60 font-semibold' }
                 : undefined
     }
@@ -966,6 +1095,8 @@ declare module '../../core/types/api.js' {
         setPivotColumnGroups?: (mode: 'fixed' | 'open' | 'closed') => void
         setPivotColumnSubtotal?: (label: ((header: string) => string) | undefined) => void
         setPivotSortableColumns?: (sortable: boolean) => void
+        setPivotValuesOn?: (where: 'columns' | 'rows') => void
+        pivotValuesOn?: () => 'columns' | 'rows'
         isPivoting?: () => boolean
     }
 }

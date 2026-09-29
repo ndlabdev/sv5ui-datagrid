@@ -130,6 +130,7 @@ export const esES: DataGridLocalePack = {
         pivotRows: 'Hacia abajo',
         pivotColumns: 'A lo ancho',
         pivotValues: 'Valores',
+        pivotValuesOn: 'Apilar medidas',
         pivotPanelEmpty: 'Nada cruzado todavía',
         addPivotRow: 'Añadir hacia abajo',
         addPivotColumn: 'Añadir a lo ancho',

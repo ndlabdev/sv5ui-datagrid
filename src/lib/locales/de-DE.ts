@@ -125,6 +125,7 @@ export const deDE: DataGridLocalePack = {
         pivotRows: 'Nach unten',
         pivotColumns: 'Quer',
         pivotValues: 'Werte',
+        pivotValuesOn: 'Kennzahlen stapeln',
         pivotPanelEmpty: 'Noch nichts gekreuzt',
         addPivotRow: 'Zu nach unten hinzufügen',
         addPivotColumn: 'Zu quer hinzufügen',

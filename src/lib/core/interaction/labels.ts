@@ -157,6 +157,7 @@ export const defaultLabels: DataGridLabels = {
     pivotRows: 'Down',
     pivotColumns: 'Across',
     pivotValues: 'Values',
+    pivotValuesOn: 'Stack measures',
     pivotPanelEmpty: 'Nothing crossed yet',
     addPivotRow: 'Add to down',
     addPivotColumn: 'Add to across',

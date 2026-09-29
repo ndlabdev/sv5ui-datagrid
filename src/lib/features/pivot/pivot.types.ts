@@ -272,9 +272,38 @@ export interface PivotOptions<TRow = unknown> {
     columnGroups?: 'fixed' | 'open' | 'closed'
 
     /**
+     * Which axis the measures stack on.
+     *
+     * On `'columns'` every crossing splits into one leaf per measure, so the
+     * table is as many columns wide as crossings times measures. On `'rows'`
+     * each crossing is a single column and every group opens into one row per
+     * measure instead, headed by a generated column naming which measure the
+     * row holds.
+     *
+     * Reach for `'rows'` when there are more measures than a reader can scan
+     * sideways: the column axis stops multiplying, so `maxColumns` buys as
+     * many crossings again, and a group folded shut still shows its measures.
+     *
+     * Two things follow from a column no longer naming a measure. Sorting by a
+     * crossing sorts the groups by the first measure, and the grid says so
+     * once. Measures whose results are of different types share one column, so
+     * that column carries no type and each value is drawn as it comes; give
+     * them the same `type` to get it back.
+     *
+     * `rowModel: "server"` keeps the measures on the column axis whatever this
+     * says, since splitting a row the server sent is not the client's to do.
+     *
+     * @default 'columns'
+     */
+    valuesOn?: PivotValuesOn
+
+    /**
      * A row at the bottom holding each measure over every row the grid is
      * showing, headed by this text in the first row field's column. Left out,
      * there is no total row.
      */
     totalRow?: string
 }
+
+/** Which axis `pivot()` stacks its measures on. */
+export type PivotValuesOn = 'columns' | 'rows'

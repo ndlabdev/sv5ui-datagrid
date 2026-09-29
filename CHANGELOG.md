@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     nested axis folds down to its subtotals. `maxColumns` refuses rather than
     truncates.
 
+    Measures stack on the column axis, so a crossing is as many columns wide as
+    crossings times measures. `valuesOn: 'rows'` stops that multiplying: each
+    crossing becomes one column and every group opens into one row per measure
+    instead, at every level, so a group folded shut still shows what it
+    measures. Sorting by a crossing then sorts by the first measure, since a
+    header that names a crossing cannot say which measure was meant.
+
     `Grid.PivotPanel` builds a crossing, a column menu offers the two axes, and
     `grid.api` carries the same moves, all of it kept in a saved view.
     `rowsBehind` answers which rows a cell was measured from.

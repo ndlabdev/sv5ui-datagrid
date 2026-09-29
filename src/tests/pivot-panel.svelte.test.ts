@@ -129,4 +129,17 @@ describe('the pivot panel', () => {
             )
             .toContain('%')
     })
+
+    it('moves the measures down the page, giving each one a row of its own', async () => {
+        await open()
+        const before = document.querySelectorAll('[role="row"]').length
+
+        await page.getByRole('button', { name: 'Xếp số đo' }).click()
+        await page.getByRole('menuitem', { name: 'Chạy dọc' }).click()
+
+        await expect.poll(() => headers()).toContain('Giá trị')
+        await expect
+            .poll(() => document.querySelectorAll('[role="row"]').length)
+            .toBeGreaterThan(before)
+    })
 })

@@ -46,6 +46,7 @@ function crossing(options: Partial<PivotOptions<Sale>>): PivotOptions<Sale> {
 function measure(data: Sale[], options: Partial<PivotOptions<Sale>>) {
     let best = Number.POSITIVE_INFINITY
     let leaves = 0
+    let rows = 0
 
     const cleanup = $effect.root(() => {
         const grid = createDataGrid<Sale>({
@@ -63,10 +64,11 @@ function measure(data: Sale[], options: Partial<PivotOptions<Sale>>) {
             best = Math.min(best, performance.now() - start)
         }
         leaves = grid.columns.visible.filter((column) => isPivotColumn(column.id)).length
+        rows = grid.preWindowNodes.length
     })
     cleanup()
 
-    return { ms: best, leaves }
+    return { ms: best, leaves, rows }
 }
 
 const BUDGET_MS = 1_500
@@ -83,6 +85,29 @@ describe('crossing 100k rows stays inside its budget', () => {
         expect(wide.leaves).toBe(100)
         expect(wide.ms).toBeLessThan(BUDGET_MS)
         expect(wide.ms).toBeLessThan(narrow.ms * 3)
+    })
+
+    it('pays for measures down the page in rows rather than in columns', () => {
+        const across = measure(wide100k, {
+            values: [
+                { field: 'amount', agg: 'sum' },
+                { field: 'amount', agg: 'avg' },
+                { field: 'amount', agg: 'max' }
+            ]
+        })
+        const down = measure(wide100k, {
+            valuesOn: 'rows',
+            values: [
+                { field: 'amount', agg: 'sum' },
+                { field: 'amount', agg: 'avg' },
+                { field: 'amount', agg: 'max' }
+            ]
+        })
+
+        expect(across.leaves).toBe(300)
+        expect(down.leaves).toBe(101)
+        expect(down.rows).toBe(across.rows * 4)
+        expect(down.ms).toBeLessThan(BUDGET_MS)
     })
 
     it('stays inside it nested, with two measures and both totals', () => {

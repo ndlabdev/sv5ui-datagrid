@@ -121,6 +121,7 @@ export const zhCN: DataGridLocalePack = {
         pivotRows: '向下',
         pivotColumns: '横向',
         pivotValues: '值',
+        pivotValuesOn: '度量堆叠',
         pivotPanelEmpty: '尚未进行透视',
         addPivotRow: '添加到行方向',
         addPivotColumn: '添加到列方向',

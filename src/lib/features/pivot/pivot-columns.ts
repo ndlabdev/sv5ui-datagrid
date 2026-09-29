@@ -10,6 +10,31 @@ const TOTAL = `${PIVOT_PREFIX}:t:`
 
 export const isPivotColumn = (columnId: string): boolean => columnId.startsWith(`${PIVOT_PREFIX}:`)
 
+export const MEASURE_COLUMN = `${PIVOT_PREFIX}:m`
+
+const MEASURE_ROW = /^m(\d+):/
+
+export const measureRowId = (groupId: string, at: number): string => `m${at}:${groupId}`
+
+export const measureRowBase = (rowId: string): string => rowId.replace(MEASURE_ROW, '')
+
+export function agreedLook<TRow>(looks: Partial<ColumnDef<TRow>>[]): Partial<ColumnDef<TRow>> {
+    const first = looks[0] ?? {}
+    const agree = looks.every(
+        (look) =>
+            look.type === first.type &&
+            look.typeOptions === first.typeOptions &&
+            look.cell === first.cell
+    )
+    if (agree) return first
+
+    return {
+        align: first.align ?? 'right',
+        ...(first.width === undefined ? {} : { width: first.width }),
+        ...(first.minWidth === undefined ? {} : { minWidth: first.minWidth })
+    }
+}
+
 export const isPivotTotalColumn = (columnId: string): boolean => columnId.startsWith(TOTAL)
 
 const escapeKey = (key: string): string => key.replaceAll('\\', '\\\\').replaceAll('|', '\\|')

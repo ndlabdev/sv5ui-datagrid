@@ -122,6 +122,7 @@ export const idID: DataGridLocalePack = {
         pivotRows: 'Ke bawah',
         pivotColumns: 'Ke samping',
         pivotValues: 'Nilai',
+        pivotValuesOn: 'Susun ukuran',
         pivotPanelEmpty: 'Belum ada yang disilangkan',
         addPivotRow: 'Tambah ke bawah',
         addPivotColumn: 'Tambah ke samping',

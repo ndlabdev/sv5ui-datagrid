@@ -127,6 +127,7 @@ export const ruRU: DataGridLocalePack = {
         pivotRows: 'Вниз',
         pivotColumns: 'Поперёк',
         pivotValues: 'Значения',
+        pivotValuesOn: 'Расположение мер',
         pivotPanelEmpty: 'Пока ничего не сведено',
         addPivotRow: 'Добавить вниз',
         addPivotColumn: 'Добавить поперёк',
