@@ -50,6 +50,10 @@ const ARGS: Record<string, unknown[]> = {
     filteredRows: [12, 300],
     selectedRows: [4],
 
+    movePivotEarlier: ['Region'],
+    movePivotLater: ['Region'],
+    removePivotChip: ['Region'],
+
     moveGroupEarlier: ['Region'],
     moveGroupLater: ['Region'],
     removeGroup: ['Region'],

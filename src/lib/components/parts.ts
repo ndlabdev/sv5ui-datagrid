@@ -18,6 +18,7 @@ import {
     FindReplace,
     GroupPanel,
     ImportWizard,
+    PivotPanel,
     SavedViews,
     ToolPanel
 } from './panels/index.js'
@@ -53,6 +54,7 @@ export interface GridParts {
     StatusBar: typeof GridStatusBar
 
     GroupPanel: typeof GroupPanel
+    PivotPanel: typeof PivotPanel
     FilterBuilder: typeof FilterBuilder
     FindReplace: typeof FindReplace
     SavedViews: typeof SavedViews
@@ -80,6 +82,7 @@ export const Grid: GridParts = {
     StatusBar: GridStatusBar,
 
     GroupPanel,
+    PivotPanel,
     FilterBuilder,
     FindReplace,
     SavedViews,
