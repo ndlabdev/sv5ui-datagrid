@@ -429,3 +429,13 @@ export function cacheByRows<TRow>(): (
         return found.get(slot)
     }
 }
+
+export function offAxis<TRow>(
+    defs: ColumnDef<TRow>[],
+    taken: string[]
+): { id: string; header: string }[] {
+    const used = new Set(taken)
+    return defs
+        .filter((def) => !used.has(def.id))
+        .map((def) => ({ id: def.id, header: String(def.header ?? def.id) }))
+}

@@ -7,6 +7,7 @@ import {
     type RowNode
 } from '../../core/types/index.js'
 import { mutator, numericOrNull } from '../../core/utils/index.js'
+import { flattenColumns } from '../../core/columns/header-groups.js'
 import { getSorting } from '../sorting/index.js'
 import { sortNodes } from '../sorting/sort.js'
 import { aggregate } from '../grouping/aggregate.js'
@@ -25,6 +26,7 @@ import {
     keepOnly,
     isPivotColumn,
     missingFields,
+    offAxis,
     partitionByPath,
     pathId,
     pivotColumnDefs,
@@ -38,7 +40,7 @@ import {
 import { reorderGroups } from './pivot-sort.js'
 import type { PivotRequest } from '../server-row-model/server-row-model.types.js'
 import type { SortState } from '../../core/types/index.js'
-import type { PivotMeasure, PivotOptions } from './pivot.types.js'
+import type { PivotMeasure, PivotOptions, PivotShowAs } from './pivot.types.js'
 
 const PIVOT = 'pivot'
 const SERVER_ROW_MODEL = 'serverRowModel'
@@ -173,6 +175,38 @@ export class Pivot<TRow> {
 
     setColumnSubtotal = mutator((label: ((header: string) => string) | undefined): void => {
         this.columnSubtotal = label
+    })
+
+    pivotableColumns(): { id: string; header: string }[] {
+        return offAxis(flattenColumns(this.#grid.columns.defs), [...this.rows, ...this.columns])
+    }
+
+    moveRowField = mutator((field: string, offset: number): void => {
+        this.rows = moved(this.rows, field, offset)
+    })
+
+    moveColumnField = mutator((field: string, offset: number): void => {
+        this.columns = moved(this.columns, field, offset)
+    })
+
+    addValue = mutator((field: string, agg: Aggregation<TRow> = 'sum'): void => {
+        this.values = [...this.values, { field, agg }]
+    })
+
+    removeValue = mutator((at: number): void => {
+        this.values = this.values.filter((_measure, index) => index !== at)
+    })
+
+    setValueAgg = mutator((at: number, agg: Aggregation<TRow>): void => {
+        this.values = this.values.map((measure, index) =>
+            index === at ? { ...measure, agg } : measure
+        )
+    })
+
+    setValueShowAs = mutator((at: number, showAs: PivotShowAs | undefined): void => {
+        this.values = this.values.map((measure, index) =>
+            index === at ? { ...measure, showAs } : measure
+        )
     })
 
     clearPivot = mutator((): void => {
@@ -497,6 +531,19 @@ export class Pivot<TRow> {
             })
         ]
     }
+}
+
+function moved(fields: string[], field: string, offset: number): string[] {
+    const from = fields.indexOf(field)
+    if (from < 0) return fields
+
+    const to = from + offset
+    if (to < 0 || to >= fields.length) return fields
+
+    const next = [...fields]
+    next.splice(from, 1)
+    next.splice(to, 0, field)
+    return next
 }
 
 function share(value: unknown, whole: unknown): unknown {
