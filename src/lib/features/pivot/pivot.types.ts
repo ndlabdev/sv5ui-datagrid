@@ -14,8 +14,33 @@ import type { Aggregation } from '../grouping/grouping.types.js'
  *
  * The share is a fraction, and the generated column is typed `percent`, so
  * `0.34` is drawn as `34%` on screen and in every export.
+ *
+ * The last four read a cell against the ones beside it rather than against a
+ * total, so they follow the order the crossing is drawn in.
+ *
+ * `runningTotal` is the measure over every crossing up to and including this
+ * one, which is how a year to date reads. It takes only `sum` and `count`,
+ * the reductions where running the rows and adding the cells give the same
+ * answer; for any other the cells are left empty and the grid says so once,
+ * because a running median is not something to guess at.
+ *
+ * `differenceFrom` is this cell less the one before it, and
+ * `percentDifferenceFrom` is that difference over the one before, which is how
+ * growth between two periods reads. `rankInRow` places the cell among the
+ * others on its row, one being the largest.
+ *
+ * All four are left empty on a subtotal and on a total column: those stand
+ * outside the run, so a difference from them would be a difference from
+ * nothing in particular.
  */
-export type PivotShowAs = 'percentOfRow' | 'percentOfColumn' | 'percentOfTotal'
+export type PivotShowAs =
+    | 'percentOfRow'
+    | 'percentOfColumn'
+    | 'percentOfTotal'
+    | 'runningTotal'
+    | 'differenceFrom'
+    | 'percentDifferenceFrom'
+    | 'rankInRow'
 
 /** One thing being measured: a column to read, and how to reduce it. */
 export interface PivotMeasure<TRow = unknown> {
@@ -26,8 +51,10 @@ export interface PivotMeasure<TRow = unknown> {
     agg: Aggregation<TRow>
 
     /**
-     * Reads this measure as a share instead of as itself. Left out, the
-     * measure is drawn as the number it reduced to.
+     * Reads this measure as something other than the number it reduced to:
+     * a share of a total, a running total, a change from the crossing before
+     * it, or a rank among the crossings beside it. Left out, the measure is
+     * drawn as it was measured.
      */
     showAs?: PivotShowAs
 

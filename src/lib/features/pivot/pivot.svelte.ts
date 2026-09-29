@@ -31,6 +31,7 @@ import {
     pathId,
     pivotColumnDefs,
     pivotCrossing,
+    placesOf,
     rowsInGroup,
     startsWithKeys,
     subtotalId,
@@ -55,6 +56,15 @@ const RESHAPES_THE_ROWS: Record<string, string> = {
 const DEFAULT_MAX_COLUMNS = 100
 const EMPTY: Crossing = { tree: [], paths: [], overflowed: false }
 
+const ADDITIVE = new Set(['sum', 'count'])
+
+const ALONG_THE_ROW = new Set<PivotShowAs>([
+    'runningTotal',
+    'differenceFrom',
+    'percentDifferenceFrom',
+    'rankInRow'
+])
+
 const CROSSED = Object.freeze({})
 
 const refuseEditing = (): unknown => CROSSED
@@ -75,6 +85,11 @@ const SERVER_DRILL =
     'pivot() cannot say which rows are behind a cell on rowModel: "server": the client holds the ' +
     'crossed rows the server sent, not the rows they were measured from. Ask the server for them ' +
     'with the same crossing, or cross on the client.'
+
+const RUNNING_AGG =
+    'pivot() left a runningTotal empty: it runs only a sum or a count, the reductions where ' +
+    'adding the cells and measuring the rows give the same answer. Anything else would be a guess ' +
+    'at what running it should mean.'
 
 const UNNAMED_AGG =
     'pivot() sent no crossing to the server: a measure reduces with a function or a ' +
@@ -444,6 +459,48 @@ export class Pivot<TRow> {
             return aggregate(measure.agg, cells, rows)
         }
 
+        const ordered = this.#crossing.paths.map((path) => pathId(path))
+        const placeOf = placesOf(ordered)
+
+        const series = cacheByRows<TRow>()
+        const valuesAcross = (index: number, rows: TRow[]): (number | null)[] =>
+            series(rows, index, () =>
+                ordered.map((id) => numericOrNull(reduce(index, bucketsFor(rows).get(id))))
+            ) as (number | null)[]
+
+        const running = (index: number, rows: TRow[], at: number): unknown => {
+            if (!ADDITIVE.has(String(measures[index]!.agg))) {
+                this.#warnRunning()
+                return undefined
+            }
+            const across = valuesAcross(index, rows)
+            let total: number | null = null
+            for (let step = 0; step <= at; step++) {
+                const value = across[step]
+                if (value !== null && value !== undefined) total = (total ?? 0) + value
+            }
+            return total ?? undefined
+        }
+
+        const neighbour = (index: number, rows: TRow[], at: number): unknown => {
+            const how = measures[index]!.showAs
+            const across = valuesAcross(index, rows)
+            const here = across[at] ?? null
+
+            if (how === 'rankInRow') {
+                if (here === null) return undefined
+                const bigger = across.filter(
+                    (value) => value !== null && value !== undefined && value > here
+                )
+                return bigger.length + 1
+            }
+
+            const before = at > 0 ? (across[at - 1] ?? null) : null
+            if (here === null || before === null) return undefined
+            if (how === 'differenceFrom') return here - before
+            return before === 0 ? undefined : (here - before) / before
+        }
+
         const shares = measures.some((measure) => measure.showAs)
         const everyRow = shares ? all.map((node) => node.row) : []
         const everyBucket = shares ? partitionByPath(everyRow, columns, rawRead) : undefined
@@ -460,15 +517,24 @@ export class Pivot<TRow> {
 
         const shown = (
             index: number,
-            raw: unknown,
+            raw: () => unknown,
             rows: TRow[],
             key: string | undefined
         ): unknown => {
             const how = measures[index]!.showAs
-            if (!how) return raw
-            if (how === 'percentOfRow') return share(raw, gatheredOf(index, rows))
-            if (how === 'percentOfTotal') return share(raw, wholeOf(index))
-            return share(raw, key === undefined ? wholeOf(index) : keyOf(index, key))
+            if (!how) return raw()
+
+            if (ALONG_THE_ROW.has(how)) {
+                const at = key === undefined ? undefined : placeOf(key)
+                if (at === undefined) return undefined
+                return how === 'runningTotal'
+                    ? running(index, rows, at)
+                    : neighbour(index, rows, at)
+            }
+
+            if (how === 'percentOfRow') return share(raw(), gatheredOf(index, rows))
+            if (how === 'percentOfTotal') return share(raw(), wholeOf(index))
+            return share(raw(), key === undefined ? wholeOf(index) : keyOf(index, key))
         }
 
         const out: Record<string, Aggregation<TRow>> = {}
@@ -476,7 +542,7 @@ export class Pivot<TRow> {
             const id = pathId(path)
             for (let index = 0; index < measures.length; index++) {
                 out[crossingId(path, index)] = (_values, rows) =>
-                    shown(index, reduce(index, bucketsFor(rows).get(id)), rows, id)
+                    shown(index, () => reduce(index, bucketsFor(rows).get(id)), rows, id)
             }
         }
 
@@ -485,7 +551,7 @@ export class Pivot<TRow> {
                 const id = pathId(path)
                 for (let index = 0; index < measures.length; index++) {
                     out[subtotalId(path, index)] = (_values, rows) =>
-                        shown(index, reduce(index, bucketsFor(rows).get(id)), rows, id)
+                        shown(index, () => reduce(index, bucketsFor(rows).get(id)), rows, id)
                 }
             }
         }
@@ -493,7 +559,7 @@ export class Pivot<TRow> {
         if (this.totalColumn !== undefined) {
             for (let index = 0; index < measures.length; index++) {
                 out[totalId(index)] = (_values, rows) =>
-                    shown(index, reduce(index, rows), rows, undefined)
+                    shown(index, () => reduce(index, rows), rows, undefined)
             }
         }
         return out
@@ -507,6 +573,15 @@ export class Pivot<TRow> {
         const nulls = getSorting(this.#grid)?.nulls
 
         return reorderGroups(rows, (siblings) => sortNodes(siblings, defs, sort, nulls))
+    }
+
+    #runningWarned = false
+
+    #warnRunning(): void {
+        if (this.#runningWarned) return
+        this.#runningWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(RUNNING_AGG)
     }
 
     #drillWarned = false
@@ -657,7 +732,15 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
     }
 }
 
-const SHARES: PivotShowAs[] = ['percentOfRow', 'percentOfColumn', 'percentOfTotal']
+const SHARES: PivotShowAs[] = [
+    'percentOfRow',
+    'percentOfColumn',
+    'percentOfTotal',
+    'runningTotal',
+    'differenceFrom',
+    'percentDifferenceFrom',
+    'rankInRow'
+]
 const GROUP_MODES: ColumnGroupMode[] = ['fixed', 'open', 'closed']
 
 function shareIn(value: unknown): PivotShowAs | undefined {

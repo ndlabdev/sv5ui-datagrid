@@ -41,7 +41,11 @@
         undefined,
         'percentOfRow',
         'percentOfColumn',
-        'percentOfTotal'
+        'percentOfTotal',
+        'runningTotal',
+        'differenceFrom',
+        'percentDifferenceFrom',
+        'rankInRow'
     ]
 
     const headerOf = (id: string) => grid.columns.get(id)?.header ?? id

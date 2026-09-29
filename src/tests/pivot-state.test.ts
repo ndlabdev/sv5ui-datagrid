@@ -264,3 +264,18 @@ describe('a saved view carries every setting a reader can change', () => {
         expect(settings(fresh).showAs).toBeUndefined()
     })
 })
+
+describe('the readings along a row travel with the view too', () => {
+    it.each(['runningTotal', 'differenceFrom', 'percentDifferenceFrom', 'rankInRow'] as const)(
+        'carries %s back',
+        (showAs) => {
+            const source = build()
+            getPivot(source)!.setValueShowAs(0, showAs)
+
+            const fresh = build()
+            fresh.api.setState!(source.api.getState!())
+
+            expect(getPivot(fresh)!.values[0]!.showAs).toBe(showAs)
+        }
+    )
+})

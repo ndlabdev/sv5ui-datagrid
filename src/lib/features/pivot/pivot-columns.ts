@@ -182,7 +182,11 @@ export function measuredLook<TRow>(
         align: source.align ?? 'right'
     }
 
-    if (measure.showAs) return { ...look, type: 'percent' as const }
+    const showAs = measure.showAs
+    if (showAs === 'rankInRow') return look
+    if (showAs !== undefined && showAs !== 'runningTotal' && showAs !== 'differenceFrom') {
+        return { ...look, type: 'percent' as const }
+    }
 
     const agg = measure.agg
     if (typeof agg !== 'string' || COUNTS.has(agg)) return look
@@ -485,4 +489,9 @@ export function offAxis<TRow>(
     return defs
         .filter((def) => !used.has(def.id))
         .map((def) => ({ id: def.id, header: String(def.header ?? def.id) }))
+}
+
+export function placesOf(ordered: string[]): (id: string) => number | undefined {
+    const at = new Map(ordered.map((id, place) => [id, place]))
+    return (id) => at.get(id)
 }
