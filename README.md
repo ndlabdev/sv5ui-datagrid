@@ -46,6 +46,7 @@ you use, and nothing else reaches your bundle.
 - [Feature modules](#feature-modules)
 - [Extension points](#extension-points)
 - [Columns](#columns)
+- [Pivot](#pivot)
 - [Localization](#localization)
 - [State persistence](#state-persistence)
 - [Server row model](#server-row-model)
@@ -72,6 +73,7 @@ you use, and nothing else reaches your bundle.
 | **Accessibility**       | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
 | **Server**              | `rowModel: 'server'` with normalized filter and sort requests, paged or infinite blocks                                               |
 | **Grouping**            | Group by any number of columns, thirteen aggregators, group footers, a grand total, and values read as a share of one of them         |
+| **Pivot**               | One field down the page by another across it, columns read from the data, seven ways to show a measure, and the rows behind a cell    |
 | **Structure**           | Tree data from `getChildren` or `getParentId`, and a detail panel under any row                                                       |
 | **Formulas**            | Calculated columns from an expression, 31 functions, a dependency graph that catches a cycle, and no `eval`                           |
 | **Ranges**              | Excel-style cell ranges, multiple selections, a fill handle that reads a series, cut and move, and a summary bar                      |
@@ -237,6 +239,7 @@ registered.
 | Feature                   | Adds                                                           |
 | ------------------------- | -------------------------------------------------------------- |
 | `grouping()`              | Group by N columns, thirteen aggregators, footers, grand total |
+| `pivot()`                 | One field crossed by another, with columns read from the data  |
 | `tree()`                  | Nested or flat parent/child data                               |
 | `masterDetail()`          | A detail panel under a row                                     |
 | `showValuesAs()`          | A number read as a share of a total, a parent or a row         |
@@ -324,6 +327,7 @@ from inside a feature's own `component`, reach the grid it is mounted in.
 | `isLoadingRow(row)`                    | `serverRowModel()` | A cell snippet draws a row still on its way differently from one that arrived                                                        |
 | `isDetailNode(id)`                     | `masterDetail()`   | You hold a row id and need to know whether it names a detail panel rather than a row                                                 |
 | `totalsKindOf(id)`                     | `grouping()`       | The same question for a group footer (`'footer'`) or the grand total (`'grandTotal'`), and `null` for anything else                  |
+| `isPivotColumn(id)`                    | `pivot()`          | You walk `grid.columns.visible` and need to tell a column the crossing generated from one the application declared                   |
 | `aggregate(aggregation, values, rows)` | `grouping()`       | You want the number a group footer would show, somewhere other than the grid: a summary card, a chart, a second table                |
 | `autoColumns(rows, options?)`          | the kernel         | The shape of the data is known only at runtime, so the columns are read off a sample of the rows                                     |
 | `localStorageViews`                    | `savedViews()`     | You take the default store, or write an object of the same shape to keep views on a server instead                                   |
@@ -622,13 +626,15 @@ a leaf one. The snippet is handed the group cell - id, label, span, whether it
 is folded - and a `toggle`, and the grid's own control stays beside whatever
 it draws:
 
-````svelte
+```svelte
 {#snippet payHeader({ cell, toggle }: HeaderGroupContext)}
     <Badge label={`${cell.header} (${cell.span})`} onclick={toggle} />
 {/snippet}
-``` Folding is not hiding -
-what the Column chooser put away stays away, and what a group folded comes
-back when it opens - and the state travels in a snapshot, keyed by group.
+```
+
+Folding is not hiding - what the Column chooser put away stays away, and what
+a group folded comes back when it opens - and the state travels in a snapshot,
+keyed by group.
 
 A group is only offered a toggle when the state it would switch to leaves a
 column of it on screen. One whose children are all `'open'` would fold its own
@@ -667,6 +673,113 @@ and an export taken while folded.
 A group's `id` shares a namespace with the columns', so it needs one of its
 own: a group and a column that answer to the same id cannot both be addressed.
 
+## Pivot
+
+A pivot reads one long list two ways at once: a field gathered down the page,
+another gathered across it, and a measure where the two meet.
+
+```ts
+pivot<Sale>({
+    rows: ['region'],
+    columns: ['quarter'],
+    values: [{ field: 'amount', agg: 'sum' }]
+})
+```
+
+Six hundred rows of sales become four rows of regions by four columns of
+quarters. The columns are the part nothing else here does: the grid reads the
+data, finds the distinct values of `quarter`, and makes a column for each one.
+A quarter the data has not held before arrives as a column of its own with no
+code changed, which is why this belongs in a grid rather than in an
+application. `grouping()` changes how many rows there are; a pivot changes how
+many columns there are as well.
+
+While a crossing is on, the grid draws the row fields and the columns it
+generated and nothing else. A column taking no part has no single value on a
+gathered row, so it would draw empty on every one. They are hidden rather than
+dropped, so they stay filterable, and narrowing the field that runs across the
+page is most of how a pivot is read. Turning the crossing off brings them back.
+
+### What a total means
+
+Every total is measured from the rows, never added up from the cells beside it.
+For a sum the two agree. For an average they do not, and not by a little: three
+rows of 100, 80 and 150 cross into averages of 90 and 150, whose own average is
+120, while the rows themselves average 110. One hundred and ten is the answer,
+and it is the one `totalColumn`, `columnSubtotal` and every share are built on.
+
+`totalColumn` closes the crossing, `totalRow` closes the page, and
+`columnSubtotal` closes each group of a nested column axis. With
+`columnGroups: 'open'` a reader folds a group away and is left with its
+subtotal; without a subtotal there would be nothing to fold down to, so the
+group folds to a rail instead. The control lives in `columnOps()`.
+
+### Showing a measure as something else
+
+| `showAs`                | The cell holds                                           |
+| ----------------------- | -------------------------------------------------------- |
+| `percentOfRow`          | Its share of the rows the gathered row holds             |
+| `percentOfColumn`       | Its share of the rows under the same crossing            |
+| `percentOfTotal`        | Its share of every row the grid is showing               |
+| `runningTotal`          | The measure over every crossing up to this one           |
+| `differenceFrom`        | This cell less the crossing before it                    |
+| `percentDifferenceFrom` | That change over what came before                        |
+| `rankInRow`             | Its place among the crossings beside it, one the largest |
+
+The last four follow the order the crossing is drawn in, and are left empty on
+a subtotal and a total column, which stand outside the run. A running total
+takes only a sum or a count: those are the two reductions where adding the
+cells and measuring the rows agree, so there is nothing to guess at, and
+anything else is left empty with a word in the console.
+
+`per` divides one measure by another under the same reduction, which is how a
+margin or a rate is read:
+
+```ts
+values: [{ field: 'profit', agg: 'sum', per: 'revenue', type: 'percent' }]
+```
+
+It divides the two reductions, not the rows. Fifty over a hundred and ninety
+over nine hundred is a margin of fourteen percent, while the mean of the two
+rows' own margins is thirty, and they part further the more the rows differ in
+size. `type` comes with it because a ratio is the unit of neither column it
+divides, and nothing but the application knows which it is.
+
+### The axis, and what it is made of
+
+Keys are ordered by the values themselves, so a number axis counts and a date
+axis runs in time, and each key is drawn through the formatter of the field it
+came from. `columnKeys` replaces what the data offers with what the application
+knows: an order the values do not have on their own, such as `Low`, `Medium`,
+`High`, and keys with no rows behind them, which is how a report shows every
+month of a year including the quiet ones.
+
+The keys come from the data before any filter, so filtering every row of a key
+away leaves that column standing and empties its cells rather than removing it.
+Reading the filtered rows instead would close a loop, since the filter reads the
+columns.
+
+`maxColumns` refuses rather than truncates. A table nobody can read is worse
+than no table, and a list silently cut would present a wrong one as right.
+
+### Building one, and reading it back
+
+`Grid.PivotPanel` draws the three zones a pivot is described by, and the same
+moves are on `grid.api`: `setPivotRows`, `setPivotColumns`, `setPivotValues`,
+`addPivotRowField`, `addPivotColumnField`, `removePivotField`, `clearPivot`,
+and the settings beside them. A column menu offers the two axes. Taking the
+last field off an axis is not an error, it turns the crossing off; starting
+with an empty one is, since that is a misconfiguration rather than a choice.
+
+`getPivot(grid).rowsBehind(node, columnId)`, or `grid.api.pivotRowsBehind`,
+answers the rows a cell was measured from. It is the first question a reader
+asks of a number they did not expect, and it answers the rows a filter left, so
+what comes back matches what is on screen.
+
+A crossed cell is refused by every editor, since it is a result rather than
+data, and it is not offered for filtering. It is exported, copied and searched
+like any other value.
+
 ## Localization
 
 Hand the grid the languages it may use. It picks one from the page's own
@@ -676,7 +789,7 @@ language, so nothing else needs configuring:
 import { enUS, jaJP, viVN } from '@sv5ui/datagrid/locales'
 
 createDataGrid({ columns, data, getRowId, locales: [enUS, viVN, jaJP] })
-````
+```
 
 Twelve packs ship: `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`,
 `de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only what you import is
@@ -823,6 +936,45 @@ Two things the request cannot carry, because they are functions: a column's
 `sortFn` and a filter's custom `predicate` run on the client only. Under a
 server row model they are never called, and the request describes the built-in
 meaning of the condition instead.
+
+### A crossing the server answers
+
+A client never crosses a server grid for itself. Every cell would be a total
+over the blocks it happens to hold, and a table measured that way looks exactly
+like a correct one, so the grid sends the crossing and draws what comes back.
+
+`pivot` rides on every request:
+
+```ts
+pivot?: {
+    rows: string[]
+    columns: string[]
+    values: { field: string; agg: string; per?: string }[]
+    sort?: { keys: string[]; measure: number; direction: 'asc' | 'desc' }[]
+}
+```
+
+The answer carries `pivotColumns`, one key path per generated column, outermost
+first. That is where the column axis comes from: the client holds part of the
+data and cannot learn the axis from it. Answer the same paths for every block
+of one crossing, or the columns move under the reader as they scroll.
+
+Each returned row carries its crossings under `pivot`, nested one level per
+column field and bottoming out in one entry per measure:
+
+```ts
+{ region: 'North', pivot: { Q1: [180, 2], Q2: [150, 1] }, pivotTotal: [330, 3] }
+```
+
+Nested rather than keyed by a joined path, so a key holding the separator
+cannot be read as two. `pivotTotal` answers a `totalColumn`; a `totalRow` is a
+row like any other and the grid says so if you ask it for one.
+
+Only named reductions cross the wire. A reduction written as a function sends
+no pivot at all rather than one missing a measure, and says so once. Without a
+`serverRowModel()` to carry the crossing the grid draws its rows unchanged;
+`getPivot(grid).serverHandled` tells a UI which of the two it is looking at.
+Asking for the rows behind a cell answers nothing there, for the same reason.
 
 `src/tests/server-contract.test.ts` is a backend written against this table.
 It answers what the client answers, and it is the shortest description of what

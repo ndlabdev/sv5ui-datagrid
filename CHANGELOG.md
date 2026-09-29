@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pivot tables.** `pivot()` gathers one field down the page and another
+  across it, and the columns across come from the data: the grid reads the
+  distinct values of the field and makes a column for each, so a value the data
+  has not held before arrives as a column with no code changed. Nothing else
+  here generates columns, which is the reason this is a grid feature rather
+  than an application's.
+
+    Every total is measured from the rows, never added up from the cells beside
+    it. For a sum the two agree; for an average they do not, and the grid shows
+    the one that is true of the rows. That rule holds for `totalColumn`,
+    `totalRow`, `columnSubtotal` and every share.
+
+    A measure can be read as a share of its row, its column or the whole, as a
+    running total, as a change from the crossing before it, or as a rank among
+    the crossings beside it. `per` divides one measure by another under the same
+    reduction, which is how a margin is read, and it divides the reductions
+    rather than the rows.
+
+    The column axis is ordered by the values themselves, so a number axis counts
+    and a date axis runs in time, and `columnKeys` replaces that with an order
+    only the application knows or with keys that have no rows behind them. A
+    nested axis folds down to its subtotals. `maxColumns` refuses rather than
+    truncates.
+
+    `Grid.PivotPanel` builds a crossing, a column menu offers the two axes, and
+    `grid.api` carries the same moves, all of it kept in a saved view.
+    `rowsBehind` answers which rows a cell was measured from.
+
+    On `rowModel: 'server'` the client never crosses for itself. The crossing
+    goes out on every request and the column axis comes back with the rows,
+    because a table measured over the blocks a client happens to hold looks
+    exactly like a correct one.
+
+- **A feature can shape the columns the grid draws.** `GridFeature.columns` is
+  asked in registration order, and what it answers feeds leaves, header groups,
+  order and widths alike. A generated column is a column like any other: it
+  filters, it exports, it takes part in a snapshot.
+
+### Fixed
+
+- **A header group a feature generated was invisible to the group machinery.**
+  The column model was shaped by halves, so such a group had no definition to
+  find, no toggle to fold it with, and a fold written into a saved view was
+  thrown away on the way back in. Features now hydrate before the column
+  snapshot resolves, so a view that restores a different shape is pruned
+  against the columns that shape produced.
+
+- **A whole-column share divided by a total counted over data rows only**, so a
+  column whose numbers live on gathered rows read blank. It falls back to the
+  total across the top level, which is the same number wherever data rows carry
+  values.
+
+- **An XLSX export of a gathered grid wrote an empty sheet**, the writer having
+  taken only data rows.
+
 ## [2.0.0] - 2026-09-11
 
 The largest release the grid has had. Sixteen feature modules, nine parts to
