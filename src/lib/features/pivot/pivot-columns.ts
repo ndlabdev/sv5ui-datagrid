@@ -182,6 +182,8 @@ export function measuredLook<TRow>(
         align: source.align ?? 'right'
     }
 
+    if (measure.showAs) return { ...look, type: 'percent' as const }
+
     const agg = measure.agg
     if (typeof agg !== 'string' || COUNTS.has(agg)) return look
 
@@ -401,4 +403,29 @@ export function crossingIndex(
         out.set(totalId(measure), { keys: [], measure })
     }
     return out
+}
+
+export function cacheByKey(): (key: string, compute: () => unknown) => unknown {
+    const seen = new Map<string, unknown>()
+    return (key, compute) => {
+        if (!seen.has(key)) seen.set(key, compute())
+        return seen.get(key)
+    }
+}
+
+export function cacheByRows<TRow>(): (
+    rows: TRow[],
+    slot: number,
+    compute: () => unknown
+) => unknown {
+    const seen = new WeakMap<object, Map<number, unknown>>()
+    return (rows, slot, compute) => {
+        let found = seen.get(rows as object)
+        if (!found) {
+            found = new Map()
+            seen.set(rows as object, found)
+        }
+        if (!found.has(slot)) found.set(slot, compute())
+        return found.get(slot)
+    }
 }

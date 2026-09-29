@@ -1,5 +1,22 @@
 import type { Aggregation } from '../grouping/grouping.types.js'
 
+/**
+ * A measure read as a share of something larger instead of as itself.
+ *
+ * `percentOfRow` divides by what the same measure makes of every row the
+ * gathered row holds, so a row reads across to 1. `percentOfColumn` divides by
+ * what it makes of every row under the same crossing, so a column reads down
+ * to 1. `percentOfTotal` divides by every row the grid is showing.
+ *
+ * Each denominator is measured from the rows, never added up from the cells
+ * beside it, for the reason `totalColumn` gives: the average of a group is not
+ * the average of its columns' averages.
+ *
+ * The share is a fraction, and the generated column is typed `percent`, so
+ * `0.34` is drawn as `34%` on screen and in every export.
+ */
+export type PivotShowAs = 'percentOfRow' | 'percentOfColumn' | 'percentOfTotal'
+
 /** One thing being measured: a column to read, and how to reduce it. */
 export interface PivotMeasure<TRow = unknown> {
     /** Column id whose values are reduced. */
@@ -7,6 +24,12 @@ export interface PivotMeasure<TRow = unknown> {
 
     /** How to reduce them. The same set `grouping()` accepts. */
     agg: Aggregation<TRow>
+
+    /**
+     * Reads this measure as a share instead of as itself. Left out, the
+     * measure is drawn as the number it reduced to.
+     */
+    showAs?: PivotShowAs
 
     /**
      * Header for this measure's leaf, used only when there is more than one

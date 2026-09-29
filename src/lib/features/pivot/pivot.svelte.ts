@@ -6,7 +6,7 @@ import {
     type MenuItem,
     type RowNode
 } from '../../core/types/index.js'
-import { mutator } from '../../core/utils/index.js'
+import { mutator, numericOrNull } from '../../core/utils/index.js'
 import { getSorting } from '../sorting/index.js'
 import { sortNodes } from '../sorting/sort.js'
 import { aggregate } from '../grouping/aggregate.js'
@@ -17,6 +17,8 @@ import {
     type ColumnGroupMode,
     type Crossing,
     crossingId,
+    cacheByKey,
+    cacheByRows,
     crossingIndex,
     defaultHeader,
     measuredLook,
@@ -361,13 +363,14 @@ export class Pivot<TRow> {
         return [...shown, ...generated]
     }
 
-    #aggregations(): Record<string, Aggregation<TRow>> {
+    #aggregations(all: RowNode<TRow>[]): Record<string, Aggregation<TRow>> {
         const read = gateReader(this.#grid, 'render')
         const defs = this.#grid.columns.defs
         const columns = this.#columnDefs()
         const measures = this.values.map((measure) => ({
             agg: measure.agg,
-            def: defs.find((def) => def.id === measure.field)
+            def: defs.find((def) => def.id === measure.field),
+            showAs: measure.showAs
         }))
 
         const buckets = new WeakMap<object, Map<string, TRow[]>>()
@@ -389,12 +392,39 @@ export class Pivot<TRow> {
             return aggregate(measure.agg, cells, rows)
         }
 
+        const shares = measures.some((measure) => measure.showAs)
+        const everyRow = shares ? all.map((node) => node.row) : []
+        const everyBucket = shares ? partitionByPath(everyRow, columns, rawRead) : undefined
+
+        const cached = cacheByKey()
+        const wholeOf = (index: number): unknown =>
+            cached(`whole:${index}`, () => reduce(index, everyRow))
+        const keyOf = (index: number, key: string): unknown =>
+            cached(`key:${index}:${key}`, () => reduce(index, everyBucket?.get(key)))
+
+        const perGroup = cacheByRows<TRow>()
+        const gatheredOf = (index: number, rows: TRow[]): unknown =>
+            perGroup(rows, index, () => reduce(index, rows))
+
+        const shown = (
+            index: number,
+            raw: unknown,
+            rows: TRow[],
+            key: string | undefined
+        ): unknown => {
+            const how = measures[index]!.showAs
+            if (!how) return raw
+            if (how === 'percentOfRow') return share(raw, gatheredOf(index, rows))
+            if (how === 'percentOfTotal') return share(raw, wholeOf(index))
+            return share(raw, key === undefined ? wholeOf(index) : keyOf(index, key))
+        }
+
         const out: Record<string, Aggregation<TRow>> = {}
         for (const path of this.#crossing.paths) {
             const id = pathId(path)
             for (let index = 0; index < measures.length; index++) {
                 out[crossingId(path, index)] = (_values, rows) =>
-                    reduce(index, bucketsFor(rows).get(id))
+                    shown(index, reduce(index, bucketsFor(rows).get(id)), rows, id)
             }
         }
 
@@ -403,14 +433,15 @@ export class Pivot<TRow> {
                 const id = pathId(path)
                 for (let index = 0; index < measures.length; index++) {
                     out[subtotalId(path, index)] = (_values, rows) =>
-                        reduce(index, bucketsFor(rows).get(id))
+                        shown(index, reduce(index, bucketsFor(rows).get(id)), rows, id)
                 }
             }
         }
 
         if (this.totalColumn !== undefined) {
             for (let index = 0; index < measures.length; index++) {
-                out[totalId(index)] = (_values, rows) => reduce(index, rows)
+                out[totalId(index)] = (_values, rows) =>
+                    shown(index, reduce(index, rows), rows, undefined)
             }
         }
         return out
@@ -438,7 +469,7 @@ export class Pivot<TRow> {
         if (this.#crossing.overflowed || this.#columnDefs().length === 0) return nodes
 
         const read = gateReader(this.#grid, 'render')
-        const aggregations = this.#aggregations()
+        const aggregations = this.#aggregations(nodes)
         const columns = this.#bodyColumns()
 
         const rows = buildGroupNodes(nodes, {
@@ -466,6 +497,13 @@ export class Pivot<TRow> {
             })
         ]
     }
+}
+
+function share(value: unknown, whole: unknown): unknown {
+    const top = numericOrNull(value)
+    const bottom = numericOrNull(whole)
+    if (top === null || bottom === null || bottom === 0) return undefined
+    return top / bottom
 }
 
 function samePaths(left: string[][], right: string[][]): boolean {

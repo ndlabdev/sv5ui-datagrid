@@ -107,7 +107,8 @@ export {
     pivot,
     type Pivot,
     type PivotMeasure,
-    type PivotOptions
+    type PivotOptions,
+    type PivotShowAs
 } from './pivot/index.js'
 export {
     getPolicy,
