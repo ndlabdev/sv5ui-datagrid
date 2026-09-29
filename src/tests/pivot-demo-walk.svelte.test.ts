@@ -137,3 +137,55 @@ describe('reading a measure as a share in the demo', () => {
         await expect.poll(() => cells()[0]?.[1] ?? '').toContain('$')
     })
 })
+
+describe('seeing the rows behind a cell in the demo', () => {
+    it('opens the source rows on a double click, and they add up', async () => {
+        await open()
+        expect(document.querySelector('[data-dg-drill]')).toBeNull()
+
+        const cell = Array.from(
+            document.querySelectorAll('[data-dg-row-id] [role="gridcell"]')
+        ).find((element) => (element.textContent ?? '').includes('$'))
+
+        expect(cell).toBeDefined()
+        cell?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+
+        await expect.poll(() => document.querySelector('[data-dg-drill]')).not.toBeNull()
+        const rows = document.querySelectorAll('[data-dg-drill] tr')
+        expect(rows.length).toBeGreaterThan(0)
+    })
+
+    it('closes again', async () => {
+        await open()
+        const cell = Array.from(
+            document.querySelectorAll('[data-dg-row-id] [role="gridcell"]')
+        ).find((element) => (element.textContent ?? '').includes('$'))
+        cell?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        await expect.poll(() => document.querySelector('[data-dg-drill]')).not.toBeNull()
+
+        await click('Đóng')
+        await expect.poll(() => document.querySelector('[data-dg-drill]')).toBeNull()
+    })
+})
+
+describe('drilling with the row label pinned', () => {
+    it('picks the cell the reader actually clicked, not the one at that index', async () => {
+        await open()
+
+        const row = document.querySelector('[data-dg-row-id]')!
+        const cells = Array.from(row.querySelectorAll('[role="gridcell"]'))
+        const money = cells.filter((cell) => (cell.textContent ?? '').includes('$'))
+        expect(money.length).toBeGreaterThan(1)
+
+        const second = money[1]!
+        second.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+
+        await expect.poll(() => document.querySelector('[data-dg-drill]')).not.toBeNull()
+
+        const heading = document
+            .querySelector('[data-dg-drill]')
+            ?.closest('div.space-y-2')
+            ?.querySelector('h2')?.textContent
+        expect(heading).toContain('Q2')
+    })
+})

@@ -13,6 +13,7 @@
         pivot,
         sorting,
         type ColumnDef,
+        type RowNode,
         type PivotShowAs
     } from '$lib/index.js'
     import { Badge, Button, Container, Link, ThemeModeButton } from 'sv5ui'
@@ -67,7 +68,7 @@
     })
 
     const columns: ColumnDef<Sale>[] = [
-        { id: 'region', header: 'Region', width: 130, filter: 'text' },
+        { id: 'region', header: 'Region', width: 130, filter: 'text', pinned: 'left' },
         { id: 'quarter', header: 'Quarter', width: 120, filter: 'text' },
         { id: 'product', header: 'Product', width: 150, filter: 'text' },
         { id: 'shipped', header: 'Shipped', type: 'date', width: 150 },
@@ -162,6 +163,33 @@
     let subtotals = $state(false)
     let foldable = $state(false)
     let share = $state<PivotShowAs | undefined>(undefined)
+    let drilled = $state<{ cell: string; rows: Sale[] } | null>(null)
+
+    function drill(node: RowNode<Sale>, columnId: string) {
+        const behind = getPivot(pivotGrid)!.rowsBehind(node, columnId)
+        if (behind.length === 0) return
+
+        const header = pivotGrid.columns.get(columnId)?.header ?? columnId
+        const label = pivotGrid.getValue(node, pivotGrid.columns.get(down)!)
+        drilled = { cell: `${String(label)} / ${String(header)}`, rows: behind }
+    }
+
+    function columnAt(cell: Element): string | undefined {
+        const at = Number(cell.getAttribute('data-dg-cell')?.split(':')[1])
+        return Number.isInteger(at) ? pivotGrid.columns.visible[at]?.id : undefined
+    }
+
+    function onCellClick(event: MouseEvent) {
+        const cell = (event.target as HTMLElement | null)?.closest('[data-dg-cell]')
+        const rowId = cell?.closest('[data-dg-row-id]')?.getAttribute('data-dg-row-id')
+        if (!cell || !rowId) return
+
+        const columnId = columnAt(cell)
+        if (!columnId || !isPivotColumn(columnId)) return
+
+        const node = pivotGrid.preWindowNodes.find((candidate) => candidate.id === rowId)
+        if (node) drill(node, columnId)
+    }
     let totals = $state(false)
     let ownKeys = $state(false)
     let saved = $state<ReturnType<NonNullable<typeof pivotGrid.api.getState>> | null>(null)
@@ -362,8 +390,43 @@
     {/if}
 
     {#key view}
-        <DataGrid grid={active} toolbar class="h-100" />
+        {#if view === 'pivot'}
+            <div ondblclick={onCellClick} role="presentation">
+                <DataGrid grid={active} toolbar class="h-100" />
+            </div>
+        {:else}
+            <DataGrid grid={active} toolbar class="h-100" />
+        {/if}
     {/key}
+
+    {#if view === 'pivot' && drilled}
+        <div class="space-y-2 rounded-lg border border-outline-variant p-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-medium text-on-surface">
+                    {drilled.rows.length} dòng đứng sau ô {drilled.cell}
+                </h2>
+                <Button variant="ghost" size="sm" label="Đóng" onclick={() => (drilled = null)} />
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-outline-variant">
+                <table class="w-full text-left text-xs" data-dg-drill>
+                    <tbody class="text-on-surface-variant">
+                        {#each drilled.rows.slice(0, 12) as row (row.id)}
+                            <tr class="border-t border-outline-variant">
+                                <td class="px-3 py-1">{row.region}</td>
+                                <td class="px-3 py-1">{row.quarter}</td>
+                                <td class="px-3 py-1">{row.product}</td>
+                                <td class="px-3 py-1 text-right">{money.format(row.amount)}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs text-on-surface-variant">
+                Bấm đúp vào một ô giao để xem những dòng gốc đã cộng thành con số ấy. Đây là câu hỏi
+                đầu tiên người đọc pivot đặt ra khi thấy một số lạ.
+            </p>
+        </div>
+    {/if}
 
     {#if view === 'pivot'}
         <div class="space-y-3 rounded-lg border border-outline-variant p-4">
