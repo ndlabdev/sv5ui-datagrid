@@ -170,6 +170,13 @@ export function defaultHeader<TRow>(
 
 const COUNTS = new Set(['count', 'distinctCount'])
 
+const KEEPS_UNIT = new Set(['runningTotal', 'differenceFrom'])
+
+function readingOf(showAs: string | undefined): 'measured' | 'plain' | 'percent' {
+    if (showAs === undefined || KEEPS_UNIT.has(showAs)) return 'measured'
+    return showAs === 'rankInRow' ? 'plain' : 'percent'
+}
+
 export function measuredLook<TRow>(
     measure: PivotMeasure<TRow>,
     source: ColumnDef<TRow> | undefined
@@ -182,14 +189,14 @@ export function measuredLook<TRow>(
         align: source.align ?? 'right'
     }
 
-    const showAs = measure.showAs
-    if (showAs === 'rankInRow') return look
-    if (showAs !== undefined && showAs !== 'runningTotal' && showAs !== 'differenceFrom') {
-        return { ...look, type: 'percent' as const }
-    }
+    if (measure.type !== undefined) return { ...look, type: measure.type }
+
+    const read = readingOf(measure.showAs)
+    if (read === 'plain') return look
+    if (read === 'percent') return { ...look, type: 'percent' as const }
 
     const agg = measure.agg
-    if (typeof agg !== 'string' || COUNTS.has(agg)) return look
+    if (measure.per !== undefined || typeof agg !== 'string' || COUNTS.has(agg)) return look
 
     return { ...look, type: source.type, typeOptions: source.typeOptions, cell: source.cell }
 }

@@ -470,3 +470,24 @@ describe('what the client cannot know, it does not guess', () => {
         warn.mockRestore()
     })
 })
+
+describe('a ratio crosses the wire', () => {
+    it('carries the divisor with the measure it divides', async () => {
+        const { grid, seen, getRows } = serverGrid(
+            { rows: crossed },
+            {
+                values: [{ field: 'amount', agg: 'sum', per: 'quarter' }]
+            }
+        )
+        await load(grid, getRows)
+
+        expect(seen[0]!.pivot!.values).toEqual([{ field: 'amount', agg: 'sum', per: 'quarter' }])
+    })
+
+    it('leaves it off a measure that has none', async () => {
+        const { grid, seen, getRows } = serverGrid({ rows: crossed })
+        await load(grid, getRows)
+
+        expect(seen[0]!.pivot!.values).toEqual([{ field: 'amount', agg: 'sum' }])
+    })
+})

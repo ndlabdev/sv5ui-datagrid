@@ -1,3 +1,4 @@
+import type { ColumnType } from '../../core/types/index.js'
 import type { Aggregation } from '../grouping/grouping.types.js'
 
 /**
@@ -49,6 +50,35 @@ export interface PivotMeasure<TRow = unknown> {
 
     /** How to reduce them. The same set `grouping()` accepts. */
     agg: Aggregation<TRow>
+
+    /**
+     * Divides this measure by the same reduction of another column, which is
+     * how a margin, a rate or an average per something is read.
+     *
+     * `{ field: 'profit', agg: 'sum', per: 'revenue' }` is the profit of a
+     * crossing over its revenue. It divides the two reductions, not the rows:
+     * the margin of a group is not the average of its rows' margins, and the
+     * two differ by more the more the rows differ in size.
+     *
+     * A reduction written as a function can do this already, but only on the
+     * client and only until the view is saved. This crosses the wire and comes
+     * back from a snapshot, because it is two column names and a reduction.
+     *
+     * A crossing with no rows, or one whose divisor comes to nothing, draws
+     * empty rather than an infinity. `runningTotal` refuses it: ratios do not
+     * add up, so running them would mean nothing.
+     */
+    per?: string
+
+    /**
+     * What the result is, when that is not what the measured column was. A
+     * ratio is the usual reason: profit is money, but profit over revenue is
+     * a percentage, and nothing but the application knows which.
+     *
+     * Without it a measure keeps the type of the column it measured, except
+     * for a count, which is a count of anything.
+     */
+    type?: ColumnType
 
     /**
      * Reads this measure as something other than the number it reduced to:

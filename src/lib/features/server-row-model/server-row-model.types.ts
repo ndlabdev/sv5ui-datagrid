@@ -65,8 +65,14 @@ export interface PivotRequest {
     rows: string[]
     /** Column ids gathered across the page, outermost first. */
     columns: string[]
-    /** What each cell holds, in the order the grid will draw the measures. */
-    values: { field: string; agg: string }[]
+    /**
+     * What each cell holds, in the order the grid will draw the measures.
+     *
+     * `per` names a second column to divide by, under the same reduction, so
+     * `{ field: 'profit', agg: 'sum', per: 'revenue' }` asks for a margin. It
+     * is the reductions that divide, not the rows.
+     */
+    values: { field: string; agg: string; per?: string }[]
 
     /**
      * Order the gathered rows by what a crossing measured, outermost sort

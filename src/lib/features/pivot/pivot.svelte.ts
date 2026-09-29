@@ -1,6 +1,7 @@
 import { gateReader, type GridState, PIPELINE_ORDER, rawRead } from '../../core/grid/index.js'
 import {
     type ColumnDef,
+    type ColumnType,
     type GridFeature,
     type MenuContext,
     type MenuItem,
@@ -87,9 +88,9 @@ const SERVER_DRILL =
     'with the same crossing, or cross on the client.'
 
 const RUNNING_AGG =
-    'pivot() left a runningTotal empty: it runs only a sum or a count, the reductions where ' +
-    'adding the cells and measuring the rows give the same answer. Anything else would be a guess ' +
-    'at what running it should mean.'
+    'pivot() left a runningTotal empty: it runs only a sum or a count of one column, the ' +
+    'reductions where adding the cells and measuring the rows give the same answer. A ratio does ' +
+    'not add up at all, and anything else would be a guess at what running it should mean.'
 
 const UNNAMED_AGG =
     'pivot() sent no crossing to the server: a measure reduces with a function or a ' +
@@ -272,7 +273,11 @@ export class Pivot<TRow> {
                 }
                 return undefined
             }
-            values.push({ field: measure.field, agg: measure.agg })
+            values.push({
+                field: measure.field,
+                agg: measure.agg,
+                ...(measure.per === undefined ? {} : { per: measure.per })
+            })
         }
         const sort = this.#sort.flatMap((entry) => {
             const ref = this.#index.get(entry.columnId)
@@ -300,7 +305,10 @@ export class Pivot<TRow> {
 
     #fieldsResolve(): boolean {
         const defs = this.#grid.columns.defs
-        return this.values.every((measure) => defs.some((def) => def.id === measure.field))
+        const known = (id: string): boolean => defs.some((def) => def.id === id)
+        return this.values.every(
+            (measure) => known(measure.field) && (measure.per === undefined || known(measure.per))
+        )
     }
 
     #columnDefs(): ColumnDef<TRow>[] {
@@ -356,7 +364,8 @@ export class Pivot<TRow> {
     #warnMissing(defs: ColumnDef<TRow>[]): void {
         const absent = missingFields(defs, [
             ...this.columns,
-            ...this.values.map((measure) => measure.field)
+            ...this.values.map((measure) => measure.field),
+            ...this.values.flatMap((measure) => (measure.per === undefined ? [] : [measure.per]))
         ])
 
         if (absent.length === 0 || this.#missingWarned) return
@@ -437,6 +446,8 @@ export class Pivot<TRow> {
         const measures = this.values.map((measure) => ({
             agg: measure.agg,
             def: defs.find((def) => def.id === measure.field),
+            over: measure.per,
+            per: measure.per === undefined ? undefined : defs.find((d) => d.id === measure.per),
             showAs: measure.showAs
         }))
 
@@ -450,13 +461,22 @@ export class Pivot<TRow> {
             return found
         }
 
+        const reduceWith = (def: ColumnDef<TRow>, agg: Aggregation<TRow>, rows: TRow[]): unknown =>
+            aggregate(
+                agg,
+                rows.map((row) => read({ id: '', row, index: 0 } as RowNode<TRow>, def)),
+                rows
+            )
+
         const reduce = (index: number, rows: TRow[] | undefined): unknown => {
             const measure = measures[index]!
             if (!measure.def || !rows || rows.length === 0) return undefined
-            const cells = rows.map((row) =>
-                read({ id: '', row, index: 0 } as RowNode<TRow>, measure.def!)
-            )
-            return aggregate(measure.agg, cells, rows)
+
+            const top = reduceWith(measure.def, measure.agg, rows)
+            if (measure.over === undefined) return top
+            if (!measure.per) return undefined
+
+            return share(top, reduceWith(measure.per, measure.agg, rows))
         }
 
         const ordered = this.#crossing.paths.map((path) => pathId(path))
@@ -469,7 +489,8 @@ export class Pivot<TRow> {
             ) as (number | null)[]
 
         const running = (index: number, rows: TRow[], at: number): unknown => {
-            if (!ADDITIVE.has(String(measures[index]!.agg))) {
+            const measure = measures[index]!
+            if (measure.over !== undefined || !ADDITIVE.has(String(measure.agg))) {
                 this.#warnRunning()
                 return undefined
             }
@@ -725,7 +746,9 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
                       field: measure.field,
                       agg: measure.agg as string,
                       ...(measure.header === undefined ? {} : { header: measure.header }),
-                      ...(measure.showAs === undefined ? {} : { showAs: measure.showAs })
+                      ...(measure.showAs === undefined ? {} : { showAs: measure.showAs }),
+                      ...(measure.per === undefined ? {} : { per: measure.per }),
+                      ...(measure.type === undefined ? {} : { type: measure.type })
                   }))
               }
             : {})
@@ -743,6 +766,26 @@ const SHARES: PivotShowAs[] = [
 ]
 const GROUP_MODES: ColumnGroupMode[] = ['fixed', 'open', 'closed']
 
+const COLUMN_TYPES: ColumnType[] = [
+    'text',
+    'number',
+    'currency',
+    'percent',
+    'date',
+    'datetime',
+    'boolean',
+    'badge',
+    'user',
+    'progress',
+    'rating',
+    'link',
+    'actions'
+]
+
+function typeIn(value: unknown): ColumnType | undefined {
+    return COLUMN_TYPES.find((known) => known === value)
+}
+
 function shareIn(value: unknown): PivotShowAs | undefined {
     return SHARES.find((share) => share === value)
 }
@@ -759,6 +802,41 @@ function fieldsIn<TRow>(slice: Record<string, unknown>, key: string, grid: GridS
     )
 }
 
+function withKnown<TRow>(
+    measure: PivotMeasure<TRow>,
+    extras: Partial<PivotMeasure<TRow>>
+): PivotMeasure<TRow> {
+    const held = measure as unknown as Record<string, unknown>
+    for (const [key, value] of Object.entries(extras)) {
+        if (value !== undefined) held[key] = value
+    }
+    return measure
+}
+
+function columnIn<TRow>(value: unknown, grid: GridState<TRow>): string | undefined {
+    return typeof value === 'string' && grid.columns.get(value) ? value : undefined
+}
+
+function measureIn<TRow>(entry: unknown, grid: GridState<TRow>): PivotMeasure<TRow>[] {
+    if (entry === null || typeof entry !== 'object') return []
+
+    const { field, agg, header, showAs, per, type } = entry as Record<string, unknown>
+    if (typeof field !== 'string' || typeof agg !== 'string') return []
+    if (!grid.columns.get(field)) return []
+
+    return [
+        withKnown<TRow>(
+            { field, agg: agg as PivotMeasure<TRow>['agg'] },
+            {
+                header: headerIn(header),
+                showAs: shareIn(showAs),
+                per: columnIn(per, grid),
+                type: typeIn(type)
+            }
+        )
+    ]
+}
+
 function measuresIn<TRow>(
     slice: Record<string, unknown>,
     grid: GridState<TRow>
@@ -766,22 +844,7 @@ function measuresIn<TRow>(
     const found = slice.values
     if (!Array.isArray(found)) return undefined
 
-    const kept = found.flatMap((entry): PivotMeasure<TRow>[] => {
-        if (entry === null || typeof entry !== 'object') return []
-        const { field, agg, header, showAs } = entry as Record<string, unknown>
-        if (typeof field !== 'string' || typeof agg !== 'string') return []
-        if (!grid.columns.get(field)) return []
-
-        const share = shareIn(showAs)
-        return [
-            {
-                field,
-                agg: agg as PivotMeasure<TRow>['agg'],
-                ...(typeof header === 'string' ? { header } : {}),
-                ...(share === undefined ? {} : { showAs: share })
-            }
-        ]
-    })
+    const kept = found.flatMap((entry) => measureIn<TRow>(entry, grid))
     return kept.length > 0 ? kept : undefined
 }
 
