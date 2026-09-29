@@ -453,3 +453,20 @@ describe('an order on a crossing goes to the server', () => {
         expect(grid.columns.get('__pv:c:Q1::0')!.def.sortable).toBe(false)
     })
 })
+
+describe('what the client cannot know, it does not guess', () => {
+    it('answers no rows behind a cell, and says why once', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const { grid, getRows } = serverGrid({ rows: crossed, pivotColumns: [['Q1']] })
+        await load(grid, getRows)
+
+        const node = grid.preWindowNodes[0]!
+        expect(getPivot(grid)!.rowsBehind(node, '__pv:c:Q1::0')).toEqual([])
+        expect(getPivot(grid)!.rowsBehind(node, '__pv:c:Q1::0')).toEqual([])
+
+        expect(
+            warn.mock.calls.filter((call) => String(call[0]).includes('which rows are behind'))
+        ).toHaveLength(1)
+        warn.mockRestore()
+    })
+})

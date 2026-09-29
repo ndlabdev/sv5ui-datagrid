@@ -11,7 +11,7 @@ import { flattenColumns } from '../../core/columns/header-groups.js'
 import { getSorting } from '../sorting/index.js'
 import { sortNodes } from '../sorting/sort.js'
 import { aggregate } from '../grouping/aggregate.js'
-import { buildGroupNodes } from '../grouping/group-nodes.js'
+import { buildGroupNodes, groupNodeId } from '../grouping/group-nodes.js'
 import { buildGrandTotalNode, totalsKindOf } from '../grouping/totals-nodes.js'
 import type { Aggregation } from '../grouping/grouping.types.js'
 import {
@@ -31,6 +31,8 @@ import {
     pathId,
     pivotColumnDefs,
     pivotCrossing,
+    rowsInGroup,
+    startsWithKeys,
     subtotalId,
     subtotalPaths,
     readServerCell,
@@ -68,6 +70,11 @@ const SERVER_TOTAL_ROW =
     'pivot() draws no totalRow on rowModel: "server": the row would hold a total over the blocks ' +
     'this client happens to hold. Have the server return it as a row of its own, the way it ' +
     'returns every other row, and leave totalRow off.'
+
+const SERVER_DRILL =
+    'pivot() cannot say which rows are behind a cell on rowModel: "server": the client holds the ' +
+    'crossed rows the server sent, not the rows they were measured from. Ask the server for them ' +
+    'with the same crossing, or cross on the client.'
 
 const UNNAMED_AGG =
     'pivot() sent no crossing to the server: a measure reduces with a function or a ' +
@@ -306,7 +313,12 @@ export class Pivot<TRow> {
     })
 
     #index = $derived.by(() =>
-        crossingIndex(this.#crossing.paths, this.values.length, this.totalColumn !== undefined)
+        crossingIndex({
+            paths: this.#crossing.paths,
+            subtotals: this.columnSubtotal ? subtotalPaths(this.#crossing.tree) : [],
+            measures: this.values.length,
+            withTotal: this.totalColumn !== undefined
+        })
     )
 
     ownsSort = (columnId: string): boolean => this.#index.has(columnId)
@@ -491,6 +503,44 @@ export class Pivot<TRow> {
         return reorderGroups(rows, (siblings) => sortNodes(siblings, defs, sort, nulls))
     }
 
+    #drillWarned = false
+
+    rowsBehind(node: RowNode<TRow>, columnId: string): TRow[] {
+        const ref = this.#index.get(columnId)
+        if (!ref || !this.isCrossing) return []
+
+        if (this.#onServer) {
+            if (!this.#drillWarned) {
+                this.#drillWarned = true
+                // eslint-disable-next-line no-console
+                console.warn(SERVER_DRILL)
+            }
+            return []
+        }
+
+        const read = gateReader(this.#grid, 'render')
+        const nodes = this.#grid.filteredNodes
+        const fields = this.#rowDefs()
+
+        const gathered =
+            totalsKindOf(node.id) === 'grandTotal'
+                ? nodes.map((row) => row.row)
+                : rowsInGroup(nodes, { fields, read, idOf: groupNodeId, wanted: node.id })
+
+        if (ref.keys.length === 0) return gathered
+
+        const across = this.#columnDefs()
+        return gathered.filter((row) => startsWithKeys(row, across, rawRead, ref.keys))
+    }
+
+    #rowDefs(): ColumnDef<TRow>[] {
+        const defs = this.#grid.columns.defs
+        return this.rows.flatMap((id) => {
+            const found = defs.find((def) => def.id === id)
+            return found ? [found] : []
+        })
+    }
+
     #bodyColumns(): ColumnDef<TRow>[] {
         return this.#grid.columns.all
             .map((column) => column.def)
@@ -615,6 +665,7 @@ function measuresIn<TRow>(
         const { field, agg, header } = entry as Record<string, unknown>
         if (typeof field !== 'string' || typeof agg !== 'string') return []
         if (!grid.columns.get(field)) return []
+
         return [
             {
                 field,
@@ -691,6 +742,8 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 addPivotColumnField: state.addColumnField,
                 removePivotField: state.removeField,
                 clearPivot: state.clearPivot,
+                pivotRowsBehind: (node: unknown, columnId: string) =>
+                    state.rowsBehind(node as RowNode<TRow>, columnId),
                 setPivotTotalColumn: state.setTotalColumn,
                 setPivotTotalRow: state.setTotalRow,
                 setPivotColumnGroups: state.setColumnGroups,
@@ -728,6 +781,7 @@ declare module '../../core/types/api.js' {
         addPivotColumnField?: (field: string) => void
         removePivotField?: (field: string) => void
         clearPivot?: () => void
+        pivotRowsBehind?: (node: unknown, columnId: string) => unknown[]
         setPivotTotalColumn?: (header: string | undefined) => void
         setPivotTotalRow?: (header: string | undefined) => void
         setPivotColumnGroups?: (mode: 'fixed' | 'open' | 'closed') => void

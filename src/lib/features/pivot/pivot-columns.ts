@@ -386,23 +386,70 @@ export interface CrossingRef {
     measure: number
 }
 
-export function crossingIndex(
-    paths: string[][],
-    measures: number,
+export interface IndexShape {
+    paths: string[][]
+    subtotals: string[][]
+    measures: number
     withTotal: boolean
-): Map<string, CrossingRef> {
+}
+
+export function crossingIndex(shape: IndexShape): Map<string, CrossingRef> {
     const out = new Map<string, CrossingRef>()
-    for (const path of paths) {
-        for (let measure = 0; measure < measures; measure++) {
+
+    for (const path of shape.paths) {
+        for (let measure = 0; measure < shape.measures; measure++) {
             out.set(crossingId(path, measure), { keys: path, measure })
         }
     }
-    if (!withTotal) return out
 
-    for (let measure = 0; measure < measures; measure++) {
+    for (const path of shape.subtotals) {
+        for (let measure = 0; measure < shape.measures; measure++) {
+            out.set(subtotalId(path, measure), { keys: path, measure })
+        }
+    }
+
+    if (!shape.withTotal) return out
+
+    for (let measure = 0; measure < shape.measures; measure++) {
         out.set(totalId(measure), { keys: [], measure })
     }
     return out
+}
+
+export interface GroupLookup<TRow> {
+    fields: ColumnDef<TRow>[]
+    read: CellRead<TRow>
+    idOf: (path: { columnId: string; key: string }[]) => string
+    wanted: string
+}
+
+export function rowsInGroup<TRow>(nodes: RowNode<TRow>[], lookup: GroupLookup<TRow>): TRow[] {
+    const { fields, read, idOf, wanted } = lookup
+    const kept: TRow[] = []
+
+    for (const node of nodes) {
+        const path: { columnId: string; key: string }[] = []
+        for (const field of fields) {
+            path.push({ columnId: field.id, key: keyOf(node.row, field, read) })
+            if (idOf(path) === wanted) {
+                kept.push(node.row)
+                break
+            }
+        }
+    }
+    return kept
+}
+
+export function startsWithKeys<TRow>(
+    row: TRow,
+    fields: ColumnDef<TRow>[],
+    read: CellRead<TRow>,
+    keys: string[]
+): boolean {
+    return keys.every((key, depth) => {
+        const field = fields[depth]
+        return field !== undefined && keyOf(row, field, read) === key
+    })
 }
 
 export function cacheByKey(): (key: string, compute: () => unknown) => unknown {

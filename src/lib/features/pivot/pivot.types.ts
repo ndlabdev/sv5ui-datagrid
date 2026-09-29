@@ -186,6 +186,16 @@ export interface PivotOptions<TRow = unknown> {
     columnSubtotal?: (header: string) => string
 
     /**
+     * `getPivot(grid).rowsBehind(node, columnId)` answers the rows a cell was
+     * measured from, which is the first question a reader asks of a number
+     * they did not expect. It answers the rows a filter left, and the rows
+     * themselves, so a masked column is masked only where the grid draws it.
+     *
+     * On `rowModel: 'server'` it answers nothing and says so once: the client
+     * holds the crossed rows the server sent, not the rows behind them.
+     */
+
+    /**
      * Whether a reader can fold a group of the column axis away, and which
      * state it starts in. `'open'` and `'closed'` both make it foldable.
      *
