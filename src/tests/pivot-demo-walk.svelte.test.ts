@@ -120,7 +120,10 @@ describe('reading a measure as a share in the demo', () => {
         const first = cells()[0]!
             .slice(1)
             .filter((text) => text.includes('%'))
-        const total = first.reduce((sum, text) => sum + Number(text.replace(/[^0-9.]/g, '')), 0)
+        const total = first.reduce(
+            (sum, text) => sum + Number(text.replace(/[^0-9,.]/g, '').replace(',', '.')),
+            0
+        )
         expect(total).toBeGreaterThan(99)
         expect(total).toBeLessThan(101)
     })

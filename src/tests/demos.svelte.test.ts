@@ -208,9 +208,16 @@ describe('pivot demo, the parts a reader has to see working', () => {
         await openPivot()
         await page.getByRole('button', { name: 'shipped', exact: true }).nth(1).click()
 
-        await expect.poll(() => headers()).toContain('Jan 10, 2026')
+        await expect.poll(() => headers().some((text) => text.includes('2026'))).toBe(true)
+
         const drawn = headers().filter((text) => text.includes('2026'))
-        expect(drawn).toEqual(['Jan 10, 2026', 'Apr 10, 2026', 'Jul 10, 2026', 'Oct 10, 2026'])
+        expect(drawn).toEqual([
+            '10 thg 1, 2026',
+            '10 thg 4, 2026',
+            '10 thg 7, 2026',
+            '10 thg 10, 2026'
+        ])
+        expect(drawn.every((text) => !text.includes('T00:00'))).toBe(true)
     })
 
     it('takes the order the application declares over the one the values have', async () => {

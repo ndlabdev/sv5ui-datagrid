@@ -4,6 +4,7 @@
         createDataGrid,
         DataGrid,
         filtering,
+        Grid,
         getGrouping,
         getPivot,
         getSorting,
@@ -15,6 +16,7 @@
         type PivotShowAs
     } from '$lib/index.js'
     import { Badge, Button, Container, Link, ThemeModeButton } from 'sv5ui'
+    import { viVN } from '$lib/locales/index.js'
 
     interface Sale {
         id: number
@@ -88,6 +90,8 @@
         data: initialSales,
         columns,
         getRowId: (sale) => String(sale.id),
+        locales: [viVN],
+        locale: 'vi-VN',
         features: [filtering(), sorting()]
     })
 
@@ -95,6 +99,8 @@
         data: initialSales,
         columns,
         getRowId: (sale) => String(sale.id),
+        locales: [viVN],
+        locale: 'vi-VN',
         features: [
             filtering(),
             sorting(),
@@ -110,6 +116,8 @@
         data: initialSales,
         columns,
         getRowId: (sale) => String(sale.id),
+        locales: [viVN],
+        locale: 'vi-VN',
         features: [
             filtering(),
             sorting(),
@@ -347,6 +355,10 @@
                 onclick={() => (ownKeys = !ownKeys)}
             />
         </div>
+    {/if}
+
+    {#if view === 'pivot'}
+        <Grid.PivotPanel grid={pivotGrid} />
     {/if}
 
     {#key view}
