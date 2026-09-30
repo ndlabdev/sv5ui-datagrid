@@ -37,6 +37,14 @@ export function agreedLook<TRow>(looks: Partial<ColumnDef<TRow>>[]): Partial<Col
 
 export const isPivotTotalColumn = (columnId: string): boolean => columnId.startsWith(TOTAL)
 
+export function isCrossingBody(columnId: string): boolean {
+    if (!columnId.startsWith(CROSSING)) return false
+
+    const cut = columnId.lastIndexOf('::')
+    if (cut < 0) return false
+    return /^\d+$/.test(columnId.slice(cut + 2))
+}
+
 const escapeKey = (key: string): string => key.replaceAll('\\', '\\\\').replaceAll('|', '\\|')
 
 export const pathId = (keys: string[]): string => keys.map(escapeKey).join('|')

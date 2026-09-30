@@ -63,7 +63,7 @@ const crossings = (grid: GridState<Sale>, node: RowNode<Sale>): unknown[] =>
 const shape = (grid: GridState<Sale>): string[] =>
     grid.preWindowNodes.map((node) => {
         const label = grid.columns.visible.find(
-            (column) => column.id === (node.meta?.expandable ? 'region' : '__pv:m')
+            (column) => column.id === (node.id.startsWith('group:') ? 'region' : '__pv:m')
         )!
         return `${node.meta?.level}:${String(grid.getValue(node, label))}`
     })
@@ -115,18 +115,17 @@ describe('a pivot with its measures on the row axis', () => {
         expect(all.slice(1, 3)).toEqual([`m0:${head}`, `m1:${head}`])
     })
 
-    it('still shows the measures when the group is shut', () => {
+    it('always shows the measures, a gathered row having nothing to open', () => {
         const grid = build()
         const group = grid.preWindowNodes[0]!
+        const before = shape(grid)
+
+        expect(group.meta?.expandable).toBe(false)
 
         grid.expansion.toggle(group.id)
-        const open = shape(grid)
-        grid.expansion.toggle(group.id)
-        const shut = shape(grid)
 
-        expect(open.slice(0, 3)).toEqual(['0:North', '1:amount', '1:Average'])
-        expect(shut.slice(0, 3)).toEqual(['0:North', '1:amount', '1:Average'])
-        expect(open.length).toBeGreaterThan(shut.length)
+        expect(shape(grid)).toEqual(before)
+        expect(before.slice(0, 3)).toEqual(['0:North', '1:amount', '1:Average'])
     })
 
     it('reads the total column and the total row once per measure', () => {
@@ -208,7 +207,7 @@ describe('what follows from a column no longer naming a measure', () => {
         })
         const all = grid.preWindowNodes.map((node) => node.id)
         const state = getPivot(grid)!
-        const opened = grid.preWindowNodes.filter((node) => !node.meta?.expandable)
+        const opened = grid.preWindowNodes.filter((node) => !node.id.startsWith('group:'))
 
         expect(new Set(all).size).toBe(all.length)
         for (const node of opened) {

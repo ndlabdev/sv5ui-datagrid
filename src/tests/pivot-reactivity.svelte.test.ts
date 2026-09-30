@@ -220,7 +220,7 @@ describe('a crossing can be changed while the grid is open', () => {
                 grid.columns.visible
                     .filter((column) => column.id.startsWith('__pv'))
                     .map((column) => String(column.def.header))
-            const north = () => grid.preWindowNodes.find((node) => node.meta?.expandable)!
+            const north = () => grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
             expect(leaves()).toEqual(['Q1', 'Q2'])
             expect(grid.getValue(north(), grid.columns.get('__pv:c:Q1::0')!)).toBe(10)

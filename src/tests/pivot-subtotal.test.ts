@@ -48,7 +48,7 @@ const headers = (grid: GridState<Sale>) =>
         .map((column) => String(column.def.header))
 
 const north = (grid: GridState<Sale>): RowNode<Sale> =>
-    grid.preWindowNodes.find((node) => node.meta?.expandable)!
+    grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
 const at = (grid: GridState<Sale>, id: string) => grid.getValue(north(grid), grid.columns.get(id)!)
 

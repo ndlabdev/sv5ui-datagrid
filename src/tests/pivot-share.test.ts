@@ -39,7 +39,7 @@ function build(showAs: PivotShowAs | undefined, extra: Partial<PivotOptions<Sale
 }
 
 const groups = (grid: GridState<Sale>): RowNode<Sale>[] =>
-    grid.preWindowNodes.filter((node) => node.meta?.expandable)
+    grid.preWindowNodes.filter((node) => node.id.startsWith('group:'))
 
 const at = (grid: GridState<Sale>, node: RowNode<Sale>, id: string) =>
     grid.getValue(node, grid.columns.get(id)!)

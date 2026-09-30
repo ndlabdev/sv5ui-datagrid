@@ -7,10 +7,14 @@ interface Block<TRow> {
     body: RowNode<TRow>[]
 }
 
-function firstHead<TRow>(run: RowNode<TRow>[], level: number): number {
+type Head<TRow> = (node: RowNode<TRow>) => boolean
+
+const opensAGroup = <TRow>(node: RowNode<TRow>): boolean => node.meta?.expandable === true
+
+function firstHead<TRow>(run: RowNode<TRow>[], level: number, isHead: Head<TRow>): number {
     for (let at = 0; at < run.length; at++) {
-        const meta = run[at]!.meta
-        if ((meta?.level ?? 0) === level && meta?.expandable === true) return at
+        const node = run[at]!
+        if ((node.meta?.level ?? 0) === level && isHead(node)) return at
     }
     return -1
 }
@@ -18,7 +22,8 @@ function firstHead<TRow>(run: RowNode<TRow>[], level: number): number {
 function blocksFrom<TRow>(
     run: RowNode<TRow>[],
     level: number,
-    start: number
+    start: number,
+    isHead: Head<TRow>
 ): Block<TRow>[] | undefined {
     const blocks: Block<TRow>[] = []
 
@@ -28,28 +33,32 @@ function blocksFrom<TRow>(
             blocks[blocks.length - 1]?.body.push(node)
             continue
         }
-        if (node.meta?.expandable !== true) return undefined
+        if (!isHead(node)) return undefined
         blocks.push({ head: node, body: [] })
     }
 
     return blocks
 }
 
-export function reorderGroups<TRow>(run: RowNode<TRow>[], order: Order<TRow>): RowNode<TRow>[] {
+export function reorderGroups<TRow>(
+    run: RowNode<TRow>[],
+    order: Order<TRow>,
+    isHead: Head<TRow> = opensAGroup
+): RowNode<TRow>[] {
     if (run.length < 2) return run
 
     const level = run[0]!.meta?.level ?? 0
-    const start = firstHead(run, level)
+    const start = firstHead(run, level, isHead)
     if (start < 0) return run
 
-    const blocks = blocksFrom(run, level, start)
+    const blocks = blocksFrom(run, level, start, isHead)
     if (!blocks) return run
 
     const byId = new Map(blocks.map((block) => [block.head.id, block]))
     const sorted = order(blocks.map((block) => block.head)).flatMap((head) => {
         const block = byId.get(head.id)
         if (!block) return [head]
-        return [head, ...reorderGroups(block.body, order)]
+        return [head, ...reorderGroups(block.body, order, isHead)]
     })
 
     return start === 0 ? sorted : [...run.slice(0, start), ...sorted]

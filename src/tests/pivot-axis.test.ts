@@ -211,7 +211,7 @@ describe('the application can declare the axis itself', () => {
                 })
             ]
         })
-        const node = grid.preWindowNodes.find((row) => row.meta?.expandable)!
+        const node = grid.preWindowNodes.find((row) => row.id.startsWith('group:'))!
 
         expect(grid.getValue(node, grid.columns.get('__pv:c:Small::0')!)).toBeGreaterThan(0)
         expect(grid.getValue(node, grid.columns.get('__pv:c:Enormous::0')!)).toBeUndefined()

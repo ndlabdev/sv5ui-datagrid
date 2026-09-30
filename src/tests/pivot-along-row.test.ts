@@ -40,7 +40,7 @@ function build(showAs: PivotShowAs, extra: Partial<PivotOptions<Sale>> = {}) {
 }
 
 const groups = (grid: GridState<Sale>): RowNode<Sale>[] =>
-    grid.preWindowNodes.filter((node) => node.meta?.expandable)
+    grid.preWindowNodes.filter((node) => node.id.startsWith('group:'))
 
 const across = (grid: GridState<Sale>, node: RowNode<Sale>) =>
     ['Q1', 'Q2', 'Q3'].map((key) => grid.getValue(node, grid.columns.get(`__pv:c:${key}::0`)!))

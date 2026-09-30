@@ -73,7 +73,7 @@ function table(
     const label = grid.columns.visible.find((column) => column.id === rowField)!
     const out: Record<string, Record<string, unknown>> = {}
     for (const node of grid.preWindowNodes) {
-        if (!node.meta?.expandable) continue
+        if (!node.id.startsWith('group:')) continue
         const cells: Record<string, unknown> = {}
         for (const column of leaves) cells[String(column.def.header)] = grid.getValue(node, column)
         out[String(grid.getValue(node, label))] = cells
@@ -308,7 +308,7 @@ describe('pivot says no rather than guessing', () => {
         void grid.preWindowNodes
 
         expect(columnIds(grid)).toEqual(['region', 'product', 'quarter', 'amount'])
-        expect(grid.preWindowNodes.some((node) => node.meta?.expandable)).toBe(false)
+        expect(grid.preWindowNodes.some((node) => node.id.startsWith('group:'))).toBe(false)
         expect(warn.mock.calls.filter((call) => String(call[0]).includes('pivot()'))).toHaveLength(
             1
         )
@@ -353,11 +353,13 @@ describe('pivot gathers more than one field down the page', () => {
     it('nests the second row field inside the first', () => {
         const grid = build({ rows: ['region', 'product'] })
         grid.expansion.expandAll(
-            grid.preWindowNodes.filter((node) => node.meta?.expandable).map((node) => node.id)
+            grid.preWindowNodes
+                .filter((node) => node.id.startsWith('group:'))
+                .map((node) => node.id)
         )
 
         const levels = grid.preWindowNodes
-            .filter((node) => node.meta?.expandable)
+            .filter((node) => node.id.startsWith('group:'))
             .map((node) => node.meta!.level)
 
         expect(levels).toContain(0)
@@ -383,7 +385,7 @@ describe('pivot gathers more than one field across the page', () => {
 
     it('crosses on the pair, not on either field alone', () => {
         const grid = build({ columns: ['quarter', 'product'] })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
         const at = (id: string) => grid.getValue(north, grid.columns.get(id)!)
 
         expect(at('__pv:c:Q1|Gadget::0')).toBe(80)
@@ -425,7 +427,7 @@ describe('pivot measures more than one thing', () => {
                 { field: 'amount', agg: 'count', header: 'Count' }
             ]
         })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         expect(grid.getValue(north, grid.columns.get('__pv:c:Q1::0')!)).toBe(180)
         expect(grid.getValue(north, grid.columns.get('__pv:c:Q1::1')!)).toBe(2)
@@ -435,7 +437,7 @@ describe('pivot measures more than one thing', () => {
 describe('the total column is measured, not added up', () => {
     it('sums the rows, which for a sum is also the sum of the cells', () => {
         const grid = build({ totalColumn: 'Total' })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         expect(grid.getValue(north, grid.columns.get('__pv:t:0')!)).toBe(330)
     })
@@ -445,7 +447,7 @@ describe('the total column is measured, not added up', () => {
             values: [{ field: 'amount', agg: 'avg' }],
             totalColumn: 'Total'
         })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         const q1 = grid.getValue(north, grid.columns.get('__pv:c:Q1::0')!) as number
         const q2 = grid.getValue(north, grid.columns.get('__pv:c:Q2::0')!) as number
@@ -465,7 +467,7 @@ describe('the total column is measured, not added up', () => {
             ],
             totalColumn: 'Total'
         })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         expect(grid.getValue(north, grid.columns.get('__pv:t:0')!)).toBe(330)
         expect(grid.getValue(north, grid.columns.get('__pv:t:1')!)).toBe(3)
@@ -561,7 +563,7 @@ describe('a crossed cell cannot be written back', () => {
             getRowId: (row) => String(row.id),
             features: [editing(), pivot<Sale>({ ...crossing, totalColumn: 'Total' })]
         })
-        const node = grid.preWindowNodes.find((row) => row.meta?.expandable)!
+        const node = grid.preWindowNodes.find((row) => row.id.startsWith('group:'))!
         return { grid, node, state: getEditing(grid)! }
     }
 
@@ -575,7 +577,7 @@ describe('a crossed cell cannot be written back', () => {
 
     it('refuses an empty crossing, where the value and the refusal look alike', () => {
         const { grid, node, state } = editable()
-        const south = grid.preWindowNodes.filter((row) => row.meta?.expandable)[1]!
+        const south = grid.preWindowNodes.filter((row) => row.id.startsWith('group:'))[1]!
 
         expect(grid.getValue(south, grid.columns.get('__pv:c:Q2::0')!)).toBeUndefined()
         expect(state.editableAt(south, grid.columns.get('__pv:c:Q2::0')!.def)).toBe(false)
@@ -614,14 +616,14 @@ describe('showValuesAs reads the generated columns', () => {
         const grid = shared({
             '__pv:c:Q1::0': { kind: 'percentOfRow', of: ['__pv:c:Q1::0', '__pv:c:Q2::0'] }
         })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         expect(grid.getValue(north, grid.columns.get('__pv:c:Q1::0')!)).toBeCloseTo(180 / 330, 6)
     })
 
     it('reads a crossing as its share of what that column totals down the page', () => {
         const grid = shared({ '__pv:c:Q1::0': 'percentOfGrandTotal' })
-        const groups = grid.preWindowNodes.filter((node) => node.meta?.expandable)
+        const groups = grid.preWindowNodes.filter((node) => node.id.startsWith('group:'))
 
         expect(grid.getValue(groups[0]!, grid.columns.get('__pv:c:Q1::0')!)).toBeCloseTo(
             180 / 380,
@@ -635,7 +637,7 @@ describe('showValuesAs reads the generated columns', () => {
 
     it('reads percentOfParent the same way, since a pivot row has no parent above it', () => {
         const grid = shared({ '__pv:c:Q1::0': 'percentOfParent' })
-        const north = grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
 
         expect(grid.getValue(north, grid.columns.get('__pv:c:Q1::0')!)).toBeCloseTo(180 / 380, 6)
     })
@@ -660,7 +662,7 @@ describe('sorting by what a crossing measured', () => {
 
     const labels = (grid: GridState<Sale>) =>
         grid.preWindowNodes
-            .filter((node) => node.meta?.expandable)
+            .filter((node) => node.id.startsWith('group:'))
             .map((node) => String(grid.getValue(node, grid.columns.get('region')!)))
 
     it('leaves a crossing unsortable unless asked', () => {
@@ -699,12 +701,14 @@ describe('sorting by what a crossing measured', () => {
     it('orders siblings within their parent, not across the whole list', () => {
         const grid = sorted({ rows: ['region', 'product'], sortableColumns: true })
         grid.expansion.expandAll(
-            grid.preWindowNodes.filter((node) => node.meta?.expandable).map((node) => node.id)
+            grid.preWindowNodes
+                .filter((node) => node.id.startsWith('group:'))
+                .map((node) => node.id)
         )
 
         const shape = () =>
             grid.preWindowNodes
-                .filter((node) => node.meta?.expandable)
+                .filter((node) => node.id.startsWith('group:'))
                 .map((node) => {
                     const field = node.meta!.level === 0 ? 'region' : 'product'
                     return `${node.meta!.level}:${grid.getValue(node, grid.columns.get(field)!)}`
@@ -813,7 +817,7 @@ describe('refusing to draw is also refusing to gather', () => {
 
         expect(columnIds(grid).some(isPivotColumn)).toBe(false)
         expect(grid.preWindowNodes).toHaveLength(sales.length)
-        expect(grid.preWindowNodes.some((node) => node.meta?.expandable)).toBe(false)
+        expect(grid.preWindowNodes.some((node) => node.id.startsWith('group:'))).toBe(false)
         warn.mockRestore()
     })
 
@@ -827,7 +831,7 @@ describe('refusing to draw is also refusing to gather', () => {
         })
 
         expect(grid.preWindowNodes).toHaveLength(sales.length)
-        expect(grid.preWindowNodes.some((node) => node.meta?.expandable)).toBe(false)
+        expect(grid.preWindowNodes.some((node) => node.id.startsWith('group:'))).toBe(false)
         warn.mockRestore()
     })
 })
@@ -845,7 +849,7 @@ describe('a saved view carries a pivot order back', () => {
 
     const order = (grid: GridState<Sale>) =>
         grid.preWindowNodes
-            .filter((node) => node.meta?.expandable)
+            .filter((node) => node.id.startsWith('group:'))
             .map((node) => String(grid.getValue(node, grid.columns.get('region')!)))
 
     it('restores the order a crossing put the groups in', () => {

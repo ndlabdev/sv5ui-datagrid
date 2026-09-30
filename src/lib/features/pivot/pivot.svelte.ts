@@ -35,6 +35,7 @@ import {
     measureRowId,
     MEASURE_COLUMN,
     keepOnly,
+    isCrossingBody,
     isPivotColumn,
     missingFields,
     offAxis,
@@ -381,6 +382,11 @@ export class Pivot<TRow> {
 
     ownsSort = (columnId: string): boolean => this.#index.has(columnId)
 
+    crossingMeasure = (columnId: string): number | undefined =>
+        isCrossingBody(columnId) ? this.#index.get(columnId)?.measure : undefined
+
+    inCrossingBody = (nodeId: string): boolean => measureRowBase(nodeId).startsWith('group:')
+
     get #sort(): SortState[] {
         return getSorting(this.#grid)?.sort ?? []
     }
@@ -666,13 +672,15 @@ export class Pivot<TRow> {
 
         const order = (siblings: RowNode<TRow>[]): RowNode<TRow>[] =>
             sortNodes(siblings, defs, sort, nulls)
+        const gathers = (node: RowNode<TRow>): boolean => measureRowBase(node.id) === node.id
 
-        if (!this.#onRows) return reorderGroups(rows, order)
+        if (!this.#onRows) return reorderGroups(rows, order, gathers)
 
         if (this.values.length > 1) this.#warnSortMeasure()
         return reorderGroups(
             rows,
-            alongFirstMeasure(rows, (id) => measureRowId(id, 0), order)
+            alongFirstMeasure(rows, (id) => measureRowId(id, 0), order),
+            gathers
         )
     }
 
@@ -755,6 +763,7 @@ export class Pivot<TRow> {
             aggregations: this.#onRows ? {} : aggregations[0]!,
             isExpanded: (id) => this.#grid.expansion.isExpanded(id),
             groupLabel: (key) => key,
+            opensToRows: false,
             read,
             ...(this.#onRows
                 ? {

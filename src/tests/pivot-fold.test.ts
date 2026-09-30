@@ -83,7 +83,7 @@ describe('a column group folds down to its own total', () => {
 
     it('keeps the number the total was showing while it was open', () => {
         const grid = build()
-        const north = () => grid.preWindowNodes.find((node) => node.meta?.expandable)!
+        const north = () => grid.preWindowNodes.find((node) => node.id.startsWith('group:'))!
         const before = grid.getValue(north(), grid.columns.get('__pv:c:Q1::s0')!)
 
         grid.columns.setGroupCollapsed('__pv:c:Q1', true)

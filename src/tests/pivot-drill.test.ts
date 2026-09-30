@@ -52,7 +52,7 @@ function build(options: Partial<PivotOptions<Sale>> = {}): GridState<Sale> {
 }
 
 const groups = (grid: GridState<Sale>): RowNode<Sale>[] =>
-    grid.preWindowNodes.filter((node) => node.meta?.expandable)
+    grid.preWindowNodes.filter((node) => node.id.startsWith('group:'))
 
 const ids = (rows: Sale[]) => rows.map((row) => row.id).sort((a, b) => a - b)
 
@@ -174,7 +174,7 @@ describe('a subtotal column can be sorted by', () => {
 
         const labels = () =>
             grid.preWindowNodes
-                .filter((node) => node.meta?.expandable)
+                .filter((node) => node.id.startsWith('group:'))
                 .map((node) => String(grid.getValue(node, grid.columns.get('region')!)))
 
         expect(getPivot(grid)!.ownsSort('__pv:c:Q1::s0')).toBe(true)

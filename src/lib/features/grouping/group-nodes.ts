@@ -20,6 +20,8 @@ interface BuildGroupNodesOptions<TRow> {
     footerLabel?: (key: string, count: number, columnId: string) => string
 
     repeat?: RepeatRows<TRow>
+
+    opensToRows?: boolean
 }
 
 interface RepeatRows<TRow> {
@@ -93,6 +95,23 @@ function partition<TRow>(
     return groups
 }
 
+function gatheredRow<TRow>(
+    members: RowNode<TRow>[],
+    at: { columnId: string; key: string },
+    options: BuildGroupNodesOptions<TRow>
+): TRow {
+    const measured = options.repeat
+        ? {}
+        : aggregateRowValues(members, options.columns, options.aggregations, options.read)
+
+    return markSyntheticRow(
+        withComputed({} as TRow, {
+            ...measured,
+            [at.columnId]: options.groupLabel(at.key, members.length, at.columnId)
+        })
+    )
+}
+
 function buildLevel<TRow>(
     nodes: RowNode<TRow>[],
     level: number,
@@ -115,30 +134,19 @@ function buildLevel<TRow>(
         position += 1
         const groupPath = [...path, { columnId, key }]
         const id = groupNodeId(groupPath)
-        const row = markSyntheticRow(
-            withComputed({} as TRow, {
-                ...(options.repeat
-                    ? {}
-                    : aggregateRowValues(
-                          members,
-                          options.columns,
-                          options.aggregations,
-                          options.read
-                      )),
-                [columnId]: options.groupLabel(key, members.length, columnId)
-            })
-        )
+        const row = gatheredRow(members, { columnId, key }, options)
+        const opens = level < options.by.length - 1 || options.opensToRows !== false
 
         output.push({
             id,
             row,
             index: members[0]!.index,
-            meta: { level, expandable: true, setSize, posInSet: position }
+            meta: { level, expandable: opens, setSize, posInSet: position }
         })
 
         if (options.repeat) output.push(...repeatedRows(members, id, level + 1, options))
 
-        if (options.isExpanded(id)) {
+        if (opens && options.isExpanded(id)) {
             output.push(...buildLevel(members, level + 1, groupPath, options))
             if (options.footerLabel) {
                 output.push(

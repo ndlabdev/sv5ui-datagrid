@@ -277,7 +277,7 @@ describe('the client never crosses a server grid for itself', () => {
         })
         await load(grid, getRows)
 
-        expect(grid.preWindowNodes.some((node) => node.meta?.expandable)).toBe(false)
+        expect(grid.preWindowNodes.some((node) => node.id.startsWith('group:'))).toBe(false)
         expect(grid.preWindowNodes).toHaveLength(2)
     })
 
