@@ -53,6 +53,9 @@ const ARGS: Record<string, unknown[]> = {
     movePivotEarlier: ['Region'],
     movePivotLater: ['Region'],
     removePivotChip: ['Region'],
+    pivotSubtotalOf: ['Q1'],
+    pivotKeepTop: [10],
+    pivotKeepBottom: [10],
 
     moveGroupEarlier: ['Region'],
     moveGroupLater: ['Region'],

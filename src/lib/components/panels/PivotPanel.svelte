@@ -70,6 +70,79 @@
 
     const addTo = (take: (id: string) => void) =>
         free.map((column) => ({ label: column.header, onSelect: () => take(column.id) }))
+
+    const toggles = $derived.by(() => {
+        const state = pivot
+        if (!state) return []
+
+        return [
+            {
+                label: t.pivotTotalColumn,
+                on: state.totalColumn !== undefined,
+                press: () =>
+                    state.setTotalColumn(
+                        state.totalColumn === undefined ? t.pivotTotalColumn : undefined
+                    )
+            },
+            {
+                label: t.pivotTotalRow,
+                on: state.totalRow !== undefined,
+                press: () =>
+                    state.setTotalRow(state.totalRow === undefined ? t.pivotTotalRow : undefined)
+            },
+            {
+                label: t.pivotSubtotal,
+                on: state.columnSubtotal !== undefined,
+                press: () =>
+                    state.setColumnSubtotal(
+                        state.columnSubtotal === undefined ? t.pivotSubtotalOf : undefined
+                    )
+            },
+            {
+                label: t.pivotFoldable,
+                on: state.columnGroups !== 'fixed',
+                press: () =>
+                    state.setColumnGroups(state.columnGroups === 'fixed' ? 'open' : 'fixed')
+            },
+            {
+                label: t.pivotSortable,
+                on: state.sortableColumns,
+                press: () => state.setSortableColumns(!state.sortableColumns)
+            }
+        ]
+    })
+
+    const KEEP_COUNTS = [5, 10, 20]
+
+    const kept = $derived(pivot?.keepRows)
+
+    const keptLabel = $derived.by(() => {
+        if (kept?.top !== undefined) return t.pivotKeepTop(kept.top)
+        if (kept?.bottom !== undefined) return t.pivotKeepBottom(kept.bottom)
+        return t.pivotKeepAll
+    })
+
+    const keepChoices = $derived([
+        { label: t.pivotKeepAll, onSelect: () => pivot?.setKeepRows(undefined) },
+        ...KEEP_COUNTS.map((top) => ({
+            label: t.pivotKeepTop(top),
+            onSelect: () =>
+                pivot?.setKeepRows(
+                    kept?.others === undefined ? { top } : { top, others: kept.others }
+                )
+        }))
+    ])
+
+    const gatherRest = () => {
+        if (!kept) return
+        if (kept.others === undefined) {
+            pivot?.setKeepRows({ ...kept, others: t.pivotKeepOthers })
+            return
+        }
+
+        const { others: _dropped, ...rest } = kept
+        pivot?.setKeepRows(rest)
+    }
 </script>
 
 {#snippet zone(
@@ -265,5 +338,50 @@
                 />
             {/if}
         </div>
+
+        {#if pivot.isCrossing}
+            <div
+                role="group"
+                aria-label={t.pivotSettings}
+                data-dg-pivot-zone="settings"
+                class={slots.groupPanel({ class: theme('groupPanel') })}
+            >
+                <span class={slots.groupPanelLabel({ class: theme('groupPanelLabel') })}
+                    >{t.pivotSettings}</span
+                >
+
+                {#each toggles as toggle (toggle.label)}
+                    <Button
+                        variant={toggle.on ? 'solid' : 'outline'}
+                        size="xs"
+                        label={toggle.label}
+                        aria-pressed={toggle.on}
+                        onclick={toggle.press}
+                    />
+                {/each}
+
+                <DropdownMenu items={keepChoices}>
+                    {#snippet children({ props })}
+                        <Button
+                            {...props}
+                            variant={kept ? 'solid' : 'outline'}
+                            size="xs"
+                            label={keptLabel}
+                            aria-label={t.pivotKeep}
+                        />
+                    {/snippet}
+                </DropdownMenu>
+
+                {#if kept}
+                    <Button
+                        variant={kept.others === undefined ? 'outline' : 'solid'}
+                        size="xs"
+                        label={t.pivotKeepOthers}
+                        aria-pressed={kept.others !== undefined}
+                        onclick={gatherRest}
+                    />
+                {/if}
+            </div>
+        {/if}
     </div>
 {/if}
