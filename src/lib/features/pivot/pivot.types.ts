@@ -298,6 +298,33 @@ export interface PivotOptions<TRow = unknown> {
     valuesOn?: PivotValuesOn
 
     /**
+     * Keep only some of the gathered rows, ranked by what a measure makes of
+     * them.
+     *
+     * A crossing of forty regions is a page nobody reads. `{ top: 10 }` keeps
+     * the ten largest and leaves the rest out, which is how a report of that
+     * shape is read everywhere it is read at all.
+     *
+     * The ranking is measured from the rows of each gathered row, the way
+     * `totalColumn` measures, not added up from the cells drawn beside it, and
+     * it is measured whether or not a total column is asked for. `measure`
+     * picks which of `values` ranks them; the reading a `showAs` puts on that
+     * measure is left out of it, since a rank by percentage of its own row
+     * would put every row at the same place.
+     *
+     * What is left out is left out of everything: the total row and every
+     * share are measured over the rows that remain, so the page adds up to
+     * what it shows. `others` is the way to keep it all: the rows that lost
+     * are gathered into one more row under that name, measured from
+     * themselves, and the totals then cover everything again.
+     *
+     * With more than one row field this applies to the outermost, which is the
+     * one the question is about. Opening a row that survived still shows every
+     * field under it.
+     */
+    keepRows?: PivotKeepRows
+
+    /**
      * A row at the bottom holding each measure over every row the grid is
      * showing, headed by this text in the first row field's column. Left out,
      * there is no total row.
@@ -307,3 +334,18 @@ export interface PivotOptions<TRow = unknown> {
 
 /** Which axis `pivot()` stacks its measures on. */
 export type PivotValuesOn = 'columns' | 'rows'
+
+/** Which of the gathered rows a pivot keeps, and what becomes of the rest. */
+export interface PivotKeepRows {
+    /** Keep this many, the largest first. */
+    top?: number
+
+    /** Or keep this many, the smallest first. Ignored when `top` is given. */
+    bottom?: number
+
+    /** Which measure ranks them, by its place in `values`. */
+    measure?: number
+
+    /** Gather everything left out into one row under this name. */
+    others?: string
+}

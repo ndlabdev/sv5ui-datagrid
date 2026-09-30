@@ -13,7 +13,7 @@ import {
     type MenuItem,
     type RowNode
 } from '../../core/types/index.js'
-import { mutator, numericOrNull } from '../../core/utils/index.js'
+import { mutator, numericOrNull, withComputed } from '../../core/utils/index.js'
 import { flattenColumns } from '../../core/columns/header-groups.js'
 import { getSorting } from '../sorting/index.js'
 import { sortNodes } from '../sorting/sort.js'
@@ -29,6 +29,8 @@ import {
     cacheByKey,
     cacheByRows,
     crossingIndex,
+    groupsByKey,
+    type KeyedRows,
     defaultHeader,
     measuredLook,
     measureRowBase,
@@ -55,7 +57,13 @@ import {
 import { alongFirstMeasure, reorderGroups } from './pivot-sort.js'
 import type { PivotRequest } from '../server-row-model/server-row-model.types.js'
 import type { SortState } from '../../core/types/index.js'
-import type { PivotMeasure, PivotOptions, PivotShowAs, PivotValuesOn } from './pivot.types.js'
+import type {
+    PivotKeepRows,
+    PivotMeasure,
+    PivotOptions,
+    PivotShowAs,
+    PivotValuesOn
+} from './pivot.types.js'
 
 const PIVOT = 'pivot'
 const SERVER_ROW_MODEL = 'serverRowModel'
@@ -108,6 +116,16 @@ const SORT_BY_FIRST_MEASURE =
     'than a measure, so sorting by one sorts the groups by the first measure. Put the measure ' +
     'you mean first in values, or move the measures back to the column axis to sort by each.'
 
+const rankOutOfRange = (at: number, many: number): string =>
+    `pivot(): keepRows ranks by values[${at}], and there ${many === 1 ? 'is' : 'are'} only ` +
+    `${many}. Nothing ranks the rows, so the ones kept are whichever the data listed first. ` +
+    'Point measure at one of the measures, or leave it out to rank by the first.'
+
+const SERVER_KEEP_ROWS =
+    'pivot() keeps every row it is given on rowModel: "server". Ranking the gathered rows means ' +
+    'measuring all of them, and the client holds only the blocks the server sent, so the ten ' +
+    'largest of what it happens to hold are not the ten largest. Ask the server for them.'
+
 const RUNNING_AGG =
     'pivot() left a runningTotal empty: it runs only a sum or a count of one column, the ' +
     'reductions where adding the cells and measuring the rows give the same answer. A ratio does ' +
@@ -138,6 +156,7 @@ export class Pivot<TRow> {
     columnGroups = $state.raw<ColumnGroupMode>('fixed')
     columnSubtotal = $state.raw<((header: string) => string) | undefined>(undefined)
     valuesOn = $state.raw<PivotValuesOn>('columns')
+    keepRows = $state.raw<PivotKeepRows | undefined>(undefined)
 
     #grid: GridState<TRow>
     #options: PivotOptions<TRow>
@@ -154,6 +173,7 @@ export class Pivot<TRow> {
         this.columnGroups = options.columnGroups ?? 'fixed'
         this.columnSubtotal = options.columnSubtotal
         this.valuesOn = options.valuesOn ?? 'columns'
+        this.keepRows = options.keepRows
 
         if (options.rows.length === 0 || options.columns.length === 0) {
             throw new Error('pivot() needs at least one row field and one column field')
@@ -213,6 +233,10 @@ export class Pivot<TRow> {
 
     setColumnGroups = mutator((mode: ColumnGroupMode): void => {
         this.columnGroups = mode
+    })
+
+    setKeepRows = mutator((keep: PivotKeepRows | undefined): void => {
+        this.keepRows = keep
     })
 
     setValuesOn = mutator((where: PivotValuesOn): void => {
@@ -431,6 +455,17 @@ export class Pivot<TRow> {
         console.warn(SERVER_VALUES_ON_ROWS)
     }
 
+    #keepRowsWarned = false
+
+    #warnKeepRows(): void {
+        if (!this.#onServer || this.keepRows === undefined) return
+        if (this.#keepRowsWarned) return
+
+        this.#keepRowsWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(SERVER_KEEP_ROWS)
+    }
+
     #overflowWarned = false
 
     #warnOverflow(): void {
@@ -447,6 +482,7 @@ export class Pivot<TRow> {
         this.#warnMissing(defs)
         this.#warnTotalRow()
         this.#warnValuesOnRows()
+        this.#warnKeepRows()
         if (!this.#onServer && this.#columnDefs().length === 0) return false
         if (!this.#onServer && !this.#fieldsResolve()) return false
         if (this.#crossing.overflowed) {
@@ -663,6 +699,74 @@ export class Pivot<TRow> {
         })
     }
 
+    #measureOver(at: number, rows: TRow[], read: CellRead<TRow>): unknown {
+        const measure = this.values[at]
+        if (!measure || rows.length === 0) return undefined
+
+        const defs = this.#grid.columns.defs
+        const def = defs.find((candidate) => candidate.id === measure.field)
+        if (!def) return undefined
+
+        const cells = (column: ColumnDef<TRow>): unknown[] =>
+            rows.map((row) => read({ id: '', row, index: 0 } as RowNode<TRow>, column))
+
+        const top = aggregate(measure.agg, cells(def), rows)
+        if (measure.per === undefined) return top
+
+        const per = defs.find((candidate) => candidate.id === measure.per)
+        return per ? share(top, aggregate(measure.agg, cells(per), rows)) : undefined
+    }
+
+    #ranked(nodes: RowNode<TRow>[]): { kept: RowNode<TRow>[]; lost: RowNode<TRow>[] } | undefined {
+        const keep = this.keepRows
+        const many = keep?.top ?? keep?.bottom
+        if (!keep || many === undefined || many <= 0) return undefined
+
+        const field = this.#rowDefs()[0]
+        if (!field) return undefined
+
+        const buckets = groupsByKey(nodes, field, rawRead)
+        if (buckets.length <= many) return undefined
+
+        const at = keep.measure ?? 0
+        if (at >= this.values.length) this.#warnRankMeasure(at)
+
+        const read = gateReader(this.#grid, 'render')
+        const scored = buckets.map((bucket) => ({
+            bucket,
+            score: numericOrNull(
+                this.#measureOver(
+                    at,
+                    bucket.nodes.map((node) => node.row),
+                    read
+                )
+            )
+        }))
+
+        const order = byScore(scored, keep.top === undefined)
+        return {
+            kept: order.slice(0, many).flatMap((entry) => entry.bucket.nodes),
+            lost: order.slice(many).flatMap((entry) => entry.bucket.nodes)
+        }
+    }
+
+    #keep(nodes: RowNode<TRow>[]): RowNode<TRow>[] {
+        const split = this.#ranked(nodes)
+        if (!split) return nodes
+
+        const label = this.keepRows?.others
+        if (label === undefined) return split.kept
+
+        const field = this.#rowDefs()[0]!
+        return [
+            ...split.kept,
+            ...split.lost.map((node) => ({
+                ...node,
+                row: withComputed(node.row, { [field.id]: label })
+            }))
+        ]
+    }
+
     #order(rows: RowNode<TRow>[]): RowNode<TRow>[] {
         if (!this.#crossesTheSort) return rows
 
@@ -693,6 +797,15 @@ export class Pivot<TRow> {
         console.warn(SORT_BY_FIRST_MEASURE)
     }
 
+    #rankWarned = false
+
+    #warnRankMeasure(at: number): void {
+        if (this.#rankWarned) return
+        this.#rankWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(rankOutOfRange(at, this.values.length))
+    }
+
     #runningWarned = false
 
     #warnRunning(): void {
@@ -718,19 +831,33 @@ export class Pivot<TRow> {
         }
 
         const read = gateReader(this.#grid, 'render')
-        const nodes = this.#grid.filteredNodes
         const fields = this.#rowDefs()
-
         const wanted = measureRowBase(node.id)
-        const gathered =
-            totalsKindOf(wanted) === 'grandTotal'
-                ? nodes.map((row) => row.row)
-                : rowsInGroup(nodes, { fields, read, idOf: groupNodeId, wanted })
+        const gathered = this.#rowsUnder(wanted, read, fields)
 
         if (ref.keys.length === 0) return gathered
 
         const across = this.#columnDefs()
         return gathered.filter((row) => startsWithKeys(row, across, rawRead, ref.keys))
+    }
+
+    #othersId(): string | undefined {
+        const label = this.keepRows?.others
+        const field = this.#rowDefs()[0]
+        if (label === undefined || !field) return undefined
+        return groupNodeId([{ columnId: field.id, key: label }])
+    }
+
+    #rowsUnder(wanted: string, read: CellRead<TRow>, fields: ColumnDef<TRow>[]): TRow[] {
+        const source = this.#grid.filteredNodes
+        const split = this.#ranked(source)
+        if (split && wanted === this.#othersId()) return split.lost.map((entry) => entry.row)
+
+        const gathersTheRest = this.keepRows?.others !== undefined
+        const shown = gathersTheRest ? source : (split?.kept ?? source)
+
+        if (totalsKindOf(wanted) === 'grandTotal') return shown.map((entry) => entry.row)
+        return rowsInGroup(shown, { fields, read, idOf: groupNodeId, wanted })
     }
 
     #rowDefs(): ColumnDef<TRow>[] {
@@ -753,11 +880,12 @@ export class Pivot<TRow> {
         if (this.#crossing.overflowed || this.#columnDefs().length === 0) return nodes
         if (!this.#fieldsResolve()) return nodes
 
+        const kept = this.#keep(nodes)
         const read = gateReader(this.#grid, 'render')
-        const aggregations = this.#aggregations(nodes)
+        const aggregations = this.#aggregations(kept)
         const columns = this.#bodyColumns()
 
-        const rows = buildGroupNodes(nodes, {
+        const rows = buildGroupNodes(kept, {
             by: this.rows,
             columns,
             aggregations: this.#onRows ? {} : aggregations[0]!,
@@ -780,9 +908,9 @@ export class Pivot<TRow> {
         const ordered = this.#order(rows)
 
         const label = this.totalRow
-        if (label === undefined || nodes.length === 0) return ordered
+        if (label === undefined || kept.length === 0) return ordered
 
-        return [...ordered, ...this.#totalRows(nodes, aggregations, { columns, label, read })]
+        return [...ordered, ...this.#totalRows(kept, aggregations, { columns, label, read })]
     }
 
     #totalRows(
@@ -815,6 +943,22 @@ export class Pivot<TRow> {
             }))
         ]
     }
+}
+
+interface Scored<TRow> {
+    bucket: KeyedRows<TRow>
+    score: number | null
+}
+
+function byScore<TRow>(scored: Scored<TRow>[], smallestFirst: boolean): Scored<TRow>[] {
+    const known = scored.filter((entry) => entry.score !== null)
+    const unknown = scored.filter((entry) => entry.score === null)
+
+    known.sort((left, right) =>
+        smallestFirst ? left.score! - right.score! : right.score! - left.score!
+    )
+
+    return [...known, ...unknown]
 }
 
 function moved(fields: string[], field: string, offset: number): string[] {
@@ -870,6 +1014,7 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
         columnGroups: state.columnGroups,
         sortableColumns: state.sortableColumns,
         valuesOn: state.valuesOn,
+        ...(state.keepRows === undefined ? {} : { keepRows: state.keepRows }),
         ...(state.totalColumn === undefined ? {} : { totalColumn: state.totalColumn }),
         ...(state.totalRow === undefined ? {} : { totalRow: state.totalRow }),
         ...(named
@@ -922,6 +1067,31 @@ function typeIn(value: unknown): ColumnType | undefined {
 
 function shareIn(value: unknown): PivotShowAs | undefined {
     return SHARES.find((share) => share === value)
+}
+
+function placeIn(value: unknown): number | undefined {
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) return undefined
+    return value
+}
+
+function countIn(value: unknown): number | undefined {
+    if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) return undefined
+    return value
+}
+
+function keepRowsIn(value: unknown): PivotKeepRows | undefined {
+    if (value === null || typeof value !== 'object') return undefined
+
+    const shape = value as Record<string, unknown>
+    const top = countIn(shape.top)
+    const bottom = top === undefined ? countIn(shape.bottom) : undefined
+    if (top === undefined && bottom === undefined) return undefined
+
+    const keep: PivotKeepRows = top === undefined ? { bottom } : { top }
+    const measure = placeIn(shape.measure)
+    if (measure !== undefined) keep.measure = measure
+    if (typeof shape.others === 'string') keep.others = shape.others
+    return keep
 }
 
 function headerIn(value: unknown): string | undefined {
@@ -995,13 +1165,21 @@ function hydratePivot<TRow>(slice: unknown, grid: GridState<TRow>): void {
     if (columns) state.setColumns(columns)
     if (values) state.setValues(values)
 
+    hydrateSettings(state, shape)
+}
+
+function hydrateSettings<TRow>(state: Pivot<TRow>, shape: Record<string, unknown>): void {
     const mode = GROUP_MODES.find((known) => known === shape.columnGroups)
     if (mode) state.setColumnGroups(mode)
+
     const where = VALUES_ON.find((known) => known === shape.valuesOn)
     if (where) state.setValuesOn(where)
+
+    if ('keepRows' in shape) state.setKeepRows(keepRowsIn(shape.keepRows))
     if (typeof shape.sortableColumns === 'boolean') {
         state.setSortableColumns(shape.sortableColumns)
     }
+
     state.setTotalColumn(headerIn(shape.totalColumn))
     state.setTotalRow(headerIn(shape.totalRow))
 }
@@ -1065,6 +1243,9 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 setPivotColumnSubtotal: state.setColumnSubtotal,
                 setPivotSortableColumns: state.setSortableColumns,
                 setPivotValuesOn: (where: unknown) => state.setValuesOn(where as PivotValuesOn),
+                setPivotKeepRows: (keep: unknown) =>
+                    state.setKeepRows(keep as PivotKeepRows | undefined),
+                pivotKeepRows: () => state.keepRows,
                 pivotValuesOn: () => state.valuesOn,
                 isPivoting: () => state.isCrossing
             }
@@ -1105,6 +1286,8 @@ declare module '../../core/types/api.js' {
         setPivotColumnSubtotal?: (label: ((header: string) => string) | undefined) => void
         setPivotSortableColumns?: (sortable: boolean) => void
         setPivotValuesOn?: (where: 'columns' | 'rows') => void
+        setPivotKeepRows?: (keep: unknown) => void
+        pivotKeepRows?: () => unknown
         pivotValuesOn?: () => 'columns' | 'rows'
         isPivoting?: () => boolean
     }

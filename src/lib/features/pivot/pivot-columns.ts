@@ -341,6 +341,29 @@ export function missingFields<TRow>(defs: ColumnDef<TRow>[], fields: string[]): 
     return fields.filter((field) => !declared.has(field))
 }
 
+export interface KeyedRows<TRow> {
+    key: string
+    nodes: RowNode<TRow>[]
+}
+
+export function groupsByKey<TRow>(
+    nodes: readonly RowNode<TRow>[],
+    field: ColumnDef<TRow>,
+    read: CellRead<TRow>
+): KeyedRows<TRow>[] {
+    const buckets = new Map<string, KeyedRows<TRow>>()
+
+    for (const node of nodes) {
+        const value = read(node, field)
+        const key = isBlank(value) ? '(blank)' : String(value)
+        const found = buckets.get(key)
+        if (found) found.nodes.push(node)
+        else buckets.set(key, { key, nodes: [node] })
+    }
+
+    return [...buckets.values()]
+}
+
 export function partitionByPath<TRow>(
     rows: TRow[],
     columns: ColumnDef<TRow>[],
