@@ -783,6 +783,30 @@ back as many crossings as there were measures.
 Splitting one row into several is the client rebuilding rows the server sent,
 which is the one thing the server row model does not let it do.
 
+### Colouring a crossing
+
+A crossing's columns are generated, so their ids are not knowable when a
+formatting rule is written. A rule names the measure instead, and paints every
+cell of it at once:
+
+```ts
+conditionalFormatting({
+    rules: [{ kind: 'colorScale', column: { measure: 0 } }]
+})
+```
+
+The scale spans the whole crossing rather than each column on its own, which
+is the difference between a heat map that says which region and quarter is
+weak and one that only says which cell is smallest in its own column.
+
+Totals stand outside it. Neither the total row nor a total or subtotal column
+is painted or counted, for the same reason the readings along a row leave them
+empty: a total is not one of the things being compared, and it would pale
+everything else by being larger than all of them.
+
+An XLSX export carries the rule across as one colour scale over every column
+of the measure, so the workbook reads the way the screen did.
+
 ### The axis, and what it is made of
 
 Keys are ordered by the values themselves, so a number axis counts and a date
@@ -805,14 +829,26 @@ than no table, and a list silently cut would present a wrong one as right.
 `Grid.PivotPanel` draws the three zones a pivot is described by, and the same
 moves are on `grid.api`: `setPivotRows`, `setPivotColumns`, `setPivotValues`,
 `addPivotRowField`, `addPivotColumnField`, `removePivotField`, `clearPivot`,
-and the settings beside them. A column menu offers the two axes. Taking the
-last field off an axis is not an error, it turns the crossing off; starting
-with an empty one is, since that is a misconfiguration rather than a choice.
+and the settings beside them. The column menu offers the two axes on a column
+that is on neither, and offers to take one back off, which is how a reader
+builds a crossing without a panel; it is drawn by `columnOps()`, so register
+that too. While a crossing is on, only the row fields are still drawn, so the
+menu is how a pivot is started rather than how it is widened.
+
+Taking the last field off an axis is not an error, it turns the crossing off;
+starting with an empty one is, since that is a misconfiguration rather than a
+choice.
+
+A gathered row opens onto the next row field and onto nothing else. With one
+row field it does not open at all, and the innermost field never opens onto the
+rows it gathered: every column that would say what those rows are has been put
+away, so what came back was a name repeated and a run of empty cells.
 
 `getPivot(grid).rowsBehind(node, columnId)`, or `grid.api.pivotRowsBehind`,
-answers the rows a cell was measured from. It is the first question a reader
-asks of a number they did not expect, and it answers the rows a filter left, so
-what comes back matches what is on screen.
+is where that question is answered instead. It hands back the rows a cell was
+measured from, which is the first thing a reader asks of a number they did not
+expect, and it answers the rows a filter left, so what comes back matches what
+is on screen.
 
 A crossed cell is refused by every editor, since it is a result rather than
 data, and it is not offered for filtering. It is exported, copied and searched

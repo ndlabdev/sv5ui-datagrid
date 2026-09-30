@@ -49,12 +49,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     because a table measured over the blocks a client happens to hold looks
     exactly like a correct one.
 
+- **A formatting rule can name a pivot measure instead of a column.**
+  `conditionalFormatting()` aimed at `{ measure: 0 }` paints every crossing of
+  that measure, and ranks each cell against the whole crossing rather than
+  against its own column. A crossing's columns are generated from the data, so
+  their ids cannot be written into a rule; the measure's place in `values` can.
+  Totals are left out of both the paint and the scale. The XLSX export carries
+  it across as one scale spanning every column of the measure.
+
 - **A feature can shape the columns the grid draws.** `GridFeature.columns` is
   asked in registration order, and what it answers feeds leaves, header groups,
   order and widths alike. A generated column is a column like any other: it
   filters, it exports, it takes part in a snapshot.
 
 ### Fixed
+
+- **A column menu never offered what a feature put on a column.** `menuItems`
+  was asked in one place only, the row context menu, which hands it the row and
+  no column, and both `pivot()` and `grouping()` answer nothing without one. So
+  every column-scoped item they declared was unreachable: the two pivot axes,
+  taking a column back off a pivot, and grouping by a column. The column menu
+  now asks as well, with the column it belongs to. It is drawn by `columnOps()`,
+  so that feature has to be registered for the items to appear.
+
+- **A gathered row opened onto rows nothing could be read from.** A pivot puts
+  away every column that is not on the row axis, so opening the innermost
+  gathered row gave back the group's own name repeated down the label column
+  and an empty cell everywhere else: a crossing column holds a measure over a
+  set of rows, and one row is not a set. The innermost row field no longer
+  opens, and `rowsBehind` answers that question properly. An outer row field
+  still opens onto the next one, and `grouping()` still opens onto the rows
+  themselves.
 
 - **A header group a feature generated was invisible to the group machinery.**
   The column model was shaped by halves, so such a group had no definition to
