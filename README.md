@@ -783,6 +783,42 @@ back as many crossings as there were measures.
 Splitting one row into several is the client rebuilding rows the server sent,
 which is the one thing the server row model does not let it do.
 
+### Keeping only some of the rows
+
+A crossing of forty regions is a page nobody reads. `keepRows` keeps the
+largest few and leaves the rest out:
+
+```ts
+keepRows: { top: 10, others: 'Everything else' }
+```
+
+They are ranked by what a measure makes of each gathered row, measured from
+its rows the way `totalColumn` measures and whether or not a total column was
+asked for. `measure` picks which of `values` ranks them, and the reading a
+`showAs` puts on it is left out, a rank by percentage of its own row putting
+every row in the same place.
+
+What is left out is left out of everything. The total row, the total column
+and every share are measured over the rows that remain, so the page adds up to
+what it shows. `others` is how to keep the whole: the rows that lost are
+gathered into one more row of their own, measured from themselves, and the
+totals cover everything again. `rowsBehind` opens that row onto the rows it
+stands for, which are the rows themselves and not the copies it gathered them
+by.
+
+With more than one row field it applies to the outermost, the one the question
+is about, and a row that survived still opens onto every field under it.
+
+Two rows that tie at the cut are taken in the order the data listed them, so a
+tie decides nothing and the grid does not pretend otherwise. A `measure` that
+is not one of the measures ranks nothing, and the grid says so once rather than
+quietly keeping whichever rows came first.
+
+`rowModel: "server"` keeps every row it is given. Ranking means measuring all
+of them, and the client holds only the blocks the server sent, so the ten
+largest of what it happens to hold are not the ten largest. Ask the server for
+them instead, and the grid says so once.
+
 ### Colouring a crossing
 
 A crossing's columns are generated, so their ids are not knowable when a

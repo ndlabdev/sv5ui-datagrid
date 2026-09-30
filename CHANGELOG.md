@@ -49,6 +49,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     because a table measured over the blocks a client happens to hold looks
     exactly like a correct one.
 
+- **A pivot keeps only the rows worth reading.** `keepRows: { top: 10 }` keeps
+  the ten largest gathered rows, ranked by what a measure makes of each one,
+  measured from its rows and whether or not a total column was asked for. The
+  cut happens before anything is measured, so the total row, the total column
+  and every share cover what is left rather than what was dropped. `others`
+  gathers the rest into one more row, measured from themselves, which puts the
+  totals back where they were, and `rowsBehind` opens it onto the rows it
+  stands for. With a nested row axis it cuts the outermost field and leaves
+  every field under it whole.
+
 - **A formatting rule can name a pivot measure instead of a column.**
   `conditionalFormatting()` aimed at `{ measure: 0 }` paints every crossing of
   that measure, and ranks each cell against the whole crossing rather than

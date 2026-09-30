@@ -42,6 +42,11 @@
             demos: [
                 ['/pivot/filtering', 'Lọc làm rỗng cột', 'Cột không biến mất khi lọc'],
                 ['/pivot/sorting', 'Sắp theo cột giao', 'Bấm header một quý'],
+                [
+                    '/pivot/keep-rows',
+                    'Chỉ giữ hàng lớn nhất',
+                    'Top N theo measure, tổng đo lại trên phần còn lại'
+                ],
                 ['/pivot/drill', 'Dòng sau một ô', 'Lối duy nhất đi xuống dữ liệu thô'],
                 ['/pivot/menu', 'Menu của cột', 'Đưa cột lên trục ngay từ header'],
                 ['/pivot/panel', 'Bảng điều khiển', 'Tự dựng phép giao lúc đang chạy'],

@@ -12,6 +12,7 @@ import Gate from '../routes/pivot/gate/+page.svelte'
 import Growing from '../routes/pivot/growing/+page.svelte'
 import Header from '../routes/pivot/header/+page.svelte'
 import Heatmap from '../routes/pivot/heatmap/+page.svelte'
+import KeepRows from '../routes/pivot/keep-rows/+page.svelte'
 import Keys from '../routes/pivot/keys/+page.svelte'
 import MaxColumns from '../routes/pivot/max-columns/+page.svelte'
 import Measures from '../routes/pivot/measures/+page.svelte'
@@ -41,6 +42,7 @@ const pages: [string, unknown][] = [
     ['ratio', Ratio],
     ['heatmap', Heatmap],
     ['keys', Keys],
+    ['keep-rows', KeepRows],
     ['ordering', Ordering],
     ['header', Header],
     ['growing', Growing],
@@ -149,6 +151,20 @@ describe('what each pivot demo is supposed to show', () => {
         await expect.element(page.getByRole('treegrid')).toBeVisible()
 
         expect(cells().slice(0, 4)).toEqual(['North', '54.5%', '45.5%', '-'])
+    })
+
+    it('keeps the two largest and measures the total over them', async () => {
+        render(KeepRows as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(cells().slice(-5)).toEqual(['Tất cả', '460', '370', '220', '1,050'])
+
+        await page.getByRole('button', { name: 'Chỉ hai vùng lớn nhất' }).click()
+        await expect.poll(() => cells()[0]).toBe('South')
+        expect(cells().at(-1)).toBe('750')
+
+        await page.getByRole('button', { name: 'Gom phần còn lại thành một hàng' }).click()
+        await expect.poll(() => cells().at(-1)).toBe('1,050')
     })
 
     it('grows a column when the data grows a value', async () => {
