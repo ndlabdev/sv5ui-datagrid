@@ -1,4 +1,4 @@
-import type { FormatRule } from '../conditional-formatting/index.js'
+import type { FormatRule, FormatTarget } from '../conditional-formatting/index.js'
 import type { XlsxColor, XlsxStyle } from './styles.types.js'
 
 export interface XlsxFormatColors {
@@ -71,6 +71,7 @@ const HIGHLIGHT_STYLE = (colors: Required<XlsxFormatColors>): XlsxStyle => ({
 
 export interface XlsxFormatContext {
     letterOf: (columnId: string) => string | undefined
+    columnIdsOf: (target: FormatTarget) => string[]
     rowCount: number
     colors: Required<XlsxFormatColors>
     addDxf: (style: XlsxStyle) => number
@@ -128,10 +129,15 @@ export function xlsxFormatRules(
     for (const rule of rules) {
         if (rule.kind === 'expression' || rule.column === undefined) continue
 
-        const letter = context.letterOf(rule.column)
-        if (!letter) continue
+        const letters = context
+            .columnIdsOf(rule.column)
+            .map((columnId) => context.letterOf(columnId))
+            .filter((letter): letter is string => Boolean(letter))
+        if (letters.length === 0) continue
 
-        const sqref = `${letter}2:${letter}${context.rowCount + 1}`
+        const sqref = letters
+            .map((letter) => `${letter}2:${letter}${context.rowCount + 1}`)
+            .join(' ')
         out.push(...cfRuleOf(rule, sqref, context))
     }
     return out

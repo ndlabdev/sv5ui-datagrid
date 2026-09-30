@@ -244,8 +244,18 @@ function formatRulesOf<TRow>(input: FormatRulesInput<TRow>): XlsxCfRule[] {
     const overrides =
         typeof options.conditionalFormatting === 'object' ? options.conditionalFormatting : {}
 
+    const crossings = grid.feature<{ crossingMeasure?: (id: string) => number | undefined }>(
+        'pivot'
+    )
+
     return xlsxFormatRules(state.rules, {
         letterOf: (columnId) => letters.get(columnId),
+        columnIdsOf: (target) =>
+            typeof target === 'string'
+                ? [target]
+                : columns
+                      .map((column) => column.id)
+                      .filter((id) => crossings?.crossingMeasure?.(id) === target.measure),
         rowCount,
         colors: { ...DEFAULT_FORMAT_COLORS, ...overrides },
         addDxf: (style) => styles.addDxf(style)

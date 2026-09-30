@@ -32,6 +32,8 @@ export {
     type ExpressionRule,
     type FormatPaint,
     type FormatRule,
+    type FormatTarget,
+    type PivotCrossing,
     type TopNRule
 } from './conditional-formatting/index.js'
 export {
