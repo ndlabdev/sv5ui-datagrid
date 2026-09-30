@@ -862,7 +862,14 @@ than no table, and a list silently cut would present a wrong one as right.
 
 ### Building one, and reading it back
 
-`Grid.PivotPanel` draws the three zones a pivot is described by, and the same
+`Grid.PivotPanel` draws the three zones a pivot is described by, and a fourth
+for how the crossing reads: the total column and total row, the subtotals,
+whether the column groups fold, whether a crossing can be sorted by, and how
+many rows to keep. Those settings were reachable only through `grid.api`
+before, which meant every application that wanted a reader to touch them built
+the controls again.
+
+It draws the three zones, and the same
 moves are on `grid.api`: `setPivotRows`, `setPivotColumns`, `setPivotValues`,
 `addPivotRowField`, `addPivotColumnField`, `removePivotField`, `clearPivot`,
 and the settings beside them. The column menu offers the two axes on a column

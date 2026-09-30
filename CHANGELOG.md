@@ -49,6 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     because a table measured over the blocks a client happens to hold looks
     exactly like a correct one.
 
+- **The pivot panel adjusts how a crossing reads, not only what it crosses.**
+  `Grid.PivotPanel` gains a fourth zone for the six settings that were reachable
+  only through `grid.api`: the total column, the total row, the subtotals,
+  whether the column groups fold, whether a crossing can be sorted by, and how
+  many rows to keep. Every one of them had to be built again by hand in any
+  application that wanted a reader to touch them, this repository's own demo
+  included.
+
 - **A pivot keeps only the rows worth reading.** `keepRows: { top: 10 }` keeps
   the ten largest gathered rows, ranked by what a measure makes of each one,
   measured from its rows and whether or not a total column was asked for. The
