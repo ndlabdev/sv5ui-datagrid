@@ -717,7 +717,7 @@ export class Pivot<TRow> {
         return per ? share(top, aggregate(measure.agg, cells(per), rows)) : undefined
     }
 
-    #ranked(nodes: RowNode<TRow>[]): { kept: RowNode<TRow>[]; lost: RowNode<TRow>[] } | undefined {
+    #cutAt(): { many: number; field: ColumnDef<TRow>; at: number } | undefined {
         const keep = this.keepRows
         const many = keep?.top ?? keep?.bottom
         if (!keep || many === undefined || many <= 0) return undefined
@@ -725,10 +725,17 @@ export class Pivot<TRow> {
         const field = this.#rowDefs()[0]
         if (!field) return undefined
 
+        return { many, field, at: keep.measure ?? 0 }
+    }
+
+    #ranked(nodes: RowNode<TRow>[]): { kept: RowNode<TRow>[]; lost: RowNode<TRow>[] } | undefined {
+        const cut = this.#cutAt()
+        if (!cut) return undefined
+
+        const { many, field, at } = cut
         const buckets = groupsByKey(nodes, field, rawRead)
         if (buckets.length <= many) return undefined
 
-        const at = keep.measure ?? 0
         if (at >= this.values.length) this.#warnRankMeasure(at)
 
         const read = gateReader(this.#grid, 'render')
@@ -743,7 +750,7 @@ export class Pivot<TRow> {
             )
         }))
 
-        const order = byScore(scored, keep.top === undefined)
+        const order = byScore(scored, this.keepRows?.top === undefined)
         return {
             kept: order.slice(0, many).flatMap((entry) => entry.bucket.nodes),
             lost: order.slice(many).flatMap((entry) => entry.bucket.nodes)
