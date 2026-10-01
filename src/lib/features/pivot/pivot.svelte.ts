@@ -1056,6 +1056,7 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
         rows: [...state.rows],
         columns: [...state.columns],
         columnGroups: state.columnGroups,
+        columnSubtotal: state.columnSubtotal !== undefined,
         sortableColumns: state.sortableColumns,
         valuesOn: state.valuesOn,
         ...(state.keepRows === undefined ? {} : { keepRows: state.keepRows }),
@@ -1222,10 +1223,29 @@ function hydratePivot<TRow>(slice: unknown, grid: GridState<TRow>): void {
     if (columns) state.setColumns(columns)
     if (values) state.setValues(values)
 
-    hydrateSettings(state, shape)
+    hydrateSettings(state, shape, grid)
 }
 
-function hydrateSettings<TRow>(state: Pivot<TRow>, shape: Record<string, unknown>): void {
+function hydrateSubtotal<TRow>(
+    state: Pivot<TRow>,
+    shape: Record<string, unknown>,
+    grid: GridState<TRow>
+): void {
+    if (!('columnSubtotal' in shape)) return
+    if (shape.columnSubtotal !== true) {
+        state.setColumnSubtotal(undefined)
+        return
+    }
+    if (state.columnSubtotal === undefined) {
+        state.setColumnSubtotal(grid.labels.pivotSubtotalOf)
+    }
+}
+
+function hydrateSettings<TRow>(
+    state: Pivot<TRow>,
+    shape: Record<string, unknown>,
+    grid: GridState<TRow>
+): void {
     const mode = GROUP_MODES.find((known) => known === shape.columnGroups)
     if (mode) state.setColumnGroups(mode)
 
@@ -1237,6 +1257,8 @@ function hydrateSettings<TRow>(state: Pivot<TRow>, shape: Record<string, unknown
     if (typeof shape.sortableColumns === 'boolean') {
         state.setSortableColumns(shape.sortableColumns)
     }
+
+    hydrateSubtotal(state, shape, grid)
 
     state.setTotalColumn(headerIn(shape.totalColumn))
     state.setTotalRow(headerIn(shape.totalRow))

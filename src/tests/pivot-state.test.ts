@@ -197,6 +197,7 @@ describe('a saved view carries every setting a reader can change', () => {
             sortable: state.sortableColumns,
             totalColumn: state.totalColumn,
             totalRow: state.totalRow,
+            subtotal: state.columnSubtotal !== undefined,
             showAs: state.values[0]!.showAs
         }
     }
@@ -218,6 +219,7 @@ describe('a saved view carries every setting a reader can change', () => {
             sortable: false,
             totalColumn: undefined,
             totalRow: undefined,
+            subtotal: true,
             showAs: undefined
         })
 
@@ -227,6 +229,7 @@ describe('a saved view carries every setting a reader can change', () => {
             sortable: true,
             totalColumn: 'Total',
             totalRow: 'All',
+            subtotal: true,
             showAs: 'percentOfRow'
         })
     })
@@ -242,6 +245,64 @@ describe('a saved view carries every setting a reader can change', () => {
         fresh.api.setState!(snapshot)
         expect(settings(fresh).totalColumn).toBeUndefined()
         expect(settings(fresh).totalRow).toBeUndefined()
+    })
+
+    it('brings a subtotal back onto a grid that never declared one', () => {
+        const source = build({ columns: ['quarter', 'product'] })
+        const subtotals = (grid: GridState<Sale>) =>
+            leaves(grid).filter((id) => id.includes('::s')).length
+
+        expect(subtotals(source)).toBe(0)
+        getPivot(source)!.setColumnSubtotal((header) => `${header} total`)
+        expect(subtotals(source)).toBeGreaterThan(0)
+
+        const snapshot = source.api.getState!()
+        const fresh = build({ columns: ['quarter', 'product'] })
+        expect(subtotals(fresh)).toBe(0)
+
+        fresh.api.setState!(snapshot)
+        expect(subtotals(fresh)).toBe(subtotals(source))
+
+        const headerOf = (grid: GridState<Sale>) =>
+            grid.columns.visible
+                .filter((column) => column.id.includes('::s'))
+                .map((column) => String(column.def.header))
+
+        expect(headerOf(fresh)).toEqual(['Q1 total', 'Q2 total'])
+    })
+
+    it('takes the subtotal off again when the view was saved without one', () => {
+        const source = build({ columns: ['quarter', 'product'] })
+        const snapshot = source.api.getState!()
+
+        const fresh = build({
+            columns: ['quarter', 'product'],
+            columnSubtotal: (header) => `${header} total`
+        })
+        expect(leaves(fresh).filter((id) => id.includes('::s')).length).toBeGreaterThan(0)
+
+        fresh.api.setState!(snapshot)
+        expect(leaves(fresh).filter((id) => id.includes('::s'))).toEqual([])
+    })
+
+    it('leaves the subtotal as declared when an older view never mentioned it', () => {
+        const fresh = build({
+            columns: ['quarter', 'product'],
+            columnSubtotal: (header) => `${header} total`
+        })
+
+        fresh.api.setState!({
+            version: 1,
+            features: {
+                pivot: {
+                    rows: ['region'],
+                    columns: ['quarter', 'product'],
+                    values: [{ field: 'amount', agg: 'sum' }]
+                }
+            }
+        } as never)
+
+        expect(getPivot(fresh)!.columnSubtotal).toBeDefined()
     })
 
     it('refuses a share or a folding mode the snapshot made up', () => {
