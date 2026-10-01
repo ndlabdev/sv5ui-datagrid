@@ -165,6 +165,7 @@ export class Pivot<TRow> {
     valuesOn = $state.raw<PivotValuesOn>('columns')
     keepRows = $state.raw<PivotKeepRows | undefined>(undefined)
     orderColumns = $state.raw<PivotOrderColumns | undefined>(undefined)
+    maxColumns = $state.raw(DEFAULT_MAX_COLUMNS)
 
     #grid: GridState<TRow>
     #options: PivotOptions<TRow>
@@ -183,6 +184,7 @@ export class Pivot<TRow> {
         this.valuesOn = options.valuesOn ?? 'columns'
         this.keepRows = options.keepRows
         this.orderColumns = options.orderColumns
+        this.maxColumns = options.maxColumns ?? DEFAULT_MAX_COLUMNS
 
         if (options.rows.length === 0 || options.columns.length === 0) {
             throw new Error('pivot() needs at least one row field and one column field')
@@ -301,8 +303,12 @@ export class Pivot<TRow> {
         this.columns = []
     })
 
+    setMaxColumns = mutator((limit: number): void => {
+        this.maxColumns = limit
+    })
+
     get #limit(): number {
-        return this.#options.maxColumns ?? DEFAULT_MAX_COLUMNS
+        return this.maxColumns
     }
 
     #warned = false
@@ -1330,6 +1336,11 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                     state.setOrderColumns(order as PivotOrderColumns | undefined),
                 pivotOrderColumns: () => state.orderColumns,
                 pivotValuesOn: () => state.valuesOn,
+                pivotRows: () => [...state.rows],
+                pivotColumns: () => [...state.columns],
+                pivotValues: () => [...state.values],
+                setPivotMaxColumns: state.setMaxColumns,
+                pivotMaxColumns: () => state.maxColumns,
                 isPivoting: () => state.isCrossing
             }
         },
@@ -1374,6 +1385,11 @@ declare module '../../core/types/api.js' {
         setPivotOrderColumns?: (order: unknown) => void
         pivotOrderColumns?: () => unknown
         pivotValuesOn?: () => 'columns' | 'rows'
+        pivotRows?: () => string[]
+        pivotColumns?: () => string[]
+        pivotValues?: () => unknown[]
+        setPivotMaxColumns?: (limit: number) => void
+        pivotMaxColumns?: () => number
         isPivoting?: () => boolean
     }
 }

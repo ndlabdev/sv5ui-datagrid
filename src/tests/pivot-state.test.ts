@@ -340,3 +340,85 @@ describe('the readings along a row travel with the view too', () => {
         }
     )
 })
+
+describe('the api reads back what it was told to set', () => {
+    it('reports which fields run down and which run across', () => {
+        const grid = build()
+
+        expect(grid.api.pivotRows!()).toEqual(['region'])
+        expect(grid.api.pivotColumns!()).toEqual(['quarter'])
+
+        grid.api.setPivotRows!(['product'])
+        grid.api.setPivotColumns!(['quarter', 'region'])
+
+        expect(grid.api.pivotRows!()).toEqual(['product'])
+        expect(grid.api.pivotColumns!()).toEqual(['quarter', 'region'])
+    })
+
+    it('hands back a copy, so a caller cannot reach in and reorder an axis', () => {
+        const grid = build()
+
+        const read = grid.api.pivotColumns!()
+        read.push('product')
+
+        expect(grid.api.pivotColumns!()).toEqual(['quarter'])
+    })
+
+    it('reports the measures, so a toolbar need not keep its own mirror', () => {
+        const grid = build()
+        expect(grid.api.pivotValues!()).toEqual([{ field: 'amount', agg: 'sum' }])
+
+        grid.api.setPivotValues!([{ field: 'amount', agg: 'avg', header: 'Mean' }])
+        expect(grid.api.pivotValues!()).toEqual([{ field: 'amount', agg: 'avg', header: 'Mean' }])
+    })
+
+    it('says nothing is crossing once both axes are cleared', () => {
+        const grid = build()
+        expect(grid.api.isPivoting!()).toBe(true)
+
+        grid.api.clearPivot!()
+        expect(grid.api.pivotRows!()).toEqual([])
+        expect(grid.api.pivotColumns!()).toEqual([])
+        expect(grid.api.isPivoting!()).toBe(false)
+    })
+})
+
+describe('the ceiling on generated columns moves at run time', () => {
+    const warn = () => vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    it('starts at the declared ceiling and reports it', () => {
+        const grid = build({ maxColumns: 3 })
+        expect(grid.api.pivotMaxColumns!()).toBe(3)
+    })
+
+    it('consults the raised ceiling, so the table it had refused comes out', () => {
+        const spy = warn()
+        const grid = build({ columns: ['quarter', 'product'], maxColumns: 1 })
+
+        expect(leaves(grid)).toEqual([])
+        expect(spy).toHaveBeenCalled()
+
+        grid.api.setPivotMaxColumns!(50)
+
+        expect(grid.api.pivotMaxColumns!()).toBe(50)
+        expect(leaves(grid).length).toBeGreaterThan(1)
+        spy.mockRestore()
+    })
+
+    it('refuses again when the ceiling is lowered back under the table', () => {
+        const spy = warn()
+        const grid = build({ columns: ['quarter', 'product'] })
+        expect(leaves(grid).length).toBeGreaterThan(1)
+
+        grid.api.setPivotMaxColumns!(1)
+        expect(leaves(grid)).toEqual([])
+        spy.mockRestore()
+    })
+
+    it('keeps the ceiling out of a saved view, since no reader can change it', () => {
+        const grid = build({ maxColumns: 7 })
+        const snapshot = JSON.stringify(grid.api.getState!())
+
+        expect(snapshot).not.toContain('maxColumns')
+    })
+})
