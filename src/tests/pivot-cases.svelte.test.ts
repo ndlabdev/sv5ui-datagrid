@@ -2,32 +2,22 @@ import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import AlongRow from '../routes/pivot/along-row/+page.svelte'
-import Cases from '../routes/pivot/cases/+page.svelte'
+import Narrative from '../routes/pivot/+page.svelte'
 import Crossing from '../routes/pivot/crossing/+page.svelte'
 import Drill from '../routes/pivot/drill/+page.svelte'
-import Exporting from '../routes/pivot/export/+page.svelte'
-import Filtering from '../routes/pivot/filtering/+page.svelte'
 import Folding from '../routes/pivot/folding/+page.svelte'
-import Gate from '../routes/pivot/gate/+page.svelte'
-import Growing from '../routes/pivot/growing/+page.svelte'
-import Header from '../routes/pivot/header/+page.svelte'
-import Heatmap from '../routes/pivot/heatmap/+page.svelte'
 import KeepRows from '../routes/pivot/keep-rows/+page.svelte'
 import Keys from '../routes/pivot/keys/+page.svelte'
 import MaxColumns from '../routes/pivot/max-columns/+page.svelte'
 import Measures from '../routes/pivot/measures/+page.svelte'
-import Menu from '../routes/pivot/menu/+page.svelte'
 import Nested from '../routes/pivot/nested/+page.svelte'
 import Ordering from '../routes/pivot/ordering/+page.svelte'
 import Panel from '../routes/pivot/panel/+page.svelte'
 import Ratio from '../routes/pivot/ratio/+page.svelte'
-import Server from '../routes/pivot/server/+page.svelte'
 import Shares from '../routes/pivot/shares/+page.svelte'
-import Sorting from '../routes/pivot/sorting/+page.svelte'
 import TotalRow from '../routes/pivot/total-row/+page.svelte'
 import Totals from '../routes/pivot/totals/+page.svelte'
 import ValuesOnRows from '../routes/pivot/values-on-rows/+page.svelte'
-import Views from '../routes/pivot/views/+page.svelte'
 
 const pages: [string, unknown][] = [
     ['crossing', Crossing],
@@ -40,22 +30,15 @@ const pages: [string, unknown][] = [
     ['shares', Shares],
     ['along-row', AlongRow],
     ['ratio', Ratio],
-    ['heatmap', Heatmap],
+
     ['keys', Keys],
     ['keep-rows', KeepRows],
     ['ordering', Ordering],
-    ['header', Header],
-    ['growing', Growing],
-    ['filtering', Filtering],
-    ['sorting', Sorting],
+
     ['max-columns', MaxColumns],
     ['drill', Drill],
-    ['menu', Menu],
-    ['panel', Panel],
-    ['views', Views],
-    ['gate', Gate],
-    ['export', Exporting],
-    ['server', Server]
+
+    ['panel', Panel]
 ]
 
 const headers = () =>
@@ -99,12 +82,17 @@ describe('every pivot demo page stands up', () => {
         })
     }
 
-    it('lists every demo on the index', async () => {
-        render(Cases as never)
+    it('lists every one of them at the one way in', async () => {
+        render(Narrative as never)
         await expect.element(page.getByRole('heading', { level: 1 })).toBeVisible()
 
-        const links = Array.from(document.querySelectorAll('a[href^="/pivot/"]'))
-        expect(links.length).toBeGreaterThanOrEqual(pages.length)
+        const linked = new Set(
+            Array.from(document.querySelectorAll('a[href^="/pivot/"]')).map((anchor) =>
+                (anchor.getAttribute('href') ?? '').replace('/pivot/', '')
+            )
+        )
+
+        for (const [name] of pages) expect(linked, name).toContain(name)
     })
 })
 
@@ -168,23 +156,12 @@ describe('what each pivot demo is supposed to show', () => {
     })
 
     it('grows a column when the data grows a value', async () => {
-        render(Growing as never)
+        render(Crossing as never)
         await expect.element(page.getByRole('treegrid')).toBeVisible()
         expect(headers()).not.toContain('Q4')
 
         await page.getByRole('button', { name: 'Thêm hai dòng quý Q4' }).click()
         await expect.poll(() => headers()).toContain('Q4')
-    })
-
-    it('empties a filtered out column instead of dropping it', async () => {
-        render(Filtering as never)
-        await expect.element(page.getByRole('treegrid')).toBeVisible()
-
-        const before = headers()
-        await page.getByRole('button', { name: 'Chỉ Q2' }).click()
-
-        await expect.poll(() => cells().slice(0, 4)).toEqual(['North', '-', '150', '-'])
-        expect(headers()).toEqual(before)
     })
 
     it('moves the measures between the axes', async () => {
@@ -197,29 +174,5 @@ describe('what each pivot demo is supposed to show', () => {
 
         await page.getByRole('button', { name: 'Chạy dọc' }).click()
         await expect.poll(() => headers().length).toBe(down)
-    })
-
-    it('sends the crossing to the server and draws what came back', async () => {
-        render(Server as never)
-        await expect.element(page.getByRole('treegrid')).toBeVisible()
-
-        await expect.poll(() => document.body.textContent ?? '').toContain('"rows"')
-        expect(headers()).toEqual(expect.arrayContaining(['Q1', 'Q2', 'Q3']))
-    })
-
-    it('writes the crossing to csv, one line per row on screen', async () => {
-        render(Exporting as never)
-        await expect.element(page.getByRole('treegrid')).toBeVisible()
-
-        const onScreen = document.querySelectorAll('[role="row"][data-dg-row-id]').length
-        await page.getByRole('button', { name: 'Xuất CSV' }).click()
-
-        const csv = () =>
-            Array.from(document.querySelectorAll('pre'))
-                .map((node) => node.textContent ?? '')
-                .find((text) => text.includes('Vùng')) ?? ''
-
-        await expect.poll(csv).not.toBe('')
-        expect(csv().trim().split('\n')).toHaveLength(onScreen + 1)
     })
 })

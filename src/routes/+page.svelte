@@ -16,14 +16,9 @@
 
     const whatsNew = [
         {
-            href: '/pivot/cases',
-            title: 'Pivot, từng tính năng một',
-            check: '23 trang, mỗi trang một tính năng và giải thích nó làm gì'
-        },
-        {
             href: '/pivot',
             title: 'Pivot table',
-            check: 'Cột sinh từ dữ liệu, và Total không cộng các ô'
+            check: 'Cột sinh từ dữ liệu, Total không cộng các ô, và 21 trang từng tính năng'
         },
         {
             href: '/aggregate',

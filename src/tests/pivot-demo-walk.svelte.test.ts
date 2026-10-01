@@ -11,6 +11,11 @@ const headers = () =>
 const click = async (name: string) =>
     page.getByRole('button', { name, exact: true }).first().click()
 
+const readAs = async (reading: string) => {
+    await page.getByRole('button', { name: 'Đọc theo' }).click()
+    await page.getByRole('menuitem', { name: reading, exact: true }).click()
+}
+
 const pickAcross = async (field: string) =>
     page.getByRole('button', { name: field, exact: true }).nth(1).click()
 
@@ -24,17 +29,17 @@ async function open() {
 describe('the pivot demo holds together as a reader drives it', () => {
     it('shows the row field and the crossing, and no column full of dashes', async () => {
         await open()
-        expect(headers()).toEqual(['Region', 'Q1', 'Q2', 'Q3', 'Q4'])
+        expect(headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
     })
 
     it('keeps declared keys to the field they were declared for', async () => {
         await open()
         await pickAcross('size')
         await click('Tự khai khoá cho Size')
-        expect(headers()).toEqual(['Region', 'Small', 'Medium', 'Large'])
+        expect(headers()).toEqual(['Vùng', 'Small', 'Medium', 'Large'])
 
         await pickAcross('quarter')
-        expect(headers()).toEqual(['Region', 'Q1', 'Q2', 'Q3', 'Q4'])
+        expect(headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
     })
 
     it('lands where the buttons say when the crossing is turned back on', async () => {
@@ -43,10 +48,10 @@ describe('the pivot demo holds together as a reader drives it', () => {
         await expect.poll(() => headers()).toContain('Widget')
 
         await click('Tắt pivot')
-        await expect.poll(() => headers()).toContain('Amount')
+        await expect.poll(() => headers()).toContain('Tiền')
 
         await click('Bật lại')
-        await expect.poll(() => headers()).toEqual(['Region', 'Q1', 'Q2', 'Q3', 'Q4'])
+        await expect.poll(() => headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
     })
 
     it('keeps the buttons and the grid agreeing after a view is reloaded', async () => {
@@ -56,7 +61,7 @@ describe('the pivot demo holds together as a reader drives it', () => {
         await expect.poll(() => headers()).toContain('Large')
 
         await click('Nạp lại view đã lưu')
-        await expect.poll(() => headers()).toEqual(['Region', 'Q1', 'Q2', 'Q3', 'Q4'])
+        await expect.poll(() => headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
 
         const pressed = Array.from(document.querySelectorAll('button'))
             .filter((button) => button.textContent?.trim() === 'quarter')
@@ -73,8 +78,8 @@ describe('folding a column group in the demo', () => {
         await click('Lồng thêm Product ra ngang')
         await expect.poll(() => headers()).toContain('Widget')
 
-        await click('Tổng con mỗi nhóm cột')
-        await expect.poll(() => headers()).toContain('Q1 tổng')
+        await click('Tổng con')
+        await expect.poll(() => headers()).toContain('Q1 cộng')
 
         await click('Cho gập nhóm cột')
         await expect
@@ -95,8 +100,8 @@ describe('folding a column group in the demo', () => {
         fold?.click()
 
         await expect.poll(leaves).toBe(opened - 1)
-        expect(headers()).toContain('Q1 tổng')
-        expect(headers()).toContain('Q2 tổng')
+        expect(headers()).toContain('Q1 cộng')
+        expect(headers()).toContain('Q2 cộng')
     })
 })
 
@@ -112,9 +117,9 @@ describe('reading a measure as a share in the demo', () => {
 
     it('turns the numbers into percentages that read across to a hundred', async () => {
         await open()
-        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('$')
+        await expect.poll(() => cells()[0]?.[1] ?? '').toMatch(/\d/)
 
-        await click('% của tổng hàng')
+        await readAs('percentOfRow')
         await expect.poll(() => cells()[0]?.[1] ?? '').toContain('%')
 
         const first = cells()[0]!
@@ -128,13 +133,43 @@ describe('reading a measure as a share in the demo', () => {
         expect(total).toBeLessThan(101)
     })
 
-    it('goes back to money when the share is turned off', async () => {
+    it('goes back to the measured number when the share is turned off', async () => {
         await open()
-        await click('% của tổng hàng')
+        await readAs('percentOfRow')
         await expect.poll(() => cells()[0]?.[1] ?? '').toContain('%')
 
-        await click('% của tổng hàng')
-        await expect.poll(() => cells()[0]?.[1] ?? '').toContain('$')
+        await readAs('Như đã đo')
+        await expect.poll(() => cells()[0]?.[1] ?? '').not.toContain('%')
+    })
+})
+
+describe('the panel owns the settings on this page', () => {
+    it('keeps what the panel turned on when the page is touched again', async () => {
+        await open()
+        expect(headers()).not.toContain('Cột tổng')
+
+        await click('Cột tổng')
+        await expect.poll(() => headers()).toContain('Cột tổng')
+
+        await click('Lồng thêm Product ra ngang')
+
+        await expect.poll(() => headers()).toContain('Widget')
+        expect(headers()).toContain('Cột tổng')
+    })
+
+    it('offers each setting once, not once from the page and once from the panel', async () => {
+        await open()
+
+        const named = (name: string) =>
+            Array.from(document.querySelectorAll('button')).filter((button) =>
+                (button.getAttribute('aria-label') ?? button.textContent ?? '')
+                    .toLowerCase()
+                    .includes(name.toLowerCase())
+            ).length
+
+        expect(named('Cột tổng')).toBe(1)
+        expect(named('Tổng con')).toBe(1)
+        expect(named('Cho gập nhóm cột')).toBe(1)
     })
 })
 
@@ -145,7 +180,7 @@ describe('seeing the rows behind a cell in the demo', () => {
 
         const cell = Array.from(
             document.querySelectorAll('[data-dg-row-id] [role="gridcell"]')
-        ).find((element) => (element.textContent ?? '').includes('$'))
+        ).find((element) => /\d/.test(element.textContent ?? ''))
 
         expect(cell).toBeDefined()
         cell?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
@@ -159,7 +194,7 @@ describe('seeing the rows behind a cell in the demo', () => {
         await open()
         const cell = Array.from(
             document.querySelectorAll('[data-dg-row-id] [role="gridcell"]')
-        ).find((element) => (element.textContent ?? '').includes('$'))
+        ).find((element) => /\d/.test(element.textContent ?? ''))
         cell?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
         await expect.poll(() => document.querySelector('[data-dg-drill]')).not.toBeNull()
 
@@ -174,10 +209,10 @@ describe('drilling with the row label pinned', () => {
 
         const row = document.querySelector('[data-dg-row-id]')!
         const cells = Array.from(row.querySelectorAll('[role="gridcell"]'))
-        const money = cells.filter((cell) => (cell.textContent ?? '').includes('$'))
-        expect(money.length).toBeGreaterThan(1)
+        const measured = cells.filter((cell) => /\d/.test(cell.textContent ?? ''))
+        expect(measured.length).toBeGreaterThan(1)
 
-        const second = money[1]!
+        const second = measured[1]!
         second.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
 
         await expect.poll(() => document.querySelector('[data-dg-drill]')).not.toBeNull()

@@ -4,106 +4,52 @@
         createDataGrid,
         DataGrid,
         filtering,
-        Grid,
         getGrouping,
         getPivot,
         getSorting,
+        Grid,
         grouping,
         isPivotColumn,
         pivot,
         sorting,
-        type ColumnDef,
-        type RowNode,
-        type PivotShowAs
+        type RowNode
     } from '$lib/index.js'
-    import { Badge, Button, Container, Link, ThemeModeButton } from 'sv5ui'
+    import { Badge, Button, Card, Container, Link, ThemeModeButton } from 'sv5ui'
     import { viVN } from '$lib/locales/index.js'
-
-    interface Sale {
-        id: number
-        region: string
-        quarter: string
-        product: string
-        shipped: Date
-        size: string
-        amount: number
-    }
-
-    const regions = ['North', 'South', 'East', 'West']
-    const quarters = ['Q1', 'Q2', 'Q3', 'Q4']
-    const products = ['Widget', 'Gadget', 'Doohickey']
-    const sizes = ['Small', 'Medium', 'Large']
-    const quarterMonth: Record<string, number> = { Q1: 0, Q2: 3, Q3: 6, Q4: 9, Q5: 11 }
-
-    function makeSales(withQ5: boolean): Sale[] {
-        const out: Sale[] = []
-        let id = 1
-        const periods = withQ5 ? [...quarters, 'Q5'] : quarters
-
-        for (let index = 0; index < 600; index++) {
-            const region = regions[index % 4]!
-            const quarter = periods[Math.floor(index / 4) % periods.length]!
-            const product = products[index % 3]!
-
-            if (region === 'West' && quarter === 'Q4') continue
-            if (product === 'Doohickey' && quarter !== 'Q1') continue
-
-            out.push({
-                id: id++,
-                region,
-                quarter,
-                product,
-                shipped: new Date(Date.UTC(2026, quarterMonth[quarter] ?? 0, 10)),
-                size: sizes[index % 3]!,
-                amount: 40 + ((index * 37) % 260)
-            })
-        }
-        return out
-    }
-
-    const money = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-    })
-
-    const columns: ColumnDef<Sale>[] = [
-        { id: 'region', header: 'Region', width: 130, filter: 'text', pinned: 'left' },
-        { id: 'quarter', header: 'Quarter', width: 120, filter: 'text' },
-        { id: 'product', header: 'Product', width: 150, filter: 'text' },
-        { id: 'shipped', header: 'Shipped', type: 'date', width: 150 },
-        { id: 'size', header: 'Size', width: 120, filter: 'text' },
-        { id: 'amount', header: 'Amount', type: 'currency', flex: 1, minWidth: 140 }
-    ]
+    import { columns, rowId, sales, salesWithQ4, type Sale } from './demo-data.js'
 
     type View = 'raw' | 'grouped' | 'pivot'
 
-    let view = $state<View>('raw')
     const FIRST_DOWN = 'region'
     const FIRST_ACROSS = 'quarter'
+    const FIELDS = ['region', 'quarter', 'product', 'shipped', 'size']
+    const SIZE_ORDER = ['Small', 'Medium', 'Large']
 
-    let hasQ5 = $state(false)
+    let view = $state<View>('raw')
+    let grown = $state(false)
+    let nested = $state(false)
+    let ownKeys = $state(false)
+    let drilled = $state<{ cell: string; rows: Sale[] } | null>(null)
+    let saved = $state<unknown>(null)
 
-    const initialSales = makeSales(false)
-    const sales = $derived(hasQ5 ? makeSales(true) : initialSales)
+    const data = $derived(grown ? salesWithQ4 : sales)
+
+    const vietnamese = { locales: [viVN], locale: 'vi-VN' }
 
     const rawGrid = createDataGrid<Sale>({
-        data: initialSales,
+        data: sales,
         columns,
-        getRowId: (sale) => String(sale.id),
-        locales: [viVN],
-        locale: 'vi-VN',
+        getRowId: rowId,
+        ...vietnamese,
         features: [filtering(), sorting()]
     })
 
     const groupedGrid = createDataGrid<Sale>({
-        data: initialSales,
+        data: sales,
         columns,
-        getRowId: (sale) => String(sale.id),
-        locales: [viVN],
-        locale: 'vi-VN',
+        getRowId: rowId,
+        ...vietnamese,
         features: [
-            filtering(),
             sorting(),
             grouping<Sale>({
                 by: [FIRST_DOWN],
@@ -114,15 +60,13 @@
     })
 
     const pivotGrid = createDataGrid<Sale>({
-        data: initialSales,
+        data: sales,
         columns,
-        getRowId: (sale) => String(sale.id),
-        locales: [viVN],
-        locale: 'vi-VN',
+        getRowId: rowId,
+        ...vietnamese,
         features: [
-            filtering(),
-            sorting(),
             columnOps(),
+            sorting(),
             pivot<Sale>({
                 rows: [FIRST_DOWN],
                 columns: [FIRST_ACROSS],
@@ -137,42 +81,64 @@
         ]
     })
 
-    const pivotState = () => getPivot(pivotGrid)!
-    const down = $derived(getPivot(pivotGrid)?.rows[0] ?? '')
-    const across = $derived(getPivot(pivotGrid)?.columns[0] ?? '')
-
     const grids = [rawGrid, groupedGrid, pivotGrid]
 
     $effect(() => {
-        groupedGrid.api.setGroupBy?.([down])
-    })
-
-    $effect(() => {
-        const rows = sales
+        const rows = data
         for (const grid of grids) {
             if (grid.data !== rows) grid.data = rows
         }
     })
 
+    const pivotState = () => getPivot(pivotGrid)!
+    const down = $derived(getPivot(pivotGrid)?.rows[0] ?? '')
+    const across = $derived(getPivot(pivotGrid)?.columns[0] ?? '')
+
+    $effect(() => {
+        groupedGrid.api.setGroupBy?.([down])
+    })
+
+    const setDown = (field: string) => pivotState().setRows([field])
+    const setAcross = (field: string) =>
+        pivotState().setColumns(nested ? [field, 'product'] : [field])
+    const swap = () => {
+        const [next, previous] = [across, down]
+        pivotState().setRows([next])
+        pivotState().setColumns([previous])
+        nested = false
+    }
+
+    const toggleNested = () => {
+        nested = !nested
+        pivotState().setColumns(nested ? [across, 'product'] : [across])
+    }
+
     const active = $derived(view === 'raw' ? rawGrid : view === 'grouped' ? groupedGrid : pivotGrid)
 
-    const fields = ['region', 'quarter', 'product', 'shipped', 'size']
+    const generated = $derived(pivotGrid.columns.visible.filter((c) => isPivotColumn(c.id)))
 
-    const SIZE_ORDER = ['Small', 'Medium', 'Large']
+    const check = $derived.by(() => {
+        const node = pivotGrid.preWindowNodes[0]
+        const leaf = generated[0]
+        const label = pivotGrid.columns.visible.find((c) => c.id === down)
+        if (!node || !leaf || !label) return null
 
-    let subtotals = $state(false)
-    let foldable = $state(false)
-    let share = $state<PivotShowAs | undefined>(undefined)
-    let drilled = $state<{ cell: string; rows: Sale[] } | null>(null)
+        const downKey = String(pivotGrid.getValue(node, label) ?? '')
+        const acrossKey = String(leaf.def.header ?? '')
+        const behind = data.filter(
+            (sale) =>
+                String(sale[down as 'region']) === downKey &&
+                String(sale[across as 'quarter']) === acrossKey
+        )
+        if (behind.length === 0) return null
 
-    function drill(node: RowNode<Sale>, columnId: string) {
-        const behind = getPivot(pivotGrid)!.rowsBehind(node, columnId)
-        if (behind.length === 0) return
-
-        const header = pivotGrid.columns.get(columnId)?.header ?? columnId
-        const label = pivotGrid.getValue(node, pivotGrid.columns.get(down)!)
-        drilled = { cell: `${String(label)} / ${String(header)}`, rows: behind }
-    }
+        return {
+            downKey,
+            acrossKey,
+            count: behind.length,
+            total: behind.reduce((sum, sale) => sum + sale.amount, 0)
+        }
+    })
 
     function columnAt(cell: Element): string | undefined {
         const at = Number(cell.getAttribute('data-dg-cell')?.split(':')[1])
@@ -181,93 +147,90 @@
 
     function onCellClick(event: MouseEvent) {
         const cell = (event.target as HTMLElement | null)?.closest('[data-dg-cell]')
-        const rowId = cell?.closest('[data-dg-row-id]')?.getAttribute('data-dg-row-id')
-        if (!cell || !rowId) return
+        const nodeId = cell?.closest('[data-dg-row-id]')?.getAttribute('data-dg-row-id')
+        if (!cell || !nodeId) return
 
         const columnId = columnAt(cell)
         if (!columnId || !isPivotColumn(columnId)) return
 
-        const node = pivotGrid.preWindowNodes.find((candidate) => candidate.id === rowId)
+        const node = pivotGrid.preWindowNodes.find((candidate) => candidate.id === nodeId)
         if (node) drill(node, columnId)
     }
-    let totals = $state(false)
-    let ownKeys = $state(false)
-    let saved = $state<ReturnType<NonNullable<typeof pivotGrid.api.getState>> | null>(null)
 
-    $effect(() => {
-        const state = pivotState()
-        state.setColumnSubtotal(subtotals ? (header: string) => `${header} tổng` : undefined)
-        state.setColumnGroups(foldable ? 'open' : 'fixed')
-        state.setValues([{ field: 'amount', agg: 'sum', showAs: share }])
-        state.setTotalColumn(totals ? 'Tổng' : undefined)
-        state.setTotalRow(totals ? 'Tất cả' : undefined)
-    })
+    function drill(node: RowNode<Sale>, columnId: string) {
+        const behind = pivotState().rowsBehind(node, columnId)
+        if (behind.length === 0) return
 
-    const generatedHeaders = $derived(
-        pivotGrid.columns.visible
-            .filter((column) => isPivotColumn(column.id))
-            .map((column) => String(column.def.header))
-    )
-
-    const nested = $derived((getPivot(pivotGrid)?.columns.length ?? 0) > 1)
-
-    function setDown(field: string) {
-        pivotGrid.api.setPivotRows?.([field])
+        const header = pivotGrid.columns.get(columnId)?.header ?? columnId
+        drilled = { cell: String(header), rows: behind }
     }
-
-    function setAcross(field: string) {
-        pivotGrid.api.setPivotColumns?.(nested ? [field, 'product'] : [field])
-    }
-
-    function toggleNested() {
-        pivotGrid.api.setPivotColumns?.(nested ? [across] : [across, 'product'])
-    }
-
-    function swap() {
-        const wasDown = down
-        setDown(across)
-        pivotGrid.api.setPivotColumns?.([wasDown])
-    }
-
-    const generated = $derived(
-        pivotGrid.columns.visible.filter((column) => column.id.startsWith('__pv'))
-    )
-
-    const field = (sale: Sale, id: string): string =>
-        String((sale as unknown as Record<string, unknown>)[id] ?? '')
-
-    const check = $derived.by(() => {
-        const downKeys = [...new Set(sales.map((sale) => field(sale, down)))].sort()
-        const acrossKeys = [...new Set(sales.map((sale) => field(sale, across)))].sort()
-        const downKey = downKeys[0] ?? ''
-        const acrossKey = acrossKeys[0] ?? ''
-
-        const cell = sales.filter(
-            (sale) => field(sale, down) === downKey && field(sale, across) === acrossKey
-        )
-        return {
-            downKey,
-            acrossKey,
-            count: cell.length,
-            total: cell.reduce((sum, sale) => sum + sale.amount, 0)
-        }
-    })
 
     const views: { id: View; label: string; blurb: string }[] = [
         {
             id: 'raw',
-            label: '1. Dữ liệu thô',
-            blurb: 'Danh sách dài. Mỗi dòng là một lần bán. Muốn biết North bán bao nhiêu ở Q1 thì phải tự cộng tay.'
+            label: '1. Danh sách',
+            blurb: 'Mỗi dòng một giao dịch. Đọc cả danh sách cũng không trả lời được câu hỏi nào, vì câu hỏi người ta có luôn là "cái gì theo cái gì".'
         },
         {
             id: 'grouped',
             label: '2. Gộp nhóm',
-            blurb: 'grouping() gập danh sách lại theo một trường. Được một số mỗi nhóm. Cột vẫn đúng bốn cột ứng dụng đã khai.'
+            blurb: 'grouping() gập danh sách theo một trường. Được một con số cho mỗi nhóm. Cột vẫn đúng những cột ứng dụng đã khai.'
         },
         {
             id: 'pivot',
             label: '3. Pivot',
-            blurb: 'pivot() gập theo hai trường cùng lúc: một chạy dọc, một chạy ngang. Cột ngang do dữ liệu sinh ra.'
+            blurb: 'pivot() gập theo hai trường cùng lúc, một chạy dọc một chạy ngang. Cột ngang không có trong mã: lưới đọc dữ liệu rồi sinh ra chúng.'
+        }
+    ]
+
+    const groups = [
+        {
+            name: 'Nền tảng',
+            demos: [
+                [
+                    '/pivot/crossing',
+                    'Phép giao',
+                    'Hai trục và một measure, cột do lưới đọc dữ liệu mà sinh ra'
+                ],
+                ['/pivot/totals', 'Tổng đo từ dòng', 'Vì sao trung bình là 110 chứ không phải 120'],
+                ['/pivot/total-row', 'Hàng tổng và cột tổng', 'Khép cả hai chiều về ô góc 1050']
+            ]
+        },
+        {
+            name: 'Trục cột',
+            demos: [
+                [
+                    '/pivot/nested',
+                    'Trục cột lồng nhau',
+                    'Nhiều trường ngang, và tổng con từng nhánh'
+                ],
+                ['/pivot/folding', 'Gập nhánh cột', 'Gập về tổng con, hoặc về một dải hẹp'],
+                ['/pivot/keys', 'Tự khai khoá cột', 'Thứ tự riêng, và cột chưa có dòng nào'],
+                ['/pivot/ordering', 'Khoá xếp theo giá trị', 'Trục ngày chạy theo thời gian'],
+                ['/pivot/max-columns', 'Trần số cột', 'Từ chối chứ không cắt bớt']
+            ]
+        },
+        {
+            name: 'Measure',
+            demos: [
+                ['/pivot/measures', 'Nhiều measure', 'Mỗi phép giao tách thành nhiều lá'],
+                ['/pivot/values-on-rows', 'Measure xếp dọc', 'Chặn trục cột nhân lên'],
+                ['/pivot/shares', 'Đọc theo tỉ lệ', 'Phần trăm của hàng, của cột, của cả bảng'],
+                ['/pivot/along-row', 'Đọc theo ô bên cạnh', 'Luỹ kế, chênh lệch, thứ hạng'],
+                ['/pivot/ratio', 'Chia measure cho measure', 'Và vì sao không chia theo dòng']
+            ]
+        },
+        {
+            name: 'Người đọc làm gì với nó',
+            demos: [
+                [
+                    '/pivot/keep-rows',
+                    'Chỉ giữ hàng lớn nhất',
+                    'Top N theo measure, tổng đo lại trên phần còn lại'
+                ],
+                ['/pivot/drill', 'Dòng sau một ô', 'Lối duy nhất đi xuống dữ liệu thô'],
+                ['/pivot/panel', 'Bảng điều khiển', 'Tự dựng phép giao lúc đang chạy']
+            ]
         }
     ]
 
@@ -277,14 +240,14 @@
 <Container class="space-y-6 py-10">
     <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-on-surface">Pivot table - @sv5ui/datagrid</h1>
+            <h1 class="text-2xl font-semibold text-on-surface">Pivot table</h1>
             <p class="text-sm text-on-surface-variant">
-                Cùng một bộ {sales.length} dòng, xem ở ba dạng. Bấm lần lượt 1, 2, 3 để thấy pivot khác
-                gộp nhóm chỗ nào.
+                Cùng {data.length} dòng ấy, xem ở ba dạng. Mười dòng để bạn cộng nhẩm kiểm lại được; với
+                mười nghìn thì kết luận không đổi. Từng tính năng một nằm ở cuối trang.
             </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
-            <Link href="/aggregate">← Aggregation</Link>
+            <Link href="/aggregate">Aggregation</Link>
             <ThemeModeButton />
         </div>
     </div>
@@ -300,16 +263,16 @@
         {/each}
     </div>
 
-    <div
+    <p
         class="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm text-on-surface-variant"
     >
         {activeView.blurb}
-    </div>
+    </p>
 
     {#if view === 'pivot'}
         <div class="flex flex-wrap items-center gap-3 text-sm">
             <span class="text-on-surface-variant">Chạy dọc:</span>
-            {#each fields as field (field)}
+            {#each FIELDS as field (field)}
                 <Button
                     variant={down === field ? 'solid' : 'outline'}
                     size="sm"
@@ -322,7 +285,7 @@
             <Button variant="outline" size="sm" label="Đổi trục" onclick={swap} />
 
             <span class="text-on-surface-variant">Chạy ngang:</span>
-            {#each fields as field (field)}
+            {#each FIELDS as field (field)}
                 <Button
                     variant={across === field ? 'solid' : 'outline'}
                     size="sm"
@@ -332,48 +295,13 @@
                 />
             {/each}
         </div>
-    {/if}
 
-    {#if view === 'pivot'}
         <div class="flex flex-wrap items-center gap-2">
             <Button
                 variant={nested ? 'solid' : 'outline'}
                 size="sm"
                 label="Lồng thêm Product ra ngang"
                 onclick={toggleNested}
-            />
-            <Button
-                variant={subtotals ? 'solid' : 'outline'}
-                size="sm"
-                label="Tổng con mỗi nhóm cột"
-                disabled={!nested}
-                onclick={() => (subtotals = !subtotals)}
-            />
-            <Button
-                variant={foldable ? 'solid' : 'outline'}
-                size="sm"
-                label="Cho gập nhóm cột"
-                disabled={!nested}
-                onclick={() => (foldable = !foldable)}
-            />
-            <Button
-                variant={share === 'percentOfRow' ? 'solid' : 'outline'}
-                size="sm"
-                label="% của tổng hàng"
-                onclick={() => (share = share === 'percentOfRow' ? undefined : 'percentOfRow')}
-            />
-            <Button
-                variant={share === 'percentOfColumn' ? 'solid' : 'outline'}
-                size="sm"
-                label="% của tổng cột"
-                onclick={() =>
-                    (share = share === 'percentOfColumn' ? undefined : 'percentOfColumn')}
-            />
-            <Button
-                variant={totals ? 'solid' : 'outline'}
-                size="sm"
-                label="Cột Tổng và hàng Tất cả"
-                onclick={() => (totals = !totals)}
             />
             <Button
                 variant={ownKeys ? 'solid' : 'outline'}
@@ -383,19 +311,17 @@
                 onclick={() => (ownKeys = !ownKeys)}
             />
         </div>
-    {/if}
 
-    {#if view === 'pivot'}
         <Grid.PivotPanel grid={pivotGrid} />
     {/if}
 
     {#key view}
         {#if view === 'pivot'}
             <div ondblclick={onCellClick} role="presentation">
-                <DataGrid grid={active} toolbar class="h-100" />
+                <DataGrid grid={active} toolbar />
             </div>
         {:else}
-            <DataGrid grid={active} toolbar class="h-100" />
+            <DataGrid grid={active} toolbar />
         {/if}
     {/key}
 
@@ -407,31 +333,76 @@
                 </h2>
                 <Button variant="ghost" size="sm" label="Đóng" onclick={() => (drilled = null)} />
             </div>
-            <div class="overflow-x-auto rounded-lg border border-outline-variant">
-                <table class="w-full text-left text-xs" data-dg-drill>
-                    <tbody class="text-on-surface-variant">
-                        {#each drilled.rows.slice(0, 12) as row (row.id)}
-                            <tr class="border-t border-outline-variant">
-                                <td class="px-3 py-1">{row.region}</td>
-                                <td class="px-3 py-1">{row.quarter}</td>
-                                <td class="px-3 py-1">{row.product}</td>
-                                <td class="px-3 py-1 text-right">{money.format(row.amount)}</td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
+            <table class="w-full text-left text-xs" data-dg-drill>
+                <tbody class="text-on-surface-variant">
+                    {#each drilled.rows as row (row.id)}
+                        <tr class="border-t border-outline-variant">
+                            <td class="px-3 py-1">{row.region}</td>
+                            <td class="px-3 py-1">{row.quarter}</td>
+                            <td class="px-3 py-1">{row.product}</td>
+                            <td class="px-3 py-1 text-right">{row.amount}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
             <p class="text-xs text-on-surface-variant">
-                Bấm đúp vào một ô giao để xem những dòng gốc đã cộng thành con số ấy. Đây là câu hỏi
-                đầu tiên người đọc pivot đặt ra khi thấy một số lạ.
+                Bấm đúp một ô giao để mở những dòng đã đo thành con số ấy. Đây là câu hỏi đầu tiên
+                người đọc đặt ra khi thấy một số lạ, và là lối duy nhất đi xuống dữ liệu thô: một
+                hàng gom không mở ra được.
             </p>
         </div>
     {/if}
 
     {#if view === 'pivot'}
         <div class="space-y-3 rounded-lg border border-outline-variant p-4">
-            <h2 class="text-sm font-medium text-on-surface">Điều khiển lúc đang chạy</h2>
+            <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-sm font-medium text-on-surface">Cột nào do dữ liệu sinh ra?</h2>
+                <Button
+                    variant={grown ? 'solid' : 'outline'}
+                    size="sm"
+                    label={grown ? 'Đã thêm dữ liệu Q4' : 'Thêm dữ liệu quý Q4'}
+                    onclick={() => (grown = !grown)}
+                />
+            </div>
 
+            <div class="flex flex-wrap gap-2 text-xs">
+                <span class="text-on-surface-variant">Ứng dụng khai:</span>
+                {#each columns as column (column.id)}
+                    <Badge label={column.id} color="surface" size="sm" />
+                {/each}
+            </div>
+
+            <div class="flex flex-wrap gap-2 text-xs">
+                <span class="text-on-surface-variant">Lưới tự sinh:</span>
+                {#each generated as column (column.id)}
+                    <Badge label={String(column.def.header)} color="primary" size="sm" />
+                {/each}
+            </div>
+
+            <p class="text-xs text-on-surface-variant">
+                Hàng trên là danh sách cột trong mã, không đổi bao giờ. Hàng dưới là cột lưới tự tạo
+                sau khi đọc {data.length} dòng. Bấm thêm dữ liệu Q4: hàng dưới mọc thêm một cột, hàng
+                trên đứng yên. Đổi trục ngang sang <code>shipped</code> thì khoá xếp theo thời gian
+                và vẽ qua bộ định dạng của cột nguồn; sang <code>size</code> thì mặc định là A tới Z,
+                và nút tự khai khoá lấy lại thứ tự Small, Medium, Large.
+            </p>
+        </div>
+
+        {#if check}
+            <div class="space-y-2 rounded-lg border border-outline-variant p-4">
+                <h2 class="text-sm font-medium text-on-surface">Cộng tay để đối chiếu</h2>
+                <p class="text-xs text-on-surface-variant">
+                    Ô đầu tiên, <code>{check.downKey}</code> giao <code>{check.acrossKey}</code>,
+                    gom
+                    <strong class="text-on-surface">{check.count}</strong> dòng và cộng thành
+                    <strong class="text-on-surface">{check.total}</strong>. Con số này cộng thẳng từ
+                    dữ liệu gốc, không đi qua lưới, nên nó lệch thì là thư viện sai.
+                </p>
+            </div>
+        {/if}
+
+        <div class="space-y-3 rounded-lg border border-outline-variant p-4">
+            <h2 class="text-sm font-medium text-on-surface">Điều khiển lúc đang chạy</h2>
             <div class="flex flex-wrap items-center gap-2">
                 <Button
                     variant="outline"
@@ -455,7 +426,7 @@
                     variant="outline"
                     size="sm"
                     label="Lưu view"
-                    onclick={() => (saved = pivotGrid.api.getState?.() ?? null)}
+                    onclick={() => (saved = pivotGrid.api.getState?.())}
                 />
                 <Button
                     variant="outline"
@@ -463,104 +434,14 @@
                     label="Nạp lại view đã lưu"
                     disabled={saved === null}
                     onclick={() => {
-                        if (saved !== null) pivotGrid.api.setState?.(saved)
+                        if (saved !== null) pivotGrid.api.setState?.(saved as never)
                     }}
                 />
             </div>
-
             <p class="text-xs text-on-surface-variant">
-                Bấm <strong class="text-on-surface">Lưu view</strong>, rồi đổi trục hoặc tắt pivot
-                đi, rồi bấm <strong class="text-on-surface">Nạp lại</strong>: bảng chéo trở về đúng
-                như lúc lưu. Trước đợt này thì cấu hình pivot không vào snapshot, nên nạp lại là mất
-                trắng.
-            </p>
-
-            <p class="text-xs text-on-surface-variant">
-                <strong class="text-on-surface">% của tổng hàng</strong> chia mỗi ô cho những dòng
-                mà hàng ấy gom lại, nên đọc ngang là 1.
-                <strong class="text-on-surface">% của tổng cột</strong> chia cho những dòng dưới cùng
-                một giao, nên đọc dọc là 1. Cả hai mẫu số đều đo lại từ dòng, không cộng các ô bên cạnh,
-                nên đổi hàm gộp sang trung bình vẫn ra số đúng.
-            </p>
-
-            <p class="text-xs text-on-surface-variant">
-                Bật <strong class="text-on-surface">Lồng thêm Product</strong>,
-                <strong class="text-on-surface">Tổng con</strong> và
-                <strong class="text-on-surface">Cho gập nhóm cột</strong>, rồi bấm mũi tên trên tiêu
-                đề <code>Q1</code>: nhóm gập lại còn đúng cột tổng của nó, các nhóm bên cạnh không
-                đụng tới. Không có tổng con thì không còn gì để gập xuống, nên nhóm cuộn thành một
-                dải hẹp thay vì biến mất.
-            </p>
-
-            <p class="text-xs text-on-surface-variant">
-                Bấm chuột phải lên tiêu đề một cột dữ liệu để thấy
-                <strong class="text-on-surface">Pivot cột này xuống dọc</strong> và
-                <strong class="text-on-surface">ra ngang</strong>. Menu ấy gọi cùng những hàm mà mấy
-                nút trên đây gọi.
-            </p>
-        </div>
-
-        <div class="space-y-2 rounded-lg border border-outline-variant p-4">
-            <h2 class="text-sm font-medium text-on-surface">Cột lưới đang tự sinh</h2>
-            <div class="flex flex-wrap gap-2 text-xs">
-                {#each generatedHeaders as header, index (`${header}-${index}`)}
-                    <Badge label={header} color="primary" size="sm" />
-                {/each}
-            </div>
-            <p class="text-xs text-on-surface-variant">
-                Đổi trục ngang sang <code>shipped</code> để thấy trục ngày:
-                <strong class="text-on-surface">xếp theo thời gian</strong>, và tiêu đề vẽ qua bộ
-                định dạng của cột nguồn chứ không phải chuỗi ISO. Đổi sang
-                <code>size</code> thì thứ tự mặc định là A tới Z, bấm
-                <strong class="text-on-surface">Tự khai khoá cho Size</strong> để lấy thứ tự Small, Medium,
-                Large mà chỉ ứng dụng mới biết.
-            </p>
-        </div>
-    {/if}
-
-    {#if view === 'pivot'}
-        <div class="space-y-3 rounded-lg border border-outline-variant p-4">
-            <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-sm font-medium text-on-surface">Cột nào do dữ liệu sinh ra?</h2>
-                <Button
-                    variant={hasQ5 ? 'solid' : 'outline'}
-                    size="sm"
-                    label={hasQ5 ? 'Đã thêm dữ liệu Q5' : 'Thêm dữ liệu quý Q5'}
-                    onclick={() => (hasQ5 = !hasQ5)}
-                />
-            </div>
-
-            <div class="flex flex-wrap gap-2 text-xs">
-                <span class="text-on-surface-variant">Ứng dụng khai:</span>
-                {#each columns as column (column.id)}
-                    <Badge label={column.id} color="surface" size="sm" />
-                {/each}
-            </div>
-
-            <div class="flex flex-wrap gap-2 text-xs">
-                <span class="text-on-surface-variant">Lưới tự sinh:</span>
-                {#each generated as column (column.id)}
-                    <Badge label={String(column.def.header)} color="primary" size="sm" />
-                {/each}
-            </div>
-
-            <p class="text-xs text-on-surface-variant">
-                Hàng trên là danh sách cột trong code, không đổi bao giờ. Hàng dưới là cột lưới tự
-                tạo sau khi đọc {sales.length} dòng dữ liệu. Bấm
-                <strong class="text-on-surface">Thêm dữ liệu quý Q5</strong>: dữ liệu có thêm một
-                giá trị, hàng dưới mọc thêm một cột, hàng trên đứng yên. Đó là thứ không feature nào
-                khác trong thư viện làm được.
-            </p>
-        </div>
-
-        <div class="space-y-2 rounded-lg border border-outline-variant p-4">
-            <h2 class="text-sm font-medium text-on-surface">Cộng tay để đối chiếu</h2>
-            <p class="text-xs text-on-surface-variant">
-                Ô đầu tiên của lưới, <code>{check.downKey}</code> giao
-                <code>{check.acrossKey}</code>, gom
-                <strong class="text-on-surface">{check.count}</strong> dòng và cộng lại thành
-                <strong class="text-on-surface">{money.format(check.total)}</strong>. Con số này
-                cộng thẳng từ dữ liệu gốc, không đi qua lưới, nên nó lệch thì là thư viện sai.
+                Gỡ trường cuối cùng khỏi một trục thì phép giao tắt và lưới trở về danh sách phẳng,
+                đó là hành vi đúng chứ không phải lỗi. Toàn bộ cấu hình đi vào ảnh chụp trạng thái,
+                nên nạp lại view là dựng đúng bảng cũ.
             </p>
         </div>
     {/if}
@@ -586,12 +467,35 @@
                 onclick={() => getSorting(groupedGrid)?.setSort([])}
             />
         </div>
-        <div
+        <p
             class="rounded-lg border border-outline-variant bg-surface-container p-3 text-xs text-on-surface-variant"
         >
-            Mở hết nhóm ra và đếm: muốn biết mỗi vùng bán bao nhiêu ở từng quý, anh phải gộp thêm
-            một tầng nữa và đọc {regions.length * quarters.length} dòng xếp dọc. So "North Q1" với "South
-            Q1" thì phải cuộn đi tìm. Pivot xếp chúng thành một cột, đọc thẳng xuống.
-        </div>
+            Mở hết nhóm ra và đếm: muốn biết mỗi vùng bán bao nhiêu ở từng quý, bạn phải gập thêm
+            một tầng nữa rồi đọc từng dòng xếp dọc. So "North Q1" với "South Q1" thì phải cuộn đi
+            tìm. Pivot xếp chúng thành một cột, đọc thẳng xuống.
+        </p>
     {/if}
+    <div class="space-y-4 border-t border-outline-variant pt-6">
+        <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-on-surface">Từng tính năng một</h2>
+            <p class="text-sm text-on-surface-variant">
+                Mỗi trang dưới đây chỉ làm một việc và nói rõ việc ấy là gì. Tất cả dùng chung đúng
+                {data.length} dòng trên kia, nên con số nào cũng cộng nhẩm kiểm lại được.
+            </p>
+        </div>
+
+        {#each groups as group (group.name)}
+            <section class="space-y-2">
+                <h3 class="text-sm font-medium text-on-surface-variant">{group.name}</h3>
+                <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {#each group.demos as [href, title, what] (href)}
+                        <Card class="space-y-0.5 p-3">
+                            <Link {href} class="text-sm font-medium">{title}</Link>
+                            <p class="text-xs text-on-surface-variant">{what}</p>
+                        </Card>
+                    {/each}
+                </div>
+            </section>
+        {/each}
+    </div>
 </Container>

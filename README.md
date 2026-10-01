@@ -895,7 +895,12 @@ is on screen.
 
 A crossed cell is refused by every editor, since it is a result rather than
 data, and it is not offered for filtering. It is exported, copied and searched
-like any other value.
+like any other value, and an export takes the crossing rather than the rows it
+folded away.
+
+`columnHeader` decides the text on each generated header. It is handed the key,
+the depth of the header tier and the value before it was formatted, which is
+enough to translate a key, shorten a long one, or write each tier differently.
 
 ## Localization
 

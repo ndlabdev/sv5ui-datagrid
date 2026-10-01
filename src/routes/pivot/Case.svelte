@@ -24,7 +24,7 @@
 <div class="mx-auto max-w-4xl space-y-5 px-4 py-6">
     <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2 text-sm">
-            <Link href="/pivot/cases">Demo pivot</Link>
+            <Link href="/pivot">Demo pivot</Link>
             <span class="text-on-surface-variant">/</span>
             <span class="text-on-surface-variant">{title}</span>
         </div>

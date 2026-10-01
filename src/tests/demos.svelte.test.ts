@@ -135,41 +135,41 @@ describe('pivot demo', () => {
         }
     }
 
-    it('starts on the long list the pivot is made from', async () => {
+    it('starts on the list the pivot is made from, one row per sale', async () => {
         await show('1. Dữ liệu thô')
 
-        expect(headers()).toEqual(['Region', 'Quarter', 'Product', 'Shipped', 'Size', 'Amount'])
-        await expect.poll(rowCount).toBeGreaterThan(50)
+        expect(headers()).toEqual(['Vùng', 'Quý', 'Hàng', 'Cỡ', 'Ngày giao', 'Tiền', 'Cái'])
+        await expect.poll(rowCount).toBe(10)
     })
 
     it('folds that list down one field, keeping the declared columns', async () => {
         await show('2. Gộp nhóm')
         await expect.element(page.getByRole('treegrid')).toBeVisible()
 
-        expect(headers()).toEqual(['Region', 'Quarter', 'Product', 'Shipped', 'Size', 'Amount'])
-        await expect.poll(rowCount).toBe(4)
+        expect(headers()).toEqual(['Vùng', 'Quý', 'Hàng', 'Cỡ', 'Ngày giao', 'Tiền', 'Cái'])
+        await expect.poll(rowCount).toBe(3)
     })
 
     it('folds it down and across, inventing a column per value found', async () => {
         await show('3. Pivot')
         await expect.element(page.getByRole('treegrid')).toBeVisible()
 
-        for (const quarter of ['Q1', 'Q2', 'Q3', 'Q4']) {
+        for (const quarter of ['Q1', 'Q2', 'Q3']) {
             await expect.poll(() => headers()).toContain(quarter)
         }
-        expect(headers()).not.toContain('Quarter')
-        expect(headers()).not.toContain('Amount')
-        expect(headers()).toContain('Region')
+        expect(headers()).not.toContain('Quý')
+        expect(headers()).not.toContain('Tiền')
+        expect(headers()).toContain('Vùng')
     })
 
     it('grows a column when the data grows a value, with no code change', async () => {
         await show('3. Pivot')
-        await expect.poll(() => headers()).toContain('Q4')
-        expect(headers()).not.toContain('Q5')
+        await expect.poll(() => headers()).toContain('Q3')
+        expect(headers()).not.toContain('Q4')
 
-        await page.getByRole('button', { name: 'Thêm dữ liệu quý Q5' }).click()
-        await expect.poll(() => headers()).toContain('Q5')
-        expect(headers()).toContain('Region')
+        await page.getByRole('button', { name: 'Thêm dữ liệu quý Q4' }).click()
+        await expect.poll(() => headers()).toContain('Q4')
+        expect(headers()).toContain('Vùng')
     })
 
     it('transposes the table when the two axes trade places', async () => {
@@ -178,7 +178,7 @@ describe('pivot demo', () => {
 
         await page.getByRole('button', { name: 'Đổi trục' }).click()
         await expect.poll(() => headers()).toContain('North')
-        expect(headers()).toContain('Quarter')
+        expect(headers()).toContain('Quý')
         expect(headers()).not.toContain('Q1')
     })
 
@@ -211,12 +211,7 @@ describe('pivot demo, the parts a reader has to see working', () => {
         await expect.poll(() => headers().some((text) => text.includes('2026'))).toBe(true)
 
         const drawn = headers().filter((text) => text.includes('2026'))
-        expect(drawn).toEqual([
-            '10 thg 1, 2026',
-            '10 thg 4, 2026',
-            '10 thg 7, 2026',
-            '10 thg 10, 2026'
-        ])
+        expect(drawn).toEqual(['10 thg 2, 2026', '10 thg 5, 2026', '10 thg 8, 2026'])
         expect(drawn.every((text) => !text.includes('T00:00'))).toBe(true)
     })
 
@@ -241,8 +236,8 @@ describe('pivot demo, the parts a reader has to see working', () => {
         await page.getByRole('button', { name: 'Lồng thêm Product ra ngang' }).click()
         await expect.poll(() => headers()).toContain('Widget')
 
-        await page.getByRole('button', { name: 'Tổng con mỗi nhóm cột' }).click()
-        await expect.poll(() => headers().some((text) => text.endsWith(' tổng'))).toBe(true)
+        await page.getByRole('button', { name: 'Tổng con' }).click()
+        await expect.poll(() => headers().some((text) => text.endsWith(' cộng'))).toBe(true)
     })
 
     it('turns the crossing off and back on through the api', async () => {
@@ -250,7 +245,7 @@ describe('pivot demo, the parts a reader has to see working', () => {
         expect(headers()).toContain('Q1')
 
         await page.getByRole('button', { name: 'Tắt pivot' }).click()
-        await expect.poll(() => headers()).toContain('Quarter')
+        await expect.poll(() => headers()).toContain('Quý')
         expect(headers()).not.toContain('Q1')
 
         await page.getByRole('button', { name: 'Bật lại' }).click()
