@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page, userEvent } from 'vitest/browser'
-import Pivot from '../routes/pivot/+page.svelte'
+import Panel from '../routes/pivot/panel/+page.svelte'
 
 const headers = () =>
     Array.from(document.querySelectorAll('[role="columnheader"]')).map(
@@ -17,9 +17,7 @@ const chipsIn = (label: string) =>
         .filter(Boolean)
 
 async function open() {
-    render(Pivot as never)
-    await expect.element(page.getByRole('grid')).toBeVisible()
-    await page.getByRole('button', { name: '3. Pivot', exact: true }).first().click()
+    render(Panel as never)
     await expect.element(page.getByRole('treegrid')).toBeVisible()
 }
 

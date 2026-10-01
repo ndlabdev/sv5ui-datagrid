@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { page } from 'vitest/browser'
 import AlongRow from '../routes/pivot/along-row/+page.svelte'
-import Narrative from '../routes/pivot/+page.svelte'
+import Index from '../routes/pivot/+page.svelte'
+import Axes from '../routes/pivot/axes/+page.svelte'
 import Crossing from '../routes/pivot/crossing/+page.svelte'
+import Header from '../routes/pivot/header/+page.svelte'
 import Drill from '../routes/pivot/drill/+page.svelte'
 import Folding from '../routes/pivot/folding/+page.svelte'
 import KeepRows from '../routes/pivot/keep-rows/+page.svelte'
@@ -16,6 +18,7 @@ import Ordering from '../routes/pivot/ordering/+page.svelte'
 import Panel from '../routes/pivot/panel/+page.svelte'
 import Ratio from '../routes/pivot/ratio/+page.svelte'
 import Shares from '../routes/pivot/shares/+page.svelte'
+import Sorting from '../routes/pivot/sorting/+page.svelte'
 import TotalRow from '../routes/pivot/total-row/+page.svelte'
 import Totals from '../routes/pivot/totals/+page.svelte'
 import ValuesOnRows from '../routes/pivot/values-on-rows/+page.svelte'
@@ -36,9 +39,12 @@ const pages: [string, unknown][] = [
     ['keep-rows', KeepRows],
     ['ordering', Ordering],
     ['order-columns', OrderColumns],
+    ['header', Header],
 
     ['max-columns', MaxColumns],
     ['drill', Drill],
+    ['sorting', Sorting],
+    ['axes', Axes],
 
     ['panel', Panel]
 ]
@@ -84,18 +90,36 @@ describe('every pivot demo page stands up', () => {
         })
     }
 
-    it('lists every one of them at the one way in', async () => {
-        render(Narrative as never)
+    it('lists every one of them at the one way in, and lists nothing else', async () => {
+        render(Index as never)
         await expect.element(page.getByRole('heading', { level: 1 })).toBeVisible()
 
-        const linked = new Set(
-            Array.from(document.querySelectorAll('a[href^="/pivot/"]')).map((anchor) =>
-                (anchor.getAttribute('href') ?? '').replace('/pivot/', '')
-            )
+        const linked = Array.from(document.querySelectorAll('a[href^="/pivot/"]')).map((anchor) =>
+            (anchor.getAttribute('href') ?? '').replace('/pivot/', '')
         )
+        const known = new Set(pages.map(([name]) => name))
 
         for (const [name] of pages) expect(linked, name).toContain(name)
+        for (const name of linked) expect(known, name).toContain(name)
+        expect(linked.length).toBe(pages.length)
     })
+
+    for (const [name, Page] of pages) {
+        it(`says how it works, not just what it looks like, on ${name}`, async () => {
+            render(Page as never)
+            await expect.element(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+            const explained = Array.from(document.querySelectorAll('h2'))
+                .map((heading) => (heading.textContent ?? '').trim())
+                .filter(Boolean)
+            expect(explained.length, name).toBeGreaterThan(0)
+
+            const prose = Array.from(document.querySelectorAll('p'))
+                .map((paragraph) => paragraph.textContent?.trim() ?? '')
+                .reduce((longest, text) => Math.max(longest, text.length), 0)
+            expect(prose, name).toBeGreaterThan(120)
+        })
+    }
 })
 
 describe('what each pivot demo is supposed to show', () => {
@@ -134,6 +158,22 @@ describe('what each pivot demo is supposed to show', () => {
         await expect.element(page.getByRole('treegrid').first()).toBeVisible()
 
         expect(headers()).toEqual(expect.arrayContaining(['Vùng', 'Quý', 'Hàng', 'Cỡ']))
+    })
+
+    it('redraws itself when the ceiling moves, without the grid being rebuilt', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        render(MaxColumns as never)
+        await expect.element(page.getByRole('treegrid').first()).toBeVisible()
+
+        const crossed = () => headers().filter((text) => text.startsWith('Q')).length
+        const refused = crossed()
+
+        await page.getByRole('button', { name: 'Nâng trần lên 50' }).click()
+        await expect.poll(crossed).toBeGreaterThan(refused)
+
+        await page.getByRole('button', { name: 'Hạ trần về 3' }).click()
+        await expect.poll(crossed).toBe(refused)
+        warn.mockRestore()
     })
 
     it('reads a row across to 100 percent', async () => {
@@ -191,5 +231,58 @@ describe('what each pivot demo is supposed to show', () => {
 
         await page.getByRole('button', { name: 'Chạy dọc' }).click()
         await expect.poll(() => headers().length).toBe(down)
+    })
+
+    it('lets the application name the headers the crossing invented', async () => {
+        render(Header as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(headers()).toContain('Quý một')
+        expect(headers()).toContain('WIDGET')
+        expect(headers()).not.toContain('Q1')
+
+        await page.getByRole('button', { name: 'Đang tự đặt chữ' }).click()
+        await expect.poll(() => headers()).toContain('Q1')
+        expect(headers()).toContain('Widget')
+    })
+
+    it('sorts the groups by a column the crossing made, biggest first', async () => {
+        render(Sorting as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        const labels = () =>
+            Array.from(document.querySelectorAll('[role="row"][data-dg-row-id]'))
+                .map((row) => row.querySelector('[role="gridcell"]')?.textContent?.trim() ?? '')
+                .filter(Boolean)
+
+        expect(labels()).toEqual(['North', 'South', 'East'])
+
+        const sortBy = (header: string) =>
+            page.getByRole('button', { name: header, exact: true }).first().click()
+
+        await sortBy('Q1')
+        await expect.poll(labels).toEqual(['East', 'North', 'South'])
+
+        await sortBy('Q1')
+        await expect.poll(labels).toEqual(['South', 'North', 'East'])
+
+        await sortBy('Cả năm')
+        await expect.poll(labels).toEqual(['East', 'North', 'South'])
+    })
+
+    it('trades the axes, turns the crossing off, and brings a saved view back', async () => {
+        render(Axes as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+        expect(headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
+
+        await page.getByRole('button', { name: 'Lưu view' }).click()
+        await page.getByRole('button', { name: 'Đổi hai trục' }).click()
+        await expect.poll(() => headers()).toEqual(['Quý', 'East', 'North', 'South'])
+
+        await page.getByRole('button', { name: 'Tắt phép giao' }).click()
+        await expect.poll(() => headers()).toContain('Tiền')
+
+        await page.getByRole('button', { name: 'Nạp lại view đã lưu' }).click()
+        await expect.poll(() => headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
     })
 })

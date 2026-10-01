@@ -30,4 +30,29 @@
     {code}
 >
     <DataGrid {grid} />
+
+    {#snippet after()}
+        <div class="space-y-2 rounded-lg border border-outline-variant p-4 text-sm">
+            <h2 class="font-medium text-on-surface">Cách nó chạy</h2>
+            <p class="text-on-surface-variant">
+                per chia kết quả rút gọn cho kết quả rút gọn, theo đúng thứ tự: đo tử số trên cả tập
+                dòng, đo mẫu số trên cả tập dòng ấy, rồi mới chia. Nó không chia từng dòng rồi lấy
+                trung bình các thương.
+            </p>
+            <p class="text-on-surface-variant">
+                Hai cách cho hai con số khác nhau và cách thứ nhất mới đúng. Chia theo dòng rồi lấy
+                trung bình coi mọi dòng nặng ngang nhau, nên một dòng bán 1 cái ảnh hưởng ngang một
+                dòng bán 100 cái. Đây chính là cái bẫy trung bình của trung bình, lần này nấp trong
+                một phép chia.
+            </p>
+            <p class="text-on-surface-variant">
+                Mẫu số bằng không cho ô trống, không phải vô cực và cũng không phải 0. Không bán cái
+                nào thì không có đơn giá nào để nói.
+            </p>
+            <p class="text-on-surface-variant">
+                Vì kết quả là một phép chia chứ không còn là trường gốc, cột sinh ra không mượn định
+                dạng của trường nữa. Bạn tự khai type cho nó, như demo này khai number.
+            </p>
+        </div>
+    {/snippet}
 </Case>

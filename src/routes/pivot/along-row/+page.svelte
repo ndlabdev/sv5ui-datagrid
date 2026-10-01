@@ -71,4 +71,28 @@
     {/snippet}
 
     <DataGrid {grid} />
+
+    {#snippet after()}
+        <div class="space-y-2 rounded-lg border border-outline-variant p-4 text-sm">
+            <h2 class="font-medium text-on-surface">Cách nó chạy</h2>
+            <p class="text-on-surface-variant">
+                Bốn cách đọc này khác hẳn nhóm phần trăm. Chúng không có mẫu số chung nào cả, mà
+                nhìn sang các ô đứng cạnh trong cùng một hàng, theo đúng thứ tự trục cột đang được
+                vẽ.
+            </p>
+            <p class="text-on-surface-variant">
+                Nên thứ tự cột là một phần của kết quả. Đổi thứ tự khoá, hay sắp cột theo một
+                measure, thì luỹ kế và chênh lệch đổi theo. Đó không phải lỗi: một luỹ kế chỉ có
+                nghĩa khi trình tự có nghĩa, thường là thời gian.
+            </p>
+            <p class="text-on-surface-variant">
+                Ô đầu tiên của hàng không có ô nào đứng trước nó. Chênh lệch vì thế để trống thay vì
+                lấy chính nó, còn luỹ kế thì bằng chính nó.
+            </p>
+            <p class="text-on-surface-variant">
+                Cột tổng luôn để trống ở cả bốn cách. Nó không nằm trong trình tự nào, nên cộng dồn
+                tới nó hay so nó với ô liền trước đều không có nghĩa gì.
+            </p>
+        </div>
+    {/snippet}
 </Case>

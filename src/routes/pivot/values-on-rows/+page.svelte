@@ -51,4 +51,30 @@
     {/snippet}
 
     <DataGrid {grid} />
+
+    {#snippet after()}
+        <div class="space-y-2 rounded-lg border border-outline-variant p-4 text-sm">
+            <h2 class="font-medium text-on-surface">Cách nó chạy</h2>
+            <p class="text-on-surface-variant">
+                Đổi chỗ measure không đổi phép đo nào. Vẫn chừng ấy con số, chỉ khác chúng nằm ở ô
+                nào. Chạy ngang thì mỗi phép giao nở thành nhiều cột; chạy dọc thì mỗi phép giao còn
+                một cột, và mỗi nhóm hàng nở thêm một dòng cho mỗi measure.
+            </p>
+            <p class="text-on-surface-variant">
+                Phép toán vì thế đổi từ nhân sang cộng. Ba quý với ba measure: chạy ngang là 3 nhân
+                3 thành 9 cột, chạy dọc là 3 cột và mỗi nhóm thêm 3 dòng. Bảng cao lên thay vì rộng
+                ra, mà cuộn dọc bao giờ cũng dễ hơn cuộn ngang.
+            </p>
+            <p class="text-on-surface-variant">
+                Dòng measure mọc ở mọi tầng nhóm, kể cả tầng trong cùng và kể cả hàng tổng. Nhờ vậy
+                gập một nhóm lại vẫn còn đọc được từng measure của chính nhóm ấy, chứ không mất
+                chúng theo.
+            </p>
+            <p class="text-on-surface-variant">
+                Những dòng này không phải dòng dữ liệu. Chúng không mở ra được, không sửa được, và
+                mang id riêng để không đụng id của nhóm. Mọi thứ đọc theo tỉ lệ vẫn chạy bình thường
+                trên chúng.
+            </p>
+        </div>
+    {/snippet}
 </Case>
