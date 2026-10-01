@@ -172,6 +172,39 @@ describe('what follows from a column no longer naming a measure', () => {
         warn.mockRestore()
     })
 
+    it('reaches the same order whichever axis the measures sit on', () => {
+        const spread: Sale[] = [
+            { id: 1, region: 'North', quarter: 'Q1', amount: 100, units: 1 },
+            { id: 2, region: 'South', quarter: 'Q1', amount: 500, units: 1 },
+            { id: 3, region: 'East', quarter: 'Q1', amount: 300, units: 1 }
+        ]
+        const one = (where: 'columns' | 'rows') => {
+            const grid = createDataGrid<Sale>({
+                columns,
+                data: spread,
+                getRowId: (row) => String(row.id),
+                features: [
+                    sorting(),
+                    pivot<Sale>({
+                        rows: ['region'],
+                        columns: ['quarter'],
+                        values: [{ field: 'amount', agg: 'sum' }],
+                        valuesOn: where,
+                        sortableColumns: true
+                    })
+                ]
+            })
+            grid.api.setSort?.([{ columnId: '__pv:c:Q1::0', direction: 'asc' }])
+            const region = grid.columns.visible.find((column) => column.id === 'region')!
+            return grid.preWindowNodes
+                .filter((node) => node.id.startsWith('group:'))
+                .map((node) => grid.getValue(node, region))
+        }
+
+        expect(one('columns')).toEqual(['North', 'East', 'South'])
+        expect(one('rows')).toEqual(one('columns'))
+    })
+
     it('drops the column type when the measures do not agree on one', () => {
         const typed = build({ values: [{ field: 'amount', agg: 'sum', type: 'currency' }] })
         const mixed = build({
