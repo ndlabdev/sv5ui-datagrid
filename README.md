@@ -1273,6 +1273,13 @@ named by a column index at all: its cells carry
 `data-dg-header-cell="level:firstColumn"` instead, counted from the topmost
 level.
 
+Those three attributes are the whole contract. Components ship other
+`data-dg-*` markers on their own roots and sections, such as
+`data-dg-pivot-zone` inside the pivot panel, and those are internal structure:
+reach for them in a test or a stylesheet if it helps, but they carry no semver
+promise and may be renamed or dropped with the markup they describe. Anything
+you need for application logic should come from the API instead.
+
 ## API stability
 
 Everything exported from the package root is public and covered by semver from
