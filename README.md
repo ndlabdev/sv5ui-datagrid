@@ -783,6 +783,29 @@ back as many crossings as there were measures.
 Splitting one row into several is the client rebuilding rows the server sent,
 which is the one thing the server row model does not let it do.
 
+### Putting the columns in order of a measure
+
+A crossing comes out in the order its keys sort in, which answers where a thing
+is rather than which thing is biggest:
+
+```ts
+orderColumns: {
+    direction: 'desc'
+}
+```
+
+Each key is ranked by what the measure makes of the rows beneath it, and every
+tier is ranked among its own siblings: the quarters against each other, then
+the products within each quarter. `measure` picks which of `values` ranks them.
+Keys it cannot rank keep the order they had, at the end.
+
+`columnKeys` wins where it speaks, an order the application states being a
+statement about meaning rather than one computed from the data.
+
+The readings that follow the order a crossing is drawn in follow this one: a
+running total runs through the columns as ordered, and a difference is from the
+column now beside it. `rowModel: "server"` keeps the order the server sent.
+
 ### Keeping only some of the rows
 
 A crossing of forty regions is a page nobody reads. `keepRows` keeps the

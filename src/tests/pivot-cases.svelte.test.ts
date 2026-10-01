@@ -11,6 +11,7 @@ import Keys from '../routes/pivot/keys/+page.svelte'
 import MaxColumns from '../routes/pivot/max-columns/+page.svelte'
 import Measures from '../routes/pivot/measures/+page.svelte'
 import Nested from '../routes/pivot/nested/+page.svelte'
+import OrderColumns from '../routes/pivot/order-columns/+page.svelte'
 import Ordering from '../routes/pivot/ordering/+page.svelte'
 import Panel from '../routes/pivot/panel/+page.svelte'
 import Ratio from '../routes/pivot/ratio/+page.svelte'
@@ -34,6 +35,7 @@ const pages: [string, unknown][] = [
     ['keys', Keys],
     ['keep-rows', KeepRows],
     ['ordering', Ordering],
+    ['order-columns', OrderColumns],
 
     ['max-columns', MaxColumns],
     ['drill', Drill],
@@ -139,6 +141,21 @@ describe('what each pivot demo is supposed to show', () => {
         await expect.element(page.getByRole('treegrid')).toBeVisible()
 
         expect(cells().slice(0, 4)).toEqual(['North', '54.5%', '45.5%', '-'])
+    })
+
+    it('puts the biggest quarter first, and the total row follows', async () => {
+        render(OrderColumns as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
+
+        await page.getByRole('button', { name: 'Lớn nhất trước' }).click()
+        await expect.poll(() => headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
+        expect(cells().slice(-4)).toEqual(['Tất cả', '460', '370', '220'])
+
+        await page.getByRole('button', { name: 'Nhỏ nhất trước' }).click()
+        await expect.poll(() => headers()).toEqual(['Vùng', 'Q3', 'Q2', 'Q1'])
+        expect(cells().slice(-4)).toEqual(['Tất cả', '220', '370', '460'])
     })
 
     it('keeps the two largest and measures the total over them', async () => {

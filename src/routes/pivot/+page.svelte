@@ -207,7 +207,8 @@
                 ['/pivot/folding', 'Gập nhánh cột', 'Gập về tổng con, hoặc về một dải hẹp'],
                 ['/pivot/keys', 'Tự khai khoá cột', 'Thứ tự riêng, và cột chưa có dòng nào'],
                 ['/pivot/ordering', 'Khoá xếp theo giá trị', 'Trục ngày chạy theo thời gian'],
-                ['/pivot/max-columns', 'Trần số cột', 'Từ chối chứ không cắt bớt']
+                ['/pivot/max-columns', 'Trần số cột', 'Từ chối chứ không cắt bớt'],
+                ['/pivot/order-columns', 'Sắp cột theo measure', 'Quý nào bán tốt nhất đứng trước']
             ]
         },
         {

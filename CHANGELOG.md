@@ -57,6 +57,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   application that wanted a reader to touch them, this repository's own demo
   included.
 
+- **A pivot can put its columns in the order of a measure.**
+  `orderColumns: { direction: 'desc' }` ranks each key by what the measure makes
+  of the rows beneath it, every tier among its own siblings, so the best quarter
+  comes first rather than the earliest one. It was the one thing an application
+  could not do for itself: the only way in was `columnKeys`, which has to hand
+  back the keys and so would have meant adding up the data again outside the
+  grid. `columnKeys` still outranks it, the readings that follow the drawn order
+  follow the new one, and the server keeps the order it sent.
+
 - **A pivot keeps only the rows worth reading.** `keepRows: { top: 10 }` keeps
   the ten largest gathered rows, ranked by what a measure makes of each one,
   measured from its rows and whether or not a total column was asked for. The
