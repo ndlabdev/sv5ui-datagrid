@@ -138,7 +138,7 @@ describe('the panel adjusts how a crossing reads', () => {
                 node.getAttribute('aria-pressed')
             )
 
-        expect(pressed()).toEqual(['false', 'false', 'false', 'false', 'false'])
+        expect(pressed()).toEqual(['false', 'false', 'false', 'false', 'false', 'false'])
 
         await page.getByRole('button', { name: 'Hàng tổng' }).click()
         await expect.poll(() => pressed()[1]).toBe('true')
@@ -169,6 +169,46 @@ describe('the panel adjusts how a crossing reads', () => {
         await expect
             .poll(() => settings()?.querySelector('[aria-label="Giữ hàng"]')?.textContent?.trim())
             .toBe('3 hàng nhỏ nhất')
+    })
+
+    it('says what belongs in each zone, not only what the zone is called', async () => {
+        const grid = makeGrid()
+        await open(grid)
+
+        const hints = Array.from(document.querySelectorAll('[data-dg-pivot-zone]')).map(
+            (zone) =>
+                Array.from(zone.querySelectorAll(':scope > span'))[1]?.textContent?.trim() ?? ''
+        )
+
+        expect(hints).toEqual([
+            'Trường gom xuống dọc trang',
+            'Trường gom ngang trang',
+            'Cái được đo ở chỗ hai trục gặp nhau',
+            'Tổng, gập nhóm, sắp xếp, và giữ bao nhiêu hàng'
+        ])
+    })
+
+    it('never puts an axis name on a control that does not set an axis', async () => {
+        const grid = makeGrid()
+        await open(grid)
+
+        const zoneNames = ['Chạy dọc', 'Chạy ngang']
+        const wearing = Array.from(document.querySelectorAll('[data-dg-pivot-zone] button')).filter(
+            (button) => zoneNames.includes((button.textContent ?? '').trim())
+        )
+
+        expect(wearing).toEqual([])
+    })
+
+    it('puts the measure axis among the settings, where the other readings are', async () => {
+        const grid = makeGrid()
+        await open(grid)
+
+        const toggle = page.getByRole('button', { name: 'Measure xếp dọc' })
+        await expect.element(toggle).toBeVisible()
+
+        await toggle.click()
+        await expect.poll(() => grid.api.pivotValuesOn?.()).toBe('rows')
     })
 
     it('shows nothing of itself until a crossing stands', async () => {

@@ -55,49 +55,42 @@ describe('the pivot panel', () => {
     it('shows what is on each axis, by the header the application gave', async () => {
         await open()
 
-        expect(chipsIn('rows')).toEqual(['Region'])
-        expect(chipsIn('columns')).toEqual(['Quarter'])
+        expect(chipsIn('rows')).toEqual(['Vùng'])
+        expect(chipsIn('columns')).toEqual(['Quý'])
     })
 
     it('puts a field on an axis from its own add menu', async () => {
         await open()
         await page.getByRole('button', { name: 'Thêm vào trục ngang' }).click()
-        await expect.element(page.getByRole('menuitem', { name: 'Product' })).toBeVisible()
-        await page.getByRole('menuitem', { name: 'Product' }).click()
+        await expect.element(page.getByRole('menuitem', { name: 'Hàng' })).toBeVisible()
+        await page.getByRole('menuitem', { name: 'Hàng' }).click()
 
-        await expect.poll(() => chipsIn('columns')).toEqual(['Quarter', 'Product'])
+        await expect.poll(() => chipsIn('columns')).toEqual(['Quý', 'Hàng'])
         await expect.poll(() => headers()).toContain('Widget')
     })
 
     it('takes a field off, and the grid stops crossing on it', async () => {
         await open()
-        await page.getByRole('button', { name: 'Bỏ Quarter' }).click()
+        await page.getByRole('button', { name: 'Bỏ Quý' }).click()
 
         await expect.poll(() => chipsIn('columns')).toEqual([])
-        await expect.poll(() => headers()).toContain('Quarter')
+        await expect.poll(() => headers()).toContain('Quý')
     })
 
     it('names every control for a reader who cannot see the icon', async () => {
         await open()
 
-        for (const name of [
-            'Bỏ Region',
-            'Bỏ Quarter',
-            'Thêm vào trục dọc',
-            'Thêm vào trục ngang'
-        ]) {
+        for (const name of ['Bỏ Vùng', 'Bỏ Quý', 'Thêm vào trục dọc', 'Thêm vào trục ngang']) {
             await expect.element(page.getByRole('button', { name })).toBeInTheDocument()
         }
     })
 
     it('is reachable and operable from the keyboard alone', async () => {
         await open()
-        const remove = page.getByRole('button', { name: 'Bỏ Quarter' })
+        const remove = page.getByRole('button', { name: 'Bỏ Quý' })
         await expect.element(remove).toBeInTheDocument()
 
-        const element = document.querySelector(
-            '[aria-label="Bỏ Quarter"]'
-        ) as HTMLButtonElement | null
+        const element = document.querySelector('[aria-label="Bỏ Quý"]') as HTMLButtonElement | null
         element?.focus()
         expect(document.activeElement).toBe(element)
 
@@ -134,8 +127,7 @@ describe('the pivot panel', () => {
         await open()
         const before = document.querySelectorAll('[role="row"]').length
 
-        await page.getByRole('button', { name: 'Xếp số đo' }).click()
-        await page.getByRole('menuitem', { name: 'Chạy dọc' }).click()
+        await page.getByRole('button', { name: 'Measure xếp dọc' }).click()
 
         await expect.poll(() => headers()).toContain('Giá trị')
         await expect

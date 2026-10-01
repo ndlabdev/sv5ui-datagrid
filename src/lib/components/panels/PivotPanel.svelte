@@ -108,6 +108,11 @@
                 label: t.pivotSortable,
                 on: state.sortableColumns,
                 press: () => state.setSortableColumns(!state.sortableColumns)
+            },
+            {
+                label: t.pivotValuesDown,
+                on: state.valuesOn === 'rows',
+                press: () => state.setValuesOn(state.valuesOn === 'rows' ? 'columns' : 'rows')
             }
         ]
     })
@@ -148,6 +153,7 @@
 {#snippet zone(
     key: string,
     label: string,
+    hint: string,
     chips: ReturnType<typeof axis>,
     add: (id: string) => void,
     addLabel: string
@@ -159,6 +165,7 @@
         class={slots.groupPanel({ class: theme('groupPanel') })}
     >
         <span class={slots.groupPanelLabel({ class: theme('groupPanelLabel') })}>{label}</span>
+        <span class="mr-1 text-xs text-on-surface-variant">{hint}</span>
 
         {#each chips as chip, index (chip.id)}
             <span class="inline-flex items-center gap-0.5">
@@ -219,10 +226,18 @@
 
 {#if pivot}
     <div data-dg-pivot-panel class={['space-y-2', className]}>
-        {@render zone('rows', t.pivotRows, rowChips, (id) => pivot.addRowField(id), t.addPivotRow)}
+        {@render zone(
+            'rows',
+            t.pivotRows,
+            t.pivotRowsHint,
+            rowChips,
+            (id) => pivot.addRowField(id),
+            t.addPivotRow
+        )}
         {@render zone(
             'columns',
             t.pivotColumns,
+            t.pivotColumnsHint,
             columnChips,
             (id) => pivot.addColumnField(id),
             t.addPivotColumn
@@ -237,6 +252,7 @@
             <span class={slots.groupPanelLabel({ class: theme('groupPanelLabel') })}
                 >{t.pivotValues}</span
             >
+            <span class="mr-1 text-xs text-on-surface-variant">{t.pivotValuesHint}</span>
 
             {#each pivot.values as measure, index (`${measure.field}-${index}`)}
                 <span class={slots.groupPanelChip({ class: theme('groupPanelChip') })}>
@@ -296,25 +312,6 @@
 
             <div class="grow"></div>
 
-            {#if pivot.isCrossing}
-                <DropdownMenu
-                    items={[
-                        { label: t.pivotColumns, onSelect: () => pivot.setValuesOn('columns') },
-                        { label: t.pivotRows, onSelect: () => pivot.setValuesOn('rows') }
-                    ]}
-                >
-                    {#snippet children({ props })}
-                        <Button
-                            {...props}
-                            variant="ghost"
-                            size="xs"
-                            label={pivot.valuesOn === 'rows' ? t.pivotRows : t.pivotColumns}
-                            aria-label={t.pivotValuesOn}
-                        />
-                    {/snippet}
-                </DropdownMenu>
-            {/if}
-
             {#if free.length > 0}
                 <DropdownMenu items={addTo((id) => pivot.addValue(id))}>
                     {#snippet children({ props })}
@@ -349,6 +346,7 @@
                 <span class={slots.groupPanelLabel({ class: theme('groupPanelLabel') })}
                     >{t.pivotSettings}</span
                 >
+                <span class="mr-1 text-xs text-on-surface-variant">{t.pivotSettingsHint}</span>
 
                 {#each toggles as toggle (toggle.label)}
                     <Button

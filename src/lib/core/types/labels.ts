@@ -113,6 +113,11 @@ export interface DataGridLabels {
     pivotColumns: string
     pivotValues: string
     pivotValuesOn: string
+    pivotValuesDown: string
+    pivotRowsHint: string
+    pivotColumnsHint: string
+    pivotValuesHint: string
+    pivotSettingsHint: string
     pivotSettings: string
     pivotTotalColumn: string
     pivotTotalRow: string
