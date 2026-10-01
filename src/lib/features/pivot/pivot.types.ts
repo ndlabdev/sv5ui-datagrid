@@ -298,6 +298,34 @@ export interface PivotOptions<TRow = unknown> {
     valuesOn?: PivotValuesOn
 
     /**
+     * Put the keys of the column axis in the order a measure ranks them,
+     * rather than in the order the values themselves have.
+     *
+     * A crossing comes out in the order its keys sort in: quarters run Q1 to
+     * Q4, regions run alphabetically. That answers where a thing is, not which
+     * thing is biggest, and finding the best quarter among twenty columns is
+     * done by eye today.
+     *
+     * Each key is ranked by what the measure makes of the rows beneath it,
+     * measured from those rows, and every tier is ranked among its own
+     * siblings: the quarters against each other, then the products within each
+     * quarter. Keys the measure cannot rank fall to the end in the order they
+     * had.
+     *
+     * `columnKeys` wins where it speaks. An order the application states is a
+     * statement about meaning, which outranks one computed from the data, so a
+     * field with declared keys keeps them.
+     *
+     * The readings that follow the order a crossing is drawn in follow this
+     * one: a running total runs through the columns as ordered, and a
+     * difference is from the column now beside it. That is the point of
+     * ordering them, and it is worth knowing before turning it on.
+     *
+     * `rowModel: "server"` keeps the order the server sent.
+     */
+    orderColumns?: PivotOrderColumns
+
+    /**
      * Keep only some of the gathered rows, ranked by what a measure makes of
      * them.
      *
@@ -348,4 +376,16 @@ export interface PivotKeepRows {
 
     /** Gather everything left out into one row under this name. */
     others?: string
+}
+
+/** How the column axis is put in order by a measure. */
+export interface PivotOrderColumns {
+    /** Which measure ranks the keys, by its place in `values`. */
+    measure?: number
+
+    /**
+     * Largest first, or smallest.
+     * @default 'desc'
+     */
+    direction?: 'asc' | 'desc'
 }

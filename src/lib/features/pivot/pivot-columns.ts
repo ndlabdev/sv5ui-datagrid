@@ -128,47 +128,78 @@ export function overLimit(crossing: Crossing, limit: CrossingLimit): boolean {
     return (crossing.paths.length + groups) * limit.leavesPerPath > limit.max
 }
 
+export interface CrossingOrder<TRow> {
+    score: (rows: TRow[]) => number | null
+    direction: 'asc' | 'desc'
+}
+
 export interface CrossingShape<TRow> {
     columns: ColumnDef<TRow>[]
     read: CellRead<TRow>
     limit: CrossingLimit
     declared?: DeclaredKeys
+    order?: CrossingOrder<TRow>
+}
+
+function hold<TRow>(beneath: Map<string, TRow[]> | undefined, prefix: string, row: TRow): void {
+    if (!beneath) return
+
+    const held = beneath.get(prefix)
+    if (held) held.push(row)
+    else beneath.set(prefix, [row])
+}
+
+interface Growing<TRow> {
+    roots: KeyNode[]
+    index: Map<string, KeyNode>
+    beneath: Map<string, TRow[]> | undefined
+    leaves: number
+}
+
+function place<TRow>(
+    row: TRow,
+    columns: ColumnDef<TRow>[],
+    read: CellRead<TRow>,
+    into: Growing<TRow>
+): void {
+    let siblings = into.roots
+    let prefix = ''
+
+    for (let depth = 0; depth < columns.length; depth++) {
+        const value = rawKeyOf(row, columns[depth]!, read)
+        const key = textOf(value)
+        prefix = prefix === '' ? escapeKey(key) : `${prefix}|${escapeKey(key)}`
+
+        hold(into.beneath, prefix, row)
+
+        let found = into.index.get(prefix)
+        if (!found) {
+            found = { key, value, children: [] }
+            into.index.set(prefix, found)
+            siblings.push(found)
+            if (depth === columns.length - 1) into.leaves += 1
+        }
+        siblings = found.children
+    }
 }
 
 export function pivotCrossing<TRow>(nodes: RowNode<TRow>[], shape: CrossingShape<TRow>): Crossing {
-    const { columns, read, limit, declared } = shape
+    const { columns, read, limit, declared, order } = shape
     if (columns.length === 0) return EMPTY_CROSSING
 
-    const roots: KeyNode[] = []
-    const index = new Map<string, KeyNode>()
-    let paths = 0
+    const beneath = order ? new Map<string, TRow[]>() : undefined
+    const growing: Growing<TRow> = { roots: [], index: new Map(), beneath, leaves: 0 }
 
     for (const node of nodes) {
-        let siblings = roots
-        let prefix = ''
-
-        for (let depth = 0; depth < columns.length; depth++) {
-            const value = rawKeyOf(node.row, columns[depth]!, read)
-            const key = textOf(value)
-            prefix = prefix === '' ? escapeKey(key) : `${prefix}|${escapeKey(key)}`
-
-            let found = index.get(prefix)
-            if (!found) {
-                found = { key, value, children: [] }
-                index.set(prefix, found)
-                siblings.push(found)
-                if (depth === columns.length - 1) {
-                    paths += 1
-                    if (paths * limit.leavesPerPath > limit.max) {
-                        return { tree: [], paths: [], overflowed: true }
-                    }
-                }
-            }
-            siblings = found.children
+        place(node.row, columns, read, growing)
+        if (growing.leaves * limit.leavesPerPath > limit.max) {
+            return { tree: [], paths: [], overflowed: true }
         }
     }
 
-    sortTree(roots)
+    const roots = growing.roots
+    if (order && beneath) rankTree(roots, { order, beneath, prefix: '' })
+    else sortTree(roots)
     const shaped = declared ? reconcile(roots, columns, declared) : roots
     const built: Crossing = { tree: shaped, paths: flattenPaths(shaped), overflowed: false }
     return overLimit(built, limit) ? { tree: [], paths: [], overflowed: true } : built
@@ -177,6 +208,42 @@ export function pivotCrossing<TRow>(nodes: RowNode<TRow>[], shape: CrossingShape
 function sortTree(nodes: KeyNode[]): void {
     nodes.sort((left, right) => compareValues(left.value, right.value, -1))
     for (const node of nodes) sortTree(node.children)
+}
+
+interface Ranking<TRow> {
+    order: CrossingOrder<TRow>
+    beneath: Map<string, TRow[]>
+    prefix: string
+}
+
+const under = (prefix: string, key: string): string =>
+    prefix === '' ? escapeKey(key) : `${prefix}|${escapeKey(key)}`
+
+function byRank(left: number | null, right: number | null, direction: 'asc' | 'desc'): number {
+    if (left === null && right === null) return 0
+    if (left === null) return 1
+    if (right === null) return -1
+    return direction === 'asc' ? left - right : right - left
+}
+
+function rankTree<TRow>(nodes: KeyNode[], at: Ranking<TRow>): void {
+    const scores = new Map<KeyNode, number | null>()
+    for (const node of nodes) {
+        scores.set(node, at.order.score(at.beneath.get(under(at.prefix, node.key)) ?? []))
+    }
+
+    nodes.sort((left, right) => {
+        const ranked = byRank(
+            scores.get(left) ?? null,
+            scores.get(right) ?? null,
+            at.order.direction
+        )
+        return ranked === 0 ? compareValues(left.value, right.value, -1) : ranked
+    })
+
+    for (const node of nodes) {
+        rankTree(node.children, { ...at, prefix: under(at.prefix, node.key) })
+    }
 }
 
 function flattenPaths(nodes: KeyNode[], prefix: string[] = []): string[][] {

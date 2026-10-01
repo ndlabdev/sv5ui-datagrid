@@ -28,6 +28,7 @@ import {
     crossingId,
     cacheByKey,
     cacheByRows,
+    type CrossingOrder,
     crossingIndex,
     groupsByKey,
     type KeyedRows,
@@ -59,6 +60,7 @@ import type { PivotRequest } from '../server-row-model/server-row-model.types.js
 import type { SortState } from '../../core/types/index.js'
 import type {
     PivotKeepRows,
+    PivotOrderColumns,
     PivotMeasure,
     PivotOptions,
     PivotShowAs,
@@ -121,6 +123,11 @@ const rankOutOfRange = (at: number, many: number): string =>
     `${many}. Nothing ranks the rows, so the ones kept are whichever the data listed first. ` +
     'Point measure at one of the measures, or leave it out to rank by the first.'
 
+const SERVER_ORDER_COLUMNS =
+    'pivot() keeps the order the server sent on rowModel: "server". The column axis comes back ' +
+    'with the rows, and ranking it means measuring every row behind every key, which the client ' +
+    'cannot do over the blocks it happens to hold. Ask the server for the order.'
+
 const SERVER_KEEP_ROWS =
     'pivot() keeps every row it is given on rowModel: "server". Ranking the gathered rows means ' +
     'measuring all of them, and the client holds only the blocks the server sent, so the ten ' +
@@ -157,6 +164,7 @@ export class Pivot<TRow> {
     columnSubtotal = $state.raw<((header: string) => string) | undefined>(undefined)
     valuesOn = $state.raw<PivotValuesOn>('columns')
     keepRows = $state.raw<PivotKeepRows | undefined>(undefined)
+    orderColumns = $state.raw<PivotOrderColumns | undefined>(undefined)
 
     #grid: GridState<TRow>
     #options: PivotOptions<TRow>
@@ -174,6 +182,7 @@ export class Pivot<TRow> {
         this.columnSubtotal = options.columnSubtotal
         this.valuesOn = options.valuesOn ?? 'columns'
         this.keepRows = options.keepRows
+        this.orderColumns = options.orderColumns
 
         if (options.rows.length === 0 || options.columns.length === 0) {
             throw new Error('pivot() needs at least one row field and one column field')
@@ -237,6 +246,10 @@ export class Pivot<TRow> {
 
     setKeepRows = mutator((keep: PivotKeepRows | undefined): void => {
         this.keepRows = keep
+    })
+
+    setOrderColumns = mutator((order: PivotOrderColumns | undefined): void => {
+        this.orderColumns = order
     })
 
     setValuesOn = mutator((where: PivotValuesOn): void => {
@@ -391,7 +404,8 @@ export class Pivot<TRow> {
             columns,
             read: rawRead,
             limit,
-            declared: this.#options.columnKeys
+            declared: this.#options.columnKeys,
+            ...(this.#ranking ? { order: this.#ranking } : {})
         })
     })
 
@@ -455,6 +469,17 @@ export class Pivot<TRow> {
         console.warn(SERVER_VALUES_ON_ROWS)
     }
 
+    #orderWarned = false
+
+    #warnOrderColumns(): void {
+        if (!this.#onServer || this.orderColumns === undefined) return
+        if (this.#orderWarned) return
+
+        this.#orderWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(SERVER_ORDER_COLUMNS)
+    }
+
     #keepRowsWarned = false
 
     #warnKeepRows(): void {
@@ -483,6 +508,7 @@ export class Pivot<TRow> {
         this.#warnTotalRow()
         this.#warnValuesOnRows()
         this.#warnKeepRows()
+        this.#warnOrderColumns()
         if (!this.#onServer && this.#columnDefs().length === 0) return false
         if (!this.#onServer && !this.#fieldsResolve()) return false
         if (this.#crossing.overflowed) {
@@ -697,6 +723,17 @@ export class Pivot<TRow> {
             }
             return out
         })
+    }
+
+    get #ranking(): CrossingOrder<TRow> | undefined {
+        const order = this.orderColumns
+        if (!order) return undefined
+
+        const at = order.measure ?? 0
+        return {
+            direction: order.direction ?? 'desc',
+            score: (rows: TRow[]) => numericOrNull(this.#measureOver(at, rows, rawRead))
+        }
     }
 
     #measureOver(at: number, rows: TRow[], read: CellRead<TRow>): unknown {
@@ -1022,6 +1059,7 @@ function serializePivot<TRow>(state: Pivot<TRow>): unknown {
         sortableColumns: state.sortableColumns,
         valuesOn: state.valuesOn,
         ...(state.keepRows === undefined ? {} : { keepRows: state.keepRows }),
+        ...(state.orderColumns === undefined ? {} : { orderColumns: state.orderColumns }),
         ...(state.totalColumn === undefined ? {} : { totalColumn: state.totalColumn }),
         ...(state.totalRow === undefined ? {} : { totalRow: state.totalRow }),
         ...(named
@@ -1084,6 +1122,18 @@ function placeIn(value: unknown): number | undefined {
 function countIn(value: unknown): number | undefined {
     if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) return undefined
     return value
+}
+
+function orderColumnsIn(value: unknown): PivotOrderColumns | undefined {
+    if (value === null || typeof value !== 'object') return undefined
+
+    const shape = value as Record<string, unknown>
+    const order: PivotOrderColumns = {}
+
+    const measure = placeIn(shape.measure)
+    if (measure !== undefined) order.measure = measure
+    if (shape.direction === 'asc' || shape.direction === 'desc') order.direction = shape.direction
+    return order
 }
 
 function keepRowsIn(value: unknown): PivotKeepRows | undefined {
@@ -1183,6 +1233,7 @@ function hydrateSettings<TRow>(state: Pivot<TRow>, shape: Record<string, unknown
     if (where) state.setValuesOn(where)
 
     if ('keepRows' in shape) state.setKeepRows(keepRowsIn(shape.keepRows))
+    if ('orderColumns' in shape) state.setOrderColumns(orderColumnsIn(shape.orderColumns))
     if (typeof shape.sortableColumns === 'boolean') {
         state.setSortableColumns(shape.sortableColumns)
     }
@@ -1253,6 +1304,9 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 setPivotKeepRows: (keep: unknown) =>
                     state.setKeepRows(keep as PivotKeepRows | undefined),
                 pivotKeepRows: () => state.keepRows,
+                setPivotOrderColumns: (order: unknown) =>
+                    state.setOrderColumns(order as PivotOrderColumns | undefined),
+                pivotOrderColumns: () => state.orderColumns,
                 pivotValuesOn: () => state.valuesOn,
                 isPivoting: () => state.isCrossing
             }
@@ -1295,6 +1349,8 @@ declare module '../../core/types/api.js' {
         setPivotValuesOn?: (where: 'columns' | 'rows') => void
         setPivotKeepRows?: (keep: unknown) => void
         pivotKeepRows?: () => unknown
+        setPivotOrderColumns?: (order: unknown) => void
+        pivotOrderColumns?: () => unknown
         pivotValuesOn?: () => 'columns' | 'rows'
         isPivoting?: () => boolean
     }
