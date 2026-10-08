@@ -84,12 +84,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **The axes read back from the api.** `pivotRows()`, `pivotColumns()` and
+  `pivotValues()` answer what a crossing is currently made of, each handing
+  back a copy. Until now only the setters existed, so an application building
+  its own toolbar had to reach past the api into the state behind it.
+
+- **The ceiling on generated columns moves at run time.**
+  `setPivotMaxColumns()` and `pivotMaxColumns()`. The refusal a low ceiling
+  causes tells the reader to raise it; doing so no longer means building the
+  grid again. It stays out of a snapshot, being a guard rail rather than an
+  arrangement.
+
 - **A feature can shape the columns the grid draws.** `GridFeature.columns` is
   asked in registration order, and what it answers feeds leaves, header groups,
   order and widths alike. A generated column is a column like any other: it
   filters, it exports, it takes part in a snapshot.
 
 ### Fixed
+
+- **A pivot's column subtotal did not survive a saved view.** Turning it on
+  from the panel, saving and loading back lost the subtotal columns with
+  nothing said: `columnSubtotal` was the one panel setting the serializer did
+  not write. It is written as a boolean, and written every time rather than
+  only when on, so that turning it off survives too. Loading takes the label
+  from the locale when the grid declared none, and a slice that never mentioned
+  it leaves the grid as it was built.
+
+- **`sv5ui ^2.5.0` was not a floor the grid could stand on.** The shipped
+  header imports `usePointerDrag`, which arrived in sv5ui 2.7.0, so the two
+  versions in between satisfied the declared range and gave back a grid whose
+  columns would not resize. The peer range and the compatibility table now ask
+  for 2.7.0.
 
 - **A column menu never offered what a feature put on a column.** `menuItems`
   was asked in one place only, the row context menu, which hands it the row and
