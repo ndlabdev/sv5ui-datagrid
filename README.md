@@ -115,7 +115,7 @@ is why no `@source` path of your own is needed.
 | SvelteKit    | 2.x            |
 | Svelte       | 5.x            |
 | Tailwind CSS | 4.x            |
-| sv5ui        | 2.5.0 or later |
+| sv5ui        | 2.7.0 or later |
 
 SvelteKit is required rather than optional: sv5ui resolves `$app/state`, which
 only a SvelteKit app provides. `@iconify/svelte` and `tailwindcss` are declared
