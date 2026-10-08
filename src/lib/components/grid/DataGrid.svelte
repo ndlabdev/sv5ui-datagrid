@@ -34,6 +34,8 @@
         editing: editingProp,
         virtual,
         density,
+        headerHeight,
+        groupHeaderHeight,
         toolbar = false,
         floatingFilters = false,
         onExportAll,
@@ -58,6 +60,8 @@
                 getRowId: getRowId!,
                 rowClass,
                 density,
+                headerHeight,
+                groupHeaderHeight,
                 features: [
                     filtering<TRow>({ floatingRow: floatingFilters }),
                     sorting<TRow>(),

@@ -121,6 +121,31 @@ export interface DataGridOptions<TRow> {
     density?: Density
 
     /**
+     * Height of the leaf header row, in pixels. Left off, it follows the row
+     * height that `density` sets, which is what a header of plain labels
+     * wants.
+     *
+     * Worth setting when the header holds more than a label, or less: a
+     * wrapped two-line title needs the room, and a crossing whose headers are
+     * short generated keys does not, while its tiers add up.
+     *
+     * @default the row height for the current density
+     */
+    headerHeight?: number
+
+    /**
+     * Height of each header group tier, in pixels, counted per tier rather
+     * than for the lot. Left off, it follows the row height.
+     *
+     * This is the one a pivot reaches for. Its column axis builds a tier per
+     * field plus one for the measures, so three tiers at the row height stand
+     * taller than the rows they label, and the keys in them are short.
+     *
+     * @default the row height for the current density
+     */
+    groupHeaderHeight?: number
+
+    /**
      * Where filtering, sorting and windowing happen. `'server'` passes those
      * stages through untouched - `data` already holds what to show - while
      * the features stay registered as what a server model listens to.

@@ -33,6 +33,8 @@ import {
 export class GridState<TRow> {
     data = $state.raw<TRow[]>([])
     density = $state<Density>('standard')
+    headerHeight = $state.raw<number | undefined>(undefined)
+    groupHeaderHeight = $state.raw<number | undefined>(undefined)
 
     readonly columns: ColumnModel<TRow>
     readonly events = new EventBus<GridEventMap>()
@@ -89,6 +91,8 @@ export class GridState<TRow> {
         this.features = [...(options.features ?? [])]
         this.#valueGates = this.features.filter((feature) => feature.cellValue !== undefined)
         this.density = options.density ?? 'standard'
+        this.headerHeight = options.headerHeight
+        this.groupHeaderHeight = options.groupHeaderHeight
         this.#applyLocale(options)
 
         for (const feature of this.features) {

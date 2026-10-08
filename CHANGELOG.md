@@ -84,6 +84,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **A header row and a header group tier take their own heights.**
+  `headerHeight` and `groupHeaderHeight`, both in pixels, both following the
+  row height that `density` sets when left off. They are separate because the
+  two rows hold different things: the leaf header carries the column's real
+  name and its sort, filter and menu controls, while a tier above it carries a
+  short key. `groupHeaderHeight` counts per tier rather than for the lot, so
+  the deeper the axis the more it saves. A crossing gets no option of its own
+  on purpose: the tiers it generates are header groups, so they take
+  `groupHeaderHeight` like any other group. Neither goes into a snapshot,
+  being how the application lays the grid out rather than something a reader
+  arranged.
+
 - **The axes read back from the api.** `pivotRows()`, `pivotColumns()` and
   `pivotValues()` answer what a crossing is currently made of, each handing
   back a copy. Until now only the setters existed, so an application building
