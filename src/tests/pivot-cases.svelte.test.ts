@@ -6,6 +6,8 @@ import Index from '../routes/pivot/+page.svelte'
 import Axes from '../routes/pivot/axes/+page.svelte'
 import Crossing from '../routes/pivot/crossing/+page.svelte'
 import Header from '../routes/pivot/header/+page.svelte'
+import HeaderHeight from '../routes/pivot/header-height/+page.svelte'
+import HeaderTall from '../routes/pivot/header-tall/+page.svelte'
 import Drill from '../routes/pivot/drill/+page.svelte'
 import Folding from '../routes/pivot/folding/+page.svelte'
 import KeepRows from '../routes/pivot/keep-rows/+page.svelte'
@@ -40,6 +42,8 @@ const pages: [string, unknown][] = [
     ['ordering', Ordering],
     ['order-columns', OrderColumns],
     ['header', Header],
+    ['header-height', HeaderHeight],
+    ['header-tall', HeaderTall],
 
     ['max-columns', MaxColumns],
     ['drill', Drill],
@@ -268,6 +272,71 @@ describe('what each pivot demo is supposed to show', () => {
 
         await sortBy('Cả năm')
         await expect.poll(labels).toEqual(['East', 'North', 'South'])
+    })
+
+    it('measures the header it drew, rather than echoing the number asked for', async () => {
+        render(HeaderHeight as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        const readout = () => document.querySelector('[data-dg-measured]')?.textContent ?? ''
+        const totalIn = (text: string): number => {
+            const found = text.match(/(\d+)px/g) ?? []
+            return found.length
+        }
+
+        await expect.poll(() => totalIn(readout())).toBeGreaterThan(2)
+        const atRowHeight = readout()
+
+        await page.getByRole('button', { name: '18px', exact: true }).click()
+        await expect.poll(readout).not.toBe(atRowHeight)
+        expect(readout()).toContain('18')
+
+        await page.getByRole('button', { name: '72px', exact: true }).click()
+        await expect.poll(() => readout()).toContain('72')
+    })
+
+    it('says the total header height, and it falls when the tiers are cut', async () => {
+        render(HeaderHeight as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        const totalOf = (): number => {
+            const cells = Array.from(document.querySelectorAll('[data-dg-measured] dd'))
+            const text = cells[2]?.textContent ?? ''
+            return Number(text.replace(/[^0-9]/g, ''))
+        }
+
+        await expect.poll(totalOf).toBeGreaterThan(0)
+        const roomy = totalOf()
+
+        await page.getByRole('button', { name: '18px', exact: true }).click()
+        await expect.poll(totalOf).toBeLessThan(roomy)
+    })
+
+    it('gives a long header room without moving the rows, on the tall page', async () => {
+        render(HeaderTall as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        const leaf = () =>
+            Math.round(
+                document
+                    .querySelector(
+                        '[role="columnheader"]:not([aria-expanded]):not([data-dg-header-cell])'
+                    )
+                    ?.getBoundingClientRect().height ?? 0
+            )
+        const row = () =>
+            Math.round(
+                document
+                    .querySelector('[role="row"][data-dg-row-id] [role="gridcell"]')
+                    ?.getBoundingClientRect().height ?? 0
+            )
+
+        expect(leaf()).toBe(64)
+        const body = row()
+
+        await page.getByRole('button', { name: 'headerHeight: 64', exact: true }).click()
+        await expect.poll(leaf).toBeLessThan(64)
+        expect(row()).toBe(body)
     })
 
     it('trades the axes, turns the crossing off, and brings a saved view back', async () => {

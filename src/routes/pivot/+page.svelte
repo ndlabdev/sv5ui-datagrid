@@ -27,7 +27,17 @@
                 ['/pivot/ordering', 'Khoá xếp theo giá trị', 'Trục ngày chạy theo thời gian'],
                 ['/pivot/max-columns', 'Trần số cột', 'Từ chối chứ không cắt bớt'],
                 ['/pivot/order-columns', 'Sắp cột theo measure', 'Quý nào bán tốt nhất đứng trước'],
-                ['/pivot/header', 'Chữ trên header sinh ra', 'Giành lại quyền đặt tên cho cột']
+                ['/pivot/header', 'Chữ trên header sinh ra', 'Giành lại quyền đặt tên cho cột'],
+                [
+                    '/pivot/header-height',
+                    'Chiều cao của header',
+                    'Tầng nhóm hạ riêng, hàng lá giữ nguyên'
+                ],
+                [
+                    '/pivot/header-tall',
+                    'Header lá cần cao hơn',
+                    'Nới riêng hàng header cho tiêu đề dài'
+                ]
             ]
         },
         {
