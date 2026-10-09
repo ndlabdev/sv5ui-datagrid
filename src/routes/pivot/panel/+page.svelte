@@ -12,7 +12,7 @@
         locale: 'vi-VN',
         features: [
             pivot<Sale>({
-                rows: ['region'],
+                rows: ['region', 'product'],
                 columns: ['quarter'],
                 values: [{ field: 'amount', agg: 'sum' }]
             })
@@ -25,7 +25,7 @@
 <Case
     title="Bảng điều khiển"
     what="Grid.PivotPanel vẽ bốn vùng mà một pivot được mô tả bằng: trường chạy dọc, trường chạy ngang, các measure, và phần cài đặt chung. Mỗi vùng thêm bớt trường được, mỗi measure đổi được phép rút gọn lẫn cách đọc tỉ lệ."
-    look="Không cần kéo thả: mỗi vùng có nút thêm riêng, mỗi chip có nút dời và nút gỡ. Gỡ trường cuối cùng khỏi một trục thì phép giao tắt, đó là hành vi đúng."
+    look="Không cần kéo thả: mỗi vùng có nút thêm riêng, mỗi chip có nút dời và nút gỡ. Gỡ trường cuối cùng khỏi một trục thì phép giao tắt, đó là hành vi đúng. Trục dọc ở đây có hai trường, nên vùng thiết lập hiện thêm nút bung hết tầng."
     {code}
 >
     {#snippet controls()}
@@ -56,6 +56,11 @@
                 Gỡ trường cuối cùng khỏi một trục thì phép giao tắt và bảng về dạng phẳng. Đó là
                 hành vi đúng chứ không phải lỗi: một pivot thiếu một trục thì không còn là pivot
                 nữa.
+            </p>
+            <p class="text-on-surface-variant">
+                Trục dọc nhiều trường thì hàng lồng nhau và mặc định gập hết, nên vùng thiết lập có
+                một nút bung hết tầng. Nó đọc trạng thái thật của lưới: mở một hàng bằng tay thì
+                nhãn đổi thành gập. Trục một trường không lồng được nên nút không hiện.
             </p>
         </div>
     {/snippet}

@@ -121,8 +121,10 @@
                 đụng tới trục thật.
             </p>
             <p class="text-on-surface-variant">
-                Một điều đáng để ý: nạp lại bản chụp không làm lưới mất chỗ đang mở. Các nhóm đang
-                bung vẫn bung, vì trạng thái bung cũng nằm trong bản chụp ấy.
+                Một điều phải nói rõ: bản chụp <strong class="text-on-surface">không</strong>
+                giữ chỗ đang mở. Nó giữ cột, mật độ, và một slice cho mỗi feature; hàng nào đang bung
+                thì không nằm trong đó. Nạp lại một view là trục và cài đặt trở về đúng lúc lưu, còn các
+                tầng hàng thì gập lại như mới dựng.
             </p>
         </div>
     {/snippet}
