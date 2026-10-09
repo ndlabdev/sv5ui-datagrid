@@ -163,6 +163,8 @@ export const defaultLabels: DataGridLabels = {
     pivotColumnsHint: 'Fields gathered across it',
     pivotValuesHint: 'What is measured where two axes meet',
     pivotSettingsHint: 'Totals, folding, sorting, and how many rows to keep',
+    pivotExpandAll: 'Open every tier',
+    pivotCollapseAll: 'Shut every tier',
     pivotSettings: 'How it reads',
     pivotTotalColumn: 'Total column',
     pivotTotalRow: 'Total row',

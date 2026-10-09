@@ -136,6 +136,8 @@ export const esES: DataGridLocalePack = {
         pivotColumnsHint: 'Campos agrupados a lo ancho',
         pivotValuesHint: 'Lo que se mide en el cruce',
         pivotSettingsHint: 'Totales, plegado, orden y cuántas filas conservar',
+        pivotExpandAll: 'Abrir todos los niveles',
+        pivotCollapseAll: 'Cerrar todos los niveles',
         pivotSettings: 'Modo de lectura',
         pivotTotalColumn: 'Columna de total',
         pivotTotalRow: 'Fila de total',

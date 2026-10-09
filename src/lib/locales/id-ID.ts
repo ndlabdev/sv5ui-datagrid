@@ -128,6 +128,8 @@ export const idID: DataGridLocalePack = {
         pivotColumnsHint: 'Bidang yang dikumpulkan ke samping',
         pivotValuesHint: 'Yang diukur di titik temu',
         pivotSettingsHint: 'Total, lipatan, urutan, dan berapa baris disimpan',
+        pivotExpandAll: 'Buka semua tingkat',
+        pivotCollapseAll: 'Tutup semua tingkat',
         pivotSettings: 'Cara membaca',
         pivotTotalColumn: 'Kolom total',
         pivotTotalRow: 'Baris total',

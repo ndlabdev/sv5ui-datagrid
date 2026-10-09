@@ -131,6 +131,8 @@ export const deDE: DataGridLocalePack = {
         pivotColumnsHint: 'Felder quer gruppiert',
         pivotValuesHint: 'Was am Schnittpunkt gemessen wird',
         pivotSettingsHint: 'Summen, Einklappen, Sortieren und wie viele Zeilen bleiben',
+        pivotExpandAll: 'Alle Ebenen aufklappen',
+        pivotCollapseAll: 'Alle Ebenen zuklappen',
         pivotSettings: 'Lesart',
         pivotTotalColumn: 'Summenspalte',
         pivotTotalRow: 'Summenzeile',

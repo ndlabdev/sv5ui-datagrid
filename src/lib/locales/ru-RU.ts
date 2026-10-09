@@ -133,6 +133,8 @@ export const ruRU: DataGridLocalePack = {
         pivotColumnsHint: 'Поля, сводимые поперёк',
         pivotValuesHint: 'Что измеряется на пересечении',
         pivotSettingsHint: 'Итоги, свёртка, сортировка и сколько строк оставить',
+        pivotExpandAll: 'Развернуть все уровни',
+        pivotCollapseAll: 'Свернуть все уровни',
         pivotSettings: 'Способ чтения',
         pivotTotalColumn: 'Столбец итога',
         pivotTotalRow: 'Строка итога',

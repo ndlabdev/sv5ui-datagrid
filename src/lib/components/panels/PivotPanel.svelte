@@ -71,6 +71,9 @@
     const addTo = (take: (id: string) => void) =>
         free.map((column) => ({ label: column.header, onSelect: () => take(column.id) }))
 
+    const nested = $derived((pivot?.rows.length ?? 0) > 1)
+    const open = $derived(pivot?.rowsOpen ?? false)
+
     const toggles = $derived.by(() => {
         const state = pivot
         if (!state) return []
@@ -347,6 +350,15 @@
                     >{t.pivotSettings}</span
                 >
                 <span class="mr-1 text-xs text-on-surface-variant">{t.pivotSettingsHint}</span>
+
+                {#if nested}
+                    <Button
+                        variant={open ? 'solid' : 'outline'}
+                        size="xs"
+                        label={open ? t.pivotCollapseAll : t.pivotExpandAll}
+                        onclick={() => (open ? pivot?.collapseAllRows() : pivot?.expandAllRows())}
+                    />
+                {/if}
 
                 {#each toggles as toggle (toggle.label)}
                     <Button

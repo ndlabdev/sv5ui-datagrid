@@ -1119,6 +1119,14 @@ Only named reductions cross the wire. A reduction written as a function sends
 no pivot at all rather than one missing a measure, and says so once. Without a
 `serverRowModel()` to carry the crossing the grid draws its rows unchanged;
 `getPivot(grid).serverHandled` tells a UI which of the two it is looking at.
+
+A row axis of more than one field nests, and nested rows start shut.
+`grid.api.expandAllPivotRows()` opens every tier at once,
+`collapseAllPivotRows()` shuts them, and `pivotRowsOpen()` answers which state
+the grid is in. `Grid.PivotPanel` carries the same control, shown only where
+the axis can nest. A saved view does not carry which rows were open: the
+snapshot holds the columns, the density and a slice per feature, so a reloaded
+view comes back with its tiers shut.
 Asking for the rows behind a cell answers nothing there, for the same reason.
 
 `src/tests/server-contract.test.ts` is a backend written against this table.

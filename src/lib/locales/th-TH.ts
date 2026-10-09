@@ -128,6 +128,8 @@ export const thTH: DataGridLocalePack = {
         pivotColumnsHint: 'ฟิลด์ที่รวมตามแนวนอน',
         pivotValuesHint: 'สิ่งที่วัดตรงจุดตัด',
         pivotSettingsHint: 'ผลรวม การพับ การเรียง และเก็บกี่แถว',
+        pivotExpandAll: 'เปิดทุกระดับ',
+        pivotCollapseAll: 'ปิดทุกระดับ',
         pivotSettings: 'วิธีอ่าน',
         pivotTotalColumn: 'คอลัมน์รวม',
         pivotTotalRow: 'แถวรวม',

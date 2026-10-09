@@ -127,6 +127,8 @@ export const koKR: DataGridLocalePack = {
         pivotColumnsHint: '열로 묶는 필드',
         pivotValuesHint: '두 축이 만나는 곳에서 재는 값',
         pivotSettingsHint: '합계, 접기, 정렬, 남길 행 수',
+        pivotExpandAll: '모든 계층 펼치기',
+        pivotCollapseAll: '모든 계층 접기',
         pivotSettings: '읽는 방식',
         pivotTotalColumn: '합계 열',
         pivotTotalRow: '합계 행',

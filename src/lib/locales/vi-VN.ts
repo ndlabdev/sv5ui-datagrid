@@ -127,6 +127,8 @@ export const viVN: DataGridLocalePack = {
         pivotColumnsHint: 'Trường gom ngang trang',
         pivotValuesHint: 'Cái được đo ở chỗ hai trục gặp nhau',
         pivotSettingsHint: 'Tổng, gập nhóm, sắp xếp, và giữ bao nhiêu hàng',
+        pivotExpandAll: 'Bung hết tầng',
+        pivotCollapseAll: 'Gập hết tầng',
         pivotSettings: 'Cách đọc',
         pivotTotalColumn: 'Cột tổng',
         pivotTotalRow: 'Hàng tổng',

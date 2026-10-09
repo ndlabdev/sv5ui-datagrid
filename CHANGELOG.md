@@ -84,6 +84,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **A pivot's row axis opens and shuts in one go.**
+  `expandAllPivotRows()`, `collapseAllPivotRows()` and `pivotRowsOpen()`, plus
+  one button in the panel's settings zone. A crossing with two row fields nests,
+  and nested rows start shut, so reaching the inner tier of twenty regions was
+  twenty clicks with no way round it: `grouping()` has offered
+  `expandAllGroups` all along and `pivot()` offered nothing, leaving an
+  application to reach past the api into `grid.expansion`.
+
+    The button shows only where the axis can nest, and reads the grid rather
+    than its own flag, so opening one row by hand flips it to shut. Opening is
+    one pass per tier, since opening a tier is what reveals the next, and each
+    pass sets the open rows to the ones actually there: a row the data no
+    longer holds is dropped rather than carried, so a grid that filters over
+    and over does not collect ids for rows that stopped existing.
+
+    What is open does survive a filter until something opens everything again,
+    and survives the crossing being turned off and on. That is deliberate: it
+    is the reader's arrangement, and `grouping()` and `tree()` keep it the same
+    way.
+
 - **A cell says when its value changed.** `flashCells()` marks a cell for a
   moment when the value under it moves, so a grid fed by a socket or a poll
   says what moved rather than leaving a reader to catch it. Numbers carry a

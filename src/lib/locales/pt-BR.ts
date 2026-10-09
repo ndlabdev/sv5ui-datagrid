@@ -136,6 +136,8 @@ export const ptBR: DataGridLocalePack = {
         pivotColumnsHint: 'Campos agrupados na horizontal',
         pivotValuesHint: 'O que se mede no cruzamento',
         pivotSettingsHint: 'Totais, dobra, ordenação e quantas linhas manter',
+        pivotExpandAll: 'Abrir todos os niveis',
+        pivotCollapseAll: 'Fechar todos os niveis',
         pivotSettings: 'Modo de leitura',
         pivotTotalColumn: 'Coluna de total',
         pivotTotalRow: 'Linha de total',

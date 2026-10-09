@@ -298,6 +298,32 @@ export class Pivot<TRow> {
         )
     })
 
+    expandAllRows = (): void => {
+        const expansion = this.#grid.expansion
+        let opened: string[] = []
+
+        for (let tier = 1; tier < Math.max(2, this.rows.length); tier++) {
+            opened = [...opened, ...this.#openable()]
+            expansion.expandAll(opened)
+        }
+    }
+
+    #openable(): string[] {
+        return this.#grid.preWindowNodes
+            .filter((node) => node.meta?.expandable)
+            .map((node) => node.id)
+    }
+
+    collapseAllRows = (): void => {
+        this.#grid.expansion.collapseAll()
+    }
+
+    get rowsOpen(): boolean {
+        return this.#grid.preWindowNodes.some(
+            (node) => node.meta?.expandable && this.#grid.expansion.isExpanded(node.id)
+        )
+    }
+
     clearPivot = mutator((): void => {
         this.rows = []
         this.columns = []
@@ -1341,6 +1367,9 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
                 pivotValues: () => [...state.values],
                 setPivotMaxColumns: state.setMaxColumns,
                 pivotMaxColumns: () => state.maxColumns,
+                expandAllPivotRows: state.expandAllRows,
+                collapseAllPivotRows: state.collapseAllRows,
+                pivotRowsOpen: () => state.rowsOpen,
                 isPivoting: () => state.isCrossing
             }
         },
@@ -1390,6 +1419,9 @@ declare module '../../core/types/api.js' {
         pivotValues?: () => unknown[]
         setPivotMaxColumns?: (limit: number) => void
         pivotMaxColumns?: () => number
+        expandAllPivotRows?: () => void
+        collapseAllPivotRows?: () => void
+        pivotRowsOpen?: () => boolean
         isPivoting?: () => boolean
     }
 }

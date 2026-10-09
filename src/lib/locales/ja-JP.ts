@@ -127,6 +127,8 @@ export const jaJP: DataGridLocalePack = {
         pivotColumnsHint: '列方向にまとめる項目',
         pivotValuesHint: '交差する場所で測るもの',
         pivotSettingsHint: '合計、畳み込み、並べ替え、残す行数',
+        pivotExpandAll: 'すべての階層を開く',
+        pivotCollapseAll: 'すべての階層を閉じる',
         pivotSettings: '読み方',
         pivotTotalColumn: '合計列',
         pivotTotalRow: '合計行',

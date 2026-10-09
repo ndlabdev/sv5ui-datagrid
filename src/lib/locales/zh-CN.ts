@@ -127,6 +127,8 @@ export const zhCN: DataGridLocalePack = {
         pivotColumnsHint: '向右汇总的字段',
         pivotValuesHint: '两轴相交处所度量的值',
         pivotSettingsHint: '合计、折叠、排序，以及保留多少行',
+        pivotExpandAll: '展开所有层级',
+        pivotCollapseAll: '折叠所有层级',
         pivotSettings: '阅读方式',
         pivotTotalColumn: '合计列',
         pivotTotalRow: '合计行',
