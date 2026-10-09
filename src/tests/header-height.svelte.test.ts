@@ -359,31 +359,33 @@ describe('a row pinned to the top sticks under the header, not behind it', () =>
         )
     }
 
-    // Flush means within the hairline borders the header and the filter row
-    // draw, never the tens of pixels a wrong offset would hide the row behind.
-    const flush = async (grid: GridState<Sale>) => {
+    const HAIRLINE = 2
+
+    const flushWithinTheHairlineBorders = async (grid: GridState<Sale>) => {
         const found = await gap(grid)
         expect(found).toBeLessThanOrEqual(0)
-        expect(found).toBeGreaterThanOrEqual(-2)
+        expect(found).toBeGreaterThanOrEqual(-HAIRLINE)
     }
 
     it('sits flush under a header of the default height', async () => {
-        await flush(tall({}))
+        await flushWithinTheHairlineBorders(tall({}))
     })
 
     it('sits flush under a header that was given its own height', async () => {
-        await flush(tall({ headerHeight: 80 }))
+        await flushWithinTheHairlineBorders(tall({ headerHeight: 80 }))
     })
 
     it('sits flush under a header whose tiers were cut', async () => {
-        await flush(tall({ withTiers: true, groupHeaderHeight: 20 }))
+        await flushWithinTheHairlineBorders(tall({ withTiers: true, groupHeaderHeight: 20 }))
     })
 
     it('counts the filter row in the offset as well', async () => {
-        await flush(tall({ headerHeight: 64, withFilterRow: true }))
+        await flushWithinTheHairlineBorders(tall({ headerHeight: 64, withFilterRow: true }))
     })
 
     it('counts a tall leaf and short tiers together', async () => {
-        await flush(tall({ withTiers: true, headerHeight: 72, groupHeaderHeight: 18 }))
+        await flushWithinTheHairlineBorders(
+            tall({ withTiers: true, headerHeight: 72, groupHeaderHeight: 18 })
+        )
     })
 })
