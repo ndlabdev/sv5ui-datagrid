@@ -146,6 +146,25 @@ export interface DataGridOptions<TRow> {
     groupHeaderHeight?: number
 
     /**
+     * Keeps the group rows a reader is inside pinned under the header while
+     * their rows scroll past, one line per level, outermost first. Scroll deep
+     * into a long group and the question "which group am I in" stops needing a
+     * scroll back up to answer.
+     *
+     * It needs `virtualization()`, which is what knows where the rows sit
+     * against the scroll. Without it nothing sticks, because nothing can say
+     * which rows have gone above the fold.
+     *
+     * The pinned lines are a signpost, not a second set of controls: they are
+     * `inert`, so they add no tab stop and a screen reader hears each group
+     * once, from the row itself. The stack is as deep as the grouping, so a
+     * grid grouped six deep spends six rows of its viewport on it.
+     *
+     * @default false
+     */
+    stickyGroups?: boolean
+
+    /**
      * Where filtering, sorting and windowing happen. `'server'` passes those
      * stages through untouched - `data` already holds what to show - while
      * the features stay registered as what a server model listens to.

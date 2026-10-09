@@ -1,6 +1,7 @@
 import { prefixSums } from '../../core/columns/index.js'
 import type { GridState } from '../../core/grid/index.js'
-import { railGroupIdOf, type ColumnState } from '../../core/types/index.js'
+import { railGroupIdOf, type ColumnState, type RowNode } from '../../core/types/index.js'
+import { Virtualizer } from '../../core/virtual/index.js'
 import { getFiltering } from '../../features/filtering/index.js'
 import { getPagination } from '../../features/pagination/index.js'
 import { getVirtualization } from '../../features/virtualization/index.js'
@@ -35,15 +36,57 @@ export function headerRowsOf<TRow>(grid: GridState<TRow>): number {
     return grid.columns.headerRowCount + (getFiltering(grid)?.floatingRow ? 1 : 0)
 }
 
-export function headerOffsetOf<TRow>(grid: GridState<TRow>): string {
+export function headerOffsetOf<TRow>(grid: GridState<TRow>, extraRows = 0): string {
     const tiers = grid.columns.headerRowCount - 1
-    const filterRows = getFiltering(grid)?.floatingRow ? 1 : 0
+    const rows = (getFiltering(grid)?.floatingRow ? 1 : 0) + extraRows
 
     const parts = ['var(--dg-header-h)']
     if (tiers > 0) parts.push(`var(--dg-group-header-h) * ${tiers}`)
-    if (filterRows > 0) parts.push(`var(--dg-row-h) * ${filterRows}`)
+    if (rows > 0) parts.push(`var(--dg-row-h) * ${rows}`)
 
     return `calc(${parts.join(' + ')})`
+}
+
+export function stuckGroupsOf<TRow>(grid: GridState<TRow>): RowNode<TRow>[] {
+    if (!grid.stickyGroups) return []
+
+    const virtualization = getVirtualization(grid)
+    if (!virtualization) return []
+
+    const nodes = grid.preWindowNodes
+    const first = firstBelowTheFold(virtualization.virtualizer, nodes.length)
+    if (first < 0) return []
+
+    return ancestorsAbove(nodes, first)
+}
+
+function levelAt<TRow>(nodes: RowNode<TRow>[], at: number): number {
+    return nodes[at]?.meta?.level ?? 0
+}
+
+function bottomOf(virtualizer: Virtualizer, at: number): number {
+    return virtualizer.indexToOffset(at) + virtualizer.sizeOf(at)
+}
+
+function firstBelowTheFold(virtualizer: Virtualizer, count: number): number {
+    const top = virtualizer.scrollTop
+    for (let at = Math.max(0, virtualizer.range.start); at < count; at++) {
+        if (bottomOf(virtualizer, at) > top) return at
+    }
+    return -1
+}
+
+function ancestorsAbove<TRow>(nodes: RowNode<TRow>[], first: number): RowNode<TRow>[] {
+    const stuck: RowNode<TRow>[] = []
+    let wanted = levelAt(nodes, first) - 1
+
+    for (let at = first - 1; at >= 0 && wanted >= 0; at--) {
+        if (levelAt(nodes, at) !== wanted) continue
+        wanted -= 1
+        stuck.unshift(nodes[at]!)
+    }
+
+    return stuck
 }
 
 export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {

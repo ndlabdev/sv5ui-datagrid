@@ -84,6 +84,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **The group a reader is inside stays under the header.** `stickyGroups: true`
+  keeps the group rows containing the first visible row pinned below the
+  header, one line per level, outermost first, so scrolling deep into a long
+  group no longer means scrolling back up to ask which group it was. It reads
+  `meta.level`, which every row-structure feature sets, so it works the same
+  under `grouping()`, `tree()` and `pivot()`, whose row axis is groups too. A
+  flat grid has no levels and pays nothing.
+
+    It needs `virtualization()`, the one thing that knows where a row sits
+    against the scroll; without it nothing sticks rather than something
+    sticking wrongly. The pinned lines are a signpost rather than a second set
+    of controls: they are `inert`, so they add no tab stop and a screen reader
+    hears each group once, from the row still in the grid. The stack is as deep
+    as the grouping, so six levels spend six rows of the viewport, and it sits
+    below anything `rowPinning()` holds at the top rather than over it.
+
 - **A header row and a header group tier take their own heights.**
   `headerHeight` and `groupHeaderHeight`, both in pixels, both following the
   row height that `density` sets when left off. They are separate because the

@@ -35,6 +35,7 @@ export class GridState<TRow> {
     density = $state<Density>('standard')
     headerHeight = $state.raw<number | undefined>(undefined)
     groupHeaderHeight = $state.raw<number | undefined>(undefined)
+    stickyGroups = $state.raw(false)
 
     readonly columns: ColumnModel<TRow>
     readonly events = new EventBus<GridEventMap>()
@@ -80,6 +81,13 @@ export class GridState<TRow> {
         this.locale = options.locale
     }
 
+    #applyLayout(options: DataGridOptions<TRow>): void {
+        this.density = options.density ?? 'standard'
+        this.headerHeight = options.headerHeight
+        this.groupHeaderHeight = options.groupHeaderHeight
+        this.stickyGroups = options.stickyGroups ?? false
+    }
+
     constructor(options: DataGridOptions<TRow>) {
         this.data = options.data ?? []
         this.getRowId = options.getRowId
@@ -90,9 +98,7 @@ export class GridState<TRow> {
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.#valueGates = this.features.filter((feature) => feature.cellValue !== undefined)
-        this.density = options.density ?? 'standard'
-        this.headerHeight = options.headerHeight
-        this.groupHeaderHeight = options.groupHeaderHeight
+        this.#applyLayout(options)
         this.#applyLocale(options)
 
         for (const feature of this.features) {

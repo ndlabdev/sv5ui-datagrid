@@ -37,6 +37,7 @@
         columnWindowOf,
         headerOffsetOf,
         headerRowsOf,
+        stuckGroupsOf,
         pinLeftVar,
         pinRightVar,
         isRailAt,
@@ -277,6 +278,8 @@
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(headerRowsOf(grid))
     const headerOffset = $derived(headerOffsetOf(grid))
+    const stuckGroups = $derived(stuckGroupsOf(grid))
+    const stuckOffset = $derived(headerOffsetOf(grid, pinning?.topNodes.length ?? 0))
 
     const rails = $derived(railsOf(grid, columnWindow))
     const railClass = $derived(slots.rail({ class: theme('rail') }))
@@ -614,6 +617,29 @@
     {/each}
 {/snippet}
 
+{#snippet stickyGroupRows(nodes: RowNode<TRow>[])}
+    {#each nodes as node (node.id)}
+        <div class={slots.stickyGroupRow({ class: theme('stickyGroupRow') })}>
+            {#each columnWindow.renderColumns as entry (entry.column.id)}
+                {@const column = entry.column}
+                <div
+                    class={classOfCell({
+                        node,
+                        column,
+                        colIndex: entry.index,
+                        rowIndex: node.index
+                    })}
+                    style:grid-column={columnWindow.windowed ? entry.index + 1 : undefined}
+                    style:inset-inline-start={pinLeftVar(column)}
+                    style:inset-inline-end={pinRightVar(column)}
+                >
+                    {@render cellContent(node, column, entry.index, node.index)}
+                </div>
+            {/each}
+        </div>
+    {/each}
+{/snippet}
+
 {#if pinning && pinning.topNodes.length > 0}
     <div
         role="rowgroup"
@@ -621,6 +647,18 @@
         style:top={headerOffset}
     >
         {@render pinnedRows(pinning.topNodes, headerRows + 1, 'top')}
+    </div>
+{/if}
+
+{#if stuckGroups.length > 0}
+    <div
+        inert
+        aria-hidden="true"
+        data-dg-sticky-groups={stuckGroups.length}
+        class={slots.stickyGroupRows({ class: theme('stickyGroupRows') })}
+        style:top={stuckOffset}
+    >
+        {@render stickyGroupRows(stuckGroups)}
     </div>
 {/if}
 
