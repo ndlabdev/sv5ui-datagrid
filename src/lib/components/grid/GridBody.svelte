@@ -35,6 +35,7 @@
     import {
         ariaRowCountOf,
         columnWindowOf,
+        headerOffsetOf,
         headerRowsOf,
         pinLeftVar,
         pinRightVar,
@@ -275,6 +276,7 @@
     const rowIndexOffset = $derived(rowIndexOffsetOf(grid))
     const columnWindow = $derived(columnWindowOf(grid))
     const headerRows = $derived(headerRowsOf(grid))
+    const headerOffset = $derived(headerOffsetOf(grid))
 
     const rails = $derived(railsOf(grid, columnWindow))
     const railClass = $derived(slots.rail({ class: theme('rail') }))
@@ -616,7 +618,7 @@
     <div
         role="rowgroup"
         class={slots.pinnedRowsTop({ class: theme('pinnedRowsTop') })}
-        style:top={`calc(var(--dg-row-h) * ${headerRows})`}
+        style:top={headerOffset}
     >
         {@render pinnedRows(pinning.topNodes, headerRows + 1, 'top')}
     </div>

@@ -8,6 +8,8 @@ import {
     DataGrid,
     filtering,
     pivot,
+    rowPinning,
+    virtualization,
     type ColumnDef,
     type DataGridProps,
     type GridState
@@ -294,5 +296,94 @@ describe('what the heights do and do not take part in', () => {
 
         expect(snapshot).not.toContain('headerHeight')
         expect(snapshot).not.toContain('groupHeaderHeight')
+    })
+})
+
+describe('a row pinned to the top sticks under the header, not behind it', () => {
+    const tall = (options: {
+        headerHeight?: number
+        groupHeaderHeight?: number
+        withFilterRow?: boolean
+        withTiers?: boolean
+    }) =>
+        createDataGrid<Sale>({
+            data: Array.from({ length: 200 }, (_, at) => ({
+                id: at + 1,
+                region: at % 2 === 0 ? 'North' : 'South',
+                quarter: 'Q1',
+                product: 'Widget',
+                amount: at
+            })),
+            columns: options.withTiers
+                ? ([
+                      { id: 'region' },
+                      {
+                          id: 'money',
+                          header: 'Money',
+                          children: [{ id: 'amount', type: 'number' }, { id: 'quarter' }]
+                      }
+                  ] as ColumnDef<Sale>[])
+                : columns,
+            getRowId,
+            ...(options.headerHeight === undefined ? {} : { headerHeight: options.headerHeight }),
+            ...(options.groupHeaderHeight === undefined
+                ? {}
+                : { groupHeaderHeight: options.groupHeaderHeight }),
+            features: [
+                virtualization<Sale>({ rowHeight: 40 }),
+                ...(options.withFilterRow ? [filtering<Sale>({ floatingRow: true })] : []),
+                rowPinning<Sale>({ isRowPinned: (row) => (row.id === 1 ? 'top' : null) })
+            ]
+        })
+
+    const settle = async (container: Element) => {
+        const viewport = container.querySelector('[role="grid"]') as HTMLElement
+        viewport.scrollTop = 2000
+        viewport.dispatchEvent(new Event('scroll'))
+        await new Promise((resolve) => setTimeout(resolve, 150))
+        return viewport
+    }
+
+    const gap = async (grid: GridState<Sale>): Promise<number> => {
+        const screen = await render(TypedDataGrid, { grid, class: 'h-[400px]' })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+        await settle(screen.container)
+
+        const header = screen.container.querySelector('.sticky.top-0')
+        const pinned = screen.container.querySelector('[role="rowgroup"].sticky.z-\\[9\\]')
+        expect(header, 'header').not.toBeNull()
+        expect(pinned, 'pinned row group').not.toBeNull()
+
+        return Math.round(
+            pinned!.getBoundingClientRect().top - header!.getBoundingClientRect().bottom
+        )
+    }
+
+    // Flush means within the hairline borders the header and the filter row
+    // draw, never the tens of pixels a wrong offset would hide the row behind.
+    const flush = async (grid: GridState<Sale>) => {
+        const found = await gap(grid)
+        expect(found).toBeLessThanOrEqual(0)
+        expect(found).toBeGreaterThanOrEqual(-2)
+    }
+
+    it('sits flush under a header of the default height', async () => {
+        await flush(tall({}))
+    })
+
+    it('sits flush under a header that was given its own height', async () => {
+        await flush(tall({ headerHeight: 80 }))
+    })
+
+    it('sits flush under a header whose tiers were cut', async () => {
+        await flush(tall({ withTiers: true, groupHeaderHeight: 20 }))
+    })
+
+    it('counts the filter row in the offset as well', async () => {
+        await flush(tall({ headerHeight: 64, withFilterRow: true }))
+    })
+
+    it('counts a tall leaf and short tiers together', async () => {
+        await flush(tall({ withTiers: true, headerHeight: 72, groupHeaderHeight: 18 }))
     })
 })

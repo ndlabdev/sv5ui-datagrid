@@ -114,6 +114,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A row pinned to the top hid behind a header of its own height.** The sticky
+  offset for the pinned rows was a multiple of the row height, which held only
+  while every header row was a row tall. Giving the header or the group tiers
+  their own height moved the real header without moving that offset, so a
+  pinned row stuck up to forty pixels behind the header, or floated below it
+  leaving a gap. The offset is now added up from the three heights the header
+  actually draws with.
+
 - **A pivot's column subtotal did not survive a saved view.** Turning it on
   from the panel, saving and loading back lost the subtotal columns with
   nothing said: `columnSubtotal` was the one panel setting the serializer did

@@ -35,6 +35,17 @@ export function headerRowsOf<TRow>(grid: GridState<TRow>): number {
     return grid.columns.headerRowCount + (getFiltering(grid)?.floatingRow ? 1 : 0)
 }
 
+export function headerOffsetOf<TRow>(grid: GridState<TRow>): string {
+    const tiers = grid.columns.headerRowCount - 1
+    const filterRows = getFiltering(grid)?.floatingRow ? 1 : 0
+
+    const parts = ['var(--dg-header-h)']
+    if (tiers > 0) parts.push(`var(--dg-group-header-h) * ${tiers}`)
+    if (filterRows > 0) parts.push(`var(--dg-row-h) * ${filterRows}`)
+
+    return `calc(${parts.join(' + ')})`
+}
+
 export function ariaRowCountOf<TRow>(grid: GridState<TRow>): number {
     const pagination = getPagination(grid)
     return pagination?.server ? pagination.total : grid.totalRows
