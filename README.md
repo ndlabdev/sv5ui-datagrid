@@ -78,7 +78,7 @@ you use, and nothing else reaches your bundle.
 | **Formulas**            | Calculated columns from an expression, 31 functions, a dependency graph that catches a cycle, and no `eval`                                                                       |
 | **Ranges**              | Excel-style cell ranges, multiple selections, a fill handle that reads a series, cut and move, and a summary bar                                                                  |
 | **Finding**             | Find and replace across the rows a filter left, whole-cell and case options                                                                                                       |
-| **Conditions**          | Colour scales, data bars, duplicates, top N and expression rules, exported into the workbook as real Excel rules                                                                  |
+| **Conditions**          | Colour scales, data bars, duplicates, top N and expression rules, exported into the workbook as real Excel rules, plus a mark on any cell whose value just changed                |
 | **Filter builder**      | Nested `(A AND B) OR C`, operators per column type, alongside the column filters rather than instead of them                                                                      |
 | **Import**              | CSV, TSV, XLSX and clipboard, type guessing, column mapping, validation, and rows staged in the grid to fix in place                                                              |
 | **Export**              | CSV, and XLSX written without a dependency, on its own entry at `@sv5ui/datagrid/xlsx`                                                                                            |

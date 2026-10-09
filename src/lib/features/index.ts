@@ -69,6 +69,13 @@ export {
     type Match
 } from './find-replace/index.js'
 export {
+    flashCells,
+    getFlashCells,
+    type FlashCells as FlashCellsState,
+    type FlashCellsOptions,
+    type FlashWay
+} from './flash-cells/index.js'
+export {
     formula,
     FormulaError,
     FUNCTION_NAMES,

@@ -84,6 +84,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **A cell says when its value changed.** `flashCells()` marks a cell for a
+  moment when the value under it moves, so a grid fed by a socket or a poll
+  says what moved rather than leaving a reader to catch it. Numbers carry a
+  direction, a rise apart from a fall, where both the old and the new value are
+  numbers.
+
+    It reports only what it witnessed. A cell whose previous value the feature
+    never held is never marked, which is one rule covering the first paint, a
+    row scrolled into view, a row that scrolled away and came back, and a row
+    that is simply new. That rule is also what bounds the cost: only the cells
+    on screen are remembered, since a cell nobody can see has nothing to say,
+    so the memory is the size of the window rather than of the data.
+
+    A batch of changes shares one timer, so a thousand cells moving at once
+    costs one. The mark is an outline rather than a background, leaving a
+    colour scale or a data bar underneath still visible. A reader who asked for
+    reduced motion gets no marks, while the values are still remembered, so
+    turning motion back on does not flash a backlog. Rows must arrive as a new
+    `data` array; mutating them in place leaves the pipeline holding the same
+    nodes and nothing here can tell.
+
 - **The group a reader is inside stays under the header.** `stickyGroups: true`
   keeps the group rows containing the first visible row pinned below the
   header, one line per level, outermost first, so scrolling deep into a long
