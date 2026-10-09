@@ -127,12 +127,18 @@ export class Grouping<TRow> {
 
     expandAllGroups = (): void => {
         const expansion = this.#grid.expansion
+        let opened: string[] = []
+
         for (let level = 0; level < Math.max(1, this.by.length); level++) {
-            const ids = this.#grid.preWindowNodes
-                .filter((node) => node.meta?.expandable)
-                .map((node) => node.id)
-            expansion.expandAll([...expansion.expandedIds, ...ids])
+            opened = [...opened, ...this.#openable()]
+            expansion.expandAll(opened)
         }
+    }
+
+    #openable(): string[] {
+        return this.#grid.preWindowNodes
+            .filter((node) => node.meta?.expandable)
+            .map((node) => node.id)
     }
 
     collapseAllGroups = (): void => {
