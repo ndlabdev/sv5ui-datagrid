@@ -272,7 +272,7 @@ export function grouping<TRow>(options: GroupingOptions<TRow> = {}): GridFeature
             }
             if (kind === 'grandTotal') {
                 return {
-                    class: 'border-t border-outline-variant bg-surface-container/60 font-semibold'
+                    class: 'bg-surface-container/60 font-semibold'
                 }
             }
             return undefined

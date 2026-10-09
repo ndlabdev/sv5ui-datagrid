@@ -1359,7 +1359,7 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
             purpose === 'edit' && isPivotColumn(column.id) ? refuseEditing : undefined,
         cellDecoration: ({ node }) =>
             totalsKindOf(measureRowBase(node.id)) === 'grandTotal'
-                ? { class: 'border-t border-outline-variant bg-surface-container/60 font-semibold' }
+                ? { class: 'bg-surface-container/60 font-semibold' }
                 : undefined
     }
 }

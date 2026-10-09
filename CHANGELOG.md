@@ -130,6 +130,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The rule above a grand total was drawn twice, so it read heavier than
+  every other one.** A row already draws its separator as a one pixel hairline
+  inside its own bottom edge, and the grand total added a `border-top` of the
+  same colour on top of it. Two adjacent pixels of `outline-variant` read as a
+  two pixel rule, which is why that one line looked darker than the rest. The
+  grand total keeps its tint and its weight, which is what marked it apart to
+  begin with, and the separator is now the same single hairline as everywhere
+  else. Both `grouping()` and `pivot()` carried it.
+
 - **A row pinned to the top hid behind a header of its own height.** The sticky
   offset for the pinned rows was a multiple of the row height, which held only
   while every header row was a row tall. Giving the header or the group tiers
