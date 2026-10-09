@@ -26,7 +26,15 @@ import {
     type ReportParseError,
     type RuleParseError
 } from './rules.js'
-import { columnMap, computeStats, dataRowsOf, type RuleStats } from './stats.js'
+import {
+    aimedAtACrossing,
+    columnMap,
+    computeStats,
+    dataRowsOf,
+    type RuleStats,
+    statSource,
+    type StatSource
+} from './stats.js'
 
 const CONDITIONAL_FORMATTING = 'conditionalFormatting'
 
@@ -38,6 +46,13 @@ const SERVER_SKIP =
     'getConditionalFormatting(grid).skippedRules lists what was skipped.'
 
 const NO_READ = (): undefined => undefined
+
+const PIVOT = 'pivot'
+
+interface Crossings {
+    crossingMeasure?: (columnId: string) => number | undefined
+    inCrossingBody?: (nodeId: string) => boolean
+}
 
 export class ConditionalFormatting<TRow> {
     #grid: GridState<TRow>
@@ -66,10 +81,28 @@ export class ConditionalFormatting<TRow> {
         return columnMap(this.#grid.columns.all)
     }
 
+    get #crossings(): Crossings | undefined {
+        return this.#grid.feature<Crossings>(PIVOT)
+    }
+
+    #measureOf = (columnId: string): number | undefined =>
+        this.#crossings?.crossingMeasure?.(columnId)
+
+    #inBody = (nodeId: string): boolean => this.#crossings?.inCrossingBody?.(nodeId) === true
+
+    #source(): StatSource<TRow> {
+        const nodes = this.#grid.preWindowNodes
+        return statSource({
+            columns: this.#columns,
+            rows: dataRowsOf(nodes, isDataRow),
+            gathered: nodes.filter((node) => this.#inBody(node.id)),
+            measureOf: this.#measureOf
+        })
+    }
+
     #compute(): RuleStats[] {
         if (this.#rules.length === 0) return []
-        const rows = dataRowsOf(this.#grid.preWindowNodes, isDataRow)
-        return computeStats(this.#rules, rows, this.#columns, this.#gate)
+        return computeStats(this.#rules, this.#source(), this.#gate)
     }
 
     get skippedRules(): readonly string[] {
@@ -135,6 +168,12 @@ export class ConditionalFormatting<TRow> {
         return this.#compiled.get(ruleId(rule, index))?.node ?? null
     }
 
+    #paints(rule: FormatRule, node: RowNode<TRow>, column: ColumnState<TRow>): boolean {
+        if (!appliesTo(rule, column.id, this.#measureOf)) return false
+        if (this.#skips(rule)) return false
+        return !aimedAtACrossing(rule.column) || this.#inBody(node.id)
+    }
+
     decoration = (node: RowNode<TRow>, column: ColumnState<TRow>): CellDecoration | undefined => {
         const rules = this.#rules
         if (rules.length === 0 || isLoadingRow(node.row)) return undefined
@@ -144,7 +183,7 @@ export class ConditionalFormatting<TRow> {
         let paint: Paint | undefined
 
         for (const [index, rule] of rules.entries()) {
-            if (!appliesTo(rule, column.id) || this.#skips(rule)) continue
+            if (!this.#paints(rule, node, column)) continue
             context ??= this.#contextFor(node, column)
             context.node = this.#nodeFor(rule, index)
 

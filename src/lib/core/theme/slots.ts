@@ -1,7 +1,7 @@
 import type { ClassNameValue } from 'tailwind-merge'
 
 export const datagridSlots = {
-    root: 'w-full space-y-3',
+    root: 'w-full space-y-3 [--dg-group-header-h:var(--dg-row-h)] [--dg-header-h:var(--dg-row-h)]',
     toolbar: 'flex flex-wrap items-center gap-2',
     viewport:
         'group/grid relative w-full overflow-auto rounded-lg border border-outline-variant text-sm',
@@ -10,9 +10,9 @@ export const datagridSlots = {
     groupRow:
         'relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-[16] after:h-px after:bg-outline-variant',
     headerCell:
-        'group/head relative flex h-(--dg-row-h) min-w-0 items-center gap-1 overflow-hidden px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        'group/head relative flex h-(--dg-header-h) min-w-0 items-center gap-1 overflow-hidden px-3 font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
     groupCell:
-        'relative flex h-(--dg-row-h) min-w-0 items-center justify-center gap-1 overflow-hidden px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
+        'relative flex h-(--dg-group-header-h) min-w-0 items-center justify-center gap-1 overflow-hidden px-3 text-xs font-medium whitespace-nowrap text-on-surface-variant outline-none focus-visible:z-[7] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset',
     groupContent: 'flex min-w-0 items-center gap-1 overflow-hidden',
     rail: 'absolute inset-y-0 z-[7] cursor-pointer bg-surface-container-high',
     railHead:
@@ -83,6 +83,9 @@ export const datagridSlots = {
         'group/row relative grid min-w-min [grid-template-columns:var(--dg-grid-template)] bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:z-[6] after:h-px after:bg-outline-variant',
     pinnedRowsTop: 'sticky z-[9] min-w-min shadow-sm',
     pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
+    stickyGroupRows: 'sticky z-[8] min-w-min shadow-sm',
+    stickyGroupRow:
+        'relative grid min-w-min bg-surface-container-low [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant',
     rowSelected:
         'before:pointer-events-none before:absolute before:inset-0 before:z-[6] before:bg-primary/8',
     rowEditing:

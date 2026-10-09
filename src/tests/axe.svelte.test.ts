@@ -93,3 +93,14 @@ describe('axe accessibility', () => {
         await expectNoViolations(emptyScreen.container)
     })
 })
+
+describe('axe accessibility, the pivot panel', () => {
+    it('raises nothing on the four zones and their controls', async () => {
+        const { default: PanelDemo } = await import('../routes/pivot/panel/+page.svelte')
+        render(PanelDemo as never)
+
+        await expect.poll(() => document.querySelectorAll('button').length).toBeGreaterThan(0)
+        await expect.poll(() => document.querySelector('[data-dg-pivot-panel]')).not.toBeNull()
+        await expectNoViolations(document.querySelector('[data-dg-pivot-panel]')!)
+    })
+})

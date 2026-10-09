@@ -115,11 +115,18 @@ function exportColumns<TRow>(grid: GridState<TRow>, columnIds?: string[]): Colum
     return columnIds.flatMap((id) => visible.filter((column) => column.id === id))
 }
 
+function exportableNodes<TRow>(grid: GridState<TRow>): RowNode<TRow>[] {
+    const data = grid.preWindowNodes.filter(isDataRow)
+    if (!grid.feature('pivot')) return data
+
+    const crossed = grid.preWindowNodes.filter((node) => !isDataRow(node))
+    return crossed.length > 0 ? crossed : data
+}
+
 function loadedRows<TRow>(grid: GridState<TRow>, options: ExportXlsxOptions<TRow>): TRow[] {
     if (options.rows) return options.rows.map((node) => node.row)
 
-    const isData = isDataRow
-    const nodes = grid.preWindowNodes.filter(isData)
+    const nodes = exportableNodes(grid)
     if (!options.selectedOnly) return nodes.map((node) => node.row)
 
     const selection = grid.feature<{ isSelected: (id: string) => boolean }>('selection')
@@ -237,8 +244,18 @@ function formatRulesOf<TRow>(input: FormatRulesInput<TRow>): XlsxCfRule[] {
     const overrides =
         typeof options.conditionalFormatting === 'object' ? options.conditionalFormatting : {}
 
+    const crossings = grid.feature<{ crossingMeasure?: (id: string) => number | undefined }>(
+        'pivot'
+    )
+
     return xlsxFormatRules(state.rules, {
         letterOf: (columnId) => letters.get(columnId),
+        columnIdsOf: (target) =>
+            typeof target === 'string'
+                ? [target]
+                : columns
+                      .map((column) => column.id)
+                      .filter((id) => crossings?.crossingMeasure?.(id) === target.measure),
         rowCount,
         colors: { ...DEFAULT_FORMAT_COLORS, ...overrides },
         addDxf: (style) => styles.addDxf(style)

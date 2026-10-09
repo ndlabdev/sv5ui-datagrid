@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Badge, Card, Container, Kbd, Link, ThemeModeButton } from 'sv5ui'
+    import { Badge, Button, Card, Container, Kbd, Link, ThemeModeButton } from 'sv5ui'
     import {
         columnOps,
         createDataGrid,
@@ -160,6 +160,12 @@
     const firstHalfFolded = $derived(grid.columns.isCollapsed('first-half'))
     const planFolded = $derived(grid.columns.isCollapsed('planning'))
 
+    let tierHeight = $state<number | undefined>(undefined)
+
+    $effect(() => {
+        grid.groupHeaderHeight = tierHeight
+    })
+
     let log = $state<string[]>([])
     grid.events.on('columnGroupToggled', ({ groupId, collapsed }) => {
         log = [`${groupId}: ${collapsed ? 'gập' : 'mở'}`, ...log].slice(0, 5)
@@ -239,6 +245,26 @@
             </p>
         </Card>
     </div>
+
+    <Card class="space-y-2 p-4">
+        <div class="flex flex-wrap items-center gap-2">
+            <h2 class="me-2 font-medium text-on-surface">Chiều cao mỗi tầng nhóm</h2>
+            {#each [undefined, 20, 26, 40] as choice (String(choice))}
+                <Button
+                    variant={tierHeight === choice ? 'solid' : 'outline'}
+                    size="xs"
+                    label={choice === undefined ? 'theo chiều cao hàng' : `${choice}px`}
+                    onclick={() => (tierHeight = choice)}
+                />
+            {/each}
+        </div>
+        <p class="text-sm text-on-surface-variant">
+            <code>groupHeaderHeight</code> đếm theo từng tầng, nên lưới này có ba tầng thì nó nhân
+            ba. Không có pivot nào ở đây: đó là cùng một con số mà một phép giao dùng cho các tầng
+            nó sinh ra, vì tầng của phép giao cũng là nhóm header thật. Hàng header lá giữ nguyên,
+            nó có <code>headerHeight</code> riêng.
+        </p>
+    </Card>
 
     <DataGrid {grid} />
 

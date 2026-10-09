@@ -11,7 +11,8 @@ export type {
     ExpressionRule,
     FormatPaint,
     FormatRule,
+    FormatTarget,
     TopNRule
 } from './conditional-formatting.types.js'
 export { paintOf } from './paint.js'
-export { columnMap, computeStats, hasNumbers, sampleDataRows } from './stats.js'
+export { columnMap, computeStats, hasNumbers, sampleDataRows, statSource } from './stats.js'

@@ -71,7 +71,7 @@
     },
     "peerDependencies": {
         "@iconify/svelte": "^5.2.1",
-        "sv5ui": "^2.5.0",
+        "sv5ui": "^2.7.0",
         "svelte": "^5.0.0",
         "tailwindcss": "^4.0.0"
     },

@@ -7,6 +7,243 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pivot tables.** `pivot()` gathers one field down the page and another
+  across it, and the columns across come from the data: the grid reads the
+  distinct values of the field and makes a column for each, so a value the data
+  has not held before arrives as a column with no code changed. Nothing else
+  here generates columns, which is the reason this is a grid feature rather
+  than an application's.
+
+    Every total is measured from the rows, never added up from the cells beside
+    it. For a sum the two agree; for an average they do not, and the grid shows
+    the one that is true of the rows. That rule holds for `totalColumn`,
+    `totalRow`, `columnSubtotal` and every share.
+
+    A measure can be read as a share of its row, its column or the whole, as a
+    running total, as a change from the crossing before it, or as a rank among
+    the crossings beside it. `per` divides one measure by another under the same
+    reduction, which is how a margin is read, and it divides the reductions
+    rather than the rows.
+
+    The column axis is ordered by the values themselves, so a number axis counts
+    and a date axis runs in time, and `columnKeys` replaces that with an order
+    only the application knows or with keys that have no rows behind them. A
+    nested axis folds down to its subtotals. `maxColumns` refuses rather than
+    truncates.
+
+    Measures stack on the column axis, so a crossing is as many columns wide as
+    crossings times measures. `valuesOn: 'rows'` stops that multiplying: each
+    crossing becomes one column and every group opens into one row per measure
+    instead, at every level, so a group folded shut still shows what it
+    measures. Sorting by a crossing then sorts by the first measure, since a
+    header that names a crossing cannot say which measure was meant.
+
+    `Grid.PivotPanel` builds a crossing, a column menu offers the two axes, and
+    `grid.api` carries the same moves, all of it kept in a saved view.
+    `rowsBehind` answers which rows a cell was measured from.
+
+    On `rowModel: 'server'` the client never crosses for itself. The crossing
+    goes out on every request and the column axis comes back with the rows,
+    because a table measured over the blocks a client happens to hold looks
+    exactly like a correct one.
+
+- **The pivot panel adjusts how a crossing reads, not only what it crosses.**
+  `Grid.PivotPanel` gains a fourth zone for the six settings that were reachable
+  only through `grid.api`: the total column, the total row, the subtotals,
+  whether the column groups fold, whether a crossing can be sorted by, and how
+  many rows to keep. Every one of them had to be built again by hand in any
+  application that wanted a reader to touch them, this repository's own demo
+  included.
+
+- **A pivot can put its columns in the order of a measure.**
+  `orderColumns: { direction: 'desc' }` ranks each key by what the measure makes
+  of the rows beneath it, every tier among its own siblings, so the best quarter
+  comes first rather than the earliest one. It was the one thing an application
+  could not do for itself: the only way in was `columnKeys`, which has to hand
+  back the keys and so would have meant adding up the data again outside the
+  grid. `columnKeys` still outranks it, the readings that follow the drawn order
+  follow the new one, and the server keeps the order it sent.
+
+- **A pivot keeps only the rows worth reading.** `keepRows: { top: 10 }` keeps
+  the ten largest gathered rows, ranked by what a measure makes of each one,
+  measured from its rows and whether or not a total column was asked for. The
+  cut happens before anything is measured, so the total row, the total column
+  and every share cover what is left rather than what was dropped. `others`
+  gathers the rest into one more row, measured from themselves, which puts the
+  totals back where they were, and `rowsBehind` opens it onto the rows it
+  stands for. With a nested row axis it cuts the outermost field and leaves
+  every field under it whole.
+
+- **A formatting rule can name a pivot measure instead of a column.**
+  `conditionalFormatting()` aimed at `{ measure: 0 }` paints every crossing of
+  that measure, and ranks each cell against the whole crossing rather than
+  against its own column. A crossing's columns are generated from the data, so
+  their ids cannot be written into a rule; the measure's place in `values` can.
+  Totals are left out of both the paint and the scale. The XLSX export carries
+  it across as one scale spanning every column of the measure.
+
+- **`flashCells` can watch columns nobody wrote down.** Its `columns` option
+  takes a predicate as well as a list of ids. A crossing generates its column
+  ids from the data, so a list could never name them, which left the narrowing
+  form unusable on the one kind of grid that most wants it:
+
+    ```ts
+    columns: (column) => isPivotColumn(column.id)
+    columns: (column) => getPivot(grid)?.crossingMeasure(column.id) === 0
+    ```
+
+- **A pivot's row axis opens and shuts in one go.**
+  `expandAllPivotRows()`, `collapseAllPivotRows()` and `pivotRowsOpen()`, plus
+  one button in the panel's settings zone. A crossing with two row fields nests,
+  and nested rows start shut, so reaching the inner tier of twenty regions was
+  twenty clicks with no way round it: `grouping()` has offered
+  `expandAllGroups` all along and `pivot()` offered nothing, leaving an
+  application to reach past the api into `grid.expansion`.
+
+    The button shows only where the axis can nest, and reads the grid rather
+    than its own flag, so opening one row by hand flips it to shut. Opening is
+    one pass per tier, since opening a tier is what reveals the next, and each
+    pass sets the open rows to the ones actually there: a row the data no
+    longer holds is dropped rather than carried, so a grid that filters over
+    and over does not collect ids for rows that stopped existing.
+
+    What is open does survive a filter until something opens everything again,
+    and survives the crossing being turned off and on. That is deliberate: it
+    is the reader's arrangement, and `grouping()` and `tree()` keep it the same
+    way.
+
+- **A cell says when its value changed.** `flashCells()` marks a cell for a
+  moment when the value under it moves, so a grid fed by a socket or a poll
+  says what moved rather than leaving a reader to catch it. Numbers carry a
+  direction, a rise apart from a fall, where both the old and the new value are
+  numbers.
+
+    It reports only what it witnessed. A cell whose previous value the feature
+    never held is never marked, which is one rule covering the first paint, a
+    row scrolled into view, a row that scrolled away and came back, and a row
+    that is simply new. That rule is also what bounds the cost: only the cells
+    on screen are remembered, since a cell nobody can see has nothing to say,
+    so the memory is the size of the window rather than of the data.
+
+    A batch of changes shares one timer, so a thousand cells moving at once
+    costs one. The mark is an outline rather than a background, leaving a
+    colour scale or a data bar underneath still visible. A reader who asked for
+    reduced motion gets no marks, while the values are still remembered, so
+    turning motion back on does not flash a backlog. Rows must arrive as a new
+    `data` array; mutating them in place leaves the pipeline holding the same
+    nodes and nothing here can tell.
+
+- **The group a reader is inside stays under the header.** `stickyGroups: true`
+  keeps the group rows containing the first visible row pinned below the
+  header, one line per level, outermost first, so scrolling deep into a long
+  group no longer means scrolling back up to ask which group it was. It reads
+  `meta.level`, which every row-structure feature sets, so it works the same
+  under `grouping()`, `tree()` and `pivot()`, whose row axis is groups too. A
+  flat grid has no levels and pays nothing.
+
+    It needs `virtualization()`, the one thing that knows where a row sits
+    against the scroll; without it nothing sticks rather than something
+    sticking wrongly. The pinned lines are a signpost rather than a second set
+    of controls: they are `inert`, so they add no tab stop and a screen reader
+    hears each group once, from the row still in the grid. The stack is as deep
+    as the grouping, so six levels spend six rows of the viewport, and it sits
+    below anything `rowPinning()` holds at the top rather than over it.
+
+- **A header row and a header group tier take their own heights.**
+  `headerHeight` and `groupHeaderHeight`, both in pixels, both following the
+  row height that `density` sets when left off. They are separate because the
+  two rows hold different things: the leaf header carries the column's real
+  name and its sort, filter and menu controls, while a tier above it carries a
+  short key. `groupHeaderHeight` counts per tier rather than for the lot, so
+  the deeper the axis the more it saves. A crossing gets no option of its own
+  on purpose: the tiers it generates are header groups, so they take
+  `groupHeaderHeight` like any other group. Neither goes into a snapshot,
+  being how the application lays the grid out rather than something a reader
+  arranged.
+
+- **The axes read back from the api.** `pivotRows()`, `pivotColumns()` and
+  `pivotValues()` answer what a crossing is currently made of, each handing
+  back a copy. Until now only the setters existed, so an application building
+  its own toolbar had to reach past the api into the state behind it.
+
+- **The ceiling on generated columns moves at run time.**
+  `setPivotMaxColumns()` and `pivotMaxColumns()`. The refusal a low ceiling
+  causes tells the reader to raise it; doing so no longer means building the
+  grid again. It stays out of a snapshot, being a guard rail rather than an
+  arrangement.
+
+- **A feature can shape the columns the grid draws.** `GridFeature.columns` is
+  asked in registration order, and what it answers feeds leaves, header groups,
+  order and widths alike. A generated column is a column like any other: it
+  filters, it exports, it takes part in a snapshot.
+
+### Fixed
+
+- **The rule above a grand total was drawn twice, so it read heavier than
+  every other one.** A row already draws its separator as a one pixel hairline
+  inside its own bottom edge, and the grand total added a `border-top` of the
+  same colour on top of it. Two adjacent pixels of `outline-variant` read as a
+  two pixel rule, which is why that one line looked darker than the rest. The
+  grand total keeps its tint and its weight, which is what marked it apart to
+  begin with, and the separator is now the same single hairline as everywhere
+  else. Both `grouping()` and `pivot()` carried it.
+
+- **A row pinned to the top hid behind a header of its own height.** The sticky
+  offset for the pinned rows was a multiple of the row height, which held only
+  while every header row was a row tall. Giving the header or the group tiers
+  their own height moved the real header without moving that offset, so a
+  pinned row stuck up to forty pixels behind the header, or floated below it
+  leaving a gap. The offset is now added up from the three heights the header
+  actually draws with.
+
+- **A pivot's column subtotal did not survive a saved view.** Turning it on
+  from the panel, saving and loading back lost the subtotal columns with
+  nothing said: `columnSubtotal` was the one panel setting the serializer did
+  not write. It is written as a boolean, and written every time rather than
+  only when on, so that turning it off survives too. Loading takes the label
+  from the locale when the grid declared none, and a slice that never mentioned
+  it leaves the grid as it was built.
+
+- **`sv5ui ^2.5.0` was not a floor the grid could stand on.** The shipped
+  header imports `usePointerDrag`, which arrived in sv5ui 2.7.0, so the two
+  versions in between satisfied the declared range and gave back a grid whose
+  columns would not resize. The peer range and the compatibility table now ask
+  for 2.7.0.
+
+- **A column menu never offered what a feature put on a column.** `menuItems`
+  was asked in one place only, the row context menu, which hands it the row and
+  no column, and both `pivot()` and `grouping()` answer nothing without one. So
+  every column-scoped item they declared was unreachable: the two pivot axes,
+  taking a column back off a pivot, and grouping by a column. The column menu
+  now asks as well, with the column it belongs to. It is drawn by `columnOps()`,
+  so that feature has to be registered for the items to appear.
+
+- **A gathered row opened onto rows nothing could be read from.** A pivot puts
+  away every column that is not on the row axis, so opening the innermost
+  gathered row gave back the group's own name repeated down the label column
+  and an empty cell everywhere else: a crossing column holds a measure over a
+  set of rows, and one row is not a set. The innermost row field no longer
+  opens, and `rowsBehind` answers that question properly. An outer row field
+  still opens onto the next one, and `grouping()` still opens onto the rows
+  themselves.
+
+- **A header group a feature generated was invisible to the group machinery.**
+  The column model was shaped by halves, so such a group had no definition to
+  find, no toggle to fold it with, and a fold written into a saved view was
+  thrown away on the way back in. Features now hydrate before the column
+  snapshot resolves, so a view that restores a different shape is pruned
+  against the columns that shape produced.
+
+- **A whole-column share divided by a total counted over data rows only**, so a
+  column whose numbers live on gathered rows read blank. It falls back to the
+  total across the top level, which is the same number wherever data rows carry
+  values.
+
+- **An XLSX export of a gathered grid wrote an empty sheet**, the writer having
+  taken only data rows.
+
 ## [2.0.0] - 2026-09-11
 
 The largest release the grid has had. Sixteen feature modules, nine parts to
@@ -21,8 +258,8 @@ rest is additive.
 ### Added
 
 - **Grouping.** `grouping()` groups by any number of columns and aggregates
-  with thirteen functions, including `percentile` and `weightedAvg`. Group
-  footers, a grand total, and a `Grid.GroupPanel` to drive it.
+  with eleven functions, `percentile` and `weightedAvg` among them, or one of
+  your own. Group footers, a grand total, and a `Grid.GroupPanel` to drive it.
 - **Show values as.** `showValuesAs()` reads a number as a share of the grand
   total, of its parent group, or of its row. It replaces the value, so sorting,
   copying and exporting all agree with what is on screen.

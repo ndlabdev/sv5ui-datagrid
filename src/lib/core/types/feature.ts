@@ -1,7 +1,7 @@
 import type { Component } from 'svelte'
 import type { GridState } from '../grid/grid.svelte.js'
 import type { GridApi } from './api.js'
-import type { ColumnState } from './columns.js'
+import type { ColumnDef, ColumnState } from './columns.js'
 import type { RowNode } from './rows.js'
 
 /** The extension points a feature module plugs into. */
@@ -164,6 +164,20 @@ export interface GridFeature<TRow> {
      * a getter for the root element, which arrives after the first paint.
      */
     component?: Component
+
+    /**
+     * Shapes the columns the grid draws, for a feature whose columns come from
+     * the data rather than from the application.
+     *
+     * `columns.defs` stays what the application handed the grid. Each feature
+     * that declares this is asked in registration order, and the result feeds
+     * everything downstream: leaves, header groups, order, widths. Answer the
+     * definitions untouched to change nothing.
+     *
+     * It is read inside a derived, so it must be pure and cheap enough to run
+     * whenever the definitions or anything it reads changes.
+     */
+    columns?: (defs: ColumnDef<TRow>[], grid: GridState<TRow>) => ColumnDef<TRow>[]
 
     /**
      * How many data rows this feature is holding, when it is the one that

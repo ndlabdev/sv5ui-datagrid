@@ -16,6 +16,21 @@
 
     const whatsNew = [
         {
+            href: '/flash',
+            title: 'Ô vừa đổi thì nói ra',
+            check: 'Không có giá trị cũ thì không canh, nên hàng mới vào im lặng'
+        },
+        {
+            href: '/sticky',
+            title: 'Hàng nhóm dính',
+            check: 'Cuộn sâu vẫn biết đang ở nhóm nào, không nhân đôi chặng Tab'
+        },
+        {
+            href: '/pivot',
+            title: 'Pivot table',
+            check: 'Cột sinh từ dữ liệu, Total không cộng các ô, và 21 trang từng tính năng'
+        },
+        {
             href: '/aggregate',
             title: 'Nhóm và tổng hợp',
             check: 'Mỗi cột một hàm tổng hợp khác nhau'

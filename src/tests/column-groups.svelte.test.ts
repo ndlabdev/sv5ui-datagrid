@@ -446,6 +446,34 @@ describe('the header groups demo', () => {
             (cell) => cell.textContent?.trim().split(/\s+/)[0] ?? ''
         )
 
+    it('cuts every group tier to the height the demo asks for, with no pivot in sight', async () => {
+        const screen = await render(GroupsDemo as never)
+        await expect.element(page.getByRole('grid')).toBeVisible()
+
+        const tiers = () =>
+            [...screen.container.querySelectorAll('[data-dg-header-cell]')].map((cell) =>
+                Math.round(cell.getBoundingClientRect().height)
+            )
+        const leaf = () =>
+            Math.round(
+                screen.container.querySelector('[data-dg-cell^="-1:"]')?.getBoundingClientRect()
+                    .height ?? 0
+            )
+
+        const atRowHeight = tiers()
+        expect(atRowHeight.length).toBeGreaterThan(1)
+        expect(new Set(atRowHeight).size).toBe(1)
+        const tall = leaf()
+
+        await page.getByRole('button', { name: '20px', exact: true }).click()
+
+        await expect.poll(() => tiers().every((height) => height === 20)).toBe(true)
+        expect(leaf()).toBe(tall)
+
+        await page.getByRole('button', { name: 'theo chiều cao hàng', exact: true }).click()
+        await expect.poll(tiers).toEqual(atRowHeight)
+    })
+
     it('folds the revenue quarters into one total, through the app own header', async () => {
         const screen = await render(GroupsDemo as never)
         await expect.element(page.getByRole('grid')).toBeVisible()

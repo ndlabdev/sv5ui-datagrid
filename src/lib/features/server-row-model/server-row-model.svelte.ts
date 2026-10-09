@@ -1,10 +1,11 @@
 import ServerRows from './ServerRows.svelte'
 import { type GridState, LOADING_KEY, PIPELINE_ORDER } from '../../core/grid/index.js'
-import { type GridFeature, type RowNode } from '../../core/types/index.js'
+import { type GridFeature, type RowNode, type SortState } from '../../core/types/index.js'
 import { getFiltering, toFilterRequest } from '../../features/filtering/index.js'
 import { getPagination } from '../../features/pagination/index.js'
 import { getSorting } from '../../features/sorting/index.js'
 import { getAdvancedFilter } from '../advanced-filter/index.js'
+import { getPivot } from '../pivot/pivot.svelte.js'
 import { blockBounds, blocksFor, blocksIn, blocksToEvict, totalFromShortBlock } from './blocks.js'
 import { createLoadedBlocks } from './loaded-blocks.js'
 import type {
@@ -81,15 +82,31 @@ export class ServerRowModel<TRow> {
         }
     }
 
-    #request(startRow: number, endRow: number, groupKeys: unknown[] = []): GetRowsRequest {
-        const filtering = getFiltering(this.#grid)
+    #sortModel(): SortState[] {
+        const sort = getSorting(this.#grid)?.sort ?? []
+        const pivot = getPivot(this.#grid)
+        if (!pivot) return sort
+        return sort.filter((entry) => !pivot.ownsSort(entry.columnId))
+    }
+
+    #optional(): Partial<GetRowsRequest> {
         const tree = getAdvancedFilter(this.#grid)?.model
+        const crossing = getPivot(this.#grid)?.request
 
         return {
             ...(tree && tree.children.length > 0 ? { advancedFilter: tree } : {}),
+            ...(crossing ? { pivot: crossing } : {})
+        }
+    }
+
+    #request(startRow: number, endRow: number, groupKeys: unknown[] = []): GetRowsRequest {
+        const filtering = getFiltering(this.#grid)
+
+        return {
+            ...this.#optional(),
             startRow,
             endRow,
-            sortModel: getSorting(this.#grid)?.sort ?? [],
+            sortModel: this.#sortModel(),
             filterModel: toFilterRequest(
                 filtering?.model ?? { quick: '', columns: {} },
                 this.#grid.columns.visible.map((column) => column.id)
@@ -104,8 +121,12 @@ export class ServerRowModel<TRow> {
         this.loading = true
         try {
             const result = await this.#source.getRows(request)
+            if (generation !== this.#generation) return null
 
-            return generation === this.#generation ? result : null
+            const pivot = getPivot(this.#grid)
+            if (pivot && result.pivotColumns) pivot.setServerColumns(result.pivotColumns)
+
+            return result
         } catch (error) {
             if (generation === this.#generation) {
                 this.error = error instanceof Error ? error.message : String(error)

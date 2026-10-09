@@ -20,6 +20,27 @@ export interface FormatPaint {
     style?: Record<string, string>
 }
 
+/**
+ * Every crossing of one pivot measure, named by where the measure sits in
+ * `pivot()`'s `values`.
+ *
+ * A crossing's columns are generated from the data, so their ids are not
+ * knowable when a rule is written; naming the measure is. A rule aimed this
+ * way reads and paints every cell of that measure at once, and ranks each one
+ * against the whole crossing rather than against its own column, which is what
+ * makes a heat map of a pivot readable.
+ *
+ * Totals stand outside it. Neither the total row nor a total or subtotal
+ * column is painted or counted, for the reason the readings along a row give:
+ * a total is not one of the things being compared.
+ */
+export interface PivotCrossing {
+    measure: number
+}
+
+/** What a rule reads and paints: one column by id, or a whole crossing. */
+export type FormatTarget = string | PivotCrossing
+
 /** Fields every rule carries. */
 interface FormatRuleBase {
     /**
@@ -42,7 +63,7 @@ export interface ColorScaleRule extends FormatRuleBase {
     kind: 'colorScale'
 
     /** Column the ramp reads and paints. */
-    column: string
+    column: FormatTarget
 
     /**
      * Colour at the low end. Any CSS colour, including a theme token.
@@ -80,7 +101,7 @@ export interface DataBarRule extends FormatRuleBase {
     kind: 'dataBar'
 
     /** Column the bar reads and paints. */
-    column: string
+    column: FormatTarget
 
     /**
      * Bar colour. Any CSS colour, including a theme token.
@@ -119,7 +140,7 @@ export interface ExpressionRule extends FormatRuleBase, FormatPaint {
      * Column to paint. Omit to paint the whole row - the expression is
      * evaluated once per row either way.
      */
-    column?: string
+    column?: FormatTarget
 
     /** The condition, as text. A row is painted when it evaluates truthy. */
     when: string
@@ -133,7 +154,7 @@ export interface DuplicatesRule extends FormatRuleBase, FormatPaint {
     kind: 'duplicates'
 
     /** Column whose values are counted. */
-    column: string
+    column: FormatTarget
 
     /**
      * Paints the values that appear exactly once instead of the repeated ones.
@@ -151,7 +172,7 @@ export interface TopNRule extends FormatRuleBase, FormatPaint {
     kind: 'topN'
 
     /** Column whose values are ranked. */
-    column: string
+    column: FormatTarget
 
     /**
      * How many rows to paint. Ties are painted too, so a column with five

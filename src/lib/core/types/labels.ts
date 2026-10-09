@@ -106,6 +106,43 @@ export interface DataGridLabels {
 
     groupByColumn: string
     ungroupColumn: string
+    pivotByRow: string
+    pivotByColumn: string
+    removeFromPivot: string
+    pivotRows: string
+    pivotColumns: string
+    pivotValues: string
+    pivotValuesOn: string
+    pivotValuesDown: string
+    pivotRowsHint: string
+    pivotColumnsHint: string
+    pivotValuesHint: string
+    pivotSettingsHint: string
+    pivotExpandAll: string
+    pivotCollapseAll: string
+    pivotSettings: string
+    pivotTotalColumn: string
+    pivotTotalRow: string
+    pivotSubtotal: string
+    pivotSubtotalOf: (header: string) => string
+    pivotFoldable: string
+    pivotSortable: string
+    pivotKeepAll: string
+    pivotKeep: string
+    pivotKeepBottom: (count: number) => string
+    pivotKeepTop: (count: number) => string
+    pivotKeepOthers: string
+    pivotPanelEmpty: string
+    addPivotRow: string
+    addPivotColumn: string
+    addPivotValue: string
+    clearPivotAll: string
+    movePivotEarlier: (column: string) => string
+    movePivotLater: (column: string) => string
+    removePivotChip: (column: string) => string
+    pivotAggregation: string
+    pivotShare: string
+    pivotShareNone: string
 
     groupFooter: (key: string, count: number) => string
     grandTotal: (count: number) => string

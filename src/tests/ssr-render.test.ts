@@ -49,3 +49,35 @@ describe('server render', () => {
         expect(body).toContain('aria-expanded="true"')
     })
 })
+
+describe('a grid handed in from outside', () => {
+    const defs: ColumnDef<Row>[] = [{ id: 'id', header: '#', width: 70 }]
+    const rows = [{ id: 1, total: 3, base: 2 }]
+
+    function bodyFor(data: Row[]): string {
+        const grid = createDataGrid<Row>({
+            columns: defs,
+            data,
+            getRowId: (row) => String(row.id)
+        })
+        return render(DataGrid as never, { props: { grid } as never }).body
+    }
+
+    it('draws the rows it was created with', () => {
+        expect(bodyFor(rows)).toContain('>1<')
+    })
+
+    it('draws nothing when it was created empty, because no effect runs here', () => {
+        const grid = createDataGrid<Row>({
+            columns: defs,
+            data: [],
+            getRowId: (row) => String(row.id)
+        })
+
+        const body = render(DataGrid as never, { props: { grid } as never }).body
+        grid.data = rows
+
+        expect(body).not.toContain('>1<')
+        expect(grid.data).toHaveLength(1)
+    })
+})

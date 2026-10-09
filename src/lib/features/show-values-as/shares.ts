@@ -46,7 +46,8 @@ function grandTotalOf<TRow>(nodes: RowNode<TRow>[], values: (number | null)[]): 
         if (value === null || !isDataRow(nodes[index]!)) continue
         total = (total ?? 0) + value
     }
-    return total
+
+    return total ?? rootTotal(nodes, values)
 }
 
 function rootTotal<TRow>(nodes: RowNode<TRow>[], values: (number | null)[]): number | null {

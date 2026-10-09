@@ -1,7 +1,7 @@
 import { isDataRow, rawRead, type CellRead } from '../../core/grid/index.js'
 import { type ColumnState, type RowNode } from '../../core/types/index.js'
 import { isBlank, numericOrNull } from '../../core/utils/index.js'
-import type { FormatRule } from './conditional-formatting.types.js'
+import type { FormatRule, FormatTarget, PivotCrossing } from './conditional-formatting.types.js'
 
 export interface ScaleStats {
     kind: 'scale'
@@ -32,23 +32,62 @@ export function columnMap<TRow>(
     return new Map(columns.map((column) => [column.id, column]))
 }
 
+export interface StatSource<TRow> {
+    nodesFor: (target: FormatTarget | undefined) => readonly RowNode<TRow>[]
+    columnsFor: (target: FormatTarget | undefined) => readonly ColumnState<TRow>[]
+}
+
+interface Reach<TRow> {
+    nodes: readonly RowNode<TRow>[]
+    columns: readonly ColumnState<TRow>[]
+}
+
+const reach = <TRow>(source: StatSource<TRow>, target: FormatTarget | undefined): Reach<TRow> => ({
+    nodes: source.nodesFor(target),
+    columns: source.columnsFor(target)
+})
+
+export interface StatSourceInput<TRow> {
+    columns: ReadonlyMap<string, ColumnState<TRow>>
+    rows: readonly RowNode<TRow>[]
+    gathered?: readonly RowNode<TRow>[]
+    measureOf?: (columnId: string) => number | undefined
+}
+
+export const aimedAtACrossing = (target: FormatTarget | undefined): target is PivotCrossing =>
+    typeof target === 'object' && target !== null
+
+export function statSource<TRow>(input: StatSourceInput<TRow>): StatSource<TRow> {
+    const all = [...input.columns.values()]
+
+    return {
+        nodesFor: (target) => (aimedAtACrossing(target) ? (input.gathered ?? []) : input.rows),
+        columnsFor: (target) => {
+            if (target === undefined) return []
+            if (typeof target === 'string') {
+                const column = input.columns.get(target)
+                return column ? [column] : []
+            }
+            return all.filter((column) => input.measureOf?.(column.id) === target.measure)
+        }
+    }
+}
+
 function eachNumber<TRow>(
-    nodes: readonly RowNode<TRow>[],
-    column: ColumnState<TRow> | undefined,
+    at: Reach<TRow>,
     read: CellRead<TRow>,
     visit: (value: number) => void
 ): void {
-    if (!column) return
-    const { def } = column
-    for (const node of nodes) {
-        const value = numericOrNull(read(node, def))
-        if (value !== null) visit(value)
+    for (const column of at.columns) {
+        for (const node of at.nodes) {
+            const value = numericOrNull(read(node, column.def))
+            if (value !== null) visit(value)
+        }
     }
 }
 
 function scaleOf<TRow>(
-    nodes: readonly RowNode<TRow>[],
-    column: ColumnState<TRow> | undefined,
+    at: Reach<TRow>,
     read: CellRead<TRow>,
     rule: { min?: number; max?: number }
 ): ScaleStats {
@@ -57,7 +96,7 @@ function scaleOf<TRow>(
 
     let low = Infinity
     let high = -Infinity
-    eachNumber(nodes, column, read, (value) => {
+    eachNumber(at, read, (value) => {
         if (value < low) low = value
         if (value > high) high = value
     })
@@ -70,24 +109,18 @@ function scaleOf<TRow>(
 }
 
 function barScaleOf<TRow>(
-    nodes: readonly RowNode<TRow>[],
-    column: ColumnState<TRow> | undefined,
+    at: Reach<TRow>,
     read: CellRead<TRow>,
     rule: { min?: number; max?: number }
 ): ScaleStats {
-    const scale = scaleOf(nodes, column, read, rule)
+    const scale = scaleOf(at, read, rule)
     return rule.min === undefined && scale.min > 0 ? { ...scale, min: 0 } : scale
 }
 
-function keysOf<TRow>(
-    nodes: readonly RowNode<TRow>[],
-    column: ColumnState<TRow> | undefined,
-    read: CellRead<TRow>,
-    unique: boolean
-): KeyStats {
+function keysOf<TRow>(at: Reach<TRow>, read: CellRead<TRow>, unique: boolean): KeyStats {
     const seen = new Map<string, number>()
-    if (column) {
-        for (const node of nodes) {
+    for (const column of at.columns) {
+        for (const node of at.nodes) {
             const value = read(node, column.def)
             if (isBlank(value)) continue
             const key = String(value)
@@ -102,8 +135,7 @@ function keysOf<TRow>(
 }
 
 function thresholdOf<TRow>(
-    nodes: readonly RowNode<TRow>[],
-    column: ColumnState<TRow> | undefined,
+    at: Reach<TRow>,
     read: CellRead<TRow>,
     rule: { n?: number; bottom?: boolean }
 ): ThresholdStats {
@@ -115,7 +147,7 @@ function thresholdOf<TRow>(
     const outranks = (candidate: number, held: number) =>
         bottom ? candidate < held : candidate > held
 
-    eachNumber(nodes, column, read, (value) => {
+    eachNumber(at, read, (value) => {
         if (best.length === n && !outranks(value, best[n - 1]!)) return
 
         let at = best.length
@@ -129,20 +161,19 @@ function thresholdOf<TRow>(
 
 export function computeStats<TRow>(
     rules: readonly FormatRule[],
-    nodes: readonly RowNode<TRow>[],
-    columns: ReadonlyMap<string, ColumnState<TRow>>,
+    source: StatSource<TRow>,
     read: CellRead<TRow> = rawRead
 ): RuleStats[] {
     return rules.map((rule): RuleStats => {
         switch (rule.kind) {
             case 'colorScale':
-                return scaleOf(nodes, columns.get(rule.column), read, rule)
+                return scaleOf(reach(source, rule.column), read, rule)
             case 'dataBar':
-                return barScaleOf(nodes, columns.get(rule.column), read, rule)
+                return barScaleOf(reach(source, rule.column), read, rule)
             case 'duplicates':
-                return keysOf(nodes, columns.get(rule.column), read, rule.unique === true)
+                return keysOf(reach(source, rule.column), read, rule.unique === true)
             case 'topN':
-                return thresholdOf(nodes, columns.get(rule.column), read, rule)
+                return thresholdOf(reach(source, rule.column), read, rule)
             case 'expression':
                 return { kind: 'expression', cache: new Map<string, boolean>() }
         }

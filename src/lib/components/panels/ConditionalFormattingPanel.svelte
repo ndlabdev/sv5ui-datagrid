@@ -4,7 +4,10 @@
     import { Button, Input, Select } from 'sv5ui'
 
     import { getConditionalFormatting } from '../../features/conditional-formatting/conditional-formatting.svelte.js'
-    import type { FormatRule } from '../../features/conditional-formatting/conditional-formatting.types.js'
+    import type {
+        FormatRule,
+        FormatTarget
+    } from '../../features/conditional-formatting/conditional-formatting.types.js'
     import { ruleId } from '../../features/conditional-formatting/rules.js'
     import {
         hasNumbers,
@@ -76,8 +79,10 @@
         needsColumn ? picked || (dataColumns[0]?.value ?? '') : (picked ?? '')
     )
 
-    function headerOf(id: string | undefined): string {
-        return id ? (grid.columns.get(id)?.header ?? id) : t.formatWholeRow
+    function headerOf(target: FormatTarget | undefined): string {
+        if (target === undefined) return t.formatWholeRow
+        if (typeof target !== 'string') return `${t.pivotValues} ${target.measure + 1}`
+        return grid.columns.get(target)?.header ?? target
     }
 
     const chips = $derived(
