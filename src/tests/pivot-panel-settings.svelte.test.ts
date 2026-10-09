@@ -220,3 +220,74 @@ describe('the panel adjusts how a crossing reads', () => {
         await expect.poll(() => settings()).toBeNull()
     })
 })
+
+describe('opening the row axis from the panel', () => {
+    function nestedGrid(): GridState<Sale> {
+        return createDataGrid<Sale>({
+            columns,
+            data: sales,
+            getRowId: (sale) => String(sale.id),
+            locales: [viVN],
+            locale: 'vi-VN',
+            features: [
+                pivot<Sale>({
+                    rows: ['region', 'product'],
+                    columns: ['quarter'],
+                    values: [{ field: 'amount', agg: 'sum' }]
+                })
+            ]
+        })
+    }
+
+    const tiers = (grid: GridState<Sale>) =>
+        new Set(grid.preWindowNodes.map((node) => node.meta?.level ?? 0))
+
+    it('offers the control only where the axis can nest', async () => {
+        const flat = makeGrid()
+        await open(flat)
+        expect(settings()?.textContent).not.toContain('Bung hết tầng')
+    })
+
+    it('opens every tier, then shuts them, from the one button', async () => {
+        const grid = nestedGrid()
+        await open(grid)
+
+        expect(tiers(grid)).toEqual(new Set([0]))
+
+        await page.getByRole('button', { name: 'Bung hết tầng', exact: true }).click()
+        await expect.poll(() => tiers(grid)).toEqual(new Set([0, 1]))
+
+        await page.getByRole('button', { name: 'Gập hết tầng', exact: true }).click()
+        await expect.poll(() => tiers(grid)).toEqual(new Set([0]))
+    })
+
+    it('takes the control away when the axis shrinks to one field', async () => {
+        const grid = nestedGrid()
+        await open(grid)
+        expect(settings()?.textContent).toContain('Bung hết tầng')
+
+        state(grid).setRows(['region'])
+
+        await expect.poll(() => settings()?.textContent ?? '').not.toContain('Bung hết tầng')
+    })
+
+    it('still opens the field tiers when the measures run down the page', async () => {
+        const grid = nestedGrid()
+        await open(grid)
+        state(grid).setValuesOn('rows')
+
+        await page.getByRole('button', { name: 'Bung hết tầng', exact: true }).click()
+
+        await expect.poll(() => tiers(grid).size).toBeGreaterThan(2)
+    })
+
+    it('reads what the grid is, so a row opened by hand flips the label', async () => {
+        const grid = nestedGrid()
+        await open(grid)
+        expect(settings()?.textContent).toContain('Bung hết tầng')
+
+        grid.expansion.expand(grid.preWindowNodes[0]!.id)
+
+        await expect.poll(() => settings()?.textContent ?? '').toContain('Gập hết tầng')
+    })
+})

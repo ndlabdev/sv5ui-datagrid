@@ -53,18 +53,18 @@ describe('the pivot panel', () => {
     it('shows what is on each axis, by the header the application gave', async () => {
         await open()
 
-        expect(chipsIn('rows')).toEqual(['Vùng'])
+        expect(chipsIn('rows')).toEqual(['Vùng', 'Hàng'])
         expect(chipsIn('columns')).toEqual(['Quý'])
     })
 
     it('puts a field on an axis from its own add menu', async () => {
         await open()
         await page.getByRole('button', { name: 'Thêm vào trục ngang' }).click()
-        await expect.element(page.getByRole('menuitem', { name: 'Hàng' })).toBeVisible()
-        await page.getByRole('menuitem', { name: 'Hàng' }).click()
+        await expect.element(page.getByRole('menuitem', { name: 'Cỡ' })).toBeVisible()
+        await page.getByRole('menuitem', { name: 'Cỡ' }).click()
 
-        await expect.poll(() => chipsIn('columns')).toEqual(['Quý', 'Hàng'])
-        await expect.poll(() => headers()).toContain('Widget')
+        await expect.poll(() => chipsIn('columns')).toEqual(['Quý', 'Cỡ'])
+        await expect.poll(() => headers()).toContain('Small')
     })
 
     it('takes a field off, and the grid stops crossing on it', async () => {
