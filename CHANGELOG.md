@@ -258,8 +258,8 @@ rest is additive.
 ### Added
 
 - **Grouping.** `grouping()` groups by any number of columns and aggregates
-  with thirteen functions, including `percentile` and `weightedAvg`. Group
-  footers, a grand total, and a `Grid.GroupPanel` to drive it.
+  with eleven functions, `percentile` and `weightedAvg` among them, or one of
+  your own. Group footers, a grand total, and a `Grid.GroupPanel` to drive it.
 - **Show values as.** `showValuesAs()` reads a number as a share of the grand
   total, of its parent group, or of its row. It replaces the value, so sorting,
   copying and exporting all agree with what is on screen.
