@@ -16,6 +16,11 @@
 
     const whatsNew = [
         {
+            href: '/flash',
+            title: 'Ô vừa đổi thì nói ra',
+            check: 'Không có giá trị cũ thì không canh, nên hàng mới vào im lặng'
+        },
+        {
             href: '/sticky',
             title: 'Hàng nhóm dính',
             check: 'Cuộn sâu vẫn biết đang ở nhóm nào, không nhân đôi chặng Tab'
