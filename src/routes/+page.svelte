@@ -16,6 +16,11 @@
 
     const whatsNew = [
         {
+            href: '/sticky',
+            title: 'Hàng nhóm dính',
+            check: 'Cuộn sâu vẫn biết đang ở nhóm nào, không nhân đôi chặng Tab'
+        },
+        {
             href: '/pivot',
             title: 'Pivot table',
             check: 'Cột sinh từ dữ liệu, Total không cộng các ô, và 21 trang từng tính năng'
