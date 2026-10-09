@@ -12,7 +12,6 @@ export type {
     FormatPaint,
     FormatRule,
     FormatTarget,
-    PivotCrossing,
     TopNRule
 } from './conditional-formatting.types.js'
 export { paintOf } from './paint.js'

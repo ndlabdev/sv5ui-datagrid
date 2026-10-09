@@ -33,7 +33,6 @@ export {
     type FormatPaint,
     type FormatRule,
     type FormatTarget,
-    type PivotCrossing,
     type TopNRule
 } from './conditional-formatting/index.js'
 export {
@@ -71,7 +70,7 @@ export {
 export {
     flashCells,
     getFlashCells,
-    type FlashCells as FlashCellsState,
+    type FlashCells,
     type FlashCellsOptions,
     type FlashWay
 } from './flash-cells/index.js'
