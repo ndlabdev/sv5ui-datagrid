@@ -181,6 +181,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`expandAllGroups` never dropped the ids of groups the data no longer
+  holds.** It seeded itself from whatever was already open, so opening
+  everything again re-added the dead ones rather than pruning them: three
+  departments grouped, opened, then narrowed to one left three ids where one
+  row was live. Nothing drawn was wrong, since a dead id matches no row, so the
+  cost was memory that only grew for the life of the grid. Opening now seeds
+  from nothing and accumulates across the levels of that one call. The place
+  where `expandedByDefault` adds groups as they are first seen still seeds from
+  the open set, on purpose: it adds rather than rebuilds. Closes #50
+
 - **The rule above a grand total was drawn twice, so it read heavier than
   every other one.** A row already draws its separator as a one pixel hairline
   inside its own bottom edge, and the grand total added a `border-top` of the
