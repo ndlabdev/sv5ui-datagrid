@@ -1,3 +1,5 @@
+import type { ColumnState } from '../../core/types/index.js'
+
 /**
  * Marks a cell for a moment when its value changes, so a grid fed by a socket
  * or a poll says what moved instead of leaving the reader to spot it.
@@ -16,15 +18,25 @@
  * Replace `data` with a new array to be seen. Mutating the rows in place
  * leaves the pipeline holding the same nodes, and nothing here can tell.
  */
-export interface FlashCellsOptions {
+export interface FlashCellsOptions<TRow = unknown> {
     /**
-     * Column ids to watch. Left off, every visible column is watched, which
-     * is what a reader expects: anything on screen that changes says so.
+     * Which columns to watch. Left off, every visible column is watched,
+     * which is what a reader expects: anything on screen that changes says so.
      *
      * Narrow it when only a few columns carry live numbers, since a column
      * nobody is watching costs a comparison per rendered row.
+     *
+     * A list of ids covers columns an application declared. A predicate
+     * covers the ones it did not: a crossing generates its column ids from
+     * the data, so they cannot be written down ahead of time.
+     *
+     * ```ts
+     * columns: ['price']
+     * columns: (column) => isPivotColumn(column.id)
+     * columns: (column) => getPivot(grid)?.crossingMeasure(column.id) === 0
+     * ```
      */
-    columns?: string[]
+    columns?: string[] | ((column: ColumnState<TRow>) => boolean)
 
     /**
      * How long a cell stays marked, in milliseconds.

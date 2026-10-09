@@ -22,13 +22,13 @@ const stillOf = (way: FlashWay): CellDecoration => ({
 
 export class FlashCells<TRow> {
     #grid: GridState<TRow>
-    #options: FlashCellsOptions
+    #options: FlashCellsOptions<TRow>
     #remembered = emptyMemo()
     #timer: ReturnType<typeof setTimeout> | undefined
 
     ways = $state.raw<Record<string, FlashWay>>({})
 
-    constructor(grid: GridState<TRow>, options: FlashCellsOptions) {
+    constructor(grid: GridState<TRow>, options: FlashCellsOptions<TRow>) {
         this.#grid = grid
         this.#options = options
     }
@@ -45,7 +45,9 @@ export class FlashCells<TRow> {
     #watched(): ColumnState<TRow>[] {
         const wanted = this.#options.columns
         const visible = this.#grid.columns.visible
+
         if (!wanted) return visible
+        if (typeof wanted === 'function') return visible.filter(wanted)
         return visible.filter((column) => wanted.includes(column.id))
     }
 
@@ -105,7 +107,7 @@ export class FlashCells<TRow> {
     }
 }
 
-export function flashCells<TRow>(options: FlashCellsOptions = {}): GridFeature<TRow> {
+export function flashCells<TRow>(options: FlashCellsOptions<TRow> = {}): GridFeature<TRow> {
     return {
         id: FLASH_CELLS,
         createState: (grid) => new FlashCells(grid, options),

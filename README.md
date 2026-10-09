@@ -1129,6 +1129,11 @@ snapshot holds the columns, the density and a slice per feature, so a reloaded
 view comes back with its tiers shut.
 Asking for the rows behind a cell answers nothing there, for the same reason.
 
+A crossing's column ids come from the data, so `flashCells({ columns })` takes
+a predicate as well as a list: `columns: (column) => isPivotColumn(column.id)`
+watches every crossing cell, and `getPivot(grid).crossingMeasure(column.id)`
+narrows that to one measure.
+
 `src/tests/server-contract.test.ts` is a backend written against this table.
 It answers what the client answers, and it is the shortest description of what
 conformance costs.

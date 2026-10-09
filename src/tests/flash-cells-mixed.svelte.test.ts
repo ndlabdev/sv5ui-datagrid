@@ -9,6 +9,8 @@ import {
     filtering,
     flashCells,
     getFlashCells,
+    getPivot,
+    isPivotColumn,
     grouping,
     pagination,
     pivot,
@@ -17,6 +19,7 @@ import {
     tree,
     virtualization,
     type ColumnDef,
+    type ColumnState,
     type DataGridProps,
     type GridState
 } from '$lib/index.js'
@@ -350,5 +353,85 @@ describe('with the whole stack switched on', () => {
 
         await expect.poll(() => marked(screen).length, { timeout: 3000 }).toBe(0)
         expect(getFlashCells(grid)).toBeDefined()
+    })
+})
+
+describe('watching columns a crossing invented', () => {
+    it('watches every crossing cell through a predicate, which a list cannot name', async () => {
+        const grid = createDataGrid<Tick>({
+            data: seed(),
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [
+                flashCells<Tick>({
+                    duration: 60_000,
+                    columns: (column) => isPivotColumn(column.id)
+                }),
+                pivot<Tick>({
+                    rows: ['desk'],
+                    columns: ['size'],
+                    values: [{ field: 'price', agg: 'sum' }]
+                })
+            ]
+        })
+        const screen = await open(grid)
+
+        await change(grid, [1], 1000)
+
+        await expect.poll(() => marked(screen).length).toBeGreaterThan(0)
+        expect(marked(screen).every((cell) => /\d/.test(cell.textContent ?? ''))).toBe(true)
+    })
+
+    it('narrows to one measure of a crossing, which is what the ids hide', async () => {
+        const grid = createDataGrid<Tick>({
+            data: seed(),
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [
+                flashCells<Tick>({
+                    duration: 60_000,
+                    columns: (column: ColumnState<Tick>): boolean =>
+                        getPivot(grid)?.crossingMeasure(column.id) === 1
+                }),
+                pivot<Tick>({
+                    rows: ['desk'],
+                    columns: ['size'],
+                    values: [
+                        { field: 'price', agg: 'sum' },
+                        { field: 'price', agg: 'avg', header: 'Mean' }
+                    ]
+                })
+            ]
+        })
+        const screen = await open(grid)
+
+        await change(grid, [1], 1000)
+
+        const onlyMeasureOne = marked(screen).every(
+            (cell) =>
+                getPivot(grid)!.crossingMeasure(
+                    grid.columns.visible[Number(cell.getAttribute('data-dg-cell')?.split(':')[1])]!
+                        .id
+                ) === 1
+        )
+        await expect.poll(() => marked(screen).length).toBeGreaterThan(0)
+        expect(onlyMeasureOne).toBe(true)
+    })
+
+    it('still takes a plain list of declared ids', async () => {
+        const grid = make([], 60_000)
+        const screen = await open(grid)
+        expect(marked(screen)).toEqual([])
+
+        const narrowed = createDataGrid<Tick>({
+            data: seed(),
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [flashCells<Tick>({ duration: 60_000, columns: ['price'] })]
+        })
+        const second = await open(narrowed)
+        await change(narrowed, [1])
+
+        await expect.poll(() => marked(second).length).toBe(1)
     })
 })

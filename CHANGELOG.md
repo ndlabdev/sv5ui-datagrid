@@ -84,6 +84,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Totals are left out of both the paint and the scale. The XLSX export carries
   it across as one scale spanning every column of the measure.
 
+- **`flashCells` can watch columns nobody wrote down.** Its `columns` option
+  takes a predicate as well as a list of ids. A crossing generates its column
+  ids from the data, so a list could never name them, which left the narrowing
+  form unusable on the one kind of grid that most wants it:
+
+    ```ts
+    columns: (column) => isPivotColumn(column.id)
+    columns: (column) => getPivot(grid)?.crossingMeasure(column.id) === 0
+    ```
+
 - **A pivot's row axis opens and shuts in one go.**
   `expandAllPivotRows()`, `collapseAllPivotRows()` and `pivotRowsOpen()`, plus
   one button in the panel's settings zone. A crossing with two row fields nests,
