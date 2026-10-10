@@ -355,3 +355,25 @@ describe('what each pivot demo is supposed to show', () => {
         await expect.poll(() => headers()).toEqual(['Vùng', 'Q1', 'Q2', 'Q3'])
     })
 })
+
+describe('the count under the grid describes the grid in front of the reader', () => {
+    const counted = () =>
+        Array.from(document.querySelectorAll('span'))
+            .map((span) => span.textContent?.trim() ?? '')
+            .find((text) => /rows$/.test(text)) ?? ''
+
+    it('counts the crossings it drew, and says what they were measured from', async () => {
+        render(Totals as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(counted()).toMatch(/^3 crossings from \d+ rows$/)
+    })
+
+    it('says plain rows again once the crossing is turned off', async () => {
+        render(Axes as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+        await page.getByRole('button', { name: 'Tắt phép giao' }).click()
+
+        await expect.poll(counted).not.toMatch(/crossings/)
+    })
+})

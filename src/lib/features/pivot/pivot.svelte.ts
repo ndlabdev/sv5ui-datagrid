@@ -250,6 +250,11 @@ export class Pivot<TRow> {
         this.#grid.expansion.collapseAll()
     }
 
+    get gatheredRows(): number {
+        if (!this.isCrossing) return 0
+        return this.#grid.preWindowNodes.filter((node) => node.meta?.level === 0).length
+    }
+
     get rowsOpen(): boolean {
         return this.#grid.preWindowNodes.some(
             (node) => node.meta?.expandable && this.#grid.expansion.isExpanded(node.id)
@@ -497,6 +502,7 @@ export class Pivot<TRow> {
         )
         const generated = pivotColumnDefs<TRow>(found, {
             measures: this.#onRows ? this.values.slice(0, 1) : this.values,
+            names: this.values.map((_measure, at) => this.#measureLabel(at)),
             looks: this.#onRows ? [agreedLook(looks)] : looks,
             totalHeader: found.paths.length > 0 ? this.totalColumn : undefined,
             subtotalHeader: this.columnSubtotal,
@@ -528,7 +534,10 @@ export class Pivot<TRow> {
     #measureLabel = (at: number): string => {
         const measure = this.values[at]
         if (!measure) return ''
-        return measure.header ?? measure.field
+        if (measure.header !== undefined) return measure.header
+
+        const source = this.#grid.columns.defs.find((def) => def.id === measure.field)
+        return String(source?.header ?? measure.field)
     }
 
     #aggregations(all: RowNode<TRow>[]): Record<string, Aggregation<TRow>>[] {

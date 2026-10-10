@@ -115,3 +115,52 @@ describe('the ceiling on generated columns, left unsaid', () => {
         expect(bodyColumns(grid)).toHaveLength(101)
     })
 })
+
+describe('a measure that names no header of its own', () => {
+    const rows: Sale[] = [
+        { id: 1, region: 'North', outer: 'Q1', inner: 'only', amount: 10 },
+        { id: 2, region: 'North', outer: 'Q1', inner: 'only', amount: 30 }
+    ]
+
+    const headersOf = (grid: GridState<Sale>): string[] =>
+        grid.columns.visible
+            .filter((column) => isPivotColumn(column.id))
+            .map((column) => String(column.def.header))
+
+    it('takes the header of the column it reduces, not that column id', () => {
+        const grid = createDataGrid<Sale>({
+            columns: [
+                { id: 'region' },
+                { id: 'outer' },
+                { id: 'inner' },
+                { id: 'amount', header: 'Amount sold', type: 'number' }
+            ],
+            data: rows,
+            getRowId: (row) => String(row.id),
+            features: [
+                pivot<Sale>({
+                    rows: ['region'],
+                    columns: ['outer'],
+                    values: [
+                        { field: 'amount', agg: 'sum' },
+                        { field: 'amount', agg: 'avg' }
+                    ]
+                })
+            ]
+        })
+
+        expect(headersOf(grid)).toEqual(['Amount sold', 'Amount sold'])
+    })
+
+    it('falls back to the id only where the column declares no header', () => {
+        const grid = build(rows, {
+            columns: ['outer'],
+            values: [
+                { field: 'amount', agg: 'sum' },
+                { field: 'amount', agg: 'avg' }
+            ]
+        })
+
+        expect(headersOf(grid)).toEqual(['amount', 'amount'])
+    })
+})

@@ -8,6 +8,7 @@ export type ColumnGroupMode = 'fixed' | 'open' | 'closed'
 
 interface ColumnShape<TRow> {
     measures: PivotMeasure<TRow>[]
+    names: string[]
     looks: Partial<ColumnDef<TRow>>[]
     totalHeader: string | undefined
     subtotalHeader?: (header: string) => string
@@ -39,7 +40,7 @@ function measureLeaves<TRow>(
     })
 
     if (shape.measures.length === 1) return [leaf(0, header)]
-    return shape.measures.map((measure, index) => leaf(index, measure.header ?? measure.field))
+    return shape.measures.map((_measure, index) => leaf(index, shape.names[index] ?? ''))
 }
 
 function subtotalOf<TRow>(
