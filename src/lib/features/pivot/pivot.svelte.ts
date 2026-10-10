@@ -47,6 +47,7 @@ import type {
 } from './pivot.types.js'
 
 import {
+    DRILL_PAST_A_GATE,
     RESHAPES_THE_ROWS,
     RUNNING_AGG,
     SERVER_DRILL,
@@ -661,9 +662,22 @@ export class Pivot<TRow> {
     }
 
     #drillWarned = false
+    #gateWarned = false
+
+    #warnIfGated(): void {
+        const gated = this.#grid.features.some(
+            (feature) => feature.cellValue !== undefined && feature.id !== PIVOT
+        )
+        if (!gated || this.#gateWarned) return
+        this.#gateWarned = true
+        // eslint-disable-next-line no-console
+        console.warn(DRILL_PAST_A_GATE)
+    }
+
     rowsBehind(node: RowNode<TRow>, columnId: string): TRow[] {
         const ref = this.#index.get(columnId)
         if (!ref || !this.isCrossing) return []
+        this.#warnIfGated()
 
         if (this.#onServer) {
             if (!this.#drillWarned) {

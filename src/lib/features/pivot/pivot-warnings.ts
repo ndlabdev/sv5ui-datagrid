@@ -56,6 +56,13 @@ export const UNNAMED_AGG =
     'parameterised aggregation, and only the named ones cross the wire. The grid sends no pivot ' +
     'at all rather than one missing a measure. Name the reduction, or cross on the client.'
 
+export const DRILL_PAST_A_GATE =
+    'pivot(): rowsBehind() hands back the rows themselves, which have not been through the ' +
+    'value gate the grid draws its cells with. A feature that masks a value, policy() among ' +
+    'them, covers what the grid renders, copies and exports; it does not reach a row an ' +
+    'application asked for by hand. Mask the rows again before drawing them, or do not offer ' +
+    'the drill-down on a masked grid.'
+
 export const missing = (fields: string[]): string =>
     `pivot() found no column defined for ${fields.join(', ')}, so there is nothing to cross and ` +
     'the grid is drawing its rows unchanged. A pivot field names a column id, not a row property.'

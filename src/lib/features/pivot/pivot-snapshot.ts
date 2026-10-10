@@ -60,6 +60,7 @@ const SHARES: PivotShowAs[] = [
     'percentDifferenceFrom',
     'rankInRow'
 ]
+const NAMED_AGGS = ['sum', 'min', 'max', 'avg', 'count', 'median', 'distinctCount', 'first', 'last']
 
 const GROUP_MODES: ColumnGroupMode[] = ['fixed', 'open', 'closed']
 
@@ -158,7 +159,7 @@ function measureIn<TRow>(entry: unknown, grid: GridState<TRow>): PivotMeasure<TR
 
     const { field, agg, header, showAs, per, type } = entry as Record<string, unknown>
     if (typeof field !== 'string' || typeof agg !== 'string') return []
-    if (!grid.columns.get(field)) return []
+    if (!grid.columns.get(field) || !NAMED_AGGS.includes(agg)) return []
 
     return [
         withKnown<TRow>(
