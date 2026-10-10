@@ -369,6 +369,22 @@ describe('the count under the grid describes the grid in front of the reader', (
         expect(counted()).toMatch(/^3 crossings from \d+ rows$/)
     })
 
+    it('does not count the total row as a crossing it gathered', async () => {
+        render(TotalRow as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        const rows = document.querySelectorAll('[role="row"][data-dg-row-id]').length
+        expect(counted()).toMatch(/^3 crossings from \d+ rows$/)
+        expect(rows).toBeGreaterThan(3)
+    })
+
+    it('counts the row others were gathered into, which is a row of its own', async () => {
+        render(KeepRows as never)
+        await expect.element(page.getByRole('treegrid')).toBeVisible()
+
+        expect(counted()).toMatch(/^[23] crossings from \d+ rows$/)
+    })
+
     it('says plain rows again once the crossing is turned off', async () => {
         render(Axes as never)
         await expect.element(page.getByRole('treegrid')).toBeVisible()

@@ -24,7 +24,8 @@
     const filtered = $derived(
         pagination?.server ? total : (treeState?.filteredRows ?? grid.filteredRowCount)
     )
-    const crossings = $derived(pivotState?.isCrossing ? pivotState.gatheredRows : null)
+    const crossed = $derived(pivotState?.isCrossing === true && !pivotState.serverHandled)
+    const crossings = $derived(crossed ? (pivotState?.gatheredRows ?? null) : null)
     const selected = $derived(selectionState?.count ?? 0)
 </script>
 

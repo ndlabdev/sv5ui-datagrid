@@ -573,3 +573,31 @@ describe('changing the crossing asks the server again', () => {
         expect(seen.length).toBe(before)
     })
 })
+
+describe('the count under a server crossing claims only what the client knows', () => {
+    it('counts no crossings of its own, the server having done the crossing', async () => {
+        const { grid, getRows } = serverGrid({ rows: crossed, pivotColumns: [['Q1'], ['Q2']] })
+        await load(grid, getRows)
+        const state = getPivot(grid)!
+
+        expect(state.serverHandled).toBe(true)
+        expect(state.gatheredRows).toBe(0)
+    })
+
+    it('counts them on a client crossing of the same shape', () => {
+        const grid = createDataGrid<Sale>({
+            columns,
+            data: [
+                { id: 1, region: 'North', quarter: 'Q1', amount: 10 },
+                { id: 2, region: 'North', quarter: 'Q2', amount: 20 },
+                { id: 3, region: 'South', quarter: 'Q1', amount: 30 }
+            ],
+            getRowId: (row) => String(row.id),
+            features: [pivot<Sale>(crossing)]
+        })
+        const state = getPivot(grid)!
+
+        expect(state.serverHandled).toBe(false)
+        expect(state.gatheredRows).toBe(2)
+    })
+})

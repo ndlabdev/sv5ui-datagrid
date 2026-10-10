@@ -252,7 +252,9 @@ export class Pivot<TRow> {
 
     get gatheredRows(): number {
         if (!this.isCrossing) return 0
-        return this.#grid.preWindowNodes.filter((node) => node.meta?.level === 0).length
+        return this.#grid.preWindowNodes.filter(
+            (node) => node.meta?.level === 0 && totalsKindOf(node.id) === null
+        ).length
     }
 
     get rowsOpen(): boolean {
