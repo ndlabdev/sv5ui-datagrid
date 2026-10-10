@@ -250,8 +250,12 @@ export class Pivot<TRow> {
         this.#grid.expansion.collapseAll()
     }
 
+    get isDrawn(): boolean {
+        return this.#grid.columns.visible.some((column) => isPivotColumn(column.id))
+    }
+
     get gatheredRows(): number {
-        if (!this.isCrossing) return 0
+        if (!this.isDrawn) return 0
         return this.#grid.preWindowNodes.filter(
             (node) => node.meta?.level === 0 && totalsKindOf(node.id) === null
         ).length

@@ -90,3 +90,58 @@ describe('the count under a crossing the server made', () => {
         await expect.poll(counted).toMatch(/^\d+ rows$/)
     })
 })
+
+describe('the count under a crossing the grid refused to draw', () => {
+    const wide: Sale[] = Array.from({ length: 12 }, (_, at) => ({
+        id: at + 1,
+        region: at % 2 === 0 ? 'North' : 'South',
+        quarter: `Q${at}`,
+        amount: at
+    }))
+
+    it('says plain rows when the column axis went past the ceiling', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const grid = createDataGrid<Sale>({
+            columns,
+            data: wide,
+            getRowId: (row) => String(row.id),
+            features: [pivot<Sale>({ ...crossing, maxColumns: 6 })]
+        })
+
+        await show(grid)
+
+        expect(counted()).toBe('12 rows')
+        warn.mockRestore()
+    })
+
+    it('says plain rows when an axis field names no column', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const grid = createDataGrid<Sale>({
+            columns,
+            data: wide,
+            getRowId: (row) => String(row.id),
+            features: [pivot<Sale>({ ...crossing, columns: ['nowhere'] })]
+        })
+
+        await show(grid)
+
+        expect(counted()).toBe('12 rows')
+        warn.mockRestore()
+    })
+
+    it('says plain rows on a server grid with no server row model to cross it', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const grid = createDataGrid<Sale>({
+            columns,
+            data: wide,
+            getRowId: (row) => String(row.id),
+            rowModel: 'server',
+            features: [pivot<Sale>(crossing)]
+        })
+
+        await show(grid)
+
+        expect(counted()).toBe('12 rows')
+        warn.mockRestore()
+    })
+})

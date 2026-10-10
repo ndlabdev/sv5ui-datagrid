@@ -85,6 +85,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The count under a grid that refused to cross still called it a crossing.**
+  Past `maxColumns` the grid draws its plain rows, but the count asked only
+  whether a crossing was configured, so it read "0 crossings from 12 rows". The
+  same zero was waiting in two more places a crossing is configured and not
+  drawn: an axis or measure field naming no column, and `rowModel: 'server'`
+  with no `serverRowModel()` to carry it. The count now asks whether a
+  generated column is on screen, which is the result rather than a second copy
+  of the four conditions that produce it.
+
 - **The count under a crossed grid counted the total row, and counted nothing
   at all on a server grid.** Both came in with the count itself, in this branch.
   The grand total node sits at level zero like a gathered row, so a crossing of
