@@ -76,13 +76,30 @@ describe('a saved view carries the crossing back', () => {
         expect(leaves(fresh)).toHaveLength(4)
     })
 
-    it('writes nothing down while nothing is being crossed', () => {
+    it('writes the crossing down even when there is none, so that off survives', () => {
         const grid = build()
         grid.api.clearPivot?.()
 
-        const snapshot = grid.api.getState!() as { features?: Record<string, unknown> }
+        const snapshot = grid.api.getState!() as {
+            features?: { pivot?: { rows?: unknown; columns?: unknown } }
+        }
 
-        expect(snapshot.features?.pivot).toBeUndefined()
+        expect(snapshot.features?.pivot?.rows).toEqual([])
+        expect(snapshot.features?.pivot?.columns).toEqual([])
+    })
+
+    it('turns a crossing off when the view it loads was saved with none', () => {
+        const off = build()
+        off.api.clearPivot?.()
+        const saved = off.api.getState!()
+
+        const on = build()
+        expect(getPivot(on)!.isCrossing).toBe(true)
+
+        on.api.setState!(saved)
+
+        expect(getPivot(on)!.isCrossing).toBe(false)
+        expect(leaves(on)).toHaveLength(0)
     })
 
     it('leaves the grid alone when the snapshot names a column it no longer has', () => {

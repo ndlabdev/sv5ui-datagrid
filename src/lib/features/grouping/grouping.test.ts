@@ -228,8 +228,20 @@ describe('state round-trip', () => {
         expect(getGrouping(fresh)!.by).toEqual(['dept'])
     })
 
-    it('leaves an ungrouped grid out of the snapshot entirely', () => {
-        expect(createGrid().api.getState().features?.grouping).toBeUndefined()
+    it('writes an ungrouped grid down as grouped by nothing', () => {
+        expect(createGrid().api.getState().features?.grouping).toEqual({ by: [] })
+    })
+
+    it('ungroups when the view it loads was saved with no grouping', () => {
+        const saved = createGrid().api.getState()
+
+        const grouped = createGrid()
+        grouped.api.setGroupBy!(['dept'])
+        expect(getGrouping(grouped)!.isGrouped).toBe(true)
+
+        grouped.api.setState(saved)
+
+        expect(getGrouping(grouped)!.isGrouped).toBe(false)
     })
 
     it('drops a column the grid no longer has', () => {

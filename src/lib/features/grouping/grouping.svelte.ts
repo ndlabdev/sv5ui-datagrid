@@ -245,10 +245,7 @@ export function grouping<TRow>(options: GroupingOptions<TRow> = {}): GridFeature
             }
         },
         menuItems: createMenuItems,
-        serialize: (grid) => {
-            const by = getGrouping(grid)?.by ?? []
-            return by.length > 0 ? { by } : undefined
-        },
+        serialize: (grid) => ({ by: getGrouping(grid)?.by ?? [] }),
         hydrate: (slice, grid) => {
             const state = getGrouping(grid)
             if (!state || typeof slice !== 'object' || slice === null) return

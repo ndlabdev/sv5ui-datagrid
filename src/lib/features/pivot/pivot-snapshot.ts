@@ -16,10 +16,8 @@ const UNNAMED_SAVE =
     'is saved; the measures stay as the grid was built with.'
 
 export function serializePivot<TRow>(state: Pivot<TRow>): unknown {
-    if (!state.isCrossing) return undefined
-
     const named = state.values.every((measure) => typeof measure.agg === 'string')
-    if (!named && !state.warnedSave) {
+    if (state.isCrossing && !named && !state.warnedSave) {
         state.warnedSave = true
         // eslint-disable-next-line no-console
         console.warn(UNNAMED_SAVE)
