@@ -125,18 +125,18 @@ declare module '../../core/types/api.js' {
         addPivotColumnField?: (field: string) => void
         removePivotField?: (field: string) => void
         clearPivot?: () => void
-        pivotRowsBehind?: (node: unknown, columnId: string) => unknown[]
+        pivotRowsBehind?: (node: RowNode<unknown>, columnId: string) => unknown[]
         setPivotTotalColumn?: (header: string | undefined) => void
         setPivotTotalRow?: (header: string | undefined) => void
         setPivotColumnGroups?: (mode: 'fixed' | 'open' | 'closed') => void
         setPivotColumnSubtotal?: (label: ((header: string) => string) | undefined) => void
         setPivotSortableColumns?: (sortable: boolean) => void
-        setPivotValuesOn?: (where: 'columns' | 'rows') => void
-        setPivotKeepRows?: (keep: unknown) => void
-        pivotKeepRows?: () => unknown
-        setPivotOrderColumns?: (order: unknown) => void
-        pivotOrderColumns?: () => unknown
-        pivotValuesOn?: () => 'columns' | 'rows'
+        setPivotValuesOn?: (where: PivotValuesOn) => void
+        setPivotKeepRows?: (keep: PivotKeepRows | undefined) => void
+        pivotKeepRows?: () => PivotKeepRows | undefined
+        setPivotOrderColumns?: (order: PivotOrderColumns | undefined) => void
+        pivotOrderColumns?: () => PivotOrderColumns | undefined
+        pivotValuesOn?: () => PivotValuesOn
         pivotRows?: () => string[]
         pivotColumns?: () => string[]
         pivotValues?: () => unknown[]

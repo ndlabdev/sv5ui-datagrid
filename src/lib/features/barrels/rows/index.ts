@@ -43,9 +43,12 @@ export {
     isPivotColumn,
     pivot,
     type Pivot,
+    type PivotKeepRows,
     type PivotMeasure,
     type PivotOptions,
-    type PivotShowAs
+    type PivotOrderColumns,
+    type PivotShowAs,
+    type PivotValuesOn
 } from '../../pivot/index.js'
 export {
     getRowPinning,

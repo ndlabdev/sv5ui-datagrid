@@ -306,7 +306,6 @@ export type DataGridProps<TRow> = {
           density?: never
           headerHeight?: never
           groupHeaderHeight?: never
-          stickyGroups?: never
       }
     | {
           grid?: never
@@ -358,11 +357,5 @@ export type DataGridProps<TRow> = {
            * for the lot. Follows the row height when left off.
            */
           groupHeaderHeight?: number
-
-          /**
-           * Keeps the group rows a reader is inside pinned under the header
-           * while their rows scroll past. Needs `virtualization()`.
-           */
-          stickyGroups?: boolean
       }
 )

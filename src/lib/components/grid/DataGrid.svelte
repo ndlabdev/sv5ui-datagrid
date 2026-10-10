@@ -36,7 +36,6 @@
         density,
         headerHeight,
         groupHeaderHeight,
-        stickyGroups,
         toolbar = false,
         floatingFilters = false,
         onExportAll,
@@ -63,7 +62,6 @@
                 density,
                 headerHeight,
                 groupHeaderHeight,
-                stickyGroups,
                 features: [
                     filtering<TRow>({ floatingRow: floatingFilters }),
                     sorting<TRow>(),
