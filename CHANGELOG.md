@@ -66,12 +66,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   row height when left off. The second counts per tier rather than for the lot,
   which is what a pivot's column axis reaches for. Neither goes into a snapshot.
 
+- **`DataGridLabels` gains 39 members, and the theme two slots.** Thirty seven
+  are the strings and the two panel maps a crossing needs, `pivotAggs` naming
+  the nine reductions and `pivotShares` the seven readings, in all twelve
+  languages; the slots are `stickyGroupRows` and `stickyGroupRow`.
+
+    **Breaking** in the same narrow way 2.0.0 was: `DataGridLabels` is the
+    complete table, so an application passing its own as `mergeLabels`' base no
+    longer compiles. `DataGridLabelsInput`, which is what a grid is normally
+    handed, stays a subset and is unaffected. The two maps override one entry at
+    a time, the way `textOps` does.
+
 - **`GridFeature.columns`.** A feature can reshape the column definitions the
   grid draws, asked in registration order. This is the extension point that made
   a crossing reachable from outside at all, and a generated column is a column
   like any other: it filters, it exports, it takes part in a snapshot.
 
 ### Fixed
+
+- **A server grid kept the answer to the crossing before.** `serverRowModel()`
+  listened for a sort, a filter and a page, so changing the axes through
+  `Grid.PivotPanel`, the column menu or `grid.api` moved the state and left the
+  rows alone: the column axis came from the previous response and no longer
+  matched what had been asked for. A crossing now emits `pivotChanged` when it
+  changes anything a `PivotRequest` carries, and the server row model fetches on
+  it the way it does on a filter. A reading that never travels, `showAs` among
+  them, still asks for nothing.
+
+- **A saved view could turn a crossing on but never off.** `serialize` wrote
+  nothing while nothing was being crossed, so the slice was absent, and an
+  absent slice is one `hydrate` is never asked about: loading a view saved with
+  the pivot off left the pivot on. It is written every time now, the way
+  `columnSubtotal` already is. `grouping()` was the same shape and is fixed with
+  it.
+
+- **A measure with no header of its own was labelled with a column id.** With
+  two measures and no `header`, the leaves read `amount` rather than the header
+  the column declares. The fallback now runs header, then id, which is what the
+  axis chips and every other generated label already did.
+
+- **The count under a crossed grid described rows nobody could see.** It read
+  "12 rows" while four gathered rows were drawn, counting the rows the measures
+  came from, which in a crossing are rows the innermost tier never opens onto.
+  It now reads "4 crossings from 12 rows", and says both numbers under a filter
+  too. `crossedRows` and `crossedFilteredRows` are the labels.
+
+- **`stickyGroups` on the shorthand `<DataGrid>` did nothing and said nothing.**
+  The shorthand registers no feature that gives a row a level, so there was
+  never anything to pin. The prop is gone, which makes passing it a compile
+  error rather than a silent no-op; `createDataGrid({ stickyGroups: true })`
+  with `grouping()`, `tree()` or `pivot()` is where it works.
 
 - **`expandAllGroups` kept the ids of groups the data no longer holds**, seeding
   itself from whatever was already open, so the set only grew for the life of the
@@ -99,6 +143,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   column-scoped item `pivot()` and `grouping()` declared was unreachable. The
   column menu now asks as well; it is drawn by `columnOps()`.
 
+    A feature of your own written against 2.0.0 is now asked from two places
+    rather than one. The context menu hands it `{ grid, node }` and the column
+    menu `{ grid, columnId }`, both optional on `MenuContext` as they always
+    were, so an item returned without looking at the context now appears in
+    every column's menu as well as the row's. Check for the one you meant.
+
 - **A gathered row opened onto rows nothing could be read from**, a pivot having
   put away every column that would say what those rows are. The innermost row
   field no longer opens, and `rowsBehind` answers that question instead.
@@ -111,8 +161,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A whole-column share divided by a total counted over data rows only**, so a
   column whose numbers live on gathered rows read blank.
 
-- **An XLSX export of a gathered grid wrote an empty sheet**, the writer having
-  taken only data rows.
+- **An XLSX export of a crossed grid wrote an empty sheet**, the writer having
+  taken only data rows, and a pivot draws none: every row it draws is a
+  gathered one. A `grouping()` grid still holds its leaves, so it was never
+  empty and is unchanged.
 
 ## [2.0.0] - 2026-09-11
 
