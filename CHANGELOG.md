@@ -66,10 +66,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   row height when left off. The second counts per tier rather than for the lot,
   which is what a pivot's column axis reaches for. Neither goes into a snapshot.
 
-- **`DataGridLabels` gains 39 members, and the theme two slots.** Thirty seven
-  are the strings and the two panel maps a crossing needs, `pivotAggs` naming
-  the nine reductions and `pivotShares` the seven readings, in all twelve
-  languages; the slots are `stickyGroupRows` and `stickyGroupRow`.
+- **`DataGridLabels` gains the strings a crossing needs, and the theme two
+  slots.** The panel's own chrome, `pivotAggs` naming the nine reductions and
+  `pivotShares` the seven readings, and `crossedRows` with
+  `crossedFilteredRows` for the count beneath a crossed grid, all of it in
+  twelve languages. The slots are `stickyGroupRows` and `stickyGroupRow`.
 
     **Breaking** in the same narrow way 2.0.0 was: `DataGridLabels` is the
     complete table, so an application passing its own as `mergeLabels`' base no
@@ -83,6 +84,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   like any other: it filters, it exports, it takes part in a snapshot.
 
 ### Fixed
+
+- **The count under a crossed grid counted the total row, and counted nothing
+  at all on a server grid.** Both came in with the count itself, in this branch.
+  The grand total node sits at level zero like a gathered row, so a crossing of
+  four regions with a `totalRow` read "5 crossings"; and a server grid's rows
+  arrive carrying no level at all, so it read "0 crossings from 17 rows", where
+  17 was the gathered rows and the rows behind them are a number only the
+  server knows. Totals are left out of the count now, and a grid the server
+  crossed says plainly how many rows it is showing rather than inventing a
+  crossing count the client never made.
 
 - **A server grid kept the answer to the crossing before.** `serverRowModel()`
   listened for a sort, a filter and a page, so changing the axes through
