@@ -121,33 +121,46 @@ export class Pivot<TRow> {
         return this.rows.length > 0 && this.columns.length > 0 && this.values.length > 0
     }
 
+    #announce(): void {
+        this.#grid.events.emit('pivotChanged', {
+            rows: [...this.rows],
+            columns: [...this.columns]
+        })
+    }
+
     setRows = mutator((fields: string[]): void => {
         this.rows = [...fields]
+        this.#announce()
     })
 
     setColumns = mutator((fields: string[]): void => {
         this.columns = [...fields]
+        this.#announce()
     })
 
     setValues = mutator((measures: PivotMeasure<TRow>[]): void => {
         this.values = [...measures]
+        this.#announce()
     })
 
     addRowField = mutator((field: string): void => {
         if (this.rows.includes(field)) return
         this.rows = [...this.rows, field]
         this.columns = this.columns.filter((id) => id !== field)
+        this.#announce()
     })
 
     addColumnField = mutator((field: string): void => {
         if (this.columns.includes(field)) return
         this.columns = [...this.columns, field]
         this.rows = this.rows.filter((id) => id !== field)
+        this.#announce()
     })
 
     removeField = mutator((field: string): void => {
         this.rows = this.rows.filter((id) => id !== field)
         this.columns = this.columns.filter((id) => id !== field)
+        this.#announce()
     })
 
     setTotalColumn = mutator((header: string | undefined): void => {
@@ -196,16 +209,19 @@ export class Pivot<TRow> {
 
     addValue = mutator((field: string, agg: Aggregation<TRow> = 'sum'): void => {
         this.values = [...this.values, { field, agg }]
+        this.#announce()
     })
 
     removeValue = mutator((at: number): void => {
         this.values = this.values.filter((_measure, index) => index !== at)
+        this.#announce()
     })
 
     setValueAgg = mutator((at: number, agg: Aggregation<TRow>): void => {
         this.values = this.values.map((measure, index) =>
             index === at ? { ...measure, agg } : measure
         )
+        this.#announce()
     })
 
     setValueShowAs = mutator((at: number, showAs: PivotShowAs | undefined): void => {
@@ -243,6 +259,7 @@ export class Pivot<TRow> {
     clearPivot = mutator((): void => {
         this.rows = []
         this.columns = []
+        this.#announce()
     })
 
     setMaxColumns = mutator((limit: number): void => {

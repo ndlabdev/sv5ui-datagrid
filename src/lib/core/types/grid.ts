@@ -84,6 +84,7 @@ export interface PersistStateOptions {
 export interface GridEventMap {
     sortChanged: { sort: SortState[] }
     filterChanged: { filter: FilterModel }
+    pivotChanged: { rows: string[]; columns: string[] }
     pageChanged: { page: number; pageSize: number | null }
     /** The server's total changed under `rowModel: 'server'`. */
     rowCountChanged: { total: number }

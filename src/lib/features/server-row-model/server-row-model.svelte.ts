@@ -74,7 +74,7 @@ export class ServerRowModel<TRow> {
             )
         }
 
-        for (const event of ['sortChanged', 'filterChanged'] as const) {
+        for (const event of ['sortChanged', 'filterChanged', 'pivotChanged'] as const) {
             grid.events.on(event, this.#refreshOnce)
         }
         if (this.mode === 'paged') {

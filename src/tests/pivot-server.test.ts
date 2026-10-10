@@ -524,3 +524,52 @@ describe('the measures stay on the column axis when the server answers', () => {
         warn.mockRestore()
     })
 })
+
+describe('changing the crossing asks the server again', () => {
+    it('fetches when a column field is set, the way a filter does', async () => {
+        const { grid, seen, getRows } = serverGrid({
+            rows: crossed,
+            pivotColumns: [['Q1'], ['Q2']]
+        })
+        await load(grid, getRows)
+        const before = seen.length
+
+        grid.api.setPivotColumns!(['region'])
+        await vi.waitFor(() => expect(seen.length).toBeGreaterThan(before))
+
+        expect(seen.at(-1)?.pivot?.columns).toEqual(['region'])
+    })
+
+    it('fetches when the axes are swapped through the api', async () => {
+        const { grid, seen, getRows } = serverGrid({ rows: crossed, pivotColumns: [['Q1']] })
+        await load(grid, getRows)
+        const before = seen.length
+
+        grid.api.setPivotRows!(['quarter'])
+        await vi.waitFor(() => expect(seen.length).toBeGreaterThan(before))
+
+        expect(seen.at(-1)?.pivot?.rows).toEqual(['quarter'])
+    })
+
+    it('fetches when a measure changes its reduction', async () => {
+        const { grid, seen, getRows } = serverGrid({ rows: crossed, pivotColumns: [['Q1']] })
+        await load(grid, getRows)
+        const before = seen.length
+
+        getPivot(grid)!.setValueAgg(0, 'avg')
+        await vi.waitFor(() => expect(seen.length).toBeGreaterThan(before))
+
+        expect(seen.at(-1)?.pivot?.values).toEqual([{ field: 'amount', agg: 'avg' }])
+    })
+
+    it('says nothing new when a reading that never travels changes', async () => {
+        const { grid, seen, getRows } = serverGrid({ rows: crossed, pivotColumns: [['Q1']] })
+        await load(grid, getRows)
+        const before = seen.length
+
+        getPivot(grid)!.setValueShowAs(0, 'percentOfRow')
+        await new Promise((resolve) => setTimeout(resolve, 20))
+
+        expect(seen.length).toBe(before)
+    })
+})
