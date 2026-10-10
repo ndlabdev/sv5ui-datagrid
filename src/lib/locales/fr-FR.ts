@@ -56,6 +56,26 @@ export const frFR: DataGridLocalePack = {
         or: 'Ou',
         yes: 'Vrai',
         no: 'Faux',
+        pivotAggs: {
+            sum: 'Somme',
+            min: 'Minimum',
+            max: 'Maximum',
+            avg: 'Moyenne',
+            count: 'Nombre',
+            median: 'Médiane',
+            distinctCount: 'Nombre de valeurs distinctes',
+            first: 'Premier',
+            last: 'Dernier'
+        },
+        pivotShares: {
+            percentOfRow: '% de la ligne',
+            percentOfColumn: '% de la colonne',
+            percentOfTotal: '% du total',
+            runningTotal: 'Cumul',
+            differenceFrom: 'Différence par rapport',
+            percentDifferenceFrom: '% de différence',
+            rankInRow: 'Rang dans la ligne'
+        },
         textOps: {
             contains: 'Contient',
             notContains: 'Ne contient pas',
@@ -98,6 +118,9 @@ export const frFR: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / page`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('fr-FR')}-${to.toLocaleString('fr-FR')} sur ${total.toLocaleString('fr-FR')}`,
+        crossedRows: (crossings, rows) => `${crossings} croisements sur ${rows} lignes`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} croisements sur ${filtered} des ${total} lignes`,
         totalRows: (total) => `${total.toLocaleString('fr-FR')} ${total > 1 ? 'lignes' : 'ligne'}`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('fr-FR')} sur ${total.toLocaleString('fr-FR')} ${total > 1 ? 'lignes' : 'ligne'}`,

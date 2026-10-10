@@ -48,6 +48,26 @@ export const viVN: DataGridLocalePack = {
         or: 'Hoặc',
         yes: 'Có',
         no: 'Không',
+        pivotAggs: {
+            sum: 'Tổng',
+            min: 'Nhỏ nhất',
+            max: 'Lớn nhất',
+            avg: 'Trung bình',
+            count: 'Số dòng',
+            median: 'Trung vị',
+            distinctCount: 'Số giá trị khác nhau',
+            first: 'Đầu tiên',
+            last: 'Cuối cùng'
+        },
+        pivotShares: {
+            percentOfRow: '% của hàng',
+            percentOfColumn: '% của cột',
+            percentOfTotal: '% của tổng',
+            runningTotal: 'Tổng luỹ tiến',
+            differenceFrom: 'Chênh so với trước',
+            percentDifferenceFrom: '% chênh so với trước',
+            rankInRow: 'Hạng trong hàng'
+        },
         textOps: {
             contains: 'Chứa',
             notContains: 'Không chứa',
@@ -90,6 +110,9 @@ export const viVN: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} dòng/trang`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('vi-VN')}-${to.toLocaleString('vi-VN')} trên ${total.toLocaleString('vi-VN')}`,
+        crossedRows: (crossings, rows) => `${crossings} phép giao từ ${rows} dòng`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} phép giao từ ${filtered} trong ${total} dòng`,
         totalRows: (total) => `${total.toLocaleString('vi-VN')} dòng`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('vi-VN')} / ${total.toLocaleString('vi-VN')} dòng`,

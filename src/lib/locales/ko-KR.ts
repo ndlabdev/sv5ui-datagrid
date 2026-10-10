@@ -48,6 +48,26 @@ export const koKR: DataGridLocalePack = {
         or: '또는',
         yes: '예',
         no: '아니요',
+        pivotAggs: {
+            sum: '합계',
+            min: '최소',
+            max: '최대',
+            avg: '평균',
+            count: '개수',
+            median: '중위수',
+            distinctCount: '고유 개수',
+            first: '첫 항목',
+            last: '마지막 항목'
+        },
+        pivotShares: {
+            percentOfRow: '행 대비 비율',
+            percentOfColumn: '열 대비 비율',
+            percentOfTotal: '총계 대비 비율',
+            runningTotal: '누계',
+            differenceFrom: '이전과의 차이',
+            percentDifferenceFrom: '이전과의 차이 비율',
+            rankInRow: '행 내 순위'
+        },
         textOps: {
             contains: '포함',
             notContains: '포함하지 않음',
@@ -90,6 +110,9 @@ export const koKR: DataGridLocalePack = {
         pageSizeOption: (size) => `${size}개씩`,
         pageRange: (from, to, total) =>
             `${total.toLocaleString('ko-KR')}개 중 ${from.toLocaleString('ko-KR')}-${to.toLocaleString('ko-KR')}`,
+        crossedRows: (crossings, rows) => `${rows}개 행에서 교차 ${crossings}개`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${total}개 중 ${filtered}개 행에서 교차 ${crossings}개`,
         totalRows: (total) => `${total.toLocaleString('ko-KR')}행`,
         filteredRows: (filtered, total) =>
             `${total.toLocaleString('ko-KR')}행 중 ${filtered.toLocaleString('ko-KR')}행`,

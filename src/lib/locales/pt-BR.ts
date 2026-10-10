@@ -55,6 +55,26 @@ export const ptBR: DataGridLocalePack = {
         or: 'Ou',
         yes: 'Verdadeiro',
         no: 'Falso',
+        pivotAggs: {
+            sum: 'Soma',
+            min: 'Mínimo',
+            max: 'Máximo',
+            avg: 'Média',
+            count: 'Contagem',
+            median: 'Mediana',
+            distinctCount: 'Contagem de valores distintos',
+            first: 'Primeiro',
+            last: 'Último'
+        },
+        pivotShares: {
+            percentOfRow: '% da linha',
+            percentOfColumn: '% da coluna',
+            percentOfTotal: '% do total',
+            runningTotal: 'Total acumulado',
+            differenceFrom: 'Diferença em relação a',
+            percentDifferenceFrom: '% de diferença',
+            rankInRow: 'Classificação na linha'
+        },
         textOps: {
             contains: 'Contém',
             notContains: 'Não contém',
@@ -97,6 +117,9 @@ export const ptBR: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / página`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('pt-BR')}-${to.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')}`,
+        crossedRows: (crossings, rows) => `${crossings} cruzamentos de ${rows} linhas`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} cruzamentos de ${filtered} de ${total} linhas`,
         totalRows: (total) =>
             `${total.toLocaleString('pt-BR')} ${total === 1 ? 'linha' : 'linhas'}`,
         filteredRows: (filtered, total) =>

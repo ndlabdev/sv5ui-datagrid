@@ -49,6 +49,26 @@ export const thTH: DataGridLocalePack = {
         or: 'หรือ',
         yes: 'ใช่',
         no: 'ไม่ใช่',
+        pivotAggs: {
+            sum: 'ผลรวม',
+            min: 'ค่าต่ำสุด',
+            max: 'ค่าสูงสุด',
+            avg: 'ค่าเฉลี่ย',
+            count: 'จำนวน',
+            median: 'มัธยฐาน',
+            distinctCount: 'จำนวนค่าที่ไม่ซ้ำ',
+            first: 'รายการแรก',
+            last: 'รายการสุดท้าย'
+        },
+        pivotShares: {
+            percentOfRow: '% ของแถว',
+            percentOfColumn: '% ของคอลัมน์',
+            percentOfTotal: '% ของผลรวม',
+            runningTotal: 'ผลรวมสะสม',
+            differenceFrom: 'ผลต่างจาก',
+            percentDifferenceFrom: '% ผลต่างจาก',
+            rankInRow: 'อันดับในแถว'
+        },
         textOps: {
             contains: 'มีคำว่า',
             notContains: 'ไม่มีคำว่า',
@@ -91,6 +111,9 @@ export const thTH: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} แถว/หน้า`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('th-TH')}-${to.toLocaleString('th-TH')} จาก ${total.toLocaleString('th-TH')}`,
+        crossedRows: (crossings, rows) => `${crossings} จุดตัดจาก ${rows} แถว`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} จุดตัดจาก ${filtered} ใน ${total} แถว`,
         totalRows: (total) => `${total.toLocaleString('th-TH')} แถว`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('th-TH')} จาก ${total.toLocaleString('th-TH')} แถว`,

@@ -84,6 +84,26 @@ export const defaultLabels: DataGridLabels = {
     or: 'Or',
     yes: 'True',
     no: 'False',
+    pivotAggs: {
+        sum: 'Sum',
+        min: 'Minimum',
+        max: 'Maximum',
+        avg: 'Average',
+        count: 'Count',
+        median: 'Median',
+        distinctCount: 'Distinct count',
+        first: 'First',
+        last: 'Last'
+    },
+    pivotShares: {
+        percentOfRow: '% of row',
+        percentOfColumn: '% of column',
+        percentOfTotal: '% of total',
+        runningTotal: 'Running total',
+        differenceFrom: 'Difference from',
+        percentDifferenceFrom: '% difference from',
+        rankInRow: 'Rank in row'
+    },
     textOps: {
         contains: 'Contains',
         notContains: 'Does not contain',
@@ -126,6 +146,9 @@ export const defaultLabels: DataGridLabels = {
     pageSizeOption: (size) => `${size} / page`,
     pageRange: (from, to, total) =>
         `${from.toLocaleString()}-${to.toLocaleString()} of ${total.toLocaleString()}`,
+    crossedRows: (crossings, rows) => `${crossings} crossings from ${rows} rows`,
+    crossedFilteredRows: (crossings, filtered, total) =>
+        `${crossings} crossings from ${filtered} of ${total} rows`,
     totalRows: (total) => `${total.toLocaleString()} rows`,
     filteredRows: (filtered, total) =>
         `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`,
@@ -370,6 +393,8 @@ export function mergeLabels(
         ...overrides,
         textOps: { ...base.textOps, ...overrides.textOps },
         numberOps: { ...base.numberOps, ...overrides.numberOps },
-        dateOps: { ...base.dateOps, ...overrides.dateOps }
+        dateOps: { ...base.dateOps, ...overrides.dateOps },
+        pivotAggs: { ...base.pivotAggs, ...overrides.pivotAggs },
+        pivotShares: { ...base.pivotShares, ...overrides.pivotShares }
     }
 }

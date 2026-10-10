@@ -48,6 +48,26 @@ export const zhCN: DataGridLocalePack = {
         or: '或者',
         yes: '是',
         no: '否',
+        pivotAggs: {
+            sum: '求和',
+            min: '最小值',
+            max: '最大值',
+            avg: '平均值',
+            count: '计数',
+            median: '中位数',
+            distinctCount: '去重计数',
+            first: '第一个',
+            last: '最后一个'
+        },
+        pivotShares: {
+            percentOfRow: '占行百分比',
+            percentOfColumn: '占列百分比',
+            percentOfTotal: '占总计百分比',
+            runningTotal: '累计',
+            differenceFrom: '差异',
+            percentDifferenceFrom: '差异百分比',
+            rankInRow: '行内排名'
+        },
         textOps: {
             contains: '包含',
             notContains: '不包含',
@@ -90,6 +110,9 @@ export const zhCN: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} 行/页`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('zh-CN')}-${to.toLocaleString('zh-CN')}，共 ${total.toLocaleString('zh-CN')} 行`,
+        crossedRows: (crossings, rows) => `${crossings} 个交叉，来自 ${rows} 行`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} 个交叉，来自 ${total} 行中的 ${filtered} 行`,
         totalRows: (total) => `共 ${total.toLocaleString('zh-CN')} 行`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('zh-CN')} / ${total.toLocaleString('zh-CN')} 行`,

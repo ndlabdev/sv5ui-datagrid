@@ -51,6 +51,26 @@ export const deDE: DataGridLocalePack = {
         or: 'Oder',
         yes: 'Wahr',
         no: 'Falsch',
+        pivotAggs: {
+            sum: 'Summe',
+            min: 'Minimum',
+            max: 'Maximum',
+            avg: 'Mittelwert',
+            count: 'Anzahl',
+            median: 'Median',
+            distinctCount: 'Anzahl eindeutiger Werte',
+            first: 'Erster',
+            last: 'Letzter'
+        },
+        pivotShares: {
+            percentOfRow: '% der Zeile',
+            percentOfColumn: '% der Spalte',
+            percentOfTotal: '% des Gesamtwerts',
+            runningTotal: 'Laufende Summe',
+            differenceFrom: 'Differenz zu',
+            percentDifferenceFrom: '% Differenz zu',
+            rankInRow: 'Rang in der Zeile'
+        },
         textOps: {
             contains: 'Enthält',
             notContains: 'Enthält nicht',
@@ -93,6 +113,9 @@ export const deDE: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / Seite`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('de-DE')}-${to.toLocaleString('de-DE')} von ${total.toLocaleString('de-DE')}`,
+        crossedRows: (crossings, rows) => `${crossings} Kreuzungen aus ${rows} Zeilen`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} Kreuzungen aus ${filtered} von ${total} Zeilen`,
         totalRows: (total) =>
             `${total.toLocaleString('de-DE')} ${total === 1 ? 'Zeile' : 'Zeilen'}`,
         filteredRows: (filtered, total) =>

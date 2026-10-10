@@ -101,16 +101,16 @@ describe('the pivot panel', () => {
         const before = document.querySelector('[role="gridcell"]')?.textContent ?? ''
 
         await page.getByRole('button', { name: 'Gộp bằng' }).click()
-        await page.getByRole('menuitem', { name: 'avg' }).click()
+        await page.getByRole('menuitem', { name: 'Trung bình' }).click()
 
-        await expect.poll(() => zone('values')?.textContent ?? '').toContain('avg')
+        await expect.poll(() => zone('values')?.textContent ?? '').toContain('Trung bình')
         expect(before).toBeTruthy()
     })
 
     it('reads a measure as a share from the panel', async () => {
         await open()
         await page.getByRole('button', { name: 'Đọc theo' }).click()
-        await page.getByRole('menuitem', { name: 'percentOfRow' }).click()
+        await page.getByRole('menuitem', { name: '% của hàng' }).click()
 
         await expect
             .poll(() =>
@@ -131,5 +131,33 @@ describe('the pivot panel', () => {
         await expect
             .poll(() => document.querySelectorAll('[role="row"]').length)
             .toBeGreaterThan(before)
+    })
+})
+
+describe('the panel names a reduction and a reading the way a reader would', () => {
+    it('shows the reduction by its name, not by its identifier', async () => {
+        await open()
+
+        const buttons = Array.from(document.querySelectorAll('button')).map(
+            (button) => button.textContent?.trim() ?? ''
+        )
+
+        expect(buttons).toContain('Tổng')
+        expect(buttons).not.toContain('sum')
+    })
+
+    it('shows a reading by its name once one is picked', async () => {
+        await open()
+        const settings = zone('values')!
+
+        void settings
+        await page.getByRole('button', { name: 'Đọc theo' }).click()
+        await page.getByRole('menuitem', { name: '% của hàng' }).click()
+
+        const buttons = Array.from(document.querySelectorAll('button')).map(
+            (button) => button.textContent?.trim() ?? ''
+        )
+        expect(buttons).toContain('% của hàng')
+        expect(buttons).not.toContain('percentOfRow')
     })
 })

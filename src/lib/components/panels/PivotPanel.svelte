@@ -3,6 +3,7 @@
     import { Button, DropdownMenu, Icon } from 'sv5ui'
     import { getPivot } from '../../features/pivot/pivot.svelte.js'
     import type { PivotShowAs } from '../../features/pivot/pivot.types.js'
+    import type { PivotAggName } from '../../core/types/index.js'
     import type { Aggregation } from '../../features/grouping/grouping.types.js'
     import { datagridVariants } from '../datagrid.variants.js'
     import type { GridState } from '$lib/index.js'
@@ -53,7 +54,10 @@
     const free = $derived(pivot?.pivotableColumns() ?? [])
 
     const shareLabel = (showAs: PivotShowAs | undefined) =>
-        showAs === undefined ? t.pivotShareNone : showAs
+        showAs === undefined ? t.pivotShareNone : (t.pivotShares[showAs] ?? showAs)
+
+    const aggLabel = (agg: unknown) =>
+        typeof agg === 'string' ? (t.pivotAggs[agg as PivotAggName] ?? agg) : String(agg)
 
     function axis(fields: string[], move: (field: string, offset: number) => void) {
         return fields.map((field, index) => ({
@@ -265,7 +269,7 @@
 
                     <DropdownMenu
                         items={AGGREGATIONS.map((agg) => ({
-                            label: String(agg),
+                            label: aggLabel(agg),
                             onSelect: () => pivot.setValueAgg(index, agg)
                         }))}
                     >
@@ -274,7 +278,7 @@
                                 {...props}
                                 variant="ghost"
                                 size="xs"
-                                label={String(measure.agg)}
+                                label={aggLabel(measure.agg)}
                                 aria-label={t.pivotAggregation}
                             />
                         {/snippet}

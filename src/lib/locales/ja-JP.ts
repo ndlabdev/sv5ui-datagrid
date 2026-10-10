@@ -48,6 +48,26 @@ export const jaJP: DataGridLocalePack = {
         or: 'または',
         yes: 'はい',
         no: 'いいえ',
+        pivotAggs: {
+            sum: '合計',
+            min: '最小',
+            max: '最大',
+            avg: '平均',
+            count: '個数',
+            median: '中央値',
+            distinctCount: '個数（重複なし）',
+            first: '先頭',
+            last: '末尾'
+        },
+        pivotShares: {
+            percentOfRow: '行に対する比率',
+            percentOfColumn: '列に対する比率',
+            percentOfTotal: '総計に対する比率',
+            runningTotal: '累計',
+            differenceFrom: '前との差',
+            percentDifferenceFrom: '前との差の比率',
+            rankInRow: '行内の順位'
+        },
         textOps: {
             contains: '含む',
             notContains: '含まない',
@@ -90,6 +110,9 @@ export const jaJP: DataGridLocalePack = {
         pageSizeOption: (size) => `${size}件`,
         pageRange: (from, to, total) =>
             `${total.toLocaleString('ja-JP')}件中 ${from.toLocaleString('ja-JP')}-${to.toLocaleString('ja-JP')}件`,
+        crossedRows: (crossings, rows) => `${rows} 行から ${crossings} 件のクロス集計`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${total} 行のうち ${filtered} 行から ${crossings} 件のクロス集計`,
         totalRows: (total) => `${total.toLocaleString('ja-JP')}行`,
         filteredRows: (filtered, total) =>
             `${total.toLocaleString('ja-JP')}行中 ${filtered.toLocaleString('ja-JP')}行`,

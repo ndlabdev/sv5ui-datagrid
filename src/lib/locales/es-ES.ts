@@ -56,6 +56,26 @@ export const esES: DataGridLocalePack = {
         or: 'O',
         yes: 'Verdadero',
         no: 'Falso',
+        pivotAggs: {
+            sum: 'Suma',
+            min: 'Mínimo',
+            max: 'Máximo',
+            avg: 'Promedio',
+            count: 'Cuenta',
+            median: 'Mediana',
+            distinctCount: 'Cuenta de valores distintos',
+            first: 'Primero',
+            last: 'Último'
+        },
+        pivotShares: {
+            percentOfRow: '% de la fila',
+            percentOfColumn: '% de la columna',
+            percentOfTotal: '% del total',
+            runningTotal: 'Total acumulado',
+            differenceFrom: 'Diferencia respecto a',
+            percentDifferenceFrom: '% de diferencia',
+            rankInRow: 'Rango en la fila'
+        },
         textOps: {
             contains: 'Contiene',
             notContains: 'No contiene',
@@ -98,6 +118,9 @@ export const esES: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / página`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('es-ES')}-${to.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
+        crossedRows: (crossings, rows) => `${crossings} cruces de ${rows} filas`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} cruces de ${filtered} de ${total} filas`,
         totalRows: (total) => `${total.toLocaleString('es-ES')} ${total === 1 ? 'fila' : 'filas'}`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')} filas`,

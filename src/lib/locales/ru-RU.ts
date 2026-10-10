@@ -54,6 +54,26 @@ export const ruRU: DataGridLocalePack = {
         or: 'Или',
         yes: 'Да',
         no: 'Нет',
+        pivotAggs: {
+            sum: 'Сумма',
+            min: 'Минимум',
+            max: 'Максимум',
+            avg: 'Среднее',
+            count: 'Количество',
+            median: 'Медиана',
+            distinctCount: 'Количество уникальных',
+            first: 'Первое',
+            last: 'Последнее'
+        },
+        pivotShares: {
+            percentOfRow: '% от строки',
+            percentOfColumn: '% от столбца',
+            percentOfTotal: '% от итога',
+            runningTotal: 'Накопительный итог',
+            differenceFrom: 'Отличие от',
+            percentDifferenceFrom: '% отличия от',
+            rankInRow: 'Ранг в строке'
+        },
         textOps: {
             contains: 'Содержит',
             notContains: 'Не содержит',
@@ -96,6 +116,9 @@ export const ruRU: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / стр.`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('ru-RU')}-${to.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')}`,
+        crossedRows: (crossings, rows) => `${crossings} пересечений из ${rows} строк`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} пересечений из ${filtered} из ${total} строк`,
         totalRows: (total) => `${total.toLocaleString('ru-RU')} ${rows(total)}`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')} ${rows(total)}`,

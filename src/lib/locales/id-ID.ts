@@ -49,6 +49,26 @@ export const idID: DataGridLocalePack = {
         or: 'Atau',
         yes: 'Benar',
         no: 'Salah',
+        pivotAggs: {
+            sum: 'Jumlah',
+            min: 'Minimum',
+            max: 'Maksimum',
+            avg: 'Rata-rata',
+            count: 'Hitung',
+            median: 'Median',
+            distinctCount: 'Hitung nilai unik',
+            first: 'Pertama',
+            last: 'Terakhir'
+        },
+        pivotShares: {
+            percentOfRow: '% dari baris',
+            percentOfColumn: '% dari kolom',
+            percentOfTotal: '% dari total',
+            runningTotal: 'Total berjalan',
+            differenceFrom: 'Selisih dari',
+            percentDifferenceFrom: '% selisih dari',
+            rankInRow: 'Peringkat dalam baris'
+        },
         textOps: {
             contains: 'Mengandung',
             notContains: 'Tidak mengandung',
@@ -91,6 +111,9 @@ export const idID: DataGridLocalePack = {
         pageSizeOption: (size) => `${size} / halaman`,
         pageRange: (from, to, total) =>
             `${from.toLocaleString('id-ID')}-${to.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')}`,
+        crossedRows: (crossings, rows) => `${crossings} persilangan dari ${rows} baris`,
+        crossedFilteredRows: (crossings, filtered, total) =>
+            `${crossings} persilangan dari ${filtered} dari ${total} baris`,
         totalRows: (total) => `${total.toLocaleString('id-ID')} baris`,
         filteredRows: (filtered, total) =>
             `${filtered.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')} baris`,
