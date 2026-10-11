@@ -78,6 +78,24 @@ const WAIT_DEFAULTS = {
  * Returns false when the budget runs out, so the caller can say so in terms of
  * the workflow rather than blaming the branch.
  */
+/**
+ * The notes for the release being cut, read off the hand-written file.
+ *
+ * Returns the body under the heading, or null where the file says nothing.
+ * Throws where the heading names a different version, because a stale file is
+ * how the wrong release gets the wrong notes.
+ */
+export function notesFor(version, text) {
+    const heading = /^#\s*v?(\d+\.\d+\.\d+)\s*$/m.exec(text ?? '')
+    if (!heading) throw new Error('Release notes need a `# <version>` heading on its own line.')
+    if (heading[1] !== version) {
+        throw new Error(`Release notes are headed ${heading[1]}, but this release is ${version}.`)
+    }
+
+    const body = (text ?? '').slice(heading.index + heading[0].length).trim()
+    return body === '' ? null : body
+}
+
 export async function waitForChecksToAppear(listChecks, options) {
     const { attempts, intervalMs, sleep, onWait } = { ...WAIT_DEFAULTS, ...options }
 

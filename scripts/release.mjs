@@ -25,8 +25,13 @@
  * from there instead of refusing.
  */
 import { execFileSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
-import { nextVersion, rotateChangelog, waitForChecksToAppear } from './lib/release-helpers.mjs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import {
+    nextVersion,
+    notesFor,
+    rotateChangelog,
+    waitForChecksToAppear
+} from './lib/release-helpers.mjs'
 
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
@@ -349,10 +354,30 @@ if (published !== version) {
 console.log(`  npm reports ${published}`)
 
 step('Release notes')
-try {
-    run('gh', ['release', 'create', tag, '--title', tag, '--notes-from-tag'], { stdio: 'inherit' })
-} catch {
-    console.log(`  could not create the GitHub release; do it by hand: gh release create ${tag}`)
+const notesPath = '.github/release-notes.md'
+let notes = null
+if (existsSync(notesPath)) {
+    try {
+        notes = notesFor(version, readFileSync(notesPath, 'utf8'))
+    } catch (error) {
+        console.log(`  ${notesPath}: ${error.message}`)
+    }
+}
+if (notes === null) {
+    console.log(
+        `  no notes in ${notesPath}, so none are published.\n` +
+            `  write them and run:  gh release create ${tag} --title ${tag} --notes-file ${notesPath}`
+    )
+} else {
+    try {
+        run('gh', ['release', 'create', tag, '--title', tag, '--notes-file', notesPath], {
+            stdio: 'inherit'
+        })
+    } catch {
+        console.log(
+            `  could not create the GitHub release; do it by hand: gh release create ${tag}`
+        )
+    }
 }
 
 console.log(`\n\x1b[32m${pkg().name}@${version} published.\x1b[0m\n`)
