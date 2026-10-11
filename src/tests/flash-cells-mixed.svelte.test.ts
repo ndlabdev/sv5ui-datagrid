@@ -68,7 +68,7 @@ const open = async (grid: GridState<Tick>, klass = 'h-[320px]') => {
 
 const marked = (screen: { container: Element }) =>
     Array.from(screen.container.querySelectorAll<HTMLElement>('[data-dg-cell]')).filter((cell) =>
-        cell.style.outline.includes('solid')
+        cell.style.boxShadow.includes('inset')
     )
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 150))
@@ -331,7 +331,7 @@ describe('beside the features that reshape the rows', () => {
         expect(pinned, 'the pinned row group').not.toBeNull()
         expect(
             Array.from(pinned!.querySelectorAll<HTMLElement>('[data-dg-pinned-cell]')).filter(
-                (cell) => cell.style.outline.includes('solid')
+                (cell) => cell.style.boxShadow.includes('inset')
             )
         ).toEqual([])
     })

@@ -193,7 +193,7 @@
     const cases = [
         {
             title: 'Mọi cột đang thấy',
-            what: 'Không khai cột nào thì mọi cột trên màn hình đều được canh. Giá lên viền xanh, xuống viền đỏ.',
+            what: 'Không khai cột nào thì mọi cột trên màn hình đều được canh. Giá lên loang xanh, xuống loang đỏ, rồi nhạt dần.',
             grid: everything
         },
         {
@@ -208,12 +208,12 @@
         },
         {
             title: 'Cùng ô với thang màu',
-            what: 'Thang màu dùng background, dấu đổi dùng outline, nên hai thứ không giành nhau. Cả hai cùng thấy được.',
+            what: 'Thang màu nằm ở nền ô, dấu đổi là một lớp loang mờ phía trên, nên thang màu vẫn lọt qua. Viền thì lưới này đã dành cho lựa chọn và focus.',
             grid: withScale
         },
         {
             title: 'Dấu đổi theo biên độ',
-            what: 'appearance nhận cả giá trị cũ và mới, nên nhảy quá 3 thì tô nền hẳn, còn nhích nhẹ thì về viền mặc định. Cường độ nói lên biên độ, không chỉ chiều.',
+            what: 'appearance nhận cả giá trị cũ và mới, nên nhảy quá 3 thì tô nền đặc, còn nhích nhẹ thì về lớp loang mặc định. Cường độ nói lên biên độ, không chỉ chiều.',
             grid: bySize
         },
         {

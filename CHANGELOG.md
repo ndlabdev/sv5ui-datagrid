@@ -98,7 +98,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     from half a second ago reads as older than one that has just landed. The
     fade is a keyframe in `@sv5ui/datagrid/theme.css` driven by
     `--dg-flash-ms`, so nothing re-renders for it, and a grid without that
-    stylesheet still draws the outline.
+    stylesheet still draws the mark.
+
+    It is a translucent wash over the cell rather than a border, because a
+    border is what this grid already says selection and focus with: a ring on
+    the focused cell, an edge on a range, a dashed edge on a cut, all of them
+    in the same primary tint a flash was using. The wash rides on the cell's
+    box-shadow, a layer nothing else at cell level touches, so it sits over a
+    colour scale's background and a data bar's gradient and lets both show
+    through, and it leaves `::before` to the range and the cut.
 
     Three ways to say it differently, from the cheapest up: the `flashCell`
     theme slot, app-wide or per grid through `ui`; the `--dg-flash-tint` and

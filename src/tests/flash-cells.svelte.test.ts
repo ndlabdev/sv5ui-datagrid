@@ -70,11 +70,11 @@ const open = async (grid: GridState<Tick>) => {
 
 const marked = (screen: { container: Element }) =>
     Array.from(screen.container.querySelectorAll<HTMLElement>('[data-dg-cell]')).filter((cell) =>
-        cell.style.outline.includes('solid')
+        cell.style.boxShadow.includes('inset')
     )
 
-const outlineOf = (screen: { container: Element }, text: string) =>
-    marked(screen).find((cell) => (cell.textContent ?? '').trim() === text)?.style.outline ?? ''
+const tintOf = (screen: { container: Element }, text: string) =>
+    marked(screen).find((cell) => (cell.textContent ?? '').trim() === text)?.style.boxShadow ?? ''
 
 const nudge = async (grid: GridState<Tick>, change: (row: Tick) => Tick) => {
     grid.data = grid.data.map(change)
@@ -141,8 +141,8 @@ describe('which way the value went', () => {
         })
 
         await expect.poll(() => marked(screen).length).toBe(2)
-        expect(outlineOf(screen, '105')).toContain('success')
-        expect(outlineOf(screen, '96')).toContain('error')
+        expect(tintOf(screen, '105')).toContain('success')
+        expect(tintOf(screen, '96')).toContain('error')
     })
 
     it('gives no direction where a value is not a number', async () => {
@@ -152,7 +152,7 @@ describe('which way the value went', () => {
         await nudge(grid, (row) => (row.id === 1 ? { ...row, desk: 'C' } : row))
 
         await expect.poll(() => marked(screen).length).toBe(1)
-        expect(outlineOf(screen, 'C')).toContain('primary')
+        expect(tintOf(screen, 'C')).toContain('primary')
     })
 
     it('gives no direction at all when the option is off', async () => {
@@ -162,7 +162,7 @@ describe('which way the value went', () => {
         await nudge(grid, (row) => (row.id === 1 ? { ...row, price: row.price + 5 } : row))
 
         await expect.poll(() => marked(screen).length).toBe(1)
-        expect(outlineOf(screen, '105')).toContain('primary')
+        expect(tintOf(screen, '105')).toContain('primary')
     })
 })
 
@@ -199,7 +199,7 @@ describe('what it is told to watch', () => {
 })
 
 describe('beside the features it shares a cell with', () => {
-    it('leaves a colour scale its background and takes the outline', async () => {
+    it('leaves a colour scale its background and washes over it', async () => {
         const grid = build({
             extra: [
                 conditionalFormatting<Tick>({ rules: [{ kind: 'colorScale', column: 'price' }] })
@@ -212,7 +212,11 @@ describe('beside the features it shares a cell with', () => {
 
         const cell = marked(screen)[0]!
         expect(cell.style.backgroundColor).not.toBe('')
-        expect(cell.style.outline).toContain('solid')
+        expect(cell.style.boxShadow).toContain('inset')
+
+        const strength = Number(/(\d+(?:\.\d+)?)%/.exec(cell.style.boxShadow)?.[1] ?? '100')
+        expect(strength).toBeGreaterThan(0)
+        expect(strength).toBeLessThan(50)
     })
 
     it('marks a group row when what it gathers changes', async () => {

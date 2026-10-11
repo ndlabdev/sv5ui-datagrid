@@ -9,8 +9,16 @@ const stylesheet = readFileSync(join('src', 'lib', 'theme.css'), 'utf8')
 describe('the stylesheet the fade needs', () => {
     it('declares the keyframes the mark animates through', () => {
         expect(stylesheet).toContain('@keyframes dg-flash-fade')
-        expect(stylesheet).toMatch(/outline-color:\s*var\(--dg-flash-tint/)
-        expect(stylesheet).toMatch(/outline-color:\s*transparent/)
+        expect(stylesheet).toMatch(/box-shadow:[^;]*var\(--dg-flash-tint/)
+        expect(stylesheet).toMatch(/box-shadow:\s*inset[^;]*transparent/)
+    })
+
+    it('washes the cell rather than bordering it, which means selection here', () => {
+        const frames = stylesheet.slice(stylesheet.indexOf('@keyframes dg-flash-fade'))
+        const body = frames.slice(0, frames.indexOf('.dg-flash'))
+
+        expect(body).not.toMatch(/outline|border/)
+        expect(body).toContain('inset')
     })
 
     it('drives the fade from the property the feature sets, not a fixed time', () => {
@@ -24,11 +32,18 @@ describe('the stylesheet the fade needs', () => {
         expect(guard).toMatch(/animation:\s*none/)
     })
 
-    it('leaves the outline to the feature, so a grid without it still marks', () => {
+    it('leaves the wash to the feature, so a grid without it still marks', () => {
         const rule = stylesheet.slice(stylesheet.indexOf('.dg-flash {'))
         const body = rule.slice(0, rule.indexOf('}'))
 
-        expect(body).not.toMatch(/outline:/)
+        expect(body).not.toMatch(/box-shadow:/)
+        expect(body).toMatch(/animation:/)
+    })
+
+    it('leaves the pseudo-elements to the range and the cut', () => {
+        const rule = stylesheet.slice(stylesheet.indexOf('.dg-flash'))
+
+        expect(rule).not.toMatch(/\.dg-flash::(before|after)/)
     })
 })
 

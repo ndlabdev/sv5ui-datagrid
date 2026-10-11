@@ -128,8 +128,7 @@ export class FlashCells<TRow> {
         return {
             class: this.#class(),
             style: {
-                outline: `2px solid ${tint}`,
-                'outline-offset': '-2px',
+                'box-shadow': `inset 0 0 0 9999px color-mix(in oklab, ${tint} 22%, transparent)`,
                 '--dg-flash-tint': tint,
                 '--dg-flash-ms': `${this.duration}ms`
             }
