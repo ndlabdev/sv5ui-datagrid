@@ -14,6 +14,8 @@ export interface SeenCell {
 export interface FlashFound {
     key: string
     way: FlashWay
+    before: unknown
+    after: unknown
 }
 
 export function wayBetween(before: unknown, after: unknown, directional: boolean): FlashWay {
@@ -36,7 +38,12 @@ export function flashesBetween(
         const before = remembered.get(cell.key)
         if (Object.is(before, cell.value)) continue
 
-        found.push({ key: cell.key, way: wayBetween(before, cell.value, directional) })
+        found.push({
+            key: cell.key,
+            way: wayBetween(before, cell.value, directional),
+            before,
+            after: cell.value
+        })
     }
 
     return found

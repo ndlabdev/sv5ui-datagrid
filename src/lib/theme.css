@@ -8,3 +8,34 @@
  */
 
 @source '.';
+
+/**
+ * The mark `flashCells()` leaves on a cell whose value just moved.
+ *
+ * The feature draws the outline itself, inset so it does not grow the cell, so
+ * a grid without this stylesheet still marks what moved. What this adds is the
+ * fade: the mark weakens over its own life, so a change from half a second ago
+ * reads as older than one that has just landed. An animation outranks an inline
+ * style, which is how it takes the outline over. Nothing re-renders for it.
+ *
+ * Override `.dg-flash` or the keyframes to say it differently, or pass
+ * `ui={{ flashCell }}` for one grid.
+ */
+@keyframes dg-flash-fade {
+    from {
+        outline-color: var(--dg-flash-tint, currentColor);
+    }
+    to {
+        outline-color: transparent;
+    }
+}
+
+.dg-flash {
+    animation: dg-flash-fade var(--dg-flash-ms, 700ms) ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dg-flash {
+        animation: none;
+    }
+}

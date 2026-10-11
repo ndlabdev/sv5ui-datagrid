@@ -1,4 +1,4 @@
-import type { ColumnState } from '../../core/types/index.js'
+import type { CellDecoration, ColumnState } from '../../core/types/index.js'
 
 /**
  * Marks a cell for a moment when its value changes, so a grid fed by a socket
@@ -39,14 +39,18 @@ export interface FlashCellsOptions<TRow = unknown> {
     columns?: string[] | ((column: ColumnState<TRow>) => boolean)
 
     /**
-     * How long a cell stays marked, in milliseconds.
+     * How long a cell stays marked, in milliseconds, counted from its own
+     * change rather than from the last change anywhere.
      *
-     * One timer covers every mark rather than one per cell or one per batch,
-     * so a thousand cells changing at once costs one timer and a stream of
-     * changes cannot pile them up. The clock restarts on each batch, so a mark
-     * lasts at least this long and at most this long after the last change
-     * anywhere on screen. Under a steady stream that reads as a cell staying
-     * lit while the stream runs, which is the honest picture of it.
+     * One timer still covers every mark: it is set to the earliest expiry
+     * among them, drops the marks that reached it, and sets itself again for
+     * the next. A thousand cells changing at once costs one timer, and a cell
+     * that changed a second ago lets go while its neighbours keep moving,
+     * which is what makes the mark mean "just now" on a grid that never stops.
+     *
+     * The mark fades over this time rather than blinking out, so a reader can
+     * tell a change from half a second ago from one that has just landed. The
+     * fade is CSS, driven by `--dg-flash-ms`, so nothing re-renders for it.
      *
      * @default 700
      */
@@ -60,6 +64,39 @@ export interface FlashCellsOptions<TRow = unknown> {
      * @default true
      */
     direction?: boolean
+
+    /**
+     * Decide the whole look yourself, per cell, instead of taking the outline.
+     *
+     * It is handed what changed and how long ago, so the mark can answer to
+     * the size of the move rather than only its direction: a tenth of a
+     * percent and a ten percent jump need not look alike. Return `undefined`
+     * to take the default for that cell.
+     *
+     * ```ts
+     * appearance: ({ way, before, after }) => {
+     *     const jump = Math.abs(Number(after) - Number(before))
+     *     if (!Number.isFinite(jump) || jump < 10) return undefined
+     *     return { style: { 'background-color': way === 'up' ? '#dcfce7' : '#fee2e2' } }
+     * }
+     * ```
+     *
+     * Reaching for a class instead keeps the cell themeable; reaching for
+     * `style` is how a value computed per cell gets in, the way a colour scale
+     * does.
+     */
+    appearance?: (mark: FlashMark & { age: number }) => CellDecoration | undefined
+}
+
+/** A cell the feature is marking: what happened, and when. */
+export interface FlashMark {
+    way: FlashWay
+    /** `Date.now()` at the sweep that saw it. */
+    at: number
+    /** The value the feature was holding. */
+    before: unknown
+    /** The value it found. */
+    after: unknown
 }
 
 /** What happened to a cell, as the decoration reads it. */

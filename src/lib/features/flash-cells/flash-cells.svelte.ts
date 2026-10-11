@@ -1,7 +1,8 @@
 import { type GridState } from '../../core/grid/index.js'
+import { slotClass } from '../../core/theme/index.js'
 import type { CellDecoration, ColumnState, GridFeature, RowNode } from '../../core/types/index.js'
 import FlashWatcher from './FlashWatcher.svelte'
-import type { FlashCellsOptions, FlashWay } from './flash-cells.types.js'
+import type { FlashCellsOptions, FlashMark, FlashWay } from './flash-cells.types.js'
 import { cellKey, emptyMemo, flashesBetween, remember, type SeenCell } from './flash-memo.js'
 
 const FLASH_CELLS = 'flashCells'
@@ -13,20 +14,13 @@ const TINT: Record<FlashWay, string> = {
     changed: 'var(--color-primary)'
 }
 
-const stillOf = (way: FlashWay): CellDecoration => ({
-    style: {
-        outline: `2px solid ${TINT[way]}`,
-        'outline-offset': '-2px'
-    }
-})
-
 export class FlashCells<TRow> {
     #grid: GridState<TRow>
     #options: FlashCellsOptions<TRow>
     #remembered = emptyMemo()
     #timer: ReturnType<typeof setTimeout> | undefined
 
-    ways = $state.raw<Record<string, FlashWay>>({})
+    marks = $state.raw<Record<string, FlashMark>>({})
 
     constructor(grid: GridState<TRow>, options: FlashCellsOptions<TRow>) {
         this.#grid = grid
@@ -70,40 +64,83 @@ export class FlashCells<TRow> {
 
     sweep = (): void => {
         const seen = this.#onScreen()
-        const found = this.muted ? [] : flashesBetween(this.#remembered, seen, this.directional)
+        const found = flashesBetween(this.#remembered, seen, this.directional)
         this.#remembered = remember(seen)
 
         if (found.length === 0) return
 
-        const next = { ...this.ways }
-        for (const one of found) next[one.key] = one.way
-        this.ways = next
+        const at = Date.now()
+        const next = { ...this.marks }
+        for (const one of found) {
+            next[one.key] = { way: one.way, at, before: one.before, after: one.after }
+        }
+        this.marks = next
 
-        this.#restart()
+        this.#sweepExpiry()
     }
 
     get directional(): boolean {
         return this.#options.direction ?? true
     }
 
-    #restart(): void {
+    #sweepExpiry(): void {
         if (this.#timer !== undefined) clearTimeout(this.#timer)
-        this.#timer = setTimeout(() => {
-            this.#timer = undefined
-            this.ways = {}
-        }, this.duration)
+        this.#timer = undefined
+
+        const now = Date.now()
+        const live: Record<string, FlashMark> = {}
+        let earliest = Infinity
+
+        for (const [key, mark] of Object.entries(this.marks)) {
+            const ends = mark.at + this.duration
+            if (ends <= now) continue
+            live[key] = mark
+            if (ends < earliest) earliest = ends
+        }
+
+        if (Object.keys(live).length !== Object.keys(this.marks).length) this.marks = live
+        if (earliest === Infinity) return
+
+        this.#timer = setTimeout(
+            () => {
+                this.#timer = undefined
+                this.#sweepExpiry()
+            },
+            Math.max(1, earliest - now)
+        )
     }
 
     stop = (): void => {
         if (this.#timer !== undefined) clearTimeout(this.#timer)
         this.#timer = undefined
-        this.ways = {}
+        this.marks = {}
         this.#remembered = emptyMemo()
     }
 
     decoration(node: RowNode<TRow>, column: ColumnState<TRow>): CellDecoration | undefined {
-        const way = this.ways[cellKey(node.id, column.id)]
-        return way ? stillOf(way) : undefined
+        const mark = this.marks[cellKey(node.id, column.id)]
+        if (!mark) return undefined
+
+        const own = this.#options.appearance?.({ ...mark, age: Date.now() - mark.at })
+        if (own) return own
+
+        const tint = TINT[mark.way]
+        return {
+            class: this.#class(),
+            style: {
+                outline: `2px solid ${tint}`,
+                'outline-offset': '-2px',
+                '--dg-flash-tint': tint,
+                '--dg-flash-ms': `${this.duration}ms`
+            }
+        }
+    }
+
+    #class(): string {
+        const own = this.#grid.ui?.flashCell
+        return [slotClass('flashCell'), typeof own === 'string' ? own : '']
+            .filter(Boolean)
+            .join(' ')
     }
 }
 

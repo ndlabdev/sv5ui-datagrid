@@ -83,6 +83,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a crossing reachable from outside at all, and a generated column is a column
   like any other: it filters, it exports, it takes part in a snapshot.
 
+### Changed
+
+- **A flash answers to its own clock, fades, and is yours to restyle.**
+  `flashCells()` held one timer for every mark and restarted it on each batch,
+  so under the stream it exists for, nothing let go: a cell that changed a
+  second ago kept its outline for as long as any other cell kept moving, and a
+  grid fed by a socket filled up with marks that no longer meant "just now".
+  Each mark now carries the moment it was made and lets go on its own, still
+  through one timer, which is set to the earliest expiry and sets itself again
+  for the next.
+
+    The mark also fades over that time rather than blinking out, so a change
+    from half a second ago reads as older than one that has just landed. The
+    fade is a keyframe in `@sv5ui/datagrid/theme.css` driven by
+    `--dg-flash-ms`, so nothing re-renders for it, and a grid without that
+    stylesheet still draws the outline.
+
+    Three ways to say it differently, from the cheapest up: the `flashCell`
+    theme slot, app-wide or per grid through `ui`; the `--dg-flash-tint` and
+    `--dg-flash-ms` properties on the cell; and an `appearance` option handed
+    what changed, what it was, and how long ago, which is how a mark can answer
+    to the size of a move rather than only its direction.
+
+    A reader who asked for reduced motion now gets the mark without the fade,
+    rather than no mark at all. Leaving out the animation is the request;
+    leaving out the information was not.
+
 ### Fixed
 
 - **The count under a grid that refused to cross still called it a crossing.**

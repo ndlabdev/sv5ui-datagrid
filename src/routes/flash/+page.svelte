@@ -76,6 +76,36 @@
         ]
     })
 
+    const bySize = createDataGrid<Tick>({
+        data: seed(),
+        columns,
+        getRowId: (row) => String(row.id),
+        features: [
+            virtualization<Tick>({ rowHeight: 40 }),
+            flashCells<Tick>({
+                columns: ['price'],
+                appearance: ({ way, before, after }) => {
+                    const jump = Math.abs(Number(after) - Number(before))
+                    if (!Number.isFinite(jump) || jump < 3) return undefined
+                    return {
+                        style: {
+                            'background-color':
+                                way === 'down' ? 'var(--color-error)' : 'var(--color-success)',
+                            color: 'var(--color-surface)'
+                        }
+                    }
+                }
+            })
+        ]
+    })
+
+    const themed = createDataGrid<Tick>({
+        data: seed(),
+        columns,
+        getRowId: (row) => String(row.id),
+        features: [virtualization<Tick>({ rowHeight: 40 }), flashCells<Tick>({ duration: 1500 })]
+    })
+
     const grouped = createDataGrid<Tick>({
         data: seed(),
         columns,
@@ -87,7 +117,15 @@
         ]
     })
 
-    const grids: GridState<Tick>[] = [everything, priceOnly, noDirection, withScale, grouped]
+    const grids: GridState<Tick>[] = [
+        everything,
+        priceOnly,
+        noDirection,
+        withScale,
+        bySize,
+        themed,
+        grouped
+    ]
 
     let ticks = $state(0)
 
@@ -174,6 +212,17 @@
             grid: withScale
         },
         {
+            title: 'Dấu đổi theo biên độ',
+            what: 'appearance nhận cả giá trị cũ và mới, nên nhảy quá 3 thì tô nền hẳn, còn nhích nhẹ thì về viền mặc định. Cường độ nói lên biên độ, không chỉ chiều.',
+            grid: bySize
+        },
+        {
+            title: 'Đổi hình bằng slot của lưới',
+            what: 'ui flashCell thêm class vào ô đang được canh, nên một lưới đổi được dáng dấu mà không cần viết lại feature. Lưới này giữ dấu 1,5 giây để dễ thấy fade.',
+            grid: themed,
+            ui: { flashCell: 'rounded-sm ring-2 ring-primary ring-inset' }
+        },
+        {
             title: 'Hàng gom cũng đổi theo',
             what: 'Giá trị trên hàng gom là tổng của con, nên con đổi thì tổng đổi và hàng gom cũng được canh.',
             grid: grouped
@@ -227,8 +276,8 @@
         </p>
         {#if muted}
             <p class="text-sm text-on-surface">
-                Máy bạn đang đặt giảm hiệu ứng chuyển động, nên tính năng này tự tắt. Đó là có chủ
-                ý.
+                Máy bạn đang đặt giảm hiệu ứng chuyển động, nên dấu vẫn hiện nhưng không fade. Bỏ
+                chuyển động không có nghĩa là bỏ thông tin.
             </p>
         {/if}
     </Card>
@@ -237,7 +286,7 @@
         <Card class="space-y-2 p-4">
             <h2 class="font-medium text-on-surface">{at + 1}. {one.title}</h2>
             <p class="text-sm text-on-surface-variant">{one.what}</p>
-            <DataGrid grid={one.grid} class="h-[280px]" />
+            <DataGrid grid={one.grid} ui={one.ui} class="h-[280px]" />
         </Card>
     {/each}
 

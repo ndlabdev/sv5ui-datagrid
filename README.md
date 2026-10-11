@@ -44,7 +44,10 @@ pnpm add @sv5ui/datagrid sv5ui
 
 Tailwind 4 skips `node_modules` when it scans for class names, so each theme
 file registers its own compiled output. No `@source` path of your own is
-needed.
+needed. The grid's own file also carries the handful of rules a utility class
+cannot express, such as the fade `flashCells()` leaves on a cell; without the
+import the grid still works and still marks what changed, it just stops
+fading.
 
 | Package      | Version        |
 | ------------ | -------------- |

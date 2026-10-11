@@ -253,7 +253,7 @@ describe('what it costs and when it does nothing', () => {
         expect(flash.directional).toBe(true)
     })
 
-    it('marks nothing for a reader who asked for less motion', async () => {
+    it('still marks for a reader who asked for less motion, without the fade', async () => {
         const real = window.matchMedia
         window.matchMedia = ((query: string) =>
             ({
@@ -269,13 +269,14 @@ describe('what it costs and when it does nothing', () => {
             await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 999 } : row))
 
             expect(getFlashCells(grid)!.muted).toBe(true)
-            expect(marked(screen)).toEqual([])
+            expect(marked(screen)).toHaveLength(1)
+            expect(marked(screen)[0]?.textContent?.trim()).toContain('999')
         } finally {
             window.matchMedia = real
         }
     })
 
-    it('keeps remembering while muted, so unmuting does not flash the backlog', async () => {
+    it('marks each change once while muted, rather than a backlog on unmuting', async () => {
         const real = window.matchMedia
         let quiet = true
         window.matchMedia = ((query: string) =>
@@ -290,13 +291,18 @@ describe('what it costs and when it does nothing', () => {
             const grid = build({})
             const screen = await open(grid)
             await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 999 } : row))
-            expect(marked(screen)).toEqual([])
+            expect(marked(screen).map((cell) => cell.textContent?.trim())).toEqual(['999'])
 
             quiet = false
             await nudge(grid, (row) => (row.id === 2 ? { ...row, price: 777 } : row))
 
-            await expect.poll(() => marked(screen).length).toBe(1)
-            expect(marked(screen)[0]?.textContent?.trim()).toContain('777')
+            await expect
+                .poll(() =>
+                    marked(screen)
+                        .map((cell) => cell.textContent?.trim())
+                        .sort()
+                )
+                .toEqual(['777', '999'])
         } finally {
             window.matchMedia = real
         }
@@ -324,7 +330,7 @@ describe('the demo page', () => {
             .poll(
                 () => screen.container.querySelectorAll('[role="grid"], [role="treegrid"]').length
             )
-            .toBe(5)
+            .toBe(7)
 
         expect(marked(screen)).toEqual([])
 
@@ -341,7 +347,7 @@ describe('the demo page', () => {
         await expect.poll(() => marked(screen).length).toBeGreaterThan(0)
 
         await press('Thay dữ liệu, cùng giá trị')
-        await expect.poll(() => marked(screen).length).toBe(0)
+        await expect.poll(() => marked(screen).length, { timeout: 2500 }).toBe(0)
 
         await press('Thêm một hàng mới')
         const rowsMarked = marked(screen).map(
@@ -358,7 +364,7 @@ describe('the demo page', () => {
             .poll(
                 () => screen.container.querySelectorAll('[role="grid"], [role="treegrid"]').length
             )
-            .toBe(5)
+            .toBe(7)
 
         const button = Array.from(screen.container.querySelectorAll('button')).find(
             (one) => (one.textContent ?? '').trim() === 'Đổi ghi chú'
@@ -369,5 +375,140 @@ describe('the demo page', () => {
         const texts = marked(screen).map((cell) => (cell.textContent ?? '').trim())
         expect(texts.length).toBeGreaterThan(0)
         expect(texts.every((text) => text.startsWith('đổi lần'))).toBe(true)
+    })
+})
+
+describe('a mark answers to its own clock, not to the last change anywhere', () => {
+    it('lets go while its neighbours keep moving', async () => {
+        const grid = build({ duration: 150 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 99 } : row))
+        expect(marked(screen).map((cell) => cell.textContent?.trim())).toEqual(['99'])
+
+        for (let round = 0; round < 5; round++) {
+            await nudge(grid, (row) => (row.id === 2 ? { ...row, price: 100 + round } : row))
+        }
+
+        const still = marked(screen).map((cell) => cell.textContent?.trim() ?? '')
+        expect(still).not.toContain('99')
+        expect(still).toHaveLength(1)
+    })
+
+    it('keeps one timer for a batch, and clears the batch together', async () => {
+        const grid = build({ duration: 150 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => ({ ...row, price: row.price + 1 }))
+        expect(marked(screen).length).toBeGreaterThan(1)
+
+        await expect.poll(() => marked(screen).length, { timeout: 2000 }).toBe(0)
+    })
+})
+
+describe('the look of a mark is the application to change', () => {
+    it('carries the fade class and the two properties the stylesheet reads', async () => {
+        const grid = build({ duration: 250 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 42 } : row))
+        const cell = marked(screen)[0]!
+
+        expect(cell.classList.contains('dg-flash')).toBe(true)
+        expect(cell.style.getPropertyValue('--dg-flash-ms')).toBe('250ms')
+        expect(cell.style.getPropertyValue('--dg-flash-tint')).not.toBe('')
+    })
+
+    it('takes a class the grid was given for the slot', async () => {
+        const grid = build({})
+        const screen = await render(Typed, { grid, ui: { flashCell: 'ring-4' } } as never)
+        await expect
+            .poll(() => screen.container.querySelector('[role="grid"], [role="treegrid"]'))
+            .not.toBeNull()
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 42 } : row))
+        const cell = marked(screen)[0]!
+
+        expect(cell.classList.contains('dg-flash')).toBe(true)
+        expect(cell.classList.contains('ring-4')).toBe(true)
+    })
+
+    it('hands the whole look over where appearance answers', async () => {
+        const seen: unknown[] = []
+        const grid = createDataGrid<Tick>({
+            data: start,
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [
+                flashCells<Tick>({
+                    duration: 60_000,
+                    appearance: (mark) => {
+                        seen.push(mark)
+                        const jump = Math.abs(Number(mark.after) - Number(mark.before))
+                        return jump > 10
+                            ? { style: { 'background-color': 'rgb(1, 2, 3)' } }
+                            : undefined
+                    }
+                })
+            ]
+        })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: row.price + 500 } : row))
+
+        const painted = Array.from(
+            screen.container.querySelectorAll<HTMLElement>('[data-dg-cell]')
+        ).filter((cell) => cell.style.backgroundColor === 'rgb(1, 2, 3)')
+
+        expect(painted).toHaveLength(1)
+        expect(marked(screen)).toEqual([])
+        expect(seen.length).toBeGreaterThan(0)
+        expect(seen[0]).toMatchObject({ way: 'up' })
+    })
+})
+
+describe('the demo page shows the two ways an application changes the look', () => {
+    const openDemo = async () => {
+        const { default: FlashDemo } = await import('../routes/flash/+page.svelte')
+        const screen = await render(FlashDemo as never)
+        await expect
+            .poll(
+                () => screen.container.querySelectorAll('[role="grid"], [role="treegrid"]').length
+            )
+            .toBe(7)
+
+        const button = Array.from(screen.container.querySelectorAll('button')).find(
+            (one) => (one.textContent ?? '').trim() === 'Một đợt, 6 ô'
+        )
+        expect(button).toBeDefined()
+        ;(button as HTMLElement).click()
+        await new Promise((resolve) => setTimeout(resolve, 250))
+        return screen
+    }
+
+    it('paints a big jump its own way, where appearance answered', async () => {
+        const screen = await openDemo()
+
+        const painted = Array.from(
+            screen.container.querySelectorAll<HTMLElement>('[data-dg-cell]')
+        ).filter((cell) => cell.style.backgroundColor !== '' && cell.style.outline === '')
+
+        expect(painted.length).toBeGreaterThan(0)
+    })
+
+    it('adds the class one grid asked for, on that grid alone', async () => {
+        const screen = await openDemo()
+
+        const ringed = Array.from(
+            screen.container.querySelectorAll<HTMLElement>('[data-dg-cell].ring-primary')
+        )
+        expect(ringed.length).toBeGreaterThan(0)
+        for (const cell of ringed) expect(cell.classList.contains('dg-flash')).toBe(true)
+
+        const grids = Array.from(
+            screen.container.querySelectorAll('[role="grid"], [role="treegrid"]')
+        )
+        const owners = new Set(ringed.map((cell) => grids.findIndex((one) => one.contains(cell))))
+        expect(owners.size).toBe(1)
     })
 })

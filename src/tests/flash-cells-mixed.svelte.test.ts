@@ -179,15 +179,30 @@ describe('it stays quiet when only the view moved', () => {
 })
 
 describe('it keeps up with a stream rather than freezing marks', () => {
-    it('lets go of an earlier batch once a later one has had its time', async () => {
-        const grid = make([], 200)
+    it('lets an earlier batch go while a later one is still marked', async () => {
+        const grid = make([], 400)
         const screen = await open(grid)
 
         await change(grid, [1])
-        await expect.poll(() => marked(screen).length).toBe(1)
+        const first = marked(screen).map((cell) => cell.textContent?.trim())
+        expect(first).toHaveLength(1)
 
         await change(grid, [2])
-        await expect.poll(() => marked(screen).length).toBe(2)
+        await change(grid, [2])
+        const later = marked(screen).map((cell) => cell.textContent?.trim())
+
+        expect(later).not.toContain(first[0])
+        expect(later).toHaveLength(1)
+
+        await expect.poll(() => marked(screen).length, { timeout: 3000 }).toBe(0)
+    })
+
+    it('holds a batch together, every cell of it keeping the same clock', async () => {
+        const grid = make([], 400)
+        const screen = await open(grid)
+
+        await change(grid, [1, 2, 3])
+        expect(marked(screen)).toHaveLength(3)
 
         await expect.poll(() => marked(screen).length, { timeout: 3000 }).toBe(0)
     })

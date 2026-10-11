@@ -84,6 +84,7 @@ export const datagridSlots = {
     pinnedRowsTop: 'sticky z-[9] min-w-min shadow-sm',
     pinnedRowsBottom: 'sticky bottom-0 z-[9] min-w-min shadow-[0_-1px_2px_rgba(0,0,0,0.05)]',
     stickyGroupRows: 'sticky z-[8] min-w-min shadow-sm',
+    flashCell: 'dg-flash',
     stickyGroupRow:
         'relative grid min-w-min bg-surface-container-low [grid-template-columns:var(--dg-grid-template)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-outline-variant',
     rowSelected:
