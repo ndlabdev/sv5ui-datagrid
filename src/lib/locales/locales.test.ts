@@ -22,6 +22,10 @@ function announcerOf(pack: DataGridLocalePack): DataGridAnnouncerStrings {
     return pack.announcer as DataGridAnnouncerStrings
 }
 
+const MAPS = ['textOps', 'numberOps', 'dateOps', 'pivotAggs', 'pivotShares'] as const
+
+const SHARED_TERMS = new Set(['min', 'max', 'median'])
+
 const SYMBOLIC = new Set(['eq', 'neq', 'gt', 'gte', 'lt', 'lte'])
 
 const LOANWORDS: Record<string, string[]> = {
@@ -46,9 +50,18 @@ const ARGS: Record<string, unknown[]> = {
     dragRow: [3],
     pageSizeOption: [25],
     pageRange: [1, 25, 300],
+    crossedRows: [4, 12],
+    crossedFilteredRows: [3, 8, 12],
     totalRows: [300],
     filteredRows: [12, 300],
     selectedRows: [4],
+
+    movePivotEarlier: ['Region'],
+    movePivotLater: ['Region'],
+    removePivotChip: ['Region'],
+    pivotSubtotalOf: ['Q1'],
+    pivotKeepTop: [10],
+    pivotKeepBottom: [10],
 
     moveGroupEarlier: ['Region'],
     moveGroupLater: ['Region'],
@@ -159,7 +172,7 @@ describe('shipped languages', () => {
         })
 
         it('covers every operator the grid can offer', () => {
-            for (const map of ['textOps', 'numberOps', 'dateOps'] as const) {
+            for (const map of MAPS) {
                 expect(Object.keys(locale.labels[map] ?? {}).sort()).toEqual(
                     Object.keys(defaultLabels[map]).sort()
                 )
@@ -187,9 +200,9 @@ describe('shipped languages', () => {
                         `${key} is still English`
                     ).not.toBe(english)
                 }
-                for (const map of ['textOps', 'numberOps', 'dateOps'] as const) {
+                for (const map of MAPS) {
                     for (const [op, english] of Object.entries(defaultLabels[map])) {
-                        if (SYMBOLIC.has(op)) continue
+                        if (SYMBOLIC.has(op) || SHARED_TERMS.has(op)) continue
                         expect(
                             (locale.labels[map] as Record<string, string>)[op],
                             `${map}.${op} is still English`

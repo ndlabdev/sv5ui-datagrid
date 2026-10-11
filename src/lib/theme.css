@@ -8,3 +8,43 @@
  */
 
 @source '.';
+
+/**
+ * The mark `flashCells()` leaves on a cell whose value just moved.
+ *
+ * The mark is a wash over the cell rather than a border, because a border is
+ * what this grid says selection and focus with: a ring for the focused cell,
+ * an edge for a range, a dashed edge for a cut. A flash is a state, and a
+ * translucent state is a tint, which is also how `rangeCell` and the pinned
+ * selection say theirs.
+ *
+ * It rides on the cell's own box-shadow, a layer nothing else at cell level
+ * uses, so it sits over a colour scale's background and a data bar's gradient
+ * and lets both show through rather than replacing either, and it leaves
+ * `::before` to the range and the cut.
+ *
+ * The feature paints the wash itself, so a grid without this stylesheet still
+ * marks what moved. What this adds is the fade, and an animation outranks an
+ * inline style, which is how it takes the shadow over. Nothing re-renders.
+ *
+ * Override `.dg-flash` or the keyframes to say it differently, or pass
+ * `ui={{ flashCell }}` for one grid.
+ */
+@keyframes dg-flash-fade {
+    from {
+        box-shadow: inset 0 0 0 9999px color-mix(in oklab, var(--dg-flash-tint) 22%, transparent);
+    }
+    to {
+        box-shadow: inset 0 0 0 9999px transparent;
+    }
+}
+
+.dg-flash {
+    animation: dg-flash-fade var(--dg-flash-ms, 700ms) ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dg-flash {
+        animation: none;
+    }
+}

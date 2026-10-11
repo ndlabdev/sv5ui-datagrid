@@ -40,6 +40,47 @@ export interface GetRowsRequest {
      * it, and the grid says the filter is unapplied rather than pretending.
      */
     advancedFilter?: FilterGroup
+
+    /**
+     * The crossing the grid is being asked to show, when `pivot()` is
+     * registered. The server answers it; the client never crosses a server
+     * grid for itself, because a table measured over the blocks this client
+     * happens to hold looks exactly like a correct one.
+     *
+     * `agg` carries only the named reductions, the strings `grouping()`
+     * accepts. A function or a parameterised aggregation cannot cross the
+     * wire, so the grid sends no pivot at all rather than one missing a
+     * measure, and says so once in the console.
+     *
+     * A backend that does not read it returns its rows unpivoted, and the grid
+     * draws them: `getPivot(grid).serverHandled` is what a UI reads to know
+     * which of the two it is looking at.
+     */
+    pivot?: PivotRequest
+}
+
+/** The crossing `pivot()` asks a server for. */
+export interface PivotRequest {
+    /** Column ids gathered down the page, outermost first. */
+    rows: string[]
+    /** Column ids gathered across the page, outermost first. */
+    columns: string[]
+    /**
+     * What each cell holds, in the order the grid will draw the measures.
+     *
+     * `per` names a second column to divide by, under the same reduction, so
+     * `{ field: 'profit', agg: 'sum', per: 'revenue' }` asks for a margin. It
+     * is the reductions that divide, not the rows.
+     */
+    values: { field: string; agg: string; per?: string }[]
+
+    /**
+     * Order the gathered rows by what a crossing measured, outermost sort
+     * first. `keys` names the crossing the way `pivotColumns` does, and an
+     * empty `keys` is the total column. Absent when the user has sorted by
+     * nothing, or by a column that is not a crossing.
+     */
+    sort?: { keys: string[]; measure: number; direction: 'asc' | 'desc' }[]
 }
 
 export interface GetRowsResult<TRow> {
@@ -50,6 +91,35 @@ export interface GetRowsResult<TRow> {
      * tells it where the end is.
      */
     rowCount?: number
+
+    /**
+     * The crossings the server used, one key path per generated column, each
+     * path holding one key per entry of `pivot.columns` and outermost first.
+     * A single column field therefore sends single-element paths.
+     *
+     * Required to draw a pivot on a server grid: the client holds only the
+     * blocks it has loaded, so it cannot learn the column axis from the data
+     * the way it does on a client grid. Answer the same paths for every block
+     * of one crossing, or the columns will move under the user as they scroll.
+     *
+     * Each returned row carries its crossings under a `pivot` property, nested
+     * one level per column field and bottoming out in an array holding one
+     * entry per measure, in the order `pivot.values` asked for them:
+     *
+     * ```
+     * { region: 'North', pivot: { Q1: [180, 2], Q2: [150, 1] } }
+     * ```
+     *
+     * Nested rather than keyed by a joined path, so a key containing the
+     * separator cannot be read as two. A crossing the row has nothing for is
+     * left out, and the cell draws empty.
+     *
+     * A `totalColumn` reads `pivotTotal` instead, one entry per measure, and
+     * draws empty until the server answers it. It is a separate property
+     * because the total is measured over the row's own data rather than over
+     * any crossing, so it is not the sum of what sits beside it.
+     */
+    pivotColumns?: string[][]
 }
 
 export interface DataSource<TRow> {

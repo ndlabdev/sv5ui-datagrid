@@ -1,4 +1,5 @@
 import type { Component } from 'svelte'
+import { tick } from 'svelte'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
@@ -217,5 +218,64 @@ describe('tooltip on the playground', () => {
         const trigger = screen.container.querySelector<HTMLElement>('[data-tooltip-trigger]')
         expect(trigger).not.toBeNull()
         expect(trigger!.tabIndex).toBe(-1)
+    })
+})
+
+describe('dragging the resize handle', () => {
+    function handleFor(container: Element, header: string): HTMLElement {
+        const handle = container.querySelector<HTMLElement>(
+            `[role="separator"][aria-label="Resize ${header} column"]`
+        )
+        if (!handle) throw new Error(`no resize handle for ${header}`)
+        return handle
+    }
+
+    const pointer = (type: string, clientX: number, id = 7) =>
+        new PointerEvent(type, { bubbles: true, pointerId: id, clientX, isPrimary: true })
+
+    it('widens the column it belongs to', async () => {
+        const grid = makeGrid([{ id: 'name', header: 'Name', width: 160 }])
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const handle = handleFor(screen.container, 'Name')
+        handle.dispatchEvent(pointer('pointerdown', 300))
+        handle.dispatchEvent(pointer('pointermove', 380))
+        handle.dispatchEvent(pointer('pointerup', 380))
+
+        await expect.poll(() => getColumnOps(grid)!.currentWidth('name')).toBe(240)
+    })
+
+    it('finishes when the pointer is released away from the handle', async () => {
+        const grid = makeGrid([{ id: 'name', header: 'Name', width: 160 }])
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const handle = handleFor(screen.container, 'Name')
+        handle.dispatchEvent(pointer('pointerdown', 300))
+        await tick()
+        window.dispatchEvent(pointer('pointermove', 400))
+        window.dispatchEvent(pointer('pointerup', 400))
+
+        await expect.poll(() => getColumnOps(grid)!.currentWidth('name')).toBe(260)
+
+        window.dispatchEvent(pointer('pointermove', 600))
+        await new Promise((resolve) => setTimeout(resolve, 40))
+        expect(getColumnOps(grid)!.currentWidth('name')).toBe(260)
+    })
+
+    it('leaves a column alone when the drag is cancelled', async () => {
+        const grid = makeGrid([{ id: 'name', header: 'Name', width: 160 }])
+        const screen = await render(TypedDataGrid, { grid })
+        await expect.element(screen.getByRole('grid')).toBeVisible()
+
+        const handle = handleFor(screen.container, 'Name')
+        handle.dispatchEvent(pointer('pointerdown', 300))
+        await tick()
+        handle.dispatchEvent(pointer('pointercancel', 300))
+        window.dispatchEvent(pointer('pointermove', 500))
+        await new Promise((resolve) => setTimeout(resolve, 40))
+
+        expect(getColumnOps(grid)!.currentWidth('name')).toBe(160)
     })
 })

@@ -18,6 +18,53 @@ interface BuildGroupNodesOptions<TRow> {
     groupLabel: (key: string, count: number, columnId: string) => string
 
     footerLabel?: (key: string, count: number, columnId: string) => string
+
+    repeat?: RepeatRows<TRow>
+
+    opensToRows?: boolean
+}
+
+interface RepeatRows<TRow> {
+    count: number
+
+    aggregationsAt: (at: number) => Record<string, Aggregation<TRow>>
+
+    idAt: (groupId: string, at: number) => string
+
+    fieldsAt: (at: number) => Record<string, unknown>
+}
+
+function repeatedRows<TRow>(
+    members: RowNode<TRow>[],
+    groupId: string,
+    level: number,
+    options: BuildGroupNodesOptions<TRow>
+): RowNode<TRow>[] {
+    const repeat = options.repeat!
+    const out: RowNode<TRow>[] = []
+
+    for (let at = 0; at < repeat.count; at++) {
+        const row = markSyntheticRow(
+            withComputed({} as TRow, {
+                ...aggregateRowValues(
+                    members,
+                    options.columns,
+                    repeat.aggregationsAt(at),
+                    options.read
+                ),
+                ...repeat.fieldsAt(at)
+            })
+        )
+
+        out.push({
+            id: repeat.idAt(groupId, at),
+            row,
+            index: members[0]!.index,
+            meta: { level, setSize: repeat.count, posInSet: at + 1 }
+        })
+    }
+
+    return out
 }
 
 export function groupNodeId(path: { columnId: string; key: string }[]): string {
@@ -48,6 +95,23 @@ function partition<TRow>(
     return groups
 }
 
+function gatheredRow<TRow>(
+    members: RowNode<TRow>[],
+    at: { columnId: string; key: string },
+    options: BuildGroupNodesOptions<TRow>
+): TRow {
+    const measured = options.repeat
+        ? {}
+        : aggregateRowValues(members, options.columns, options.aggregations, options.read)
+
+    return markSyntheticRow(
+        withComputed({} as TRow, {
+            ...measured,
+            [at.columnId]: options.groupLabel(at.key, members.length, at.columnId)
+        })
+    )
+}
+
 function buildLevel<TRow>(
     nodes: RowNode<TRow>[],
     level: number,
@@ -70,21 +134,19 @@ function buildLevel<TRow>(
         position += 1
         const groupPath = [...path, { columnId, key }]
         const id = groupNodeId(groupPath)
-        const row = markSyntheticRow(
-            withComputed({} as TRow, {
-                ...aggregateRowValues(members, options.columns, options.aggregations, options.read),
-                [columnId]: options.groupLabel(key, members.length, columnId)
-            })
-        )
+        const row = gatheredRow(members, { columnId, key }, options)
+        const opens = level < options.by.length - 1 || options.opensToRows !== false
 
         output.push({
             id,
             row,
             index: members[0]!.index,
-            meta: { level, expandable: true, setSize, posInSet: position }
+            meta: { level, expandable: opens, setSize, posInSet: position }
         })
 
-        if (options.isExpanded(id)) {
+        if (options.repeat) output.push(...repeatedRows(members, id, level + 1, options))
+
+        if (opens && options.isExpanded(id)) {
             output.push(...buildLevel(members, level + 1, groupPath, options))
             if (options.footerLabel) {
                 output.push(

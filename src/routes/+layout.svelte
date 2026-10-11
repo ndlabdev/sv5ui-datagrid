@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { ModeWatcher } from 'mode-watcher'
+    import { ThemeMode } from 'sv5ui'
     import './layout.css'
 
     const { children } = $props()
 </script>
 
-<ModeWatcher />
+<ThemeMode />
 
 {@render children?.()}

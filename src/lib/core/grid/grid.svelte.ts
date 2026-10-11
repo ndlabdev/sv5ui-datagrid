@@ -33,6 +33,9 @@ import {
 export class GridState<TRow> {
     data = $state.raw<TRow[]>([])
     density = $state<Density>('standard')
+    headerHeight = $state.raw<number | undefined>(undefined)
+    groupHeaderHeight = $state.raw<number | undefined>(undefined)
+    stickyGroups = $state.raw(false)
 
     readonly columns: ColumnModel<TRow>
     readonly events = new EventBus<GridEventMap>()
@@ -78,17 +81,24 @@ export class GridState<TRow> {
         this.locale = options.locale
     }
 
+    #applyLayout(options: DataGridOptions<TRow>): void {
+        this.density = options.density ?? 'standard'
+        this.headerHeight = options.headerHeight
+        this.groupHeaderHeight = options.groupHeaderHeight
+        this.stickyGroups = options.stickyGroups ?? false
+    }
+
     constructor(options: DataGridOptions<TRow>) {
         this.data = options.data ?? []
         this.getRowId = options.getRowId
         this.rowClass = options.rowClass
         this.configuredDensity = options.density
         this.rowModel = options.rowModel ?? 'client'
-        this.columns = new ColumnModel(options.columns)
+        this.columns = new ColumnModel(options.columns, () => this)
         this.expansion = new ExpansionModel(this.events)
         this.features = [...(options.features ?? [])]
         this.#valueGates = this.features.filter((feature) => feature.cellValue !== undefined)
-        this.density = options.density ?? 'standard'
+        this.#applyLayout(options)
         this.#applyLocale(options)
 
         for (const feature of this.features) {
@@ -171,10 +181,15 @@ export class GridState<TRow> {
     }
 
     setState(snapshot: GridSnapshot): void {
+        for (const feature of this.features) {
+            const slice = snapshot.features?.[feature.id]
+            if (slice !== undefined) feature.hydrate?.(slice, this)
+        }
+
         const columns = resolveColumnSnapshot(
             snapshot.columns,
             this.columns.leafDefs.map((def) => def.id),
-            groupIdsOf(this.columns.defs)
+            groupIdsOf(this.columns.shaped)
         )
         this.columns.orderIds = columns.orderIds
         this.columns.widthOverrides = columns.widthOverrides
@@ -183,11 +198,6 @@ export class GridState<TRow> {
         this.columns.collapsedGroups = columns.collapsedGroups
 
         if (isDensity(snapshot.density)) this.density = snapshot.density
-
-        for (const feature of this.features) {
-            const slice = snapshot.features?.[feature.id]
-            if (slice !== undefined) feature.hydrate?.(slice, this)
-        }
     }
 
     readerFor(

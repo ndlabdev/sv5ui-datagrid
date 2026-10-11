@@ -20,9 +20,21 @@
 
     interface MenuEntry {
         label: string
-        icon: string
+        icon?: string
+        disabled?: boolean
         onSelect: () => void
     }
+
+    const featureItems = $derived(
+        grid.features.flatMap((feature) =>
+            (feature.menuItems?.({ grid, columnId: column.id }) ?? []).map((item): MenuEntry => ({
+                label: item.label,
+                icon: item.icon,
+                disabled: item.disabled,
+                onSelect: item.onSelect
+            }))
+        )
+    )
 
     function sortItems(): MenuEntry[] {
         if (!sorting || !column.def.sortable) return []
@@ -120,11 +132,14 @@
             columnOps.canResize ||
             columnOps.canHide ||
             Boolean(filteringState && filterTypeOf(column.def)) ||
-            Boolean(grid.columns.foldableGroupOf(column.id))
+            Boolean(grid.columns.foldableGroupOf(column.id)) ||
+            featureItems.length > 0
     )
 
     const items = $derived(
-        open ? [...sortItems(), ...pinItems(), ...actionItems(), ...groupItems()] : []
+        open
+            ? [...sortItems(), ...pinItems(), ...actionItems(), ...groupItems(), ...featureItems]
+            : []
     )
 </script>
 

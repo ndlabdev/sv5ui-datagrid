@@ -9,7 +9,8 @@ import {
     sampleDataRows,
     type KeyStats,
     type ScaleStats,
-    type ThresholdStats
+    type ThresholdStats,
+    statSource
 } from './stats.js'
 
 interface Row {
@@ -37,73 +38,93 @@ const columns = columnMap([
 
 describe('computeStats', () => {
     it('spans a colour scale over the values the grid holds', () => {
-        const [stats] = computeStats([{ kind: 'colorScale', column: 'value' }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'colorScale', column: 'value' }],
+            statSource({ rows: nodes, columns })
+        )
         expect(stats as ScaleStats).toMatchObject({ min: 5, max: 40 })
     })
 
     it('lets the rule override either end', () => {
         const [stats] = computeStats(
             [{ kind: 'colorScale', column: 'value', min: 0, max: 100 }],
-            nodes,
-            columns
+            statSource({ rows: nodes, columns })
         )
         expect(stats as ScaleStats).toMatchObject({ min: 0, max: 100 })
     })
 
     it('bases a data bar at zero when every value is positive', () => {
-        const [stats] = computeStats([{ kind: 'dataBar', column: 'value' }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'dataBar', column: 'value' }],
+            statSource({ rows: nodes, columns })
+        )
         expect(stats as ScaleStats).toMatchObject({ min: 0, max: 40 })
     })
 
     it('keeps a negative floor for a data bar that has one', () => {
         const [stats] = computeStats(
             [{ kind: 'dataBar', column: 'value' }],
-            nodesOf([...rows, { id: 5, value: -20, email: 'c@x.com' }]),
-            columns
+            statSource({
+                rows: nodesOf([...rows, { id: 5, value: -20, email: 'c@x.com' }]),
+                columns
+            })
         )
         expect(stats as ScaleStats).toMatchObject({ min: -20, max: 40 })
     })
 
     it('collects the repeated values, ignoring blanks', () => {
-        const [stats] = computeStats([{ kind: 'duplicates', column: 'email' }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'duplicates', column: 'email' }],
+            statSource({ rows: nodes, columns })
+        )
         expect([...(stats as KeyStats).keys]).toEqual(['a@x.com'])
     })
 
     it('collects the values seen once when asked for the unique ones', () => {
         const [stats] = computeStats(
             [{ kind: 'duplicates', column: 'email', unique: true }],
-            nodes,
-            columns
+            statSource({ rows: nodes, columns })
         )
         expect([...(stats as KeyStats).keys]).toEqual(['b@x.com'])
     })
 
     it('reads the threshold off the nth value from the top', () => {
-        const [stats] = computeStats([{ kind: 'topN', column: 'value', n: 2 }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'topN', column: 'value', n: 2 }],
+            statSource({ rows: nodes, columns })
+        )
         expect((stats as ThresholdStats).value).toBe(25)
     })
 
     it('reads it from the bottom when asked', () => {
         const [stats] = computeStats(
             [{ kind: 'topN', column: 'value', n: 2, bottom: true }],
-            nodes,
-            columns
+            statSource({ rows: nodes, columns })
         )
         expect((stats as ThresholdStats).value).toBe(10)
     })
 
     it('asks for more rows than exist without inventing a threshold', () => {
-        const [stats] = computeStats([{ kind: 'topN', column: 'value', n: 99 }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'topN', column: 'value', n: 99 }],
+            statSource({ rows: nodes, columns })
+        )
         expect((stats as ThresholdStats).value).toBe(5)
     })
 
     it('survives a column the rule names but the grid does not have', () => {
-        const [stats] = computeStats([{ kind: 'colorScale', column: 'ghost' }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'colorScale', column: 'ghost' }],
+            statSource({ rows: nodes, columns })
+        )
         expect(stats as ScaleStats).toMatchObject({ min: 0, max: 0 })
     })
 
     it('gives an expression rule a cache rather than a pass over the rows', () => {
-        const [stats] = computeStats([{ kind: 'expression', when: 'value > 1' }], nodes, columns)
+        const [stats] = computeStats(
+            [{ kind: 'expression', when: 'value > 1' }],
+            statSource({ rows: nodes, columns })
+        )
         expect(stats).toEqual({ kind: 'expression', cache: new Map() })
     })
 })

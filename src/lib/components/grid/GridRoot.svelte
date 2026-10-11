@@ -34,13 +34,28 @@
 
     const config = getDataGridConfig()
     const slots = $derived(datagridVariants({ density: grid.density }))
+
+    const heights = $derived(
+        [
+            grid.headerHeight === undefined ? '' : `--dg-header-h:${grid.headerHeight}px`,
+            grid.groupHeaderHeight === undefined
+                ? ''
+                : `--dg-group-header-h:${grid.groupHeaderHeight}px`
+        ]
+            .filter(Boolean)
+            .join(';')
+    )
 </script>
 
 {#if persistState}
     <GridStatePersistence {grid} options={persistState} />
 {/if}
 
-<div bind:this={root} class={slots.root({ class: [config.slots.root, className, ui?.root] })}>
+<div
+    bind:this={root}
+    class={slots.root({ class: [config.slots.root, className, ui?.root] })}
+    style={heights || undefined}
+>
     <div aria-live="polite" class="sr-only">{grid.announcer.message}</div>
     {#each layers as feature (feature.id)}
         {@const Layer = feature.component!}

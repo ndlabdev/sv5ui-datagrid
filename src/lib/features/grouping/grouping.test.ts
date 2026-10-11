@@ -228,8 +228,20 @@ describe('state round-trip', () => {
         expect(getGrouping(fresh)!.by).toEqual(['dept'])
     })
 
-    it('leaves an ungrouped grid out of the snapshot entirely', () => {
-        expect(createGrid().api.getState().features?.grouping).toBeUndefined()
+    it('writes an ungrouped grid down as grouped by nothing', () => {
+        expect(createGrid().api.getState().features?.grouping).toEqual({ by: [] })
+    })
+
+    it('ungroups when the view it loads was saved with no grouping', () => {
+        const saved = createGrid().api.getState()
+
+        const grouped = createGrid()
+        grouped.api.setGroupBy!(['dept'])
+        expect(getGrouping(grouped)!.isGrouped).toBe(true)
+
+        grouped.api.setState(saved)
+
+        expect(getGrouping(grouped)!.isGrouped).toBe(false)
     })
 
     it('drops a column the grid no longer has', () => {
@@ -304,5 +316,57 @@ describe('grouping a grid whose rows come from a server', () => {
         expect(getGrouping(grid)!.isPartial).toBe(false)
         expect(warn).not.toHaveBeenCalled()
         warn.mockRestore()
+    })
+})
+
+describe('opening every group keeps the set to the groups that exist', () => {
+    const openIds = (grid: GridState<Person>) => [...grid.expansion.expandedIds]
+
+    it('drops the ids of groups the data no longer holds', () => {
+        const grid = createGrid({ by: ['dept'] })
+        getGrouping(grid)!.expandAllGroups()
+        expect(openIds(grid).sort()).toEqual(['group:dept=Core', 'group:dept=Data'])
+
+        grid.data = people.filter((person) => person.dept === 'Core')
+        getGrouping(grid)!.expandAllGroups()
+
+        expect(openIds(grid)).toEqual(['group:dept=Core'])
+    })
+
+    it('opens the same set twice without piling anything up', () => {
+        const grid = createGrid({ by: ['dept', 'country'] })
+        getGrouping(grid)!.expandAllGroups()
+        const once = openIds(grid).length
+
+        getGrouping(grid)!.expandAllGroups()
+
+        expect(openIds(grid).length).toBe(once)
+    })
+
+    it('still reaches every level of a nested grouping', () => {
+        const grid = createGrid({ by: ['dept', 'country'] })
+        getGrouping(grid)!.expandAllGroups()
+
+        const levels = new Set(grid.nodes.map((node) => node.meta?.level ?? 0))
+        expect(levels).toEqual(new Set([0, 1, 2]))
+    })
+
+    it('keeps a group the reader opened by hand, it being one that exists', () => {
+        const grid = createGrid({ by: ['dept'] })
+        grid.expansion.expand('group:dept=Data')
+
+        getGrouping(grid)!.expandAllGroups()
+
+        expect(grid.expansion.isExpanded('group:dept=Data')).toBe(true)
+    })
+
+    it('drops a group the reader opened by hand once the data loses it', () => {
+        const grid = createGrid({ by: ['dept'] })
+        grid.expansion.expand('group:dept=Data')
+
+        grid.data = people.filter((person) => person.dept === 'Core')
+        getGrouping(grid)!.expandAllGroups()
+
+        expect(openIds(grid)).toEqual(['group:dept=Core'])
     })
 })

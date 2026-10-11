@@ -15,79 +15,21 @@
 
 <p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> &middot;
+  <a href="#features-are-modules"><strong>Features</strong></a> &middot;
   <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/CHANGELOG.md"><strong>Changelog</strong></a> &middot;
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/MIGRATING.md"><strong>Upgrading</strong></a> &middot;
   <a href="https://github.com/ndlabdev/sv5ui-datagrid/issues"><strong>Issues</strong></a>
 </p>
 
 ---
 
 Built on [sv5ui](https://github.com/ndlabdev/sv5ui). Register only the features
-you use, and nothing else reaches your bundle.
+you use: one a grid does not register is never imported, so its code stays out
+of your bundle.
 
-```svelte
-<script lang="ts">
-    import { DataGrid, type ColumnDef } from '@sv5ui/datagrid'
-
-    const columns: ColumnDef<Person>[] = [
-        { id: 'name', header: 'Name', sortable: true, filter: 'text', flex: 1 },
-        { id: 'age', header: 'Age', sortable: true, align: 'right', width: 100 }
-    ]
-</script>
-
-<DataGrid data={people} {columns} getRowId={(p) => String(p.id)} toolbar />
-```
-
-## Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Quick start](#quick-start)
-- [Architecture](#architecture)
-- [Feature modules](#feature-modules)
-- [Extension points](#extension-points)
-- [Columns](#columns)
-- [Localization](#localization)
-- [State persistence](#state-persistence)
-- [Server row model](#server-row-model)
-- [Theming](#theming)
-- [Accessibility](#accessibility)
-- [Performance](#performance)
-- [DOM contract](#dom-contract)
-- [API stability](#api-stability)
-- [Contributing](#contributing)
-
-## Features
-
-| Area                    | What you get                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rows**                | Row and column virtualization past a million rows, fixed or per-row heights, `'auto'` measured rows, pinned rows, full-width rows     |
-| **Columns**             | Resize, reorder, pin left/right, hide, nested header groups that fold, autosize, `colSpan` and `rowSpan`                              |
-| **Sorting**             | Multi-sort with priority badges, per-type comparators, null ordering, `sortFn`, `sortField`                                           |
-| **Filtering**           | Quick filter plus text, number, date, set and boolean column filters, two conditions per column, a filter row under the header, chips |
-| **Selection**           | Single or multi, checkbox column, select-all, Shift-range, TSV copy, CSV export                                                       |
-| **Editing**             | Cell and row editing with ten sv5ui editors, schema validation, transactions, undo/redo, clipboard paste                              |
-| **Reordering**          | Pointer and keyboard row reorder with an auto-scrolling drag preview                                                                  |
-| **Persistence**         | Versioned JSON snapshots, `localStorage` auto-sync, `migrate` hook                                                                    |
-| **Localization**        | Twelve languages, chosen from the page's own; number and date formatting follow                                                       |
-| **Accessibility**       | ARIA `grid` and `treegrid`, one tab stop, full keyboard navigation, axe-clean                                                         |
-| **Server**              | `rowModel: 'server'` with normalized filter and sort requests, paged or infinite blocks                                               |
-| **Grouping**            | Group by any number of columns, thirteen aggregators, group footers, a grand total, and values read as a share of one of them         |
-| **Structure**           | Tree data from `getChildren` or `getParentId`, and a detail panel under any row                                                       |
-| **Formulas**            | Calculated columns from an expression, 31 functions, a dependency graph that catches a cycle, and no `eval`                           |
-| **Ranges**              | Excel-style cell ranges, multiple selections, a fill handle that reads a series, cut and move, and a summary bar                      |
-| **Finding**             | Find and replace across the rows a filter left, whole-cell and case options                                                           |
-| **Conditions**          | Colour scales, data bars, duplicates, top N and expression rules, exported into the workbook as real Excel rules                      |
-| **Filter builder**      | Nested `(A AND B) OR C`, operators per column type, alongside the column filters rather than instead of them                          |
-| **Import**              | CSV, TSV, XLSX and clipboard, type guessing, column mapping, validation, and rows staged in the grid to fix in place                  |
-| **Export**              | CSV, and XLSX written without a dependency, on its own entry at `@sv5ui/datagrid/xlsx`                                                |
-| **Views**               | Named views in `localStorage` or storage of your own, and a link that carries the whole state                                         |
-| **Policy**              | Column, row and cell masking applied at render, export, clipboard, search, facet and edit                                             |
-| **Off the main thread** | A worker row model that filters and sorts a columnar copy, with a main-thread fallback                                                |
-| **Command palette**     | `Ctrl/Cmd+K` over the commands the registered features offer                                                                          |
-
-Features are opt-in. A feature you do not register is never imported, so its
-code stays out of your bundle, and `src/tests/bundle-shape.test.ts` builds a
-real entry to prove it.
+This file is the map. Every option and export carries its own documentation
+where you call it, so your editor has the detail on hover, and `pnpm dev` runs
+a playground with one page per feature.
 
 ## Installation
 
@@ -95,64 +37,34 @@ real entry to prove it.
 pnpm add @sv5ui/datagrid sv5ui
 ```
 
-Import both themes in your Tailwind entry stylesheet:
-
 ```css
+/* your Tailwind entry stylesheet */
 @import 'sv5ui/theme.css';
 @import '@sv5ui/datagrid/theme.css';
 ```
 
-Tailwind 4 skips `node_modules` when it scans for class names, so a package has
-to register its own compiled output. Each theme file does that for itself, which
-is why no `@source` path of your own is needed.
-
-### Requirements
+Tailwind 4 skips `node_modules` when it scans for class names, so each theme
+file registers its own compiled output. No `@source` path of your own is
+needed. The grid's own file also carries the handful of rules a utility class
+cannot express, such as the fade `flashCells()` leaves on a cell; without the
+import the grid still works and still marks what changed, it just stops
+fading.
 
 | Package      | Version        |
 | ------------ | -------------- |
 | SvelteKit    | 2.x            |
 | Svelte       | 5.x            |
 | Tailwind CSS | 4.x            |
-| sv5ui        | 2.5.0 or later |
+| sv5ui        | 2.7.0 or later |
 
-SvelteKit is required rather than optional: sv5ui resolves `$app/state`, which
-only a SvelteKit app provides. `@iconify/svelte` and `tailwindcss` are declared
-as peer dependencies so that the grid and sv5ui share a single instance of
-each; package managers that install peers automatically (pnpm 8+, npm 7+)
-resolve them for you.
+SvelteKit is required rather than optional, because sv5ui resolves
+`$app/state`. `@iconify/svelte` and `tailwindcss` are peer dependencies so the
+grid and sv5ui share one instance of each.
 
-### Icons
-
-Every icon the grid draws is bundled and registered into Iconify's store, so
-neither the grid nor the network is involved at render time. Nothing to
-configure: importing the grid registers them, before anything on the page
-draws. If your own UI happens to use one of the same icons, it resolves
-locally too.
-
-`registerDataGridIcons` is exported for the one case the import does not
-cover - a grid behind a dynamic `import()`, where your own icons may render
-before the grid's module is even fetched:
-
-```svelte
-<!-- src/routes/+layout.svelte -->
-<script>
-    import { registerDataGridIcons } from '@sv5ui/datagrid'
-    registerDataGridIcons()
-</script>
-```
-
-It is idempotent.
-
-The set covers what the grid itself draws. Icons you hand it - `RowAction.icon`,
-a `menuItems` entry, `typeOptions.trueIcon`, anything inside a `cell` snippet -
-are yours to bundle, as is any icon of your own the grid never uses:
-
-```ts
-import { addCollection } from '@iconify/svelte'
-addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path .../>' } } })
-```
-
-`datagridIcons` is exported too, if you want to read the shape or merge it.
+Icons are bundled and registered on import, so nothing is fetched at render
+time and there is nothing to configure. Behind a dynamic `import()`, call
+`registerDataGridIcons()` in your layout to register them before your own icons
+draw. Icons you hand the grid yourself are yours to bundle.
 
 ## Quick start
 
@@ -166,8 +78,6 @@ addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path .../>' } } })
         age: number
     }
 
-    const people: Person[] = [/* ... */]
-
     const columns: ColumnDef<Person>[] = [
         { id: 'name', header: 'Name', sortable: true, filter: 'text', flex: 1 },
         { id: 'age', header: 'Age', sortable: true, align: 'right', width: 100 }
@@ -177,10 +87,9 @@ addCollection({ prefix: 'lucide', icons: { rocket: { body: '<path .../>' } } })
 <DataGrid data={people} {columns} getRowId={(p) => String(p.id)} pageSize={10} toolbar />
 ```
 
-That gives you sorting, filtering, column operations and pagination.
-
-Use `createDataGrid` when you want to choose the features, hold the state, or
-drive the grid from outside:
+That gives you sorting, filtering, column operations and pagination. Use
+`createDataGrid` to choose the features, hold the state, or drive the grid from
+outside:
 
 ```svelte
 <script lang="ts">
@@ -205,216 +114,81 @@ drive the grid from outside:
 <DataGrid {grid} toolbar class="h-[640px]" />
 ```
 
+Call a factory inside the `features` array and `TRow` is inferred. A factory
+held in a variable first has nothing to infer from, so spell the argument out
+there: `const sort = sorting<Person>()`.
+
+## Features are modules
+
+Nothing is on by default. `createDataGrid` takes the list, and a feature left
+out of it is never imported, so it costs nothing:
+
+```ts
+features: [sorting(), filtering(), columnOps(), selection(), virtualization()]
+```
+
+They group into four kinds: the ordinary table (sorting, filtering, selection,
+editing), the shape of the rows (grouping, pivot, tree data, master detail),
+the spreadsheet end (formulas, cell ranges, conditional formatting, find and
+replace, import and export), and the application end (a server row model, the
+same off the main thread, saved views, masking policy). Autocomplete inside
+`features: [...]` is the list that cannot go stale, and each factory documents
+what it adds where it is declared.
+
+Two things deliberately are not features. `workerDataSource(rows, options)` is
+a `DataSource` you hand to `serverRowModel()`, which filters and sorts a
+columnar copy off the main thread and falls back to the main one; and the
+workbook writer is a pair of functions, `buildGridXlsx` and `createWorkbook`,
+on their own entry at `@sv5ui/datagrid/xlsx`, because writing a spreadsheet
+involves no grid.
+
+`src/tests/bundle-shape.test.ts` builds a real entry to prove that a feature
+you do not register stays out of it.
+
 ## Architecture
 
-The package is two layers, either usable on its own.
-
-**Headless core.** `createDataGrid` returns a `GridState`: Svelte 5 runes and a
-derived row pipeline of `filter`, `sort` and `window`. No DOM, no styling.
-
-**Components.** `DataGrid` renders the whole thing. The `Grid.*` parts
-(`Root`, `Viewport`, `Header`, `Body`, `Toolbar`, `Pagination`, `StatusBar` and
-others) let you compose the chrome yourself.
+The package is two layers, either usable on its own. **The headless core:**
+`createDataGrid` returns a `GridState` of Svelte 5 runes and a derived row
+pipeline, with no DOM and no styling. **The components:** `DataGrid` renders
+the whole thing, and the `Grid.*` parts (`Root`, `Viewport`, `Header`, `Body`,
+`Toolbar`, `Pagination`, `StatusBar` and others) let you compose the chrome
+yourself.
 
 The pipeline is a chain of pure transforms over a `RowNode[]`. Features insert
 stages at a declared order, so a stage never has to know what else is
 registered.
 
-## Feature modules
+Three lists of nodes answer three different questions. `grid.nodes` is what is
+on screen after paging and virtualization, `grid.preWindowNodes` is everything
+the grid would draw, and `grid.filteredNodes` is the list before anything
+folded rows away. `grid.totalRows` is the length of the drawn list, which
+counts a group header because that is a row you can focus, while
+`grid.filteredRowCount` is how many data rows a filter left.
 
-| Feature            | Adds                                            |
-| ------------------ | ----------------------------------------------- |
-| `sorting()`        | Multi-sort, header cycle, priority badges       |
-| `filtering()`      | Quick filter, column filters, filter row, chips |
-| `columnOps()`      | Resize, reorder, pin, hide, autosize            |
-| `selection()`      | Checkbox column, copy, CSV export               |
-| `editing()`        | Cell/row editing, validation, undo/redo, paste  |
-| `pagination()`     | Client paging and the server hooks              |
-| `virtualization()` | Row and column virtualization                   |
-| `rowPinning()`     | Rows pinned to the top or bottom                |
-| `rowReorder()`     | Drag grip and keyboard reorder                  |
-
-| Feature                   | Adds                                                           |
-| ------------------------- | -------------------------------------------------------------- |
-| `grouping()`              | Group by N columns, thirteen aggregators, footers, grand total |
-| `tree()`                  | Nested or flat parent/child data                               |
-| `masterDetail()`          | A detail panel under a row                                     |
-| `showValuesAs()`          | A number read as a share of a total, a parent or a row         |
-| `formula()`               | Calculated columns from an expression                          |
-| `advancedFilter()`        | A nested condition tree beside the column filters              |
-| `rangeSelection()`        | Cell ranges, fill handle, cut and move, clipboard              |
-| `findReplace()`           | Find and replace across the rows a filter left                 |
-| `conditionalFormatting()` | Colour scales, data bars, duplicates, top N, expressions       |
-| `dataImport()`            | CSV, TSV, XLSX and clipboard, staged in the grid               |
-| `savedViews()`            | Named views and a link that carries the whole state            |
-| `policy()`                | Masking at render, export, clipboard, search, facet and edit   |
-| `serverRowModel()`        | Paged or infinite blocks fetched from a source                 |
-| `workerDataSource()`      | The same, filtered and sorted off the main thread              |
-| `commandPalette()`        | `Ctrl/Cmd+K` over what the registered features offer           |
-
-The workbook writer is not a feature: `buildGridXlsx` and `createWorkbook` are
-functions, on their own entry at `@sv5ui/datagrid/xlsx`, because writing a
-spreadsheet involves no grid.
-
-Call a factory inside the `features` array, as above, and `TRow` is inferred
-from the array's own type. A factory held in a variable first has nothing to
-infer from and resolves to `GridFeature<unknown>`, so spell the argument out
-there: `const sort = sorting<Person>()`.
-
-### The filter row
-
-`filtering({ floatingRow: true })` draws a row under the header, one field per
-column, and `<DataGrid floatingFilters />` is the same thing for a grid it
-builds itself. The field filters in the operator the column already uses, so
-changing the operator in the panel and then typing in the row keeps it.
-
-Each kind of filter gets the control it needs: a field for text, a number
-field, a date picker, a choice for a boolean, and a searchable list of ticks
-for a set, which reads its values from the column the first time it is opened.
-
-The row holds one condition, however many values are ticked in it. What says
-more than that stays with the panel and reads back in the row as a summary and
-a button that opens it: two conditions joined, a `between` range, and `blank`
-or `notBlank`, which an empty field would report as no filter at all.
-
-It is a row of the grid, not a strip above it. Arrow down from the header
-lands in the field, arrow down again is the first body row, and the rows below
-are numbered under it for a screen reader.
-
-Read a feature's state back with the matching accessor:
+Read a feature's state back through its accessor, which is the typed path, or
+through `grid.api`, which is every feature's methods in one flat bag where each
+one is optional:
 
 ```ts
 import { getSelection, getSorting } from '@sv5ui/datagrid'
 
 getSelection(grid)?.selectedIds
 getSorting(grid)?.setSort([{ columnId: 'name', direction: 'asc' }])
-```
 
-The accessor is the typed path: it narrows to the feature's own class, generic
-in `TRow`, with nothing optional about what it returns. `grid.api` is the flat
-alternative - every feature's methods in one bag, each one optional, because
-the grid that has `setPage` is the one that registered `pagination()`:
-
-```ts
 grid.api.setPage?.(2) // present only with pagination()
 grid.api.getState() // the kernel's own, always there
 ```
 
-A feature declares its methods by augmenting `GridApi` from
-`@sv5ui/datagrid`, which is what the built-in features do:
+## Writing a feature
 
-```ts
-declare module '@sv5ui/datagrid' {
-    interface GridApi {
-        highlightNegative?: (columnId: string) => void
-    }
-}
-```
+A feature is a plain object: an `id`, plus any of the optional hooks on
+`GridFeature`. The built-in features use nothing that is not available to
+yours, and the interface documents each hook where it declares it, so
+autocomplete on the object is the list.
 
-### What a feature brings besides its factory
-
-Registering a feature is enough to use it. These are the named exports your
-own code reaches for when it has to meet a feature halfway: read back a row
-the grid drew, catch what a feature throws, reuse a calculation it made, or,
-from inside a feature's own `component`, reach the grid it is mounted in.
-
-| Export                                 | Comes with         | Reach for it when                                                                                                                    |
-| -------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `isDataRow(node)`                      | the kernel         | You walk `grid.preWindowNodes` and want only rows carrying data, skipping a group header, a footer, a detail panel and a loading row |
-| `isLoadingRow(row)`                    | `serverRowModel()` | A cell snippet draws a row still on its way differently from one that arrived                                                        |
-| `isDetailNode(id)`                     | `masterDetail()`   | You hold a row id and need to know whether it names a detail panel rather than a row                                                 |
-| `totalsKindOf(id)`                     | `grouping()`       | The same question for a group footer (`'footer'`) or the grand total (`'grandTotal'`), and `null` for anything else                  |
-| `aggregate(aggregation, values, rows)` | `grouping()`       | You want the number a group footer would show, somewhere other than the grid: a summary card, a chart, a second table                |
-| `autoColumns(rows, options?)`          | the kernel         | The shape of the data is known only at runtime, so the columns are read off a sample of the rows                                     |
-| `localStorageViews`                    | `savedViews()`     | You take the default store, or write an object of the same shape to keep views on a server instead                                   |
-| `ShareTooLongError`                    | `savedViews()`     | Packing a whole grid state into a link can pass what a URL carries                                                                   |
-| `FormulaError`, `isFormulaError`       | `formula()`        | A calculated cell holds one of these instead of a number when the expression cannot answer                                           |
-| `FUNCTION_NAMES`                       | `formula()`        | You build an editor for expressions and want completion over the functions there are                                                 |
-| `getGridContext()`                     | the kernel         | A feature's `component` needs the grid it is mounted in; it is handed no props                                                       |
-| `getGridElement()`                     | the kernel         | The same component needs the root element, for a listener, a measurement or a layer over the rows                                    |
-
-The grid offers three lists of nodes, and which one you want depends on the
-question. `grid.nodes` is what is on screen after paging and virtualization.
-`grid.preWindowNodes` is everything the grid would draw, so a row inside a
-collapsed group or tree node is not in it. `grid.filteredNodes` is the list one
-stage earlier, before anything folded rows away.
-
-Two counts sit on top of those, and they answer different questions.
-`grid.totalRows` is the length of the drawn list: what keyboard navigation
-bounds itself by, what `aria-rowcount` reports, and it counts a group header as
-a row because that is a row you can focus. `grid.filteredRowCount` is how many
-data rows a filter left, which is what the status bar shows and what a screen
-reader is told, and it does not move when a group is opened or shut. A feature
-holding rows the pipeline cannot see, as a nested tree does, answers for itself
-through `GridFeature.rowCount`.
-
-A calculated column never throws at you. It puts a `FormulaError` in the cell,
-carrying a `code` that reads the way a spreadsheet's does and a `detail` that
-says which name or which value caused it:
-
-```ts
-import { isFormulaError } from '@sv5ui/datagrid'
-
-const value = grid.getValue(node, column)
-if (isFormulaError(value)) {
-    console.warn(value.code, value.detail) // '#CYCLE', '"total" refers back to itself'
-}
-```
-
-`FormulaErrorCode` is the union of what `code` can be: `'#VALUE'`, `'#DIV/0'`,
-`'#NAME'`, `'#NUM'`, `'#LIMIT'` and `'#CYCLE'`. The cell prints the code, so a
-column in a cycle reads `#CYCLE` down its length and the columns outside that
-cycle keep working.
-
-Those two answer a cell. To check an expression before it becomes one, which is
-what an editor offering `FUNCTION_NAMES` needs next, write it and ask:
-
-```ts
-const formulas = getFormula(grid)!
-formulas.set('draft', expression)
-const failure = formulas.errorOf('draft') // null when it parses
-```
-
-The parser itself is not exported. It answers an internal tree that would have
-to stay still for as long as the package does, and `errorOf` carries the two
-things an editor actually shows: the message, and where in the string it went
-wrong.
-
-Sharing a state as a link is the one saved-views call that can refuse. A grid
-holding many columns, a long filter tree and a set filter with hundreds of
-ticks encodes past what a URL carries, so `shareLink` and `shareToken` reject
-rather than hand back a link that will not open:
-
-```ts
-import { getSavedViews, ShareTooLongError } from '@sv5ui/datagrid'
-
-try {
-    const link = await getSavedViews(grid)!.shareLink()
-    if (link) location.href = link
-} catch (error) {
-    if (error instanceof ShareTooLongError) {
-        alert(`${error.length} characters is too long for a link. Save it as a view.`)
-    } else throw error
-}
-```
-
-## Extension points
-
-A feature is a plain object. The built-in features use nothing that is not
-available to yours.
-
-| Hook             | What it does                                                     |
-| ---------------- | ---------------------------------------------------------------- |
-| `pipelineStage`  | an ordered, pure transform of the row list (filter, sort, group) |
-| `createState`    | reactive state exposed on `grid.state[id]`                       |
-| `createApi`      | imperative methods merged into `grid.api` (see below)            |
-| `keybindings`    | keyboard bindings, with a `when` guard                           |
-| `menuItems`      | column and context menu entries                                  |
-| `cellDecoration` | per-cell classes, inline style and `aria-selected`               |
-| `cellValue`      | stands between a cell's value and every way it leaves the grid   |
-| `component`      | a component the grid mounts in its root, for effects and the DOM |
-| `serialize`      | the feature's slice of a state snapshot                          |
-| `hydrate`        | restores what `serialize` produced                               |
+Two carry most of the weight. `pipelineStage` is an ordered, pure transform of
+the row list, which is how filtering, sorting and grouping are built.
+`cellDecoration` is per-cell classes and style:
 
 ```ts
 const highlightNegative = (): GridFeature<Row> => ({
@@ -424,70 +198,24 @@ const highlightNegative = (): GridFeature<Row> => ({
 })
 ```
 
-`cellDecoration` runs for every rendered cell, so keep it cheap. A grid whose
-features do not define it skips the work entirely.
+`cellDecoration` runs for every rendered cell, so keep it cheap. It also takes
+`style`, a record keyed by CSS property, for a value no class can name. Several
+features decorating one cell merge per property, the later one winning, and the
+grid's own layout outranks all of them.
 
-A class cannot name a value computed per cell, so the hook also takes `style`,
-a record keyed by CSS property - custom properties included, which is how a
-feature reaches a pseudo-element:
+`cellValue` decides what a value _is_ on the way out, and covers every way out
+at once: the cell and its tooltip, CSV, the clipboard, the text a quick filter
+searches, the list a set filter offers, and the draft an editor opens with.
+Sorting and filter predicates deliberately stay on the raw value, so take
+`sortable` and `filter` off a column you mask. It is a gate on the grid's own
+output rather than a security boundary: data that must not reach the browser
+should not be sent to it.
 
-```ts
-const heat = (max: number): GridFeature<Row> => ({
-    id: 'heat',
-    cellDecoration: ({ node, column }) =>
-        column.id === 'total'
-            ? {
-                  style: {
-                      'background-color': `color-mix(in oklab, var(--color-primary) ${Math.round((node.row.total / max) * 40)}%, transparent)`
-                  }
-              }
-            : undefined
-})
-```
-
-Several features decorating the same cell merge per property, the later one
-winning. The grid writes its own layout as style directives, which outrank the
-attribute a decoration lands in, so a decoration can paint a cell but cannot
-move it out of its column or unpin it.
-
-### Gating a cell's value
-
-A class can only paint a cell. `cellValue` decides what the value _is_ on the
-way out, and it covers every way out at once: the cell and its tooltip, CSV,
-the clipboard, the text a quick filter searches, the list a set filter offers,
-and the draft an editor opens with.
-
-```ts
-const maskSalary = (visible: () => boolean): GridFeature<Row> => ({
-    id: 'mask-salary',
-    // Asked per column, not per value: return one reader and it is reused for
-    // the whole pass over the rows.
-    cellValue: ({ column }) => (column.id === 'salary' && !visible() ? () => '***' : undefined)
-})
-```
-
-Answer in the type the column draws. A built-in renderer formats what it is
-given, so `'***'` on a `type: 'currency'` column parses as no number and the
-cell draws empty; `null` draws the column's empty text, and a mark of your own
-needs an untyped column or a `cell` snippet. Nothing leaks either way.
-
-Hand the value back unchanged - the same reference - for a cell you are
-leaving alone; the grid compares by identity. A cell whose value a reader
-substitutes is one the grid refuses to edit, since an editor opened on it
-would commit the substitute over the real data.
-
-Two things it deliberately does not cover. Sorting reads a column n log n
-times and stays on the raw value, so a masked column can still be ordered by
-what it hides; a filter predicate decides which rows survive and stays raw for
-the same reason, so a narrowing filter plus a row count says something about
-what was hidden. Take `sortable` and `filter` off a column you mask. And the
-row object itself still reaches your own `cell` snippet, `cellClass` and
-`tooltip` - this is a gate on the grid's own output, not a security boundary:
-data that must not reach the browser should not be sent to it.
+A feature declares its own `grid.api` methods by augmenting the `GridApi`
+interface, which is what the built-ins do. If you need something unexported in order to build a feature, that is a gap in
+the extension points. Open an issue rather than reaching into `dist`.
 
 ## Columns
-
-### Built-in renderers
 
 Set `type` and the matching sv5ui component renders the cell, with no snippet
 of your own:
@@ -496,242 +224,93 @@ of your own:
 const columns: ColumnDef<Member>[] = [
     { id: 'name', type: 'user', typeOptions: { avatar: (m) => m.avatar } },
     { id: 'team', type: 'badge', typeOptions: { colors: { Core: 'primary' } } },
-    { id: 'salary', type: 'currency', typeOptions: { currency: 'EUR' } },
-    {
-        id: 'actions',
-        type: 'actions',
-        typeOptions: { actions: (m) => [{ label: 'Edit', onSelect: edit }] }
-    }
+    { id: 'salary', type: 'currency', typeOptions: { currency: 'EUR' } }
 ]
 ```
 
-Available types: `text`, `number`, `currency`, `percent`, `date`, `datetime`,
-`boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions`.
+`ColumnType` is what `type` accepts, running from `text` and `currency`
+through `badge`, `progress` and an `actions` menu. Number and date types go
+through `Intl`, with formatters cached per configuration because a renderer
+runs on every visible cell.
 
-Number and date types go through `Intl`, with formatters cached per
-configuration because a renderer runs on every visible cell. `percent` expects
-a 0 to 1 ratio unless you set `wholePercent`. Either way its filter panel and
-chips speak percentages, so a cell reading 5% is found by typing 5; what the
-filter stores is what the row holds, `0.05` for a ratio column and `5` for a
-whole one, so a persisted filter and a server request keep the row's own
-units. A `cell` snippet always wins over
-`type`, so a column can graduate to a custom renderer without changing anything
-else.
+A `cell` snippet always wins over `type`, and declaring both is how to decorate
+without losing the formatting: the snippet is handed `formatted`, the text the
+built-in renderer would have printed, so it never restates the column's own
+`typeOptions`.
 
-Declaring both is the way to decorate without losing the formatting. The
-snippet is handed `formatted`, the text the built-in renderer would have
-printed, so it never restates the column's own `typeOptions`:
+`tooltip`, `cellClass`, `colSpan` and `rowSpan` take the same cell context.
+`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip`
+rather than the browser's `title`; a clipped cell gets a plain `title` whether
+or not the column asks for one. Blanks render as a dash, overridable per column
+with `typeOptions.emptyText`. Row spans resolve against the whole row list
+rather than the rendered window, so use them with uniform row heights.
 
-```svelte
-{
-    id: 'budget',
-    type: 'currency',
-    typeOptions: { currency: 'USD' },
-    cell: budgetCell
-}
+A header group folds when one of its children says what it is for:
+`columnGroupShow: 'closed'` marks the summary a closed group folds down to and
+`'open'` the detail it puts away. `collapseMode: 'rail'` folds the other way,
+the whole group giving way to a narrow drawer with its name down its length,
+which needs no summary column. Either way folding is not hiding, and the state
+travels in a snapshot. A group's `id` shares a namespace with the columns'.
 
-{#snippet budgetCell({ value, formatted }: DataGridCellContext<Row>)}
-    {formatted}
-    {#if Number(value) > 300_000}
-        <Badge label="high" color="warning" size="xs" />
-    {/if}
-{/snippet}
-```
+## Pivot
 
-`formatted` is `undefined` where the built-in rendering is a widget rather than
-text - `boolean`, `badge`, `user`, `progress`, `rating`, `link`, `actions` -
-because there is no string standing for one. It is computed only if the snippet
-reads it. The snippet also receives `column`, so a renderer can reach its own
-`def`, alignment or id; `cellClass`, `tooltip`, `colSpan` and `rowSpan` receive
-it too.
-
-### Tooltips
-
-`tooltip: true` shows the text the cell is showing, through sv5ui's `Tooltip` -
-the design system's, not the browser's `title`. A function takes its place when
-the text should say more; it receives the cell context, `formatted` included:
+A pivot reads one long list two ways at once: a field gathered down the page,
+another gathered across it, and a measure where the two meet.
 
 ```ts
-{ id: 'score', type: 'number', tooltip: ({ row, value }) => `${row.name}: ${value}/100` }
+pivot<Sale>({
+    rows: ['region'],
+    columns: ['quarter'],
+    values: [{ field: 'amount', agg: 'sum' }]
+})
 ```
 
-The trigger wraps the cell, so hovering anywhere in it opens the tooltip, and it
-is taken out of the tab order: the grid is one tab stop, and a page of rows must
-not become a page of them. A blank cell gets no tooltip at all.
+The columns are the part nothing else here does. The grid reads the data, finds
+the distinct values of `quarter`, and makes a column for each, so a quarter the
+data has not held before arrives as a column with no code changed.
+`grouping()` changes how many rows there are; a pivot changes how many columns
+there are as well.
 
-Text the column never asked to explain is a separate matter: a cell whose
-content is clipped gets a plain `title` on hover, measured only when hovered,
-because wrapping every cell in the grid is not affordable. `tooltip: false`
-turns that off for a column that manages its own.
+**Every total is measured from the rows, never added up from the cells beside
+it.** For a sum the two agree. For an average they do not: rows of 100, 80 and
+150 cross into averages of 90 and 150, whose own average is 120, while the rows
+themselves average 110. One hundred and ten is the answer, and it is what
+`totalColumn`, `totalRow`, `columnSubtotal` and every share are built on.
 
-Null, undefined and empty string all render as an em dash, whatever the
-column's `type` and whether it declares one at all. `typeOptions.emptyText`
-overrides the text per column - not to be confused with the `emptyText` prop on
-`<DataGrid>`, which is the message for a grid with no rows at all. A `cell`
-snippet owns its own output, `formatted` included: blanks arrive there already
-turned into that text.
+A measure reads as itself or as something else through `showAs`: a share of its
+row, its column or the whole, a running total, a change from the crossing
+before it, or a rank among the crossings beside it. `per` divides one measure
+by another under the same reduction, dividing the two reductions rather than
+the rows, which is how a margin is read.
 
-### Spanning
+The column axis is ordered by the values themselves, so a number axis counts
+and a date axis runs in time; `columnKeys` and `orderColumns` replace that with
+an order the application states or one a measure ranks. `maxColumns` refuses
+rather than truncates, `keepRows` keeps the largest or smallest few and gathers
+the rest into one row measured from itself, and `valuesOn: 'rows'` stops the
+measures multiplying the column axis by growing the table downward instead.
 
-`colSpan(ctx)` and `rowSpan(ctx)` return how many cells to merge from the
-current one. Covered cells are not rendered, the merged cell carries
-`aria-colspan` and `aria-rowspan`, and it is the single tab stop for the block.
+A pivot row is a group rather than a row, and the innermost tier never opens
+onto the rows it gathered, since every column that would say what those rows
+are has been folded away. `rowsBehind(node, columnId)` is where that question
+is answered, over the rows a filter left, while `expandAllPivotRows()` and
+`collapseAllPivotRows()` work the tiers that do nest.
 
-```ts
-{ id: 'region', rowSpan: (ctx) => runLengthAt(ctx.rowIndex) }
-```
-
-Row spans are resolved against the whole row list rather than the rendered
-window, so scrolling into the middle of one still draws it. They are sized from
-the rows they cover, so use them with uniform row heights rather than `'auto'`.
-
-### Header groups that fold
-
-A group folds when one of its children says what it is for. `columnGroupShow:
-'open'` marks the detail a closed group puts away, `'closed'` the summary it
-folds down to, and a child that says neither is drawn either way:
-
-```ts
-const columns: ColumnDef<Row>[] = [
-    {
-        id: 'pay',
-        header: 'Pay',
-        collapsed: true, // its starting state, if not open
-        children: [
-            { id: 'total', header: 'Total', columnGroupShow: 'closed' },
-            { id: 'base', header: 'Base', columnGroupShow: 'open' },
-            { id: 'bonus', header: 'Bonus', columnGroupShow: 'open' }
-        ]
-    }
-]
-```
-
-The toggle sits at the trailing edge of the group's own header cell. A
-keyboard reaches it too: the header levels are part of the roving focus, so
-`ArrowUp` from a leaf header walks up into the groups above it, `ArrowLeft`
-and `ArrowRight` step between the groups of a level, `Enter` or `Space` folds
-the one under the caret, and `ArrowDown` comes back. A column with no group
-above it has nowhere to go up to. The same action is also in the column menu
-of every column in the group. From code it is `grid.api.toggleGroup(groupId)`
-and
-`grid.api.setGroupCollapsed(groupId, collapsed)`, which announce and emit
-`columnGroupToggled` the way every other column operation does.
-
-`headerGroupCell` draws the group header yourself, the way `headerCell` draws
-a leaf one. The snippet is handed the group cell - id, label, span, whether it
-is folded - and a `toggle`, and the grid's own control stays beside whatever
-it draws:
-
-````svelte
-{#snippet payHeader({ cell, toggle }: HeaderGroupContext)}
-    <Badge label={`${cell.header} (${cell.span})`} onclick={toggle} />
-{/snippet}
-``` Folding is not hiding -
-what the Column chooser put away stays away, and what a group folded comes
-back when it opens - and the state travels in a snapshot, keyed by group.
-
-A group is only offered a toggle when the state it would switch to leaves a
-column of it on screen. One whose children are all `'open'` would fold its own
-header away with them, and nothing would be left to click to bring it back.
-
-### Folding to a rail
-
-`collapseMode: 'rail'` folds the other way: the whole group goes, header and
-cells alike, and a narrow drawer stands in its place with the group's name down
-its length. It runs the full height of the grid, header included, and the name
-starts at the top of the header and stays there as the rows scroll.
-
-```ts
-{
-    id: 'planning',
-    header: 'Planning',
-    collapseMode: 'rail',
-    children: [target, variance] // no `columnGroupShow` needed
-}
-```
-
-Nothing has to declare `columnGroupShow` for this: the drawer is what folds the
-group back open, so a group with no summary column can still fold. Clicking
-anywhere down it opens the group again, which is why no toggle sits in the
-header over it. The drawer holds no data, so it is not exported, copied or
-filtered on, and the group's own header cell is still there underneath it,
-named and marked collapsed, which is how the keyboard reaches it. A pinned
-group folds to a pinned drawer, which stays at its edge while the rest scrolls.
-
-The `/groups/cases` page walks ten of these: four levels of nesting, a drawer
-inside another group, two drawers side by side, pinned drawers on both edges,
-pinned rows, virtualized rows and columns, a group with nothing to fold into,
-a grid that opens folded and survives a snapshot round trip, right to left,
-and an export taken while folded.
-
-A group's `id` shares a namespace with the columns', so it needs one of its
-own: a group and a column that answer to the same id cannot both be addressed.
-
-## Localization
-
-Hand the grid the languages it may use. It picks one from the page's own
-language, so nothing else needs configuring:
-
-```ts
-import { enUS, jaJP, viVN } from '@sv5ui/datagrid/locales'
-
-createDataGrid({ columns, data, getRowId, locales: [enUS, viVN, jaJP] })
-````
-
-Twelve packs ship: `en-US`, `vi-VN`, `zh-CN`, `ja-JP`, `ko-KR`, `fr-FR`,
-`de-DE`, `es-ES`, `pt-BR`, `ru-RU`, `id-ID`, `th-TH`. Only what you import is
-bundled.
-
-- `locale` forces a tag. Assigning `grid.locale` switches in place, keeping the
-  sort, filter and selection on screen.
-- The same tag drives `Intl`, so number, currency and date columns that name no
-  locale of their own follow the grid and reformat with it.
-- A tag nobody answers for falls back to English. `vi` is answered by `vi-VN`.
-- `labels` and `announcer` override single strings on top of the chosen pack.
-
-A pack is `{ tag, labels, announcer }` and says what it has. English answers
-for the rest, so a pack of five strings works, and a pack written against one
-version keeps working when the next names a string it has never heard of: that
-string arrives in English rather than as a blank or as a build that will not
-run. Every key is typed, so what a pack does say is checked.
-
-## State persistence
-
-```svelte
-<DataGrid {grid} persistState={{ key: 'orders-grid' }} />
-```
-
-Column layout, sort, filter, page size and density are mirrored into
-`localStorage` and restored before the first paint. `grid.api.getState()` and
-`grid.api.setState(snapshot)` do the same by hand. The snapshot is versioned and
-JSON-serializable, so it travels to a server or a URL just as well.
-
-Columns are keyed by id: ids that disappeared are dropped, ids added since keep
-their defaults. Pass `migrate` to upgrade snapshots written by an older version
-of your app. Anything it declines falls back to the column defaults rather than
-half-applying. Features persist their own slice through `serialize` and
-`hydrate`.
-
-> Restoring reads `localStorage`, which the server cannot. Render a persisted
-> grid client-side (`export const ssr = false`) to avoid a flash of the default
-> layout on reload.
+`Grid.PivotPanel` builds a crossing at run time and adjusts how it reads, the
+column menu offers the two axes, `grid.api` carries the same moves, and all of
+it is kept in a saved view. On `rowModel: 'server'` the client never crosses
+for itself, because a table measured over the blocks a client happens to hold
+looks exactly like a correct one: the crossing goes out on every request and
+the column axis comes back with the rows.
 
 ## Server row model
 
 `rowModel: 'server'` tells the pipeline that `data` already holds exactly what
-should be shown: filtering, sorting and windowing pass their rows through
+should be shown, so filtering, sorting and windowing pass their rows through
 untouched. The features stay registered, because their state, UI and events are
 what a server row model listens to.
 
 ```ts
-import {
-    getFiltering,
-    getPagination,
-    getSorting,
-    toFilterRequest,
-    toSortRequest
-} from '@sv5ui/datagrid'
-
 const grid = createDataGrid({
     columns,
     data: [],
@@ -744,158 +323,115 @@ for (const event of ['sortChanged', 'filterChanged', 'pageChanged'] as const) {
     grid.events.on(event, fetchPage)
 }
 
-let inFlight = 0
-
 async function fetchPage() {
-    const ticket = ++inFlight
+    const visibleIds = grid.columns.visible.map((column) => column.id)
     const { rows, total } = await api.load({
-        filter: toFilterRequest(
-            getFiltering(grid)!.model,
-            grid.columns.visible.map((column) => column.id)
-        ),
+        filter: toFilterRequest(getFiltering(grid)!.model, visibleIds),
         sort: toSortRequest(getSorting(grid)!.sort, grid.columns.defs, getSorting(grid)!.nulls)
     })
-    // Typing into the quick filter sends a request per keystroke, and they do
-    // not come back in the order they left. Without this the grid ends up
-    // showing the answer to a question the user has already moved on from.
-    if (ticket !== inFlight) return
     grid.data = rows
     getPagination(grid)!.setRowCount(total)
 }
 ```
 
-The events fire after the feature has settled, which is what makes reading the
-state inside the handler safe: `pageChanged` reports the page the grid moved
-to rather than the one that was asked for, and a sort or a filter has already
-reset the page to 1 by the time it reaches you. `setRowCount` pulls the page
-back inside a list that shrank, and a selection survives `data` being replaced,
-so a row picked on page 1 is still picked when the user returns to it.
+Events fire after the feature has settled, which is what makes reading the
+state inside the handler safe. `toFilterRequest` and `toSortRequest` produce
+normalized wire shapes, kept deliberately separate from the internal models so
+that your backend answers to one and the UI to the other. Guard the handler
+against its own requests: typing into the quick filter sends one per keystroke
+and they do not come back in the order they left.
 
-### Exporting a set the grid does not hold
+Where the grid's meaning and a database's default disagree, what the reader
+sees is yours. The grid compares text case-insensitively, orders it naturally
+so `Item 2` precedes `Item 10`, treats `null`, `undefined` and `''` alike as
+blank, includes both ends of a `between`, reads a date condition as a calendar
+day in the reader's own zone, and sends a `percent` column's own units, so 5%
+travels as `0.05`. `src/tests/server-contract.test.ts` is a backend written
+against all of it, and the shortest description of what conformance costs.
 
-`exportCsv` writes the rows the grid is holding. Under a client row model that
-is every row your filter left, which is what the toolbar's "All rows" means.
-Under `rowModel: 'server'` the grid holds one page, so the same item writes
-that page and is named "Loaded rows" instead of promising the rest.
+`exportCsv` writes the rows the grid is holding, which under this model is one
+page, so the item is named "Loaded rows" rather than promising the rest. For
+the whole set, point `Grid.ExportMenu`'s `onExportAll` at an endpoint that
+streams one, built from the same request the grid sends.
 
-For the whole set, export on the server. A browser cannot be handed ten million
-rows to turn into a file: the string alone outgrows the tab long before the
-download starts, and the rows would have to be fetched page by page first.
-Point the item at an endpoint that streams one:
+## State, localization and theming
 
 ```svelte
-<Grid.ExportMenu onExportAll={() => (location.href = `/api/orders.csv?${query}`)} />
+<DataGrid {grid} persistState={{ key: 'orders-grid' }} />
 ```
 
-Build `query` from the same request the grid sends, so the file matches what is
-on screen:
+Column layout, sort, filter, page size and density are mirrored into
+`localStorage` and restored before the first paint; `grid.api.getState()` and
+`setState()` do the same by hand. The snapshot is versioned and JSON
+serializable, so it travels to a server or a URL just as well. Columns are
+keyed by id, so ids that disappeared are dropped and ids added since keep their
+defaults, and `migrate` upgrades snapshots written by an older version of your
+app.
+
+> Restoring reads `localStorage`, which the server cannot. Render a persisted
+> grid client-side (`export const ssr = false`) to avoid a flash of the default
+> layout on reload.
+
+Locale packs ship for a range of languages, and only the ones you import are
+bundled. Assigning `grid.locale` switches in place, keeping the
+sort, filter and selection on screen, and the same tag drives `Intl`. A pack
+says what it has and English answers for the rest, so a pack of five strings
+works and one written against an older version keeps working.
+
+Every visual slot is overridable, app-wide through `defineDataGridConfig` or
+per grid through the `ui` prop:
 
 ```ts
-const query = new URLSearchParams({
-    filter: JSON.stringify(toFilterRequest(getFiltering(grid)!.model, visibleIds)),
-    sort: JSON.stringify(toSortRequest(getSorting(grid)!.sort, grid.columns.defs))
-})
-```
-
-Selection is unaffected: selected ids are held across pages, so "Selected rows"
-writes what the user picked whichever model is in use.
-
-### What your backend has to agree with
-
-The request carries everything the grid decided, and your backend decides the
-rest. Under `rowModel: 'server'` the grid does not filter or sort what it is
-handed, so where the two disagree, what the reader sees is yours:
-
-| The grid means                                                  | A database's default                 |
-| --------------------------------------------------------------- | ------------------------------------ |
-| Text compares case-insensitively unless `caseSensitive` is set  | `LIKE` is case-sensitive in Postgres |
-| Text orders naturally, so `Item 2` precedes `Item 10`           | `Item 10` precedes `Item 2`          |
-| Blank is `null`, `undefined` or `''`                            | `IS NULL` misses `''`                |
-| `between` includes both ends                                    | varies                               |
-| A date condition means a calendar day, in the reader's own zone | a timestamp in the database's zone   |
-| A `percent` column holds the ratio, so 5% travels as `0.05`     | whatever the column stores           |
-
-`nulls` rides on every sort entry, written as the side blanks actually land on,
-so `ORDER BY ... NULLS LAST` reproduces it without further thought. `quickFields`
-names the columns a bare query applies to, which is otherwise unguessable.
-
-Two things the request cannot carry, because they are functions: a column's
-`sortFn` and a filter's custom `predicate` run on the client only. Under a
-server row model they are never called, and the request describes the built-in
-meaning of the condition instead.
-
-`src/tests/server-contract.test.ts` is a backend written against this table.
-It answers what the client answers, and it is the shortest description of what
-conformance costs.
-
-`toFilterRequest` and `toSortRequest` produce normalized wire shapes, kept
-deliberately separate from the internal models: the models answer to the UI and
-change with it, while these answer to your backend and grow only by adding a
-field a backend could not otherwise know, the way `nulls` and `quickFields`
-were added. A column's `sortField` is what travels, so an id that is a UI
-concern need not be one your database recognizes.
-
-## Theming
-
-Every visual slot is overridable, app-wide or per grid:
-
-```ts
-import { defineDataGridConfig } from '@sv5ui/datagrid'
-
 defineDataGridConfig({
     defaultVariants: { density: 'compact' },
     slots: { cell: 'font-mono', headerCell: 'uppercase tracking-wide' }
 })
 ```
 
-```svelte
-<DataGrid {grid} ui={{ row: 'even:bg-surface-container-lowest' }} />
-```
-
-`cellClass` and `rowClass` cover data-driven styling. Density (`compact`,
-`standard`, `comfortable`) drives row height and padding through CSS variables.
+Density (`compact`, `standard`, `comfortable`) drives row height and padding
+through CSS variables, and the header follows the row height until
+`headerHeight` or `groupHeaderHeight` says otherwise. `cellClass` and
+`rowClass` cover data-driven styling.
 
 ## Accessibility
 
 - A div-based ARIA `grid`, or `treegrid` once rows nest.
 - **One tab stop.** Cells carry a roving tabindex and every control inside
   answers through it, so leaving a thousand-row grid takes one press.
-- The whole keyboard surface, and every binding a feature adds is listed with
-  the feature that adds it:
-
-    | Keys                                      | What they do                                                                    |
-    | ----------------------------------------- | ------------------------------------------------------------------------------- |
-    | Arrows, `Home`/`End`, `PageUp`/`PageDown` | Move the focused cell                                                           |
-    | `Ctrl+Home`/`Ctrl+End`                    | First and last cell of the grid                                                 |
-    | `Enter` on a header                       | Cycle that column's sort                                                        |
-    | `Shift+Enter` on a header                 | Add the column to a multi-sort                                                  |
-    | `Space` / `Shift+Space` / `Ctrl+A`        | Select a row, a range, everything on the page                                   |
-    | `Ctrl+C` / `Ctrl+V`                       | Copy as TSV, paste across cells                                                 |
-    | `Enter`, `F2`, or any printable key       | Open the editor, seeded with what was typed                                     |
-    | `Escape`                                  | Close what the editor opened, then the editor                                   |
-    | `Ctrl`/`Cmd`+`Enter`                      | Commit without leaving the cell, for a textarea or tags field that owns `Enter` |
-    | `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`      | Undo and redo an edit                                                           |
-    | `Shift+←`/`Shift+→`                       | Resize the focused column                                                       |
-    | `Alt+←`/`Alt+→`                           | Move the focused column                                                         |
-    | `Alt+↓` on a header                       | Open the column menu                                                            |
-    | `Alt+↑`/`Alt+↓` on a row grip             | Move the row                                                                    |
-    | `←`/`→`/`Enter` on a nested row           | Collapse, expand, or step to the parent                                         |
-
-    Paste is bound to the paste event rather than to `Ctrl+V`, so it reads the
-    clipboard without a permission prompt and covers a right-click paste too.
-
 - A polite live region announces sorting, filtering, paging, selection, column
   changes and row moves, in the grid's language.
 - Layout uses logical properties, so `dir="rtl"` mirrors the grid, pinned
-  columns included. Horizontal scroll is normalized through `scrollStart` and
-  `setScrollStart`, since browsers report `scrollLeft` as negative under RTL.
+  columns included.
 - Every demo route is asserted axe-clean in CI.
+
+The moves a reader reaches for most, which is not the whole surface: a feature
+brings its own bindings when you register it, and `commandPalette()` shows at
+run time what the registered ones actually bound.
+
+| Keys                                      | What they do                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| Arrows, `Home`/`End`, `PageUp`/`PageDown` | Move the focused cell                                                           |
+| `Ctrl+Home`/`Ctrl+End`                    | First and last cell of the grid                                                 |
+| `Enter` / `Shift+Enter` on a header       | Cycle that column's sort, or add it to a multi-sort                             |
+| `Space` / `Shift+Space` / `Ctrl+A`        | Select a row, a range, everything on the page                                   |
+| `Ctrl+C` / `Ctrl+V`                       | Copy as TSV, paste across cells                                                 |
+| `Enter`, `F2`, or any printable key       | Open the editor, seeded with what was typed                                     |
+| `Escape`                                  | Close what the editor opened, then the editor                                   |
+| `Ctrl`/`Cmd`+`Enter`                      | Commit without leaving the cell, for a textarea or tags field that owns `Enter` |
+| `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`      | Undo and redo an edit                                                           |
+| `Shift+←`/`Shift+→`                       | Resize the focused column                                                       |
+| `Alt+←`/`Alt+→`                           | Move the focused column                                                         |
+| `Alt+↓` on a header                       | Open the column menu                                                            |
+| `Alt+↑`/`Alt+↓` on a row grip             | Move the row                                                                    |
+| `←`/`→`/`Enter` on a nested row           | Collapse, expand, or step to the parent                                         |
+
+Paste is bound to the paste event rather than to `Ctrl+V`, so it reads the
+clipboard without a permission prompt and covers a right-click paste too.
 
 ## Performance
 
-Measured on Chromium at a 1500x950 viewport, 39 columns of mixed renderers
-(currency, percent, date, badge, progress, rating, boolean). The playground
-route `/stress` is where these come from, so they can be re-run rather than
+Chromium, 1500x950 viewport, 39 columns of mixed renderers. The `/stress`
+playground route is where these come from, so they can be re-run rather than
 taken on trust.
 
 |                      | 100k rows | 500k rows | 1M rows |
@@ -905,95 +441,46 @@ taken on trust.
 | DOM nodes            | 779       | 779       | 779     |
 | Scroll, median frame | 19ms      | 23ms      | 35ms    |
 
-The DOM node count is the number worth reading: it is the same at a million
-rows as at a hundred thousand, because only the visible window is rendered. The
-heap is your data, not the grid's overhead.
+The DOM node count is the number worth reading: the same at a million rows as
+at a hundred thousand, because only the visible window is rendered. The heap is
+your data, not the grid's overhead.
 
-Sorting and filtering are measured separately, by `pnpm bench`, because they
-are arithmetic rather than rendering and a browser adds noise to them. 100k
-rows, four columns, best of ten:
+Sorting and filtering are measured by `pnpm bench` instead, being arithmetic
+rather than rendering. 100k rows, four columns, best of ten: 18ms to sort by
+number, 265ms by string, 6ms per quick-filter keystroke. A string sort is
+slower by an order of magnitude and stays that way, most of it
+`Intl.Collator`, which is what makes `Item 2` sort before `Item 10`.
 
-| Operation                     | Time  |
-| ----------------------------- | ----- |
-| Sort by number                | 18ms  |
-| Sort by string                | 265ms |
-| Multi-sort, string and number | 264ms |
-| Quick filter, per keystroke   | 6ms   |
-| Build row nodes               | 2ms   |
-
-A string sort is slower than a numeric one by an order of magnitude and stays
-that way: most of it is `Intl.Collator`, which is what makes `Item 2` sort
-before `Item 10`, and the grid does not trade that away for speed.
-
-### Known limits
-
-- **A very wide grid costs its column list, not its columns.** Only the columns
-  in view are rendered, bounded even on the first paint before the container
-  has been measured, so the cells drawn stay flat as columns are added. What
-  does grow is the arithmetic behind them and the CSS grid template every row
-  declares: measured in a browser at 100 rows, 20,000 columns mounts in about
-  300ms, of which the template is 117KB per row. Thousands of columns are
-  comfortable; tens of thousands work and are worth measuring for your own
-  widths.
-- **Scrolling holds 60fps to roughly half a million rows** and falls to about
-  28fps at a million with this many columns. Fewer columns move that line out.
-- **Quick filter pays for its first keystroke and reuses it after.** The first
-  pass is O(rows x visible columns) on the main thread and formats every cell,
-  since the filter matches what a cell draws rather than the value behind it.
-  Each keystroke after that is one substring test per row against text already
-  built. Measured on the bench at a million rows across four columns: 2.5s for
-  the first keystroke, 180ms for each one after, at roughly 7MB of held text
-  per 100k rows. Filter on fewer columns, or use `rowModel: 'server'`, where
-  that first pass is what matters.
-
-    The text is held against the row object, so it is dropped when a row is
-    edited, when `data` is replaced, and when the visible columns or the
-    language change.
-
-- **Beyond the browser's maximum element height** the scroll range is scaled
-  rather than clamped, so the last row stays reachable; a pixel of scrolling
-  simply covers more than a pixel of content. Engines differ on where that
-  starts (Chromium at 2^25px, others lower), so the grid caps below the lowest
-  in wide use.
-- **`getRowHeight: 'auto'`** switches the virtualizer to a Fenwick-tree offset
-  cache, which is O(log n) per lookup rather than the fixed path's arithmetic.
-  Prefer a fixed height when the rows allow it.
-- **Row reorder rewrites `data`**, so an active sort re-sorts it immediately.
-  Clear the sort before offering the grip.
-
-## DOM contract
-
-Body cells carry `data-dg-cell="rowIndex:colIndex"`, holding absolute indices
-within the filtered and sorted set, and rows carry `data-dg-row-id`. Both are
-public: delegate pointer events from a wrapper and read them with
-`event.target.closest('[data-dg-cell]')` rather than attaching a handler per
-cell.
-
-The two rows above the body use negative indices on the same attribute: `-1`
-for the leaf header row and `-2` for the filter row. A row index below zero is
-therefore never a data row. A header group spans columns, so it cannot be
-named by a column index at all: its cells carry
-`data-dg-header-cell="level:firstColumn"` instead, counted from the topmost
-level.
+Worth knowing before you scale: a quick filter pays O(rows x visible columns)
+on its first keystroke and reuses that text afterwards, so filter on fewer
+columns or move to `rowModel: 'server'` at a million rows; tens of thousands of
+columns work but are worth measuring for your own widths, the CSS grid template
+every row declares being the cost; `getRowHeight: 'auto'` switches the
+virtualizer to a Fenwick-tree offset cache, so prefer a fixed height when the
+rows allow it; and row reorder rewrites `data`, which an active sort re-sorts
+immediately.
 
 ## API stability
 
-Everything exported from the package root is public and covered by semver from
-1.0 on. The surface is deliberately small: enough to render a grid, enough to
-write a feature module, and nothing else. Internal helpers such as pipeline
-transforms, filter compilation, undo plumbing, column sizing maths and scroll
-normalization stay unexported and change freely between releases.
+Everything exported from the package root is public and covered by semver. The
+surface is deliberately small: enough to render a grid, enough to write a
+feature module, and nothing else. Internal helpers stay unexported and change
+freely between releases. Classes the grid constructs for you are exported as
+types only; you reach an instance through the grid or a `getX(grid)` accessor.
 
-Classes the grid constructs for you are exported as types only. You reach an
-instance through the grid or a `getX(grid)` accessor.
-
-If you need something unexported in order to build a feature, that is a gap in
-the extension points. Open an issue rather than reaching into `dist`, and the
-extension point gets fixed.
+Three DOM attributes are part of that contract:
+`data-dg-cell="rowIndex:colIndex"` and `data-dg-row-id` on the body, and
+`data-dg-header-cell="level:firstColumn"` on a header group, which spans
+columns and so cannot be named by one. Row indices are absolute within the
+filtered and sorted set, and the two rows above the body use negative ones,
+`-1` for the leaf header and `-2` for the filter row. Delegate from a wrapper
+and read them with `event.target.closest('[data-dg-cell]')` rather than
+attaching a handler per cell. Other `data-dg-*` markers are internal structure
+and carry no promise.
 
 ## Contributing
 
-Issues and pull requests are welcome. To run the project locally:
+Issues and pull requests are welcome.
 
 ```bash
 git clone https://github.com/ndlabdev/sv5ui-datagrid.git
@@ -1006,11 +493,10 @@ pnpm lint       # prettier + eslint
 pnpm build      # package + publint
 ```
 
-The playground under `src/routes` has one page per feature, plus review routes:
-`qa` runs everything in one grid, `i18n` switches language in place, `export`
-shows the bytes a CSV export produces, `spans` exercises cell spanning against a
-pinned column, `editors` puts every editor beside its validation rule, and
-`stress` loads up to a million rows across 39 columns.
+The playground under `src/routes` has a page per feature, plus review routes
+that run everything in one grid, switch language in place, show the bytes an
+export produces, put every editor beside its validation rule, and load up to a
+million rows. `qa` and `stress` are the two to reach for first.
 
 ## License
 

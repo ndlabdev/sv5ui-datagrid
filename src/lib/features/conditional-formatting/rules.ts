@@ -1,5 +1,5 @@
 import { FormulaSyntaxError, type Node, parse } from '../formula/index.js'
-import type { FormatRule } from './conditional-formatting.types.js'
+import type { FormatTarget, FormatRule } from './conditional-formatting.types.js'
 
 export const MAX_RULES = 64
 
@@ -23,8 +23,15 @@ export function ruleId(rule: FormatRule, index: number): string {
     return rule.id ?? `${rule.kind}:${index}`
 }
 
-export function appliesTo(rule: FormatRule, columnId: string): boolean {
-    return rule.column === undefined || rule.column === columnId
+export function appliesTo(
+    rule: FormatRule,
+    columnId: string,
+    measureOf: (id: string) => number | undefined
+): boolean {
+    const target = rule.column
+    if (target === undefined) return true
+    if (typeof target === 'string') return target === columnId
+    return measureOf(columnId) === target.measure
 }
 
 function freeId(kind: string, taken: Set<string>): string {
@@ -101,11 +108,21 @@ function paintFields(source: Record<string, unknown>): {
     return { class: text(source.class), style: styleOf(source.style) }
 }
 
+function targetOf(value: unknown): FormatTarget | undefined {
+    const named = text(value)
+    if (named) return named
+
+    const shape = value as { measure?: unknown } | null
+    const measure = shape?.measure
+    if (typeof measure !== 'number' || !Number.isInteger(measure) || measure < 0) return undefined
+    return { measure }
+}
+
 function ruleOf(source: Record<string, unknown>): FormatRule | null {
     const kind = source.kind
     if (typeof kind !== 'string' || !KINDS.has(kind)) return null
-    const column = text(source.column)
-    if (kind !== 'expression' && !column) return null
+    const column = targetOf(source.column)
+    if (kind !== 'expression' && column === undefined) return null
 
     const base = { id: text(source.id), column }
 

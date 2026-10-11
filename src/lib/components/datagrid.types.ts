@@ -304,6 +304,8 @@ export type DataGridProps<TRow> = {
           editing?: never
           virtual?: never
           density?: never
+          headerHeight?: never
+          groupHeaderHeight?: never
       }
     | {
           grid?: never
@@ -343,5 +345,17 @@ export type DataGridProps<TRow> = {
            * @default 'standard'
            */
           density?: Density
+
+          /**
+           * Height of the leaf header row, in pixels. Follows the row height
+           * when left off.
+           */
+          headerHeight?: number
+
+          /**
+           * Height of each header group tier, in pixels, per tier rather than
+           * for the lot. Follows the row height when left off.
+           */
+          groupHeaderHeight?: number
       }
 )

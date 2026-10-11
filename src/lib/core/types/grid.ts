@@ -84,6 +84,7 @@ export interface PersistStateOptions {
 export interface GridEventMap {
     sortChanged: { sort: SortState[] }
     filterChanged: { filter: FilterModel }
+    pivotChanged: { rows: string[]; columns: string[] }
     pageChanged: { page: number; pageSize: number | null }
     /** The server's total changed under `rowModel: 'server'`. */
     rowCountChanged: { total: number }
@@ -119,6 +120,50 @@ export interface DataGridOptions<TRow> {
      * @default 'standard'
      */
     density?: Density
+
+    /**
+     * Height of the leaf header row, in pixels. Left off, it follows the row
+     * height that `density` sets, which is what a header of plain labels
+     * wants.
+     *
+     * Worth setting when the header holds more than a label, or less: a
+     * wrapped two-line title needs the room, and a crossing whose headers are
+     * short generated keys does not, while its tiers add up.
+     *
+     * @default the row height for the current density
+     */
+    headerHeight?: number
+
+    /**
+     * Height of each header group tier, in pixels, counted per tier rather
+     * than for the lot. Left off, it follows the row height.
+     *
+     * This is the one a pivot reaches for. Its column axis builds a tier per
+     * field plus one for the measures, so three tiers at the row height stand
+     * taller than the rows they label, and the keys in them are short.
+     *
+     * @default the row height for the current density
+     */
+    groupHeaderHeight?: number
+
+    /**
+     * Keeps the group rows a reader is inside pinned under the header while
+     * their rows scroll past, one line per level, outermost first. Scroll deep
+     * into a long group and the question "which group am I in" stops needing a
+     * scroll back up to answer.
+     *
+     * It needs `virtualization()`, which is what knows where the rows sit
+     * against the scroll. Without it nothing sticks, because nothing can say
+     * which rows have gone above the fold.
+     *
+     * The pinned lines are a signpost, not a second set of controls: they are
+     * `inert`, so they add no tab stop and a screen reader hears each group
+     * once, from the row itself. The stack is as deep as the grouping, so a
+     * grid grouped six deep spends six rows of its viewport on it.
+     *
+     * @default false
+     */
+    stickyGroups?: boolean
 
     /**
      * Where filtering, sorting and windowing happen. `'server'` passes those

@@ -28,12 +28,14 @@ import {
     withRails
 } from './header-groups.js'
 import { clamp } from '../utils/math.js'
+import type { GridState } from '../grid/grid.svelte.js'
 import {
     isSyntheticColumn,
     railColumnId,
     ROW_HANDLE_COLUMN_ID,
     SELECTION_COLUMN_ID,
     type ColumnDef,
+    type GridFeature,
     type ColumnState,
     type PinnedSide
 } from '../types/index.js'
@@ -72,16 +74,24 @@ export class ColumnModel<TRow> {
     collapsedGroups = $state.raw<Record<string, boolean>>({})
     pinnedOverrides = $state.raw<Record<string, PinnedSide | null>>({})
 
-    leafDefs = $derived.by(() => flattenColumns(this.defs))
+    shaped = $derived.by(() => {
+        const shapers = this.#shapers()
+        if (shapers.length === 0) return this.defs
 
-    #declaredPaths = $derived.by(() => buildGroupPaths(this.defs))
+        const grid = this.#grid()
+        return shapers.reduce((defs, feature) => feature.columns!(defs, grid), this.defs)
+    })
+
+    leafDefs = $derived.by(() => flattenColumns(this.shaped))
+
+    #declaredPaths = $derived.by(() => buildGroupPaths(this.shaped))
 
     groupPaths = $derived.by(() =>
         withRailPaths(this.#declaredPaths, this.#railedGroups, railColumnId)
     )
 
     #leafById = $derived.by(() => leafDefsById(this.leafDefs))
-    #groupById = $derived.by(() => groupDefsById(this.defs))
+    #groupById = $derived.by(() => groupDefsById(this.shaped))
     #leafIdsByGroup = $derived.by(() => leafIdsByGroup(this.#declaredPaths))
 
     groupDef(groupId: string): ColumnDef<TRow> | undefined {
@@ -97,7 +107,7 @@ export class ColumnModel<TRow> {
     }
 
     groupToggles = $derived.by(() =>
-        buildGroupToggles(this.defs, {
+        buildGroupToggles(this.shaped, {
             paths: this.#declaredPaths,
             leaves: this.#leafById,
             leafIdsByGroup: this.#leafIdsByGroup,
@@ -191,8 +201,13 @@ export class ColumnModel<TRow> {
     headerRowCount = $derived(this.headerLevels.length + 1)
     groupBoundaryFlags = $derived.by(() => groupBoundaries(this.headerLevels, this.visible.length))
 
-    constructor(defs: ColumnDef<TRow>[]) {
+    #shapers: () => GridFeature<TRow>[]
+    #grid: () => GridState<TRow>
+
+    constructor(defs: ColumnDef<TRow>[], grid?: () => GridState<TRow>) {
         this.defs = defs
+        this.#grid = grid ?? (() => undefined as unknown as GridState<TRow>)
+        this.#shapers = () => (grid ? grid().features.filter((f) => f.columns) : [])
     }
 
     get(id: string): ColumnState<TRow> | undefined {

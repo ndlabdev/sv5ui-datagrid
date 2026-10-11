@@ -13,6 +13,9 @@ import type { Aggregation, GroupingOptions } from './grouping.types.js'
 
 const GROUPING = 'grouping'
 
+const GRAND_TOTAL_TINT =
+    'color-mix(in oklab, var(--color-surface-container) 60%, var(--color-surface))'
+
 const defaultLabel = (key: string, count: number): string => `${key} (${count})`
 
 const SERVER_SCOPE =
@@ -127,12 +130,18 @@ export class Grouping<TRow> {
 
     expandAllGroups = (): void => {
         const expansion = this.#grid.expansion
+        let opened: string[] = []
+
         for (let level = 0; level < Math.max(1, this.by.length); level++) {
-            const ids = this.#grid.preWindowNodes
-                .filter((node) => node.meta?.expandable)
-                .map((node) => node.id)
-            expansion.expandAll([...expansion.expandedIds, ...ids])
+            opened = [...opened, ...this.#openable()]
+            expansion.expandAll(opened)
         }
+    }
+
+    #openable(): string[] {
+        return this.#grid.preWindowNodes
+            .filter((node) => node.meta?.expandable)
+            .map((node) => node.id)
     }
 
     collapseAllGroups = (): void => {
@@ -239,10 +248,7 @@ export function grouping<TRow>(options: GroupingOptions<TRow> = {}): GridFeature
             }
         },
         menuItems: createMenuItems,
-        serialize: (grid) => {
-            const by = getGrouping(grid)?.by ?? []
-            return by.length > 0 ? { by } : undefined
-        },
+        serialize: (grid) => ({ by: getGrouping(grid)?.by ?? [] }),
         hydrate: (slice, grid) => {
             const state = getGrouping(grid)
             if (!state || typeof slice !== 'object' || slice === null) return
@@ -272,7 +278,8 @@ export function grouping<TRow>(options: GroupingOptions<TRow> = {}): GridFeature
             }
             if (kind === 'grandTotal') {
                 return {
-                    class: 'border-t border-outline-variant bg-surface-container/60 font-semibold'
+                    class: 'font-semibold',
+                    style: { 'background-color': GRAND_TOTAL_TINT }
                 }
             }
             return undefined

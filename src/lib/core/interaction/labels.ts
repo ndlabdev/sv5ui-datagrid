@@ -84,6 +84,26 @@ export const defaultLabels: DataGridLabels = {
     or: 'Or',
     yes: 'True',
     no: 'False',
+    pivotAggs: {
+        sum: 'Sum',
+        min: 'Minimum',
+        max: 'Maximum',
+        avg: 'Average',
+        count: 'Count',
+        median: 'Median',
+        distinctCount: 'Distinct count',
+        first: 'First',
+        last: 'Last'
+    },
+    pivotShares: {
+        percentOfRow: '% of row',
+        percentOfColumn: '% of column',
+        percentOfTotal: '% of total',
+        runningTotal: 'Running total',
+        differenceFrom: 'Difference from',
+        percentDifferenceFrom: '% difference from',
+        rankInRow: 'Rank in row'
+    },
     textOps: {
         contains: 'Contains',
         notContains: 'Does not contain',
@@ -126,6 +146,9 @@ export const defaultLabels: DataGridLabels = {
     pageSizeOption: (size) => `${size} / page`,
     pageRange: (from, to, total) =>
         `${from.toLocaleString()}-${to.toLocaleString()} of ${total.toLocaleString()}`,
+    crossedRows: (crossings, rows) => `${crossings} crossings from ${rows} rows`,
+    crossedFilteredRows: (crossings, filtered, total) =>
+        `${crossings} crossings from ${filtered} of ${total} rows`,
     totalRows: (total) => `${total.toLocaleString()} rows`,
     filteredRows: (filtered, total) =>
         `${filtered.toLocaleString()} of ${total.toLocaleString()} rows`,
@@ -151,6 +174,43 @@ export const defaultLabels: DataGridLabels = {
 
     groupByColumn: 'Group by this column',
     ungroupColumn: 'Ungroup this column',
+    pivotByRow: 'Pivot down this column',
+    pivotByColumn: 'Pivot across this column',
+    removeFromPivot: 'Remove from pivot',
+    pivotRows: 'Down',
+    pivotColumns: 'Across',
+    pivotValues: 'Values',
+    pivotValuesOn: 'Stack measures',
+    pivotValuesDown: 'Measures run downward',
+    pivotRowsHint: 'Fields gathered downward',
+    pivotColumnsHint: 'Fields gathered across it',
+    pivotValuesHint: 'What is measured where two axes meet',
+    pivotSettingsHint: 'Totals, folding, sorting, and how many rows to keep',
+    pivotExpandAll: 'Open every tier',
+    pivotCollapseAll: 'Shut every tier',
+    pivotSettings: 'How it reads',
+    pivotTotalColumn: 'Total column',
+    pivotTotalRow: 'Total row',
+    pivotSubtotal: 'Subtotals',
+    pivotSubtotalOf: (header) => `${header} total`,
+    pivotFoldable: 'Fold groups',
+    pivotSortable: 'Sort by crossing',
+    pivotKeepAll: 'Every row',
+    pivotKeep: 'Rows kept',
+    pivotKeepBottom: (count) => `${count} smallest`,
+    pivotKeepTop: (count) => `${count} largest`,
+    pivotKeepOthers: 'Gather what is left',
+    pivotPanelEmpty: 'Nothing crossed yet',
+    addPivotRow: 'Add to down',
+    addPivotColumn: 'Add to across',
+    addPivotValue: 'Add value',
+    clearPivotAll: 'Clear',
+    movePivotEarlier: (column) => `Move ${column} out one step`,
+    movePivotLater: (column) => `Move ${column} in one step`,
+    removePivotChip: (column) => `Take ${column} off`,
+    pivotAggregation: 'Reduce with',
+    pivotShare: 'Read as',
+    pivotShareNone: 'As measured',
 
     groupFooter: (key) => `Total: ${key}`,
     grandTotal: (count) => `Total (${count})`,
@@ -333,6 +393,8 @@ export function mergeLabels(
         ...overrides,
         textOps: { ...base.textOps, ...overrides.textOps },
         numberOps: { ...base.numberOps, ...overrides.numberOps },
-        dateOps: { ...base.dateOps, ...overrides.dateOps }
+        dateOps: { ...base.dateOps, ...overrides.dateOps },
+        pivotAggs: { ...base.pivotAggs, ...overrides.pivotAggs },
+        pivotShares: { ...base.pivotShares, ...overrides.pivotShares }
     }
 }

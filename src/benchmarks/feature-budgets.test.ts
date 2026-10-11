@@ -8,7 +8,8 @@ import {
     hasNumbers,
     paintOf,
     sampleDataRows,
-    type FormatRule
+    type FormatRule,
+    statSource
 } from '../lib/features/conditional-formatting/index.js'
 import { parse } from '../lib/features/formula/index.js'
 import { findReplace, getFindReplace } from '../lib/features/find-replace/index.js'
@@ -398,7 +399,10 @@ describe('conditional formatting budgets', () => {
                 { kind: 'expression', when: 'salary > 80000 AND active' }
             ]
             const columns = columnMap(formattedGrid(rules).columns.all)
-            const stats = computeStats(rules, makeBenchNodes(rows100k.length), columns)
+            const stats = computeStats(
+                rules,
+                statSource({ rows: makeBenchNodes(rows100k.length), columns })
+            )
             const node = parse('salary > 80000 AND active')
             const window = rows100k.slice(0, 100)
 

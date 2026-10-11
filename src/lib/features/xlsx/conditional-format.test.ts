@@ -12,6 +12,7 @@ function context(over: Partial<XlsxFormatContext> = {}): XlsxFormatContext {
     let next = 0
     return {
         letterOf: (columnId) => ({ amount: 'C', email: 'D' })[columnId],
+        columnIdsOf: (target) => (typeof target === 'string' ? [target] : []),
         rowCount: 3,
         colors: DEFAULT_FORMAT_COLORS,
         addDxf: () => next++,

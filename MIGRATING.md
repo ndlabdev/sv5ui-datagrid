@@ -1,3 +1,59 @@
+# Upgrading to 2.1
+
+Everything in this release is additive at run time: register `pivot()` or
+`flashCells()` and they work, leave them out and nothing changes. Two things
+touch existing code, and this is both of them.
+
+## `DataGridLabels` gained members again
+
+A crossing brought its own wording, and the label table is one table. If you
+hand the grid a subset, which is the usual way, nothing changes:
+
+```ts
+createDataGrid({ labels: { search: 'Find...' }, columns, data, getRowId })
+```
+
+If you built a complete `DataGridLabels` of your own and passed it as the base
+of `mergeLabels`, it no longer type-checks, for the same reason it did not at
+2.0. Merge onto the built-in table instead:
+
+```diff
+-mergeLabels(overrides, myCompleteTable)
++mergeLabels({ ...myCompleteTable, ...overrides })
+```
+
+A locale pack of your own is unaffected: a pack says what it has, and English
+answers for the rest, so a pack written against 2.0 keeps working and the new
+strings arrive in English until you translate them.
+
+## `stickyGroups` is gone from the shorthand `<DataGrid>`
+
+It type-checked there and did nothing. The shorthand registers no feature that
+gives a row a level, so there was never anything to pin, and the prop said
+nothing about it. Passing it is now a compile error rather than a silent no-op.
+
+Where it works is beside a feature that shapes the rows:
+
+```diff
+-<DataGrid data={rows} {columns} {getRowId} stickyGroups />
++<script lang="ts">
++    const grid = createDataGrid({
++        data: rows,
++        columns,
++        getRowId,
++        stickyGroups: true,
++        features: [virtualization(), grouping({ by: ['desk'] })]
++    })
++</script>
++
++<DataGrid {grid} />
+```
+
+It needs `virtualization()`, which is what knows where a row sits against the
+scroll, and one of `grouping()`, `tree()` or `pivot()` to give the rows levels.
+
+---
+
 # Upgrading to 2.0
 
 Almost everything in this release is additive: register a feature you did not

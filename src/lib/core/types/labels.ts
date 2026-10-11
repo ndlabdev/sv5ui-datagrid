@@ -6,6 +6,20 @@ import type { DataGridAnnouncerStrings } from './grid.js'
  * a language can put the number where it needs it. What the grid *speaks*
  * lives in `DataGridAnnouncerStrings`.
  */
+/** The named reductions a crossing can measure with. */
+export type PivotAggName =
+    'sum' | 'min' | 'max' | 'avg' | 'count' | 'median' | 'distinctCount' | 'first' | 'last'
+
+/** The readings a measure can be shown as. */
+export type PivotShareName =
+    | 'percentOfRow'
+    | 'percentOfColumn'
+    | 'percentOfTotal'
+    | 'runningTotal'
+    | 'differenceFrom'
+    | 'percentDifferenceFrom'
+    | 'rankInRow'
+
 export interface DataGridLabels {
     // Toolbar
     search: string
@@ -62,6 +76,8 @@ export interface DataGridLabels {
     textOps: Record<TextFilterOp, string>
     numberOps: Record<NumberFilterOp, string>
     dateOps: Record<DateFilterOp, string>
+    pivotAggs: Record<PivotAggName, string>
+    pivotShares: Record<PivotShareName, string>
 
     // Rows
     selectRow: (position: number) => string
@@ -77,6 +93,8 @@ export interface DataGridLabels {
     pageSizeOption: (size: number) => string
     /** The footer's "1-25 of 300" summary. */
     pageRange: (from: number, to: number, total: number) => string
+    crossedRows: (crossings: number, rows: number) => string
+    crossedFilteredRows: (crossings: number, filtered: number, total: number) => string
     totalRows: (total: number) => string
     filteredRows: (filtered: number, total: number) => string
     selectedRows: (count: number) => string
@@ -106,6 +124,43 @@ export interface DataGridLabels {
 
     groupByColumn: string
     ungroupColumn: string
+    pivotByRow: string
+    pivotByColumn: string
+    removeFromPivot: string
+    pivotRows: string
+    pivotColumns: string
+    pivotValues: string
+    pivotValuesOn: string
+    pivotValuesDown: string
+    pivotRowsHint: string
+    pivotColumnsHint: string
+    pivotValuesHint: string
+    pivotSettingsHint: string
+    pivotExpandAll: string
+    pivotCollapseAll: string
+    pivotSettings: string
+    pivotTotalColumn: string
+    pivotTotalRow: string
+    pivotSubtotal: string
+    pivotSubtotalOf: (header: string) => string
+    pivotFoldable: string
+    pivotSortable: string
+    pivotKeepAll: string
+    pivotKeep: string
+    pivotKeepBottom: (count: number) => string
+    pivotKeepTop: (count: number) => string
+    pivotKeepOthers: string
+    pivotPanelEmpty: string
+    addPivotRow: string
+    addPivotColumn: string
+    addPivotValue: string
+    clearPivotAll: string
+    movePivotEarlier: (column: string) => string
+    movePivotLater: (column: string) => string
+    removePivotChip: (column: string) => string
+    pivotAggregation: string
+    pivotShare: string
+    pivotShareNone: string
 
     groupFooter: (key: string, count: number) => string
     grandTotal: (count: number) => string
@@ -264,11 +319,13 @@ export interface DataGridLabels {
 
 /** Any subset; operator maps override one entry at a time. */
 export type DataGridLabelsInput = Partial<
-    Omit<DataGridLabels, 'textOps' | 'numberOps' | 'dateOps'>
+    Omit<DataGridLabels, 'textOps' | 'numberOps' | 'dateOps' | 'pivotAggs' | 'pivotShares'>
 > & {
     textOps?: Partial<Record<TextFilterOp, string>>
     numberOps?: Partial<Record<NumberFilterOp, string>>
     dateOps?: Partial<Record<DateFilterOp, string>>
+    pivotAggs?: Partial<Record<PivotAggName, string>>
+    pivotShares?: Partial<Record<PivotShareName, string>>
 }
 
 /**

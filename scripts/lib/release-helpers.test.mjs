@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { nextVersion, rotateChangelog, waitForChecksToAppear } from './release-helpers.mjs'
+import {
+    nextVersion,
+    notesFor,
+    rotateChangelog,
+    waitForChecksToAppear
+} from './release-helpers.mjs'
 
 describe('rotateChangelog', () => {
     const head = '# Changelog\n\nThe format is based on Keep a Changelog.\n\n'
@@ -151,5 +156,30 @@ describe('waitForChecksToAppear', () => {
         })
         expect(sleep).toHaveBeenCalledTimes(3)
         expect(sleep).toHaveBeenCalledWith(250)
+    })
+})
+
+describe('notesFor', () => {
+    it('hands back the body under a matching heading', () => {
+        expect(notesFor('2.1.0', '# 2.1.0\n\nPivot tables, and a flash that fades.\n')).toBe(
+            'Pivot tables, and a flash that fades.'
+        )
+    })
+
+    it('takes a v prefix on the heading', () => {
+        expect(notesFor('2.1.0', '# v2.1.0\n\nShort.\n')).toBe('Short.')
+    })
+
+    it('refuses a file left over from the release before', () => {
+        expect(() => notesFor('2.1.0', '# 2.0.0\n\nOld news.\n')).toThrow(/headed 2\.0\.0/)
+    })
+
+    it('refuses a file with no heading, rather than guessing', () => {
+        expect(() => notesFor('2.1.0', 'Pivot tables.\n')).toThrow(/heading/)
+    })
+
+    it('answers null where the heading stands alone, so the caller can skip', () => {
+        expect(notesFor('2.1.0', '# 2.1.0\n')).toBeNull()
+        expect(notesFor('2.1.0', '# 2.1.0\n\n   \n')).toBeNull()
     })
 })
