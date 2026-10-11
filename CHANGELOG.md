@@ -112,7 +112,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     theme slot, app-wide or per grid through `ui`; the `--dg-flash-tint` and
     `--dg-flash-ms` properties on the cell; and an `appearance` option handed
     what changed, what it was, and how long ago, which is how a mark can answer
-    to the size of a move rather than only its direction.
+    to the size of a move rather than only its direction. `FlashContext` names
+    what that option is asked, and `FlashMark` what the feature holds, so a
+    function written outside the options object can say what it takes instead
+    of restating the shape.
 
     A reader who asked for reduced motion now gets the mark without the fade,
     rather than no mark at all. Leaving out the animation is the request;

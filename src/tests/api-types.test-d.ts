@@ -1,10 +1,14 @@
 import {
     createDataGrid,
     filtering,
+    flashCells,
     pagination,
     sorting,
     type ColumnDef,
     type FilterModel,
+    type FlashContext,
+    type FlashMark,
+    type FlashWay,
     type GridSnapshot,
     type PivotKeepRows,
     type PivotOrderColumns,
@@ -50,3 +54,20 @@ exact<PivotValuesOn | undefined>(grid.api.pivotValuesOn?.())
 grid.api.setPivotKeepRows?.({ top: 10, others: 'Rest' })
 grid.api.setPivotOrderColumns?.({ direction: 'desc' })
 grid.api.setPivotValuesOn?.('rows')
+
+const loudJumps = ({ way, before, after, age }: FlashContext) => {
+    const jump = Math.abs(Number(after) - Number(before))
+    exact<FlashWay>(way)
+    exact<number>(age)
+    return jump > 10 ? { class: 'ring-2' } : undefined
+}
+
+exact<FlashMark>({ way: 'up', at: 0, before: 1, after: 2 })
+exact<FlashContext>({ way: 'down', at: 0, before: 2, after: 1, age: 5 })
+
+createDataGrid<Person>({
+    columns,
+    data: [] as Person[],
+    getRowId: (person) => person.id,
+    features: [flashCells<Person>({ appearance: loudJumps })]
+})

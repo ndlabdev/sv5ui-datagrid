@@ -24,6 +24,8 @@ export {
     getFlashCells,
     type FlashCells,
     type FlashCellsOptions,
+    type FlashContext,
+    type FlashMark,
     type FlashWay
 } from '../../flash-cells/index.js'
 export {

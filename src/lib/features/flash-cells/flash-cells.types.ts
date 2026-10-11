@@ -85,7 +85,23 @@ export interface FlashCellsOptions<TRow = unknown> {
      * `style` is how a value computed per cell gets in, the way a colour scale
      * does.
      */
-    appearance?: (mark: FlashMark & { age: number }) => CellDecoration | undefined
+    appearance?: (mark: FlashContext) => CellDecoration | undefined
+}
+
+/**
+ * What `appearance` is asked about: the mark, and how long it has been there.
+ *
+ * Named so that a function written outside the options object can say what it
+ * takes, rather than restating the shape.
+ *
+ * ```ts
+ * const loudJumps = ({ way, before, after }: FlashContext) => ...
+ * flashCells({ appearance: loudJumps })
+ * ```
+ */
+export interface FlashContext extends FlashMark {
+    /** Milliseconds since the sweep that made the mark. */
+    age: number
 }
 
 /** A cell the feature is marking: what happened, and when. */
