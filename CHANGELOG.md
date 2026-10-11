@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-11
+
 One type-level break, in a minor on purpose. `DataGridLabels` gains required
 members, so an application that builds its own complete table and hands it to
 `mergeLabels` as the base no longer compiles. Nothing at run time changes, and
@@ -1390,6 +1392,7 @@ full table.
 - Performance budgets in CI as coarse regression ceilings, measured best-of-3
   so a loaded machine does not fail a build.
 
+[2.1.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v2.1.0
 [2.0.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v2.0.0
 [1.3.1]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.1
 [1.3.0]: https://github.com/ndlabdev/sv5ui-datagrid/releases/tag/v1.3.0
