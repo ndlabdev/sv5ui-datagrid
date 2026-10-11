@@ -123,6 +123,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A pinned cell on a grand total row let the rows behind it show through.**
+  The total was tinted with `bg-surface-container/60`, and a pinned cell is
+  opaque only because of its own `bg-surface`: the two are both background
+  classes on the same element, nothing merges them, so the translucent one won
+  and the cell went 60 percent transparent. Scroll a wide grid sideways and the
+  text of the cells sliding underneath read straight through the total's label.
+
+    The tint is the same colour, written as the opaque mix it was rendering as,
+    which leaves a row with nothing pinned looking exactly as it did and gives
+    the pinned cell nothing to lose. `grouping()` and `pivot()` both carried it.
+
 - **The count under a grid that refused to cross still called it a crossing.**
   Past `maxColumns` the grid draws its plain rows, but the count asked only
   whether a crossing was configured, so it read "0 crossings from 12 rows". The

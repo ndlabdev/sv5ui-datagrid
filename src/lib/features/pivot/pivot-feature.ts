@@ -12,6 +12,9 @@ import type {
     PivotValuesOn
 } from './pivot.types.js'
 
+const GRAND_TOTAL_TINT =
+    'color-mix(in oklab, var(--color-surface-container) 60%, var(--color-surface))'
+
 const CROSSED = Object.freeze({})
 
 const refuseEditing = (): unknown => CROSSED
@@ -111,7 +114,7 @@ export function pivot<TRow>(options: PivotOptions<TRow>): GridFeature<TRow> {
             purpose === 'edit' && isPivotColumn(column.id) ? refuseEditing : undefined,
         cellDecoration: ({ node }) =>
             totalsKindOf(measureRowBase(node.id)) === 'grandTotal'
-                ? { class: 'bg-surface-container/60 font-semibold' }
+                ? { class: 'font-semibold', style: { 'background-color': GRAND_TOTAL_TINT } }
                 : undefined
     }
 }

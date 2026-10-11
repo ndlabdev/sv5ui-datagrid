@@ -13,6 +13,9 @@ import type { Aggregation, GroupingOptions } from './grouping.types.js'
 
 const GROUPING = 'grouping'
 
+const GRAND_TOTAL_TINT =
+    'color-mix(in oklab, var(--color-surface-container) 60%, var(--color-surface))'
+
 const defaultLabel = (key: string, count: number): string => `${key} (${count})`
 
 const SERVER_SCOPE =
@@ -275,7 +278,8 @@ export function grouping<TRow>(options: GroupingOptions<TRow> = {}): GridFeature
             }
             if (kind === 'grandTotal') {
                 return {
-                    class: 'bg-surface-container/60 font-semibold'
+                    class: 'font-semibold',
+                    style: { 'background-color': GRAND_TOTAL_TINT }
                 }
             }
             return undefined

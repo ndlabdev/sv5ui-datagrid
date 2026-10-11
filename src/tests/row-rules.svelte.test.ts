@@ -160,3 +160,79 @@ describe('one rule between two rows, never two of the same colour', () => {
         expect(style.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
     })
 })
+
+describe('a pinned cell on a total row stays opaque, whatever tints the row', () => {
+    const pinnedColumns: ColumnDef<Sale>[] = [
+        { id: 'desk', pinned: 'left', width: 120 },
+        { id: 'product', width: 160 },
+        { id: 'amount', type: 'number', width: 140 }
+    ]
+
+    const opacityOf = (cell: Element): number => {
+        const found = /\/\s*([\d.]+)\s*\)/.exec(getComputedStyle(cell).backgroundColor)
+        return found ? Number(found[1]) : 1
+    }
+
+    it('holds on a grouped grid closed by a grand total', async () => {
+        const screen = await open(
+            createDataGrid<Sale>({
+                data: sales,
+                columns: pinnedColumns,
+                getRowId: (row) => String(row.id),
+                features: [
+                    grouping<Sale>({ by: ['desk'], grandTotal: true, grandTotalLabel: () => 'All' })
+                ]
+            })
+        )
+
+        const total = screen.container.querySelector('[data-dg-row-id="total:grand"]')!
+        const pinned = total.querySelector('[role="gridcell"].sticky')
+
+        expect(pinned, 'the pinned cell of the grand total').not.toBeNull()
+        expect(opacityOf(pinned!)).toBe(1)
+    })
+
+    it('holds on a crossing closed by a total row', async () => {
+        const screen = await open(
+            createDataGrid<Sale>({
+                data: sales,
+                columns: pinnedColumns,
+                getRowId: (row) => String(row.id),
+                features: [
+                    pivot<Sale>({
+                        rows: ['desk'],
+                        columns: ['product'],
+                        values: [{ field: 'amount', agg: 'sum' }],
+                        totalRow: 'All'
+                    })
+                ]
+            })
+        )
+
+        const total = screen.container.querySelector('[data-dg-row-id="total:grand"]')!
+        const pinned = total.querySelector('[role="gridcell"].sticky')
+
+        expect(pinned, 'the pinned cell of the total row').not.toBeNull()
+        expect(opacityOf(pinned!)).toBe(1)
+    })
+
+    it('tints it the same colour a row with nothing pinned gets', async () => {
+        const screen = await open(
+            createDataGrid<Sale>({
+                data: sales,
+                columns: pinnedColumns,
+                getRowId: (row) => String(row.id),
+                features: [
+                    grouping<Sale>({ by: ['desk'], grandTotal: true, grandTotalLabel: () => 'All' })
+                ]
+            })
+        )
+
+        const total = screen.container.querySelector('[data-dg-row-id="total:grand"]')!
+        const cells = Array.from(total.querySelectorAll<HTMLElement>('[role="gridcell"]'))
+        const tints = new Set(cells.map((cell) => getComputedStyle(cell).backgroundColor))
+
+        expect(cells.length).toBeGreaterThan(1)
+        expect(tints.size).toBe(1)
+    })
+})
