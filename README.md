@@ -17,6 +17,7 @@
   <a href="#quick-start"><strong>Quick start</strong></a> &middot;
   <a href="#features-are-modules"><strong>Features</strong></a> &middot;
   <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/CHANGELOG.md"><strong>Changelog</strong></a> &middot;
+  <a href="https://github.com/ndlabdev/sv5ui-datagrid/blob/main/MIGRATING.md"><strong>Upgrading</strong></a> &middot;
   <a href="https://github.com/ndlabdev/sv5ui-datagrid/issues"><strong>Issues</strong></a>
 </p>
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+One type-level break, in a minor on purpose. `DataGridLabels` gains required
+members, so an application that builds its own complete table and hands it to
+`mergeLabels` as the base no longer compiles. Nothing at run time changes, and
+`DataGridLabelsInput`, which is what a grid is normally given, stays a subset
+and is unaffected. [MIGRATING.md](MIGRATING.md) has the two lines that fix it.
+
 ### Added
 
 - **`pivot()`.** One field gathered down the page, another across it, a measure
@@ -72,9 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `crossedFilteredRows` for the count beneath a crossed grid, all of it in
   twelve languages. The slots are `stickyGroupRows` and `stickyGroupRow`.
 
-    **Breaking** in the same narrow way 2.0.0 was: `DataGridLabels` is the
-    complete table, so an application passing its own as `mergeLabels`' base no
-    longer compiles. `DataGridLabelsInput`, which is what a grid is normally
+    `DataGridLabels` is the complete table, so this is the one type-level break
+    noted at the top. `DataGridLabelsInput`, which is what a grid is normally
     handed, stays a subset and is unaffected. The two maps override one entry at
     a time, the way `textOps` does.
 
