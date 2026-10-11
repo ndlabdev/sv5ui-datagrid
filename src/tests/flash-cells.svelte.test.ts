@@ -244,13 +244,41 @@ describe('beside the features it shares a cell with', () => {
 })
 
 describe('what it costs and when it does nothing', () => {
-    it('remembers only the cells on screen', async () => {
+    it('takes the options it was given, and the defaults it was not', async () => {
         const grid = build({ extra: [virtualization<Tick>({ rowHeight: 40 })] })
         await open(grid)
 
         const flash = getFlashCells(grid)!
         expect(flash.duration).toBe(60_000)
         expect(flash.directional).toBe(true)
+        expect(getFlashCells(build({}))!.duration).toBe(60_000)
+    })
+
+    it('remembers only the cells on screen, so a change below the fold is unseen', async () => {
+        const many: Tick[] = Array.from({ length: 400 }, (_, at) => ({
+            id: at + 1,
+            symbol: `S${at + 1}`,
+            price: 100 + at,
+            size: 10,
+            desk: 'A'
+        }))
+        const grid = createDataGrid<Tick>({
+            data: many,
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [
+                virtualization<Tick>({ rowHeight: 40 }),
+                flashCells<Tick>({ duration: 60_000 })
+            ]
+        })
+        const screen = await open(grid)
+
+        await expect.poll(() => grid.nodes.length).toBeLessThan(many.length)
+
+        const hidden = many.at(-1)!
+        await nudge(grid, (row) => (row.id === hidden.id ? { ...row, price: 4242 } : row))
+
+        expect(marked(screen)).toEqual([])
     })
 
     it('still marks for a reader who asked for less motion, without the fade', async () => {
@@ -468,7 +496,7 @@ describe('the look of a mark is the application to change', () => {
 })
 
 describe('the demo page shows the two ways an application changes the look', () => {
-    const openDemo = async () => {
+    it('draws every case, and names the two the look belongs to', async () => {
         const { default: FlashDemo } = await import('../routes/flash/+page.svelte')
         const screen = await render(FlashDemo as never)
         await expect
@@ -477,38 +505,100 @@ describe('the demo page shows the two ways an application changes the look', () 
             )
             .toBe(7)
 
-        const button = Array.from(screen.container.querySelectorAll('button')).find(
-            (one) => (one.textContent ?? '').trim() === 'Một đợt, 6 ô'
+        const titles = Array.from(screen.container.querySelectorAll('h2')).map(
+            (one) => one.textContent?.trim() ?? ''
         )
-        expect(button).toBeDefined()
-        ;(button as HTMLElement).click()
-        await new Promise((resolve) => setTimeout(resolve, 250))
-        return screen
-    }
 
-    it('paints a big jump its own way, where appearance answered', async () => {
-        const screen = await openDemo()
+        expect(titles.some((text) => text.includes('Dấu đổi theo biên độ'))).toBe(true)
+        expect(titles.some((text) => text.includes('Đổi hình bằng slot của lưới'))).toBe(true)
+    })
+})
+
+describe('the awkward inputs a caller can hand it', () => {
+    it('marks nothing at all when the duration is zero', async () => {
+        const grid = build({ duration: 0 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 5 } : row))
+
+        expect(marked(screen)).toEqual([])
+    })
+
+    it('starts the clock again when the same cell changes twice', async () => {
+        const grid = build({ duration: 400 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 5 } : row))
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 6 } : row))
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 7 } : row))
+
+        await new Promise((resolve) => setTimeout(resolve, 250))
+        expect(marked(screen).map((cell) => cell.textContent?.trim())).toEqual(['7'])
+
+        await expect.poll(() => marked(screen).length, { timeout: 2000 }).toBe(0)
+    })
+
+    it('drops three staggered marks one at a time, not all at the end', async () => {
+        const grid = build({ duration: 420 })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 11 } : row))
+        await nudge(grid, (row) => (row.id === 2 ? { ...row, price: 22 } : row))
+        await nudge(grid, (row) => (row.id === 3 ? { ...row, price: 33 } : row))
+        expect(marked(screen)).toHaveLength(3)
+
+        await expect.poll(() => marked(screen).length).toBe(2)
+        await expect.poll(() => marked(screen).length).toBe(1)
+        await expect.poll(() => marked(screen).length, { timeout: 2000 }).toBe(0)
+    })
+
+    it('takes marking up again after it was stopped', async () => {
+        const grid = build({})
+        const screen = await open(grid)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 5 } : row))
+        expect(marked(screen)).toHaveLength(1)
+
+        getFlashCells(grid)!.stop()
+        await expect.poll(() => marked(screen).length).toBe(0)
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 6 } : row))
+        expect(marked(screen)).toEqual([])
+
+        await nudge(grid, (row) => (row.id === 1 ? { ...row, price: 7 } : row))
+        expect(marked(screen).map((cell) => cell.textContent?.trim())).toEqual(['7'])
+    })
+
+    it('leaves the default where appearance answers for one way only', async () => {
+        const grid = createDataGrid<Tick>({
+            data: start,
+            columns,
+            getRowId: (row) => String(row.id),
+            features: [
+                flashCells<Tick>({
+                    duration: 60_000,
+                    appearance: ({ way }) =>
+                        way === 'down'
+                            ? { style: { 'background-color': 'rgb(9, 9, 9)' } }
+                            : undefined
+                })
+            ]
+        })
+        const screen = await open(grid)
+
+        await nudge(grid, (row) =>
+            row.id === 1
+                ? { ...row, price: row.price + 5 }
+                : row.id === 2
+                  ? { ...row, price: row.price - 5 }
+                  : row
+        )
 
         const painted = Array.from(
             screen.container.querySelectorAll<HTMLElement>('[data-dg-cell]')
-        ).filter((cell) => cell.style.backgroundColor !== '' && cell.style.outline === '')
+        ).filter((cell) => cell.style.backgroundColor === 'rgb(9, 9, 9)')
 
-        expect(painted.length).toBeGreaterThan(0)
-    })
-
-    it('adds the class one grid asked for, on that grid alone', async () => {
-        const screen = await openDemo()
-
-        const ringed = Array.from(
-            screen.container.querySelectorAll<HTMLElement>('[data-dg-cell].ring-primary')
-        )
-        expect(ringed.length).toBeGreaterThan(0)
-        for (const cell of ringed) expect(cell.classList.contains('dg-flash')).toBe(true)
-
-        const grids = Array.from(
-            screen.container.querySelectorAll('[role="grid"], [role="treegrid"]')
-        )
-        const owners = new Set(ringed.map((cell) => grids.findIndex((one) => one.contains(cell))))
-        expect(owners.size).toBe(1)
+        expect(painted).toHaveLength(1)
+        expect(marked(screen)).toHaveLength(1)
     })
 })

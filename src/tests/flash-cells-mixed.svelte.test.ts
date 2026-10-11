@@ -450,3 +450,106 @@ describe('watching columns a crossing invented', () => {
         await expect.poll(() => marked(second).length).toBe(1)
     })
 })
+
+describe('what a batch costs', () => {
+    const countTimersOver = (floor: number) => {
+        const real = window.setTimeout
+        const state = { hung: 0 }
+        window.setTimeout = ((handler: TimerHandler, ms?: number, ...rest: unknown[]) => {
+            if (typeof ms === 'number' && ms > floor) state.hung += 1
+            return (real as typeof window.setTimeout)(handler, ms, ...(rest as []))
+        }) as typeof window.setTimeout
+        return { state, undo: () => (window.setTimeout = real) }
+    }
+
+    it('spends one timer on a batch, however many cells it marks', async () => {
+        const grid = make([], 60_000)
+        const screen = await open(grid)
+        const { state, undo } = countTimersOver(1000)
+
+        try {
+            await change(grid, [1, 2, 3, 4, 5, 6])
+
+            expect(marked(screen).length).toBeGreaterThan(1)
+            expect(state.hung).toBe(1)
+        } finally {
+            undo()
+        }
+    })
+
+    it('hangs no timer where a sweep found nothing to mark', async () => {
+        const grid = make([], 60_000)
+        const screen = await open(grid)
+        const { state, undo } = countTimersOver(1000)
+
+        try {
+            grid.data = grid.data.map((row) => ({ ...row }))
+            await settle()
+
+            expect(marked(screen)).toEqual([])
+            expect(state.hung).toBe(0)
+        } finally {
+            undo()
+        }
+    })
+
+    it('stops hanging timers once the last mark has let go', async () => {
+        const grid = make([], 600)
+        const screen = await open(grid)
+        const { state, undo } = countTimersOver(500)
+
+        try {
+            await change(grid, [1])
+            expect(marked(screen)).toHaveLength(1)
+
+            await expect.poll(() => marked(screen).length, { timeout: 2000 }).toBe(0)
+            const settled = state.hung
+            for (let slice = 0; slice < 14; slice++) {
+                await new Promise((resolve) => setTimeout(resolve, 100))
+            }
+
+            expect(state.hung).toBe(settled)
+        } finally {
+            undo()
+        }
+    })
+
+    it('reads a column nobody watches fewer times than one it does', async () => {
+        const tally = { narrow: 0, wide: 0 }
+        const countingColumns = (into: 'narrow' | 'wide'): ColumnDef<Tick>[] => [
+            { id: 'symbol' },
+            { id: 'price', type: 'number' },
+            {
+                id: 'desk',
+                accessor: (row) => {
+                    tally[into] += 1
+                    return row.desk
+                }
+            }
+        ]
+        const gridOf = (into: 'narrow' | 'wide', watch?: string[]) =>
+            createDataGrid<Tick>({
+                data: seed(),
+                columns: countingColumns(into),
+                getRowId: (row) => String(row.id),
+                features: [
+                    flashCells<Tick>({
+                        duration: 60_000,
+                        ...(watch ? { columns: watch } : {})
+                    })
+                ]
+            })
+
+        const narrow = gridOf('narrow', ['price'])
+        const wide = gridOf('wide')
+        await open(narrow)
+        await open(wide)
+
+        const from = { ...tally }
+        narrow.data = narrow.data.map((row) => (row.id === 1 ? { ...row, price: 999 } : row))
+        wide.data = wide.data.map((row) => (row.id === 1 ? { ...row, price: 999 } : row))
+        await settle()
+
+        expect(tally.narrow - from.narrow).toBeLessThan(tally.wide - from.wide)
+    })
+})
